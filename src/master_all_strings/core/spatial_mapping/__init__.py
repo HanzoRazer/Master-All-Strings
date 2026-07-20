@@ -41,4 +41,5 @@ __all__ = [
     "midi_note_to_pitch_label",
     "normalized_position_for_semitones",
     "semitone_distance",
+    "to_serializable_dict",
 ]

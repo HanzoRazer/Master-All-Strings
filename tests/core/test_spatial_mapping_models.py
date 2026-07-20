@@ -62,7 +62,10 @@ def test_contracts_are_serializable() -> None:
 
 def test_phase_one_supporting_contracts_validate() -> None:
     constraints = MappingConstraints(capo_position=2.0, maximum_relative_semitone_position=12.0)
-    preferences = MappingPreferences(open_string_policy=OpenStringPolicy.PREFER, lower_position_bias=1.0)
+    preferences = MappingPreferences(
+        open_string_policy=OpenStringPolicy.PREFER,
+        lower_position_bias=1.0,
+    )
     auditory_reference = AuditoryPositionReference(
         open_string_midi_note=55,
         target_midi_note=59,

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class FingerboardMode(str, Enum):
+class FingerboardMode(StrEnum):
     """Supported fingerboard semantics."""
 
     FRETTED = "fretted"
@@ -13,7 +13,7 @@ class FingerboardMode(str, Enum):
     HYBRID = "hybrid"
 
 
-class SpatialReferenceType(str, Enum):
+class SpatialReferenceType(StrEnum):
     """Coordinate reference semantics for a spatial position."""
 
     PHYSICAL_FRET = "physical_fret"
@@ -21,7 +21,7 @@ class SpatialReferenceType(str, Enum):
     CONTINUOUS_POSITION = "continuous_position"
 
 
-class OpenStringPolicy(str, Enum):
+class OpenStringPolicy(StrEnum):
     """Deterministic open-string preference policy."""
 
     ALLOW = "allow"
@@ -30,7 +30,7 @@ class OpenStringPolicy(str, Enum):
     EXCLUDE = "exclude"
 
 
-class SelectionStatus(str, Enum):
+class SelectionStatus(StrEnum):
     """Selection result status."""
 
     SELECTED = "selected"
@@ -38,7 +38,7 @@ class SelectionStatus(str, Enum):
     UNPLAYABLE = "unplayable"
 
 
-class CandidateRejectionCode(str, Enum):
+class CandidateRejectionCode(StrEnum):
     """Stable rejection codes for excluded or invalid candidates."""
 
     STRING_DISABLED = "string_disabled"

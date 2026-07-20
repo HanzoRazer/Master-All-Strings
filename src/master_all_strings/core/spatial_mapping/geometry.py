@@ -19,7 +19,8 @@ def normalized_position_for_semitones(semitone_distance: float) -> float:
 
     require_finite(semitone_distance, "semitone_distance")
     require_nonnegative(semitone_distance, "semitone_distance")
-    return 1.0 - (2.0 ** (-semitone_distance / _EQUAL_TEMPERAMENT_DIVISOR))
+    position = 1.0 - (2.0 ** (-semitone_distance / _EQUAL_TEMPERAMENT_DIVISOR))
+    return float(position)
 
 
 def distance_from_nut_mm(scale_length_mm: float | None, semitone_distance: float) -> float | None:

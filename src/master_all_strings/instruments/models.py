@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 from master_all_strings.core.spatial_mapping.enums import FingerboardMode
 from master_all_strings.core.spatial_mapping.models import JSONScalar
@@ -90,6 +90,9 @@ class InstrumentProfile:
             raise ValueError("physical_fret_count must be nonnegative")
         if self.fingerboard_mode is FingerboardMode.FRETTED and self.physical_fret_count is None:
             raise ValueError("fretted instruments must declare physical_fret_count")
-        if self.fingerboard_mode is FingerboardMode.FRETLESS and self.physical_fret_count is not None:
+        if (
+            self.fingerboard_mode is FingerboardMode.FRETLESS
+            and self.physical_fret_count is not None
+        ):
             raise ValueError("fretless instruments must not declare physical_fret_count")
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))

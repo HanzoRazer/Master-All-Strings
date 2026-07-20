@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping, TypeAlias
+from typing import TypeAlias
 
 from .enums import OpenStringPolicy, SpatialReferenceType
 from .validation import require_finite, require_midi_note, require_non_empty, require_nonnegative
@@ -102,10 +103,18 @@ class SpatialPosition:
             require_finite(self.distance_from_nut_mm, "distance_from_nut_mm")
             require_nonnegative(self.distance_from_nut_mm, "distance_from_nut_mm")
         if self.is_open_string and self.relative_semitone_position != 0.0:
-            raise ValueError("open-string positions must have a relative semitone position of 0.0")
-        if self.reference_type is SpatialReferenceType.PHYSICAL_FRET and self.physical_fret_number is None:
+            raise ValueError(
+                "open-string positions must have a relative semitone position of 0.0",
+            )
+        if (
+            self.reference_type is SpatialReferenceType.PHYSICAL_FRET
+            and self.physical_fret_number is None
+        ):
             raise ValueError("physical_fret_number is required for physical fret references")
-        if self.reference_type is not SpatialReferenceType.PHYSICAL_FRET and self.physical_fret_number is not None:
+        if (
+            self.reference_type is not SpatialReferenceType.PHYSICAL_FRET
+            and self.physical_fret_number is not None
+        ):
             raise ValueError(
                 "physical_fret_number must be None for non-physical reference types",
             )

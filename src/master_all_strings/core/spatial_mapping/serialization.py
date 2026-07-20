@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, is_dataclass
-from typing import Any, Mapping
+from collections.abc import Mapping
+from dataclasses import fields, is_dataclass
+from types import MappingProxyType
+from typing import Any
 
 from master_all_strings.instruments import InstrumentProfile, ReferenceMarker, StringProfile
 
@@ -12,8 +14,11 @@ def to_serializable_dict(value: Any) -> Any:
     """Convert dataclass values into JSON-serializable Python containers."""
 
     if is_dataclass(value):
-        value = asdict(value)
-    if isinstance(value, dict):
+        return {
+            field.name: to_serializable_dict(getattr(value, field.name))
+            for field in fields(value)
+        }
+    if isinstance(value, (dict, MappingProxyType)):
         return {key: to_serializable_dict(item) for key, item in value.items()}
     if isinstance(value, tuple):
         return [to_serializable_dict(item) for item in value]
