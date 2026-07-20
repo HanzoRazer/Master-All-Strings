@@ -6,11 +6,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from master_all_strings.core.spatial_mapping.enums import FingerboardMode
-from master_all_strings.core.spatial_mapping.errors import SpatialMappingError
-from master_all_strings.core.spatial_mapping.models import JSONScalar
-from master_all_strings.core.spatial_mapping.validation import (
+from master_all_strings.core.foundation import (
+    FingerboardMode,
+    JSONScalar,
+    SpatialMappingError,
     require_finite,
+    require_index,
     require_midi_note,
     require_non_empty,
     require_nonnegative,
@@ -34,8 +35,7 @@ class StringProfile:
         require_non_empty(self.string_id, "string_id")
         require_non_empty(self.display_label, "display_label")
         require_midi_note(self.open_midi_note, "open_midi_note")
-        if self.display_order < 0:
-            raise SpatialMappingError("display_order must be nonnegative")
+        require_index(self.display_order, "display_order")
         if self.maximum_semitone_position is not None:
             require_finite(self.maximum_semitone_position, "maximum_semitone_position")
             require_nonnegative(self.maximum_semitone_position, "maximum_semitone_position")
@@ -72,6 +72,15 @@ class InstrumentProfile:
     metadata: Mapping[str, JSONScalar] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        # Normalize to the enum so the identity (`is`) invariant checks below cannot
+        # be silently bypassed when a raw JSON string reaches this contract.
+        try:
+            mode = FingerboardMode(self.fingerboard_mode)
+        except ValueError as exc:
+            raise SpatialMappingError(
+                f"invalid fingerboard_mode: {self.fingerboard_mode!r}"
+            ) from exc
+        object.__setattr__(self, "fingerboard_mode", mode)
         require_non_empty(self.schema_version, "schema_version")
         require_non_empty(self.instrument_id, "instrument_id")
         require_non_empty(self.display_name, "display_name")

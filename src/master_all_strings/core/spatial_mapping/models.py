@@ -5,14 +5,29 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import TypeAlias
+
+from master_all_strings.core.foundation import (
+    JSONScalar,
+    JSONValue,
+    SpatialMappingError,
+    require_finite,
+    require_midi_note,
+    require_non_empty,
+    require_nonnegative,
+)
 
 from .enums import OpenStringPolicy, SpatialReferenceType
-from .errors import SpatialMappingError
-from .validation import require_finite, require_midi_note, require_non_empty, require_nonnegative
 
-JSONScalar: TypeAlias = str | int | float | bool | None
-JSONValue: TypeAlias = JSONScalar | tuple["JSONValue", ...] | Mapping[str, "JSONValue"]
+__all__ = [
+    "AuditoryPositionReference",
+    "CandidateScore",
+    "JSONScalar",
+    "JSONValue",
+    "MappingConstraints",
+    "MappingPreferences",
+    "SpatialAnnotation",
+    "SpatialPosition",
+]
 
 
 @dataclass(frozen=True)
@@ -36,6 +51,22 @@ class MappingConstraints:
                 self.maximum_relative_semitone_position,
                 "maximum_relative_semitone_position",
             )
+        for group_name, group in (
+            ("allowed_string_ids", self.allowed_string_ids),
+            ("excluded_string_ids", self.excluded_string_ids),
+        ):
+            if group is None:
+                continue
+            for string_id in group:
+                require_non_empty(string_id, f"{group_name} entry")
+            if len(set(group)) != len(group):
+                raise ValueError(f"{group_name} must not contain duplicate string ids")
+        if self.allowed_string_ids is not None:
+            overlap = set(self.allowed_string_ids) & set(self.excluded_string_ids)
+            if overlap:
+                raise ValueError(
+                    f"string ids cannot be both allowed and excluded: {sorted(overlap)}"
+                )
 
 
 @dataclass(frozen=True)
@@ -84,6 +115,9 @@ class SpatialPosition:
     is_open_string: bool
 
     def __post_init__(self) -> None:
+        # Normalize the reference type so identity (`is`) checks below cannot be
+        # silently bypassed when a raw string reaches this contract.
+        object.__setattr__(self, "reference_type", SpatialReferenceType(self.reference_type))
         require_non_empty(self.string_id, "string_id")
         require_midi_note(self.sounding_midi_note, "sounding_midi_note")
         require_finite(self.cents_offset, "cents_offset")
@@ -106,6 +140,10 @@ class SpatialPosition:
         if self.is_open_string and self.relative_semitone_position != 0.0:
             raise SpatialMappingError(
                 "open-string positions must have a relative semitone position of 0.0",
+            )
+        if self.relative_semitone_position == 0.0 and not self.is_open_string:
+            raise ValueError(
+                "a relative semitone position of 0.0 must be marked is_open_string=True",
             )
         if (
             self.reference_type is SpatialReferenceType.PHYSICAL_FRET
@@ -158,3 +196,5 @@ class CandidateScore:
         for name, score in self.components.items():
             require_non_empty(name, "components key")
             require_finite(score, f"components[{name!r}]")
+        for entry in self.explanation:
+            require_non_empty(entry, "explanation entry")

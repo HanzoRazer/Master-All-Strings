@@ -3,7 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isfinite
+
+from master_all_strings.core.foundation import (
+    require_finite,
+    require_index,
+    require_midi_note,
+    require_non_empty,
+)
 
 
 @dataclass(frozen=True)
@@ -19,21 +25,19 @@ class MusicalEvent:
     voice_id: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.event_id:
-            msg = "event_id must not be empty"
-            raise ValueError(msg)
-        if not 0 <= self.midi_note <= 127:
-            msg = "midi_note must be between 0 and 127"
-            raise ValueError(msg)
-        if self.start_tick < 0:
-            msg = "start_tick must be nonnegative"
-            raise ValueError(msg)
+        require_non_empty(self.event_id, "event_id")
+        require_midi_note(self.midi_note, "midi_note")
+        require_index(self.start_tick, "start_tick")
+        if isinstance(self.duration_ticks, bool) or not isinstance(self.duration_ticks, int):
+            raise ValueError("duration_ticks must be an integer")
         if self.duration_ticks <= 0:
-            msg = "duration_ticks must be positive"
-            raise ValueError(msg)
-        if not 0 <= self.velocity <= 127:
-            msg = "velocity must be between 0 and 127"
-            raise ValueError(msg)
-        if not isfinite(self.cents_offset):
-            msg = "cents_offset must be finite"
-            raise ValueError(msg)
+            raise ValueError("duration_ticks must be positive")
+        if (
+            isinstance(self.velocity, bool)
+            or not isinstance(self.velocity, int)
+            or not 0 <= self.velocity <= 127
+        ):
+            raise ValueError("velocity must be an integer between 0 and 127")
+        require_finite(self.cents_offset, "cents_offset")
+        if self.voice_id is not None:
+            require_non_empty(self.voice_id, "voice_id")
