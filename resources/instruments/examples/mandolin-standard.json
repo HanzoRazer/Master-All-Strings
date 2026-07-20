@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "instrument_id": "mandolin-standard",
+  "display_name": "Standard Mandolin",
+  "family": "mandolin",
+  "fingerboard_mode": "fretted",
+  "strings": [
+    {"string_id": "course-g", "display_label": "G3", "display_order": 0, "open_midi_note": 55, "course_id": "course-g", "maximum_semitone_position": 20},
+    {"string_id": "course-d", "display_label": "D4", "display_order": 1, "open_midi_note": 62, "course_id": "course-d", "maximum_semitone_position": 20},
+    {"string_id": "course-a", "display_label": "A4", "display_order": 2, "open_midi_note": 69, "course_id": "course-a", "maximum_semitone_position": 20},
+    {"string_id": "course-e", "display_label": "E5", "display_order": 3, "open_midi_note": 76, "course_id": "course-e", "maximum_semitone_position": 20}
+  ],
+  "scale_length_mm": 350.0,
+  "physical_fret_count": 20,
+  "reference_markers": [
+    {"marker_id": "fret-3", "semitone_offset": 3, "label": "3rd fret"},
+    {"marker_id": "fret-5", "semitone_offset": 5, "label": "5th fret"},
+    {"marker_id": "fret-7", "semitone_offset": 7, "label": "7th fret"},
+    {"marker_id": "fret-12", "semitone_offset": 12, "label": "12th fret"}
+  ],
+  "metadata": {"example_profile": true}
+}

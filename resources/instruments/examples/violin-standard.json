@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "instrument_id": "violin-standard",
+  "display_name": "Standard Violin",
+  "family": "violin",
+  "fingerboard_mode": "fretless",
+  "strings": [
+    {"string_id": "string-g", "display_label": "G3", "display_order": 0, "open_midi_note": 55, "maximum_semitone_position": 24},
+    {"string_id": "string-d", "display_label": "D4", "display_order": 1, "open_midi_note": 62, "maximum_semitone_position": 24},
+    {"string_id": "string-a", "display_label": "A4", "display_order": 2, "open_midi_note": 69, "maximum_semitone_position": 24},
+    {"string_id": "string-e", "display_label": "E5", "display_order": 3, "open_midi_note": 76, "maximum_semitone_position": 24}
+  ],
+  "scale_length_mm": 328.0,
+  "physical_fret_count": null,
+  "reference_markers": [
+    {"marker_id": "semi-1", "semitone_offset": 1, "label": "minor second"},
+    {"marker_id": "semi-2", "semitone_offset": 2, "label": "major second"},
+    {"marker_id": "semi-3", "semitone_offset": 3, "label": "minor third"},
+    {"marker_id": "semi-4", "semitone_offset": 4, "label": "major third"}
+  ],
+  "metadata": {"example_profile": true, "supports_auditory_reference": true}
+}

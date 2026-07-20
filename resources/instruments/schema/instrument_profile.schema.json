@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/instrument-profile.schema.json",
+  "title": "InstrumentProfile",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "instrument_id",
+    "display_name",
+    "family",
+    "fingerboard_mode",
+    "strings"
+  ],
+  "properties": {
+    "schema_version": {"type": "string", "minLength": 1},
+    "instrument_id": {"type": "string", "minLength": 1},
+    "display_name": {"type": "string", "minLength": 1},
+    "family": {"type": "string", "minLength": 1},
+    "fingerboard_mode": {
+      "type": "string",
+      "enum": ["fretted", "fretless", "hybrid"]
+    },
+    "strings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "string_id",
+          "display_label",
+          "display_order",
+          "open_midi_note"
+        ],
+        "properties": {
+          "string_id": {"type": "string", "minLength": 1},
+          "display_label": {"type": "string", "minLength": 1},
+          "display_order": {"type": "integer", "minimum": 0},
+          "open_midi_note": {"type": "integer", "minimum": 0, "maximum": 127},
+          "course_id": {"type": ["string", "null"]},
+          "enabled": {"type": "boolean"},
+          "maximum_semitone_position": {"type": ["number", "null"], "minimum": 0}
+        },
+        "additionalProperties": false
+      }
+    },
+    "scale_length_mm": {"type": ["number", "null"], "exclusiveMinimum": 0},
+    "physical_fret_count": {"type": ["integer", "null"], "minimum": 0},
+    "reference_markers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["marker_id", "semitone_offset", "label"],
+        "properties": {
+          "marker_id": {"type": "string", "minLength": 1},
+          "semitone_offset": {"type": "number", "minimum": 0},
+          "label": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["string", "number", "integer", "boolean", "null"]
+      },
+      "default": {}
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"fingerboard_mode": {"const": "fretted"}},
+        "required": ["fingerboard_mode"]
+      },
+      "then": {"required": ["physical_fret_count"]}
+    },
+    {
+      "if": {
+        "properties": {"fingerboard_mode": {"const": "fretless"}},
+        "required": ["fingerboard_mode"]
+      },
+      "then": {
+        "properties": {"physical_fret_count": {"type": "null"}}
+      }
+    }
+  ],
+  "additionalProperties": false
+}
