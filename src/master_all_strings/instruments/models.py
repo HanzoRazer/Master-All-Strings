@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from master_all_strings.core.spatial_mapping.enums import FingerboardMode
+from master_all_strings.core.spatial_mapping.errors import SpatialMappingError
 from master_all_strings.core.spatial_mapping.models import JSONScalar
 from master_all_strings.core.spatial_mapping.validation import (
     require_finite,
@@ -34,7 +35,7 @@ class StringProfile:
         require_non_empty(self.display_label, "display_label")
         require_midi_note(self.open_midi_note, "open_midi_note")
         if self.display_order < 0:
-            raise ValueError("display_order must be nonnegative")
+            raise SpatialMappingError("display_order must be nonnegative")
         if self.maximum_semitone_position is not None:
             require_finite(self.maximum_semitone_position, "maximum_semitone_position")
             require_nonnegative(self.maximum_semitone_position, "maximum_semitone_position")
@@ -76,23 +77,23 @@ class InstrumentProfile:
         require_non_empty(self.display_name, "display_name")
         require_non_empty(self.family, "family")
         if not self.strings:
-            raise ValueError("strings must not be empty")
+            raise SpatialMappingError("strings must not be empty")
         string_ids = [string.string_id for string in self.strings]
         if len(set(string_ids)) != len(string_ids):
-            raise ValueError("string_id values must be unique")
+            raise SpatialMappingError("string_id values must be unique")
         display_orders = [string.display_order for string in self.strings]
         if len(set(display_orders)) != len(display_orders):
-            raise ValueError("display_order values must be unique")
+            raise SpatialMappingError("display_order values must be unique")
         if self.scale_length_mm is not None:
             require_finite(self.scale_length_mm, "scale_length_mm")
             require_positive(self.scale_length_mm, "scale_length_mm")
         if self.physical_fret_count is not None and self.physical_fret_count < 0:
-            raise ValueError("physical_fret_count must be nonnegative")
+            raise SpatialMappingError("physical_fret_count must be nonnegative")
         if self.fingerboard_mode is FingerboardMode.FRETTED and self.physical_fret_count is None:
-            raise ValueError("fretted instruments must declare physical_fret_count")
+            raise SpatialMappingError("fretted instruments must declare physical_fret_count")
         if (
             self.fingerboard_mode is FingerboardMode.FRETLESS
             and self.physical_fret_count is not None
         ):
-            raise ValueError("fretless instruments must not declare physical_fret_count")
+            raise SpatialMappingError("fretless instruments must not declare physical_fret_count")
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))

@@ -39,4 +39,4 @@ Master-All-Strings/
 └── docs/
 ```
 
-See `/home/runner/work/Master-All-Strings/Master-All-Strings/docs/architecture/PRODUCT_CHARTER.md` for the product charter and `/home/runner/work/Master-All-Strings/Master-All-Strings/docs/architecture/MUSICAL_SPATIAL_MAPPING_ENGINE.md` for subsystem details.
+See `docs/architecture/PRODUCT_CHARTER.md` for the product charter and `docs/architecture/MUSICAL_SPATIAL_MAPPING_ENGINE.md` for subsystem details.

@@ -8,6 +8,7 @@ from types import MappingProxyType
 from typing import TypeAlias
 
 from .enums import OpenStringPolicy, SpatialReferenceType
+from .errors import SpatialMappingError
 from .validation import require_finite, require_midi_note, require_non_empty, require_nonnegative
 
 JSONScalar: TypeAlias = str | int | float | bool | None
@@ -98,24 +99,26 @@ class SpatialPosition:
         )
         require_finite(self.normalized_position, "normalized_position")
         if not 0.0 <= self.normalized_position <= 1.0:
-            raise ValueError("normalized_position must be between 0.0 and 1.0")
+            raise SpatialMappingError("normalized_position must be between 0.0 and 1.0")
         if self.distance_from_nut_mm is not None:
             require_finite(self.distance_from_nut_mm, "distance_from_nut_mm")
             require_nonnegative(self.distance_from_nut_mm, "distance_from_nut_mm")
         if self.is_open_string and self.relative_semitone_position != 0.0:
-            raise ValueError(
+            raise SpatialMappingError(
                 "open-string positions must have a relative semitone position of 0.0",
             )
         if (
             self.reference_type is SpatialReferenceType.PHYSICAL_FRET
             and self.physical_fret_number is None
         ):
-            raise ValueError("physical_fret_number is required for physical fret references")
+            raise SpatialMappingError(
+                "physical_fret_number is required for physical fret references",
+            )
         if (
             self.reference_type is not SpatialReferenceType.PHYSICAL_FRET
             and self.physical_fret_number is not None
         ):
-            raise ValueError(
+            raise SpatialMappingError(
                 "physical_fret_number must be None for non-physical reference types",
             )
 
