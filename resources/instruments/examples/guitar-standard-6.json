@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "instrument_id": "guitar-standard-6",
+  "display_name": "Standard Guitar (6-string)",
+  "family": "guitar",
+  "fingerboard_mode": "fretted",
+  "strings": [
+    {"string_id": "string-6", "display_label": "E2", "display_order": 0, "open_midi_note": 40, "maximum_semitone_position": 22},
+    {"string_id": "string-5", "display_label": "A2", "display_order": 1, "open_midi_note": 45, "maximum_semitone_position": 22},
+    {"string_id": "string-4", "display_label": "D3", "display_order": 2, "open_midi_note": 50, "maximum_semitone_position": 22},
+    {"string_id": "string-3", "display_label": "G3", "display_order": 3, "open_midi_note": 55, "maximum_semitone_position": 22},
+    {"string_id": "string-2", "display_label": "B3", "display_order": 4, "open_midi_note": 59, "maximum_semitone_position": 22},
+    {"string_id": "string-1", "display_label": "E4", "display_order": 5, "open_midi_note": 64, "maximum_semitone_position": 22}
+  ],
+  "scale_length_mm": 648.0,
+  "physical_fret_count": 22,
+  "reference_markers": [
+    {"marker_id": "fret-3", "semitone_offset": 3, "label": "3rd fret"},
+    {"marker_id": "fret-5", "semitone_offset": 5, "label": "5th fret"},
+    {"marker_id": "fret-7", "semitone_offset": 7, "label": "7th fret"},
+    {"marker_id": "fret-12", "semitone_offset": 12, "label": "12th fret"}
+  ],
+  "metadata": {"example_profile": true}
+}

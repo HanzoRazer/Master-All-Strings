@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "instrument_id": "bass-fretless-4",
+  "display_name": "Fretless Bass (4-string)",
+  "family": "bass",
+  "fingerboard_mode": "fretless",
+  "strings": [
+    {"string_id": "string-4", "display_label": "E1", "display_order": 0, "open_midi_note": 28, "maximum_semitone_position": 24},
+    {"string_id": "string-3", "display_label": "A1", "display_order": 1, "open_midi_note": 33, "maximum_semitone_position": 24},
+    {"string_id": "string-2", "display_label": "D2", "display_order": 2, "open_midi_note": 38, "maximum_semitone_position": 24},
+    {"string_id": "string-1", "display_label": "G2", "display_order": 3, "open_midi_note": 43, "maximum_semitone_position": 24}
+  ],
+  "scale_length_mm": 864.0,
+  "physical_fret_count": null,
+  "reference_markers": [
+    {"marker_id": "semi-3", "semitone_offset": 3, "label": "minor third"},
+    {"marker_id": "semi-5", "semitone_offset": 5, "label": "perfect fourth"},
+    {"marker_id": "semi-7", "semitone_offset": 7, "label": "perfect fifth"},
+    {"marker_id": "semi-12", "semitone_offset": 12, "label": "octave"}
+  ],
+  "metadata": {"example_profile": true}
+}
