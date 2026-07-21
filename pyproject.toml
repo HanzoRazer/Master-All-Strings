@@ -25,6 +25,15 @@ dev = [
 minversion = "8.0"
 testpaths = ["tests"]
 
+[tool.coverage.run]
+source = ["master_all_strings"]
+
+[tool.coverage.report]
+# Repository-wide floor. Lives here, not in the CI command, so a local
+# `pytest --cov` enforces the same policy the workflow does. Repository sits at
+# ~98%; 95% keeps a meaningful gate with room for justified defensive branches.
+fail_under = 95
+
 [tool.ruff]
 target-version = "py311"
 line-length = 100

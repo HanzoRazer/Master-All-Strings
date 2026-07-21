@@ -1,0 +1,53 @@
+name: verify
+
+# Canonical repository verification. Runs the project's engineering gates on every
+# pull request and every push to main, so repository health is reproducible in CI
+# and not only in locally reported evidence. Verification only -- it changes no
+# runtime behavior and needs no write access.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Least privilege: a verification job reads the checkout and nothing more. No write,
+# no pull-request mutation, no package publishing.
+permissions:
+  contents: read
+
+# Supersede in-flight runs for the same ref so a new push cancels a stale run.
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Installs the package plus the dev extras (pytest, pytest-cov, ruff, mypy,
+      # jsonschema) from pyproject. Installing the package means CI does not depend
+      # on the tests/conftest.py sys.path shim.
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      # Separate named steps rather than one combined command, so a failure is
+      # attributable to a specific gate in the pull-request checks interface.
+      - name: Ruff lint
+        run: ruff check src tests
+
+      - name: mypy strict
+        run: mypy
+
+      # Coverage source and the 95% floor come from [tool.coverage] in pyproject, so
+      # this step enforces the same policy a local `pytest --cov` does -- the number
+      # is not duplicated here.
+      - name: pytest with coverage
+        run: pytest --cov --cov-report=term-missing
