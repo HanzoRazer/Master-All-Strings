@@ -1,24 +1,1346 @@
 [
-  {"vector_id": "guitar-open-e2", "instrument_id": "guitar-standard-6", "phase": "planned-phase-3", "tags": ["standard-guitar", "open-string"], "event": {"midi_note": 40, "cents_offset": 0.0}},
-  {"vector_id": "guitar-open-a2", "instrument_id": "guitar-standard-6", "phase": "planned-phase-3", "tags": ["standard-guitar", "open-string"], "event": {"midi_note": 45, "cents_offset": 0.0}},
-  {"vector_id": "guitar-multi-g3", "instrument_id": "guitar-standard-6", "phase": "planned-phase-3", "tags": ["standard-guitar", "multiple-playable-positions"], "event": {"midi_note": 55, "cents_offset": 0.0}},
-  {"vector_id": "guitar-multi-e4", "instrument_id": "guitar-standard-6", "phase": "planned-phase-3", "tags": ["standard-guitar", "multiple-playable-positions"], "event": {"midi_note": 64, "cents_offset": 0.0}},
-  {"vector_id": "guitar-unplayable-high", "instrument_id": "guitar-standard-6", "phase": "planned-phase-3", "tags": ["standard-guitar", "no-playable-position"], "event": {"midi_note": 100, "cents_offset": 0.0}},
-  {"vector_id": "guitar-capo-d4", "instrument_id": "guitar-standard-6", "phase": "planned-phase-3", "tags": ["standard-guitar", "capo-behavior"], "constraints": {"capo_position": 2.0}, "event": {"midi_note": 62, "cents_offset": 0.0}},
-  {"vector_id": "guitar-capo-g4", "instrument_id": "guitar-standard-6", "phase": "planned-phase-3", "tags": ["standard-guitar", "capo-behavior"], "constraints": {"capo_position": 3.0}, "event": {"midi_note": 67, "cents_offset": 0.0}},
-  {"vector_id": "guitar-ambiguous-a3", "instrument_id": "guitar-standard-6", "phase": "planned-phase-3", "tags": ["ambiguity", "deterministic-tie-resolution"], "event": {"midi_note": 57, "cents_offset": 0.0}},
-  {"vector_id": "guitar-previous-position-bias", "instrument_id": "guitar-standard-6", "phase": "planned-phase-3", "tags": ["previous-position-influence"], "event": {"midi_note": 59, "cents_offset": 0.0}},
-  {"vector_id": "guitar-open-b3", "instrument_id": "guitar-standard-6", "phase": "planned-phase-3", "tags": ["standard-guitar", "open-string"], "event": {"midi_note": 59, "cents_offset": 0.0}},
-  {"vector_id": "bass-open-e1", "instrument_id": "bass-fretless-4", "phase": "planned-phase-3", "tags": ["fretless-bass", "open-string"], "event": {"midi_note": 28, "cents_offset": 0.0}},
-  {"vector_id": "bass-imaginary-minor-third", "instrument_id": "bass-fretless-4", "phase": "planned-phase-3", "tags": ["imaginary-semitone-location"], "event": {"midi_note": 31, "cents_offset": 0.0}},
-  {"vector_id": "bass-fractional-target", "instrument_id": "bass-fretless-4", "phase": "planned-phase-3", "tags": ["fractional-fretless-target"], "event": {"midi_note": 33, "cents_offset": 14.0}},
-  {"vector_id": "bass-perfect-fifth", "instrument_id": "bass-fretless-4", "phase": "planned-phase-3", "tags": ["fretless-bass", "imaginary-semitone-location"], "event": {"midi_note": 35, "cents_offset": 0.0}},
-  {"vector_id": "violin-open-g3", "instrument_id": "violin-standard", "phase": "planned-phase-3", "tags": ["violin", "open-string"], "event": {"midi_note": 55, "cents_offset": 0.0}},
-  {"vector_id": "violin-major-second", "instrument_id": "violin-standard", "phase": "planned-phase-3", "tags": ["violin", "imaginary-semitone-location"], "event": {"midi_note": 57, "cents_offset": 0.0}},
-  {"vector_id": "violin-fractional-major-second", "instrument_id": "violin-standard", "phase": "planned-phase-3", "tags": ["violin", "fractional-fretless-target"], "event": {"midi_note": 57, "cents_offset": -12.0}},
-  {"vector_id": "violin-no-position", "instrument_id": "violin-standard", "phase": "planned-phase-3", "tags": ["violin", "no-playable-position"], "event": {"midi_note": 96, "cents_offset": 0.0}},
-  {"vector_id": "mandolin-open-g3", "instrument_id": "mandolin-standard", "phase": "planned-phase-3", "tags": ["mandolin", "open-string"], "event": {"midi_note": 55, "cents_offset": 0.0}},
-  {"vector_id": "mandolin-multi-d5", "instrument_id": "mandolin-standard", "phase": "planned-phase-3", "tags": ["mandolin", "multiple-playable-positions"], "event": {"midi_note": 74, "cents_offset": 0.0}},
-  {"vector_id": "mandolin-ambiguous-a4", "instrument_id": "mandolin-standard", "phase": "planned-phase-3", "tags": ["mandolin", "ambiguity", "deterministic-tie-resolution"], "event": {"midi_note": 69, "cents_offset": 0.0}},
-  {"vector_id": "mandolin-previous-position", "instrument_id": "mandolin-standard", "phase": "planned-phase-3", "tags": ["mandolin", "previous-position-influence"], "event": {"midi_note": 76, "cents_offset": 0.0}}
+  {
+    "vector_id": "guitar-open-e2",
+    "instrument_id": "guitar-standard-6",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "standard-guitar",
+      "open-string"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 40,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-6",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 40,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": 0,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "guitar-open-a2",
+    "instrument_id": "guitar-standard-6",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "standard-guitar",
+      "open-string"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 45,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-6",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 45,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 5.0,
+            "physical_semitone_position_from_nut": 5.0,
+            "physical_fret_number": 5,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.250846461562,
+            "distance_from_nut_mm": 162.548507091955,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-5",
+            "course_id": null,
+            "display_order": 1,
+            "sounding_midi_note": 45,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": 0,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "guitar-multi-g3",
+    "instrument_id": "guitar-standard-6",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "standard-guitar",
+      "multiple-playable-positions"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 55,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-6",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 55,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 15.0,
+            "physical_semitone_position_from_nut": 15.0,
+            "physical_fret_number": 15,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.579551792373,
+            "distance_from_nut_mm": 375.549561457797,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-5",
+            "course_id": null,
+            "display_order": 1,
+            "sounding_midi_note": 55,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 10.0,
+            "physical_semitone_position_from_nut": 10.0,
+            "physical_fret_number": 10,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.438768975845,
+            "distance_from_nut_mm": 284.322296347763,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-4",
+            "course_id": null,
+            "display_order": 2,
+            "sounding_midi_note": 55,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 5.0,
+            "physical_semitone_position_from_nut": 5.0,
+            "physical_fret_number": 5,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.250846461562,
+            "distance_from_nut_mm": 162.548507091955,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-3",
+            "course_id": null,
+            "display_order": 3,
+            "sounding_midi_note": 55,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": 0,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "guitar-multi-e4",
+    "instrument_id": "guitar-standard-6",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "standard-guitar",
+      "multiple-playable-positions"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 64,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-5",
+            "course_id": null,
+            "display_order": 1,
+            "sounding_midi_note": 64,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 19.0,
+            "physical_semitone_position_from_nut": 19.0,
+            "physical_fret_number": 19,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.666290036457,
+            "distance_from_nut_mm": 431.755943624454,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-4",
+            "course_id": null,
+            "display_order": 2,
+            "sounding_midi_note": 64,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 14.0,
+            "physical_semitone_position_from_nut": 14.0,
+            "physical_fret_number": 14,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.55455064093,
+            "distance_from_nut_mm": 359.34881532253,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-3",
+            "course_id": null,
+            "display_order": 3,
+            "sounding_midi_note": 64,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 9.0,
+            "physical_semitone_position_from_nut": 9.0,
+            "physical_fret_number": 9,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.405396442499,
+            "distance_from_nut_mm": 262.696894739118,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-2",
+            "course_id": null,
+            "display_order": 4,
+            "sounding_midi_note": 64,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 5.0,
+            "physical_semitone_position_from_nut": 5.0,
+            "physical_fret_number": 5,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.250846461562,
+            "distance_from_nut_mm": 162.548507091955,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-1",
+            "course_id": null,
+            "display_order": 5,
+            "sounding_midi_note": 64,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": 0,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "guitar-unplayable-high",
+    "instrument_id": "guitar-standard-6",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "standard-guitar",
+      "no-playable-position"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 100,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": []
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "guitar-capo-d4",
+    "instrument_id": "guitar-standard-6",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "standard-guitar",
+      "capo-behavior"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 62,
+        "cents_offset": 0.0
+      },
+      "constraints": {
+        "capo_position": 2.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-6",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 62,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 20.0,
+            "physical_semitone_position_from_nut": 22.0,
+            "physical_fret_number": 22,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.719384487923,
+            "distance_from_nut_mm": 466.161148173882,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-5",
+            "course_id": null,
+            "display_order": 1,
+            "sounding_midi_note": 62,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 15.0,
+            "physical_semitone_position_from_nut": 17.0,
+            "physical_fret_number": 17,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.625423230781,
+            "distance_from_nut_mm": 405.274253545978,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-4",
+            "course_id": null,
+            "display_order": 2,
+            "sounding_midi_note": 62,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 10.0,
+            "physical_semitone_position_from_nut": 12.0,
+            "physical_fret_number": 12,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.5,
+            "distance_from_nut_mm": 324.0,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-3",
+            "course_id": null,
+            "display_order": 3,
+            "sounding_midi_note": 62,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 5.0,
+            "physical_semitone_position_from_nut": 7.0,
+            "physical_fret_number": 7,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.332580072915,
+            "distance_from_nut_mm": 215.511887248909,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-2",
+            "course_id": null,
+            "display_order": 4,
+            "sounding_midi_note": 62,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 1.0,
+            "physical_semitone_position_from_nut": 3.0,
+            "physical_fret_number": 3,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.159103584746,
+            "distance_from_nut_mm": 103.099122915593,
+            "is_open_string": false
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "guitar-capo-g4",
+    "instrument_id": "guitar-standard-6",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "standard-guitar",
+      "capo-behavior"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 67,
+        "cents_offset": 0.0
+      },
+      "constraints": {
+        "capo_position": 3.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-5",
+            "course_id": null,
+            "display_order": 1,
+            "sounding_midi_note": 67,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 19.0,
+            "physical_semitone_position_from_nut": 22.0,
+            "physical_fret_number": 22,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.719384487923,
+            "distance_from_nut_mm": 466.161148173882,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-4",
+            "course_id": null,
+            "display_order": 2,
+            "sounding_midi_note": 67,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 14.0,
+            "physical_semitone_position_from_nut": 17.0,
+            "physical_fret_number": 17,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.625423230781,
+            "distance_from_nut_mm": 405.274253545978,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-3",
+            "course_id": null,
+            "display_order": 3,
+            "sounding_midi_note": 67,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 9.0,
+            "physical_semitone_position_from_nut": 12.0,
+            "physical_fret_number": 12,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.5,
+            "distance_from_nut_mm": 324.0,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-2",
+            "course_id": null,
+            "display_order": 4,
+            "sounding_midi_note": 67,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 5.0,
+            "physical_semitone_position_from_nut": 8.0,
+            "physical_fret_number": 8,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.370039475053,
+            "distance_from_nut_mm": 239.785579834061,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-1",
+            "course_id": null,
+            "display_order": 5,
+            "sounding_midi_note": 67,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 3.0,
+            "physical_fret_number": 3,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.159103584746,
+            "distance_from_nut_mm": 103.099122915593,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "guitar-ambiguous-a3",
+    "instrument_id": "guitar-standard-6",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "ambiguity",
+      "deterministic-tie-resolution"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 57,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-6",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 57,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 17.0,
+            "physical_semitone_position_from_nut": 17.0,
+            "physical_fret_number": 17,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.625423230781,
+            "distance_from_nut_mm": 405.274253545978,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-5",
+            "course_id": null,
+            "display_order": 1,
+            "sounding_midi_note": 57,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 12.0,
+            "physical_semitone_position_from_nut": 12.0,
+            "physical_fret_number": 12,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.5,
+            "distance_from_nut_mm": 324.0,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-4",
+            "course_id": null,
+            "display_order": 2,
+            "sounding_midi_note": 57,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 7.0,
+            "physical_semitone_position_from_nut": 7.0,
+            "physical_fret_number": 7,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.332580072915,
+            "distance_from_nut_mm": 215.511887248909,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-3",
+            "course_id": null,
+            "display_order": 3,
+            "sounding_midi_note": 57,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 2.0,
+            "physical_semitone_position_from_nut": 2.0,
+            "physical_fret_number": 2,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.10910128186,
+            "distance_from_nut_mm": 70.69763064506,
+            "is_open_string": false
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "guitar-previous-position-bias",
+    "instrument_id": "guitar-standard-6",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "previous-position-influence"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 59,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-6",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 59,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 19.0,
+            "physical_semitone_position_from_nut": 19.0,
+            "physical_fret_number": 19,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.666290036457,
+            "distance_from_nut_mm": 431.755943624454,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-5",
+            "course_id": null,
+            "display_order": 1,
+            "sounding_midi_note": 59,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 14.0,
+            "physical_semitone_position_from_nut": 14.0,
+            "physical_fret_number": 14,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.55455064093,
+            "distance_from_nut_mm": 359.34881532253,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-4",
+            "course_id": null,
+            "display_order": 2,
+            "sounding_midi_note": 59,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 9.0,
+            "physical_semitone_position_from_nut": 9.0,
+            "physical_fret_number": 9,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.405396442499,
+            "distance_from_nut_mm": 262.696894739118,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-3",
+            "course_id": null,
+            "display_order": 3,
+            "sounding_midi_note": 59,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 4.0,
+            "physical_semitone_position_from_nut": 4.0,
+            "physical_fret_number": 4,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.206299474016,
+            "distance_from_nut_mm": 133.682059162303,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-2",
+            "course_id": null,
+            "display_order": 4,
+            "sounding_midi_note": 59,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": 0,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "MappingPreferences has no continuity or previous-position input"
+      }
+    }
+  },
+  {
+    "vector_id": "guitar-open-b3",
+    "instrument_id": "guitar-standard-6",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "standard-guitar",
+      "open-string"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 59,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-6",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 59,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 19.0,
+            "physical_semitone_position_from_nut": 19.0,
+            "physical_fret_number": 19,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.666290036457,
+            "distance_from_nut_mm": 431.755943624454,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-5",
+            "course_id": null,
+            "display_order": 1,
+            "sounding_midi_note": 59,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 14.0,
+            "physical_semitone_position_from_nut": 14.0,
+            "physical_fret_number": 14,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.55455064093,
+            "distance_from_nut_mm": 359.34881532253,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-4",
+            "course_id": null,
+            "display_order": 2,
+            "sounding_midi_note": 59,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 9.0,
+            "physical_semitone_position_from_nut": 9.0,
+            "physical_fret_number": 9,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.405396442499,
+            "distance_from_nut_mm": 262.696894739118,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-3",
+            "course_id": null,
+            "display_order": 3,
+            "sounding_midi_note": 59,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 4.0,
+            "physical_semitone_position_from_nut": 4.0,
+            "physical_fret_number": 4,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.206299474016,
+            "distance_from_nut_mm": 133.682059162303,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-2",
+            "course_id": null,
+            "display_order": 4,
+            "sounding_midi_note": 59,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": 0,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "bass-open-e1",
+    "instrument_id": "bass-fretless-4",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "fretless-bass",
+      "open-string"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 28,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-4",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 28,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": null,
+            "reference_type": "imaginary_semitone",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "bass-imaginary-minor-third",
+    "instrument_id": "bass-fretless-4",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "imaginary-semitone-location"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 31,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-4",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 31,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 3.0,
+            "physical_semitone_position_from_nut": 3.0,
+            "physical_fret_number": null,
+            "reference_type": "imaginary_semitone",
+            "normalized_position": 0.159103584746,
+            "distance_from_nut_mm": 137.465497220791,
+            "is_open_string": false
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "bass-fractional-target",
+    "instrument_id": "bass-fretless-4",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "fractional-fretless-target"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 33,
+        "cents_offset": 14.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-4",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 33,
+            "cents_offset": 14.0,
+            "relative_semitone_position": 5.0,
+            "physical_semitone_position_from_nut": 5.0,
+            "physical_fret_number": null,
+            "reference_type": "continuous_position",
+            "normalized_position": 0.250846461562,
+            "distance_from_nut_mm": 216.731342789274,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-3",
+            "course_id": null,
+            "display_order": 1,
+            "sounding_midi_note": 33,
+            "cents_offset": 14.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": null,
+            "reference_type": "continuous_position",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "bass-perfect-fifth",
+    "instrument_id": "bass-fretless-4",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "fretless-bass",
+      "imaginary-semitone-location"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 35,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-4",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 35,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 7.0,
+            "physical_semitone_position_from_nut": 7.0,
+            "physical_fret_number": null,
+            "reference_type": "imaginary_semitone",
+            "normalized_position": 0.332580072915,
+            "distance_from_nut_mm": 287.349182998545,
+            "is_open_string": false
+          },
+          {
+            "string_id": "string-3",
+            "course_id": null,
+            "display_order": 1,
+            "sounding_midi_note": 35,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 2.0,
+            "physical_semitone_position_from_nut": 2.0,
+            "physical_fret_number": null,
+            "reference_type": "imaginary_semitone",
+            "normalized_position": 0.10910128186,
+            "distance_from_nut_mm": 94.263507526747,
+            "is_open_string": false
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "violin-open-g3",
+    "instrument_id": "violin-standard",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "violin",
+      "open-string"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 55,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-g",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 55,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": null,
+            "reference_type": "imaginary_semitone",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "violin-major-second",
+    "instrument_id": "violin-standard",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "violin",
+      "imaginary-semitone-location"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 57,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-g",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 57,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 2.0,
+            "physical_semitone_position_from_nut": 2.0,
+            "physical_fret_number": null,
+            "reference_type": "imaginary_semitone",
+            "normalized_position": 0.10910128186,
+            "distance_from_nut_mm": 35.785220449969,
+            "is_open_string": false
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "violin-fractional-major-second",
+    "instrument_id": "violin-standard",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "violin",
+      "fractional-fretless-target"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 57,
+        "cents_offset": -12.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "string-g",
+            "course_id": null,
+            "display_order": 0,
+            "sounding_midi_note": 57,
+            "cents_offset": -12.0,
+            "relative_semitone_position": 2.0,
+            "physical_semitone_position_from_nut": 2.0,
+            "physical_fret_number": null,
+            "reference_type": "continuous_position",
+            "normalized_position": 0.10910128186,
+            "distance_from_nut_mm": 35.785220449969,
+            "is_open_string": false
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "violin-no-position",
+    "instrument_id": "violin-standard",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "violin",
+      "no-playable-position"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 101,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": []
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "mandolin-open-g3",
+    "instrument_id": "mandolin-standard",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "mandolin",
+      "open-string"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 55,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "course-g",
+            "course_id": "course-g",
+            "display_order": 0,
+            "sounding_midi_note": 55,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": 0,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "mandolin-multi-d5",
+    "instrument_id": "mandolin-standard",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "mandolin",
+      "multiple-playable-positions"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 74,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "course-g",
+            "course_id": "course-g",
+            "display_order": 0,
+            "sounding_midi_note": 74,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 19.0,
+            "physical_semitone_position_from_nut": 19.0,
+            "physical_fret_number": 19,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.666290036457,
+            "distance_from_nut_mm": 233.201512760122,
+            "is_open_string": false
+          },
+          {
+            "string_id": "course-d",
+            "course_id": "course-d",
+            "display_order": 1,
+            "sounding_midi_note": 74,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 12.0,
+            "physical_semitone_position_from_nut": 12.0,
+            "physical_fret_number": 12,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.5,
+            "distance_from_nut_mm": 175.0,
+            "is_open_string": false
+          },
+          {
+            "string_id": "course-a",
+            "course_id": "course-a",
+            "display_order": 2,
+            "sounding_midi_note": 74,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 5.0,
+            "physical_semitone_position_from_nut": 5.0,
+            "physical_fret_number": 5,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.250846461562,
+            "distance_from_nut_mm": 87.796261546581,
+            "is_open_string": false
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "mandolin-ambiguous-a4",
+    "instrument_id": "mandolin-standard",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "mandolin",
+      "ambiguity",
+      "deterministic-tie-resolution"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 69,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "course-g",
+            "course_id": "course-g",
+            "display_order": 0,
+            "sounding_midi_note": 69,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 14.0,
+            "physical_semitone_position_from_nut": 14.0,
+            "physical_fret_number": 14,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.55455064093,
+            "distance_from_nut_mm": 194.092724325441,
+            "is_open_string": false
+          },
+          {
+            "string_id": "course-d",
+            "course_id": "course-d",
+            "display_order": 1,
+            "sounding_midi_note": 69,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 7.0,
+            "physical_semitone_position_from_nut": 7.0,
+            "physical_fret_number": 7,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.332580072915,
+            "distance_from_nut_mm": 116.403025520244,
+            "is_open_string": false
+          },
+          {
+            "string_id": "course-a",
+            "course_id": "course-a",
+            "display_order": 2,
+            "sounding_midi_note": 69,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": 0,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "requires DO-004 deterministic selection"
+      }
+    }
+  },
+  {
+    "vector_id": "mandolin-previous-position",
+    "instrument_id": "mandolin-standard",
+    "phase": "do-003-candidate-generation",
+    "tags": [
+      "mandolin",
+      "previous-position-influence"
+    ],
+    "inputs": {
+      "event": {
+        "midi_note": 76,
+        "cents_offset": 0.0
+      },
+      "preferences": {}
+    },
+    "expected": {
+      "generation": {
+        "candidates": [
+          {
+            "string_id": "course-d",
+            "course_id": "course-d",
+            "display_order": 1,
+            "sounding_midi_note": 76,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 14.0,
+            "physical_semitone_position_from_nut": 14.0,
+            "physical_fret_number": 14,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.55455064093,
+            "distance_from_nut_mm": 194.092724325441,
+            "is_open_string": false
+          },
+          {
+            "string_id": "course-a",
+            "course_id": "course-a",
+            "display_order": 2,
+            "sounding_midi_note": 76,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 7.0,
+            "physical_semitone_position_from_nut": 7.0,
+            "physical_fret_number": 7,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.332580072915,
+            "distance_from_nut_mm": 116.403025520244,
+            "is_open_string": false
+          },
+          {
+            "string_id": "course-e",
+            "course_id": "course-e",
+            "display_order": 3,
+            "sounding_midi_note": 76,
+            "cents_offset": 0.0,
+            "relative_semitone_position": 0.0,
+            "physical_semitone_position_from_nut": 0.0,
+            "physical_fret_number": 0,
+            "reference_type": "physical_fret",
+            "normalized_position": 0.0,
+            "distance_from_nut_mm": 0.0,
+            "is_open_string": true
+          }
+        ]
+      },
+      "selection": {
+        "status": "reserved",
+        "reason": "MappingPreferences has no continuity or previous-position input"
+      }
+    }
+  }
 ]
