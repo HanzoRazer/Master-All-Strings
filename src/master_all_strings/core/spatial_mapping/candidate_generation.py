@@ -24,8 +24,6 @@ from .models import MappingConstraints, SpatialPosition
 
 __all__ = ["generate_candidates"]
 
-_MAXIMUM_MIDI_NOTE = 127
-
 # A module-level frozen singleton rather than an instantiated default argument:
 # MappingConstraints is immutable so sharing one instance is safe, and ruff's B008
 # forbids a call in a default. Public behavior is identical to a default-constructed
@@ -53,7 +51,7 @@ def _maximum_physical_position(
     Only bounds that are actually declared participate; an omitted optional maximum
     is not incomplete data. ``physical_fret_count`` applies to fretted instruments
     only. Returns ``None`` when nothing bounds the string from the nut, in which case
-    the MIDI ceiling applied by the caller is the only remaining limit.
+    the MIDI domain is the only remaining limit (see ``_candidates_for_string``).
     """
 
     bounds: list[float] = []
@@ -100,11 +98,11 @@ def _candidates_for_string(
     if constraints.maximum_relative_semitone_position is not None:
         if relative > constraints.maximum_relative_semitone_position + tolerance:
             return
-    # With no declared maximum the MIDI domain is the only remaining ceiling. The
-    # event's own contract already bounds it, so this can only bind on a profile
-    # whose open pitch would put the target out of range.
-    if string.open_midi_note + physical > _MAXIMUM_MIDI_NOTE:
-        return
+    # The MIDI ceiling needs no explicit test here. A string with no declared maximum
+    # is bounded by the MIDI domain, but the sounding pitch of every candidate is
+    # exactly ``event.midi_note`` (``open_midi_note + physical`` telescopes back to
+    # it), and MusicalEvent already constrains that to 0..127. An explicit check
+    # would be unreachable, so the bound is documented rather than coded.
 
     yield build_candidate(
         string=string,
@@ -144,6 +142,18 @@ def generate_candidates(
             "it requires a representative instrument profile and a defined "
             "transition model between discrete and continuous regions",
         )
+    # A capo clamps behind a fret, so a fractional capo on a fretted instrument is
+    # internally inconsistent data. It is also silently corrupting: positions from
+    # the nut stay integral (they are midi_note - open_midi_note), so nothing else
+    # would flag it, but no candidate could ever reach relative position 0.0 and the
+    # instrument would quietly lose every open-string candidate.
+    if instrument.fingerboard_mode is FingerboardMode.FRETTED:
+        capo = constraints.capo_position
+        if abs(capo - round(capo)) > geometry_tolerance():
+            raise SpatialMappingError(
+                "fretted instruments require a whole-semitone capo_position; "
+                f"got {capo!r}",
+            )
 
     candidates = [
         candidate
