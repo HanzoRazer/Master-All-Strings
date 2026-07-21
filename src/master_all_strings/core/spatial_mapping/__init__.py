@@ -1,5 +1,6 @@
 """Public contracts and utilities for the Musical Spatial Mapping Engine."""
 
+from .candidate_generation import generate_candidates
 from .enums import (
     CandidateRejectionCode,
     FingerboardMode,
@@ -36,6 +37,7 @@ __all__ = [
     "SpatialPosition",
     "SpatialReferenceType",
     "distance_from_nut_mm",
+    "generate_candidates",
     "geometry_tolerance",
     "instrument_profile_from_mapping",
     "midi_note_to_pitch_label",
