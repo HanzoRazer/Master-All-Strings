@@ -36,6 +36,10 @@ class StringProfile:
         require_non_empty(self.display_label, "display_label")
         require_midi_note(self.open_midi_note, "open_midi_note")
         require_index(self.display_order, "display_order")
+        if self.course_id is not None:
+            require_non_empty(self.course_id, "course_id")
+        if not isinstance(self.enabled, bool):
+            raise SpatialMappingError("enabled must be a boolean")
         if self.maximum_semitone_position is not None:
             require_finite(self.maximum_semitone_position, "maximum_semitone_position")
             require_nonnegative(self.maximum_semitone_position, "maximum_semitone_position")
@@ -96,8 +100,11 @@ class InstrumentProfile:
         if self.scale_length_mm is not None:
             require_finite(self.scale_length_mm, "scale_length_mm")
             require_positive(self.scale_length_mm, "scale_length_mm")
-        if self.physical_fret_count is not None and self.physical_fret_count < 0:
-            raise SpatialMappingError("physical_fret_count must be nonnegative")
+        # require_index (not a bare ``< 0`` test) so ``bool``/``float``/``str`` are
+        # rejected: ``True < 0`` is False, so a boolean previously satisfied both this
+        # check and the "fretted instruments must declare physical_fret_count" check.
+        if self.physical_fret_count is not None:
+            require_index(self.physical_fret_count, "physical_fret_count")
         if self.fingerboard_mode is FingerboardMode.FRETTED and self.physical_fret_count is None:
             raise SpatialMappingError("fretted instruments must declare physical_fret_count")
         if (
@@ -105,4 +112,15 @@ class InstrumentProfile:
             and self.physical_fret_count is not None
         ):
             raise SpatialMappingError("fretless instruments must not declare physical_fret_count")
+        marker_ids = [marker.marker_id for marker in self.reference_markers]
+        if len(set(marker_ids)) != len(marker_ids):
+            raise SpatialMappingError("marker_id values must be unique")
+        # Enforce the declared ``Mapping[str, JSONScalar]`` contract at runtime; the
+        # annotation alone did not stop nested containers or blank keys from entering.
+        for key, item in self.metadata.items():
+            require_non_empty(key, "metadata key")
+            if item is not None and not isinstance(item, (str, int, float, bool)):
+                raise SpatialMappingError(
+                    f"metadata[{key!r}] must be a JSON scalar or None",
+                )
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))

@@ -11,6 +11,7 @@ from master_all_strings.core.foundation import (
     JSONValue,
     SpatialMappingError,
     require_finite,
+    require_index,
     require_midi_note,
     require_non_empty,
     require_nonnegative,
@@ -60,11 +61,11 @@ class MappingConstraints:
             for string_id in group:
                 require_non_empty(string_id, f"{group_name} entry")
             if len(set(group)) != len(group):
-                raise ValueError(f"{group_name} must not contain duplicate string ids")
+                raise SpatialMappingError(f"{group_name} must not contain duplicate string ids")
         if self.allowed_string_ids is not None:
             overlap = set(self.allowed_string_ids) & set(self.excluded_string_ids)
             if overlap:
-                raise ValueError(
+                raise SpatialMappingError(
                     f"string ids cannot be both allowed and excluded: {sorted(overlap)}"
                 )
 
@@ -79,6 +80,14 @@ class MappingPreferences:
 
     def __post_init__(self) -> None:
         require_finite(self.lower_position_bias, "lower_position_bias")
+        # Mirror the identifier discipline MappingConstraints applies; without this a
+        # blank or duplicated preferred id could enter through the preferences path.
+        for string_id in self.preferred_string_ids:
+            require_non_empty(string_id, "preferred_string_ids entry")
+        if len(set(self.preferred_string_ids)) != len(self.preferred_string_ids):
+            raise SpatialMappingError(
+                "preferred_string_ids must not contain duplicate string ids",
+            )
 
 
 @dataclass(frozen=True)
@@ -96,6 +105,8 @@ class AuditoryPositionReference:
         require_midi_note(self.target_midi_note, "target_midi_note")
         require_finite(self.interval_semitones, "interval_semitones")
         require_finite(self.target_cents_offset, "target_cents_offset")
+        if self.interval_label is not None:
+            require_non_empty(self.interval_label, "interval_label")
 
 
 @dataclass(frozen=True)
@@ -116,9 +127,19 @@ class SpatialPosition:
 
     def __post_init__(self) -> None:
         # Normalize the reference type so identity (`is`) checks below cannot be
-        # silently bypassed when a raw string reaches this contract.
-        object.__setattr__(self, "reference_type", SpatialReferenceType(self.reference_type))
+        # silently bypassed when a raw string reaches this contract. The coercion is
+        # wrapped so an invalid value raises the domain error rather than the bare
+        # ValueError the enum constructor emits, matching InstrumentProfile.
+        try:
+            reference_type = SpatialReferenceType(self.reference_type)
+        except ValueError as exc:
+            raise SpatialMappingError(
+                f"invalid reference_type: {self.reference_type!r}",
+            ) from exc
+        object.__setattr__(self, "reference_type", reference_type)
         require_non_empty(self.string_id, "string_id")
+        if self.course_id is not None:
+            require_non_empty(self.course_id, "course_id")
         require_midi_note(self.sounding_midi_note, "sounding_midi_note")
         require_finite(self.cents_offset, "cents_offset")
         require_finite(self.relative_semitone_position, "relative_semitone_position")
@@ -142,9 +163,13 @@ class SpatialPosition:
                 "open-string positions must have a relative semitone position of 0.0",
             )
         if self.relative_semitone_position == 0.0 and not self.is_open_string:
-            raise ValueError(
+            raise SpatialMappingError(
                 "a relative semitone position of 0.0 must be marked is_open_string=True",
             )
+        # Validate the fret number itself, not merely its presence: it previously
+        # accepted negatives, bools, floats, and strings for PHYSICAL_FRET references.
+        if self.physical_fret_number is not None:
+            require_index(self.physical_fret_number, "physical_fret_number")
         if (
             self.reference_type is SpatialReferenceType.PHYSICAL_FRET
             and self.physical_fret_number is None
@@ -180,6 +205,10 @@ class SpatialAnnotation:
         require_non_empty(self.string_label, "string_label")
         require_non_empty(self.position_label, "position_label")
         require_non_empty(self.accessibility_text, "accessibility_text")
+        if self.secondary_label is not None:
+            require_non_empty(self.secondary_label, "secondary_label")
+        if self.reference_marker_label is not None:
+            require_non_empty(self.reference_marker_label, "reference_marker_label")
 
 
 @dataclass(frozen=True)
