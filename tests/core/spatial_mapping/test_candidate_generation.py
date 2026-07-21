@@ -283,7 +283,10 @@ class TestCapoBehavior:
     def test_integral_capo_expressed_as_float_is_accepted(
         self, guitar: InstrumentProfile
     ) -> None:
-        assert len(generate_candidates(_event(62), guitar, MappingConstraints(capo_position=2.0))) == 5
+        candidates = generate_candidates(
+            _event(62), guitar, MappingConstraints(capo_position=2.0)
+        )
+        assert len(candidates) == 5
 
 
 class TestStringSelectionConstraints:
