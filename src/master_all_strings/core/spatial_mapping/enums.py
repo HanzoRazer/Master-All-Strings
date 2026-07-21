@@ -1,16 +1,24 @@
-"""Enumerations used by the Musical Spatial Mapping Engine."""
+"""Enumerations used by the Musical Spatial Mapping Engine.
+
+``FingerboardMode`` is a cross-cutting instrument concept and lives in the
+dependency-neutral ``core.foundation`` module; it is re-exported here so existing
+``from .enums import FingerboardMode`` call sites keep working. The remaining enums
+are spatial-mapping-specific and defined locally.
+"""
 
 from __future__ import annotations
 
 from enum import StrEnum
 
+from master_all_strings.core.foundation import FingerboardMode
 
-class FingerboardMode(StrEnum):
-    """Supported fingerboard semantics."""
-
-    FRETTED = "fretted"
-    FRETLESS = "fretless"
-    HYBRID = "hybrid"
+__all__ = [
+    "CandidateRejectionCode",
+    "FingerboardMode",
+    "OpenStringPolicy",
+    "SelectionStatus",
+    "SpatialReferenceType",
+]
 
 
 class SpatialReferenceType(StrEnum):
