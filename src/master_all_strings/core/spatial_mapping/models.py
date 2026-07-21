@@ -118,6 +118,21 @@ class SpatialPosition:
     it. It is the instrument-defined stable display and enumeration order of the
     candidate's string or course. It is NOT candidate quality, musical ranking,
     pedagogical priority, preference, or ease of performance.
+
+    ``display_order`` is meaningful **only relative to its originating instrument**.
+    It is an index into one profile's string list, not a global identifier: a
+    ``display_order`` of 0 on a guitar and on a mandolin denote different strings and
+    are not comparable. Do not use it to match, cache, or deduplicate positions
+    across instruments.
+
+    ``is_open_string`` means **unstopped by a finger**, i.e. sounding at the position
+    the string is fretted from -- which a capo redefines. It does NOT mean "at the
+    nut" or "fret zero". With a capo at the 3rd fret, an open candidate carries
+    ``relative_semitone_position == 0.0`` together with
+    ``physical_semitone_position_from_nut == 3.0`` and ``physical_fret_number == 3``.
+    A consumer that suppresses fret numbers for open strings will mis-render capoed
+    notes; read ``physical_fret_number``/``physical_semitone_position_from_nut`` for
+    physical placement and ``is_open_string`` only for stopped-versus-unstopped.
     """
 
     string_id: str

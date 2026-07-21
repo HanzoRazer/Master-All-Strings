@@ -34,6 +34,15 @@ from .models import SpatialPosition
 
 __all__ = ["build_candidate"]
 
+# Single source for the unsupported-mode message. Generation rejects HYBRID up front
+# so a caller fails before any per-string work, and the builder rejects it again for
+# callers reaching it directly; sharing the text keeps the two from drifting apart.
+HYBRID_UNSUPPORTED_MESSAGE = (
+    "hybrid candidate generation is not yet defined; it requires a representative "
+    "instrument profile and a defined transition model between discrete and "
+    "continuous regions before behavior can be specified"
+)
+
 
 def _snap_to_integer(value: float) -> float:
     """Return ``value`` snapped to a whole number when within geometry tolerance.
@@ -52,6 +61,19 @@ def _snap_to_integer(value: float) -> float:
 
 def _is_integral(value: float) -> bool:
     return abs(value - round(value)) <= geometry_tolerance()
+
+
+def _is_effectively_zero(value: float) -> bool:
+    """Return whether ``value`` is zero to within tolerance.
+
+    Used for ``cents_offset`` so the reference-type decision matches the tolerant
+    treatment positions already receive. Exact ``== 0.0`` would let float noise from
+    an upstream normalizer (a residual ``1e-15``) reclassify an exact chromatic
+    target from IMAGINARY_SEMITONE to CONTINUOUS_POSITION, changing an externally
+    visible field on the strength of numerical dust.
+    """
+
+    return abs(value) <= geometry_tolerance()
 
 
 def build_candidate(
@@ -74,11 +96,7 @@ def build_candidate(
     physical = _snap_to_integer(physical_semitone_position_from_nut)
 
     if fingerboard_mode is FingerboardMode.HYBRID:
-        raise SpatialMappingError(
-            "hybrid candidate generation is not yet defined; "
-            "it requires a representative profile and a discrete/continuous "
-            "transition model before behavior can be specified",
-        )
+        raise SpatialMappingError(HYBRID_UNSUPPORTED_MESSAGE)
 
     physical_fret_number: int | None
     if fingerboard_mode is FingerboardMode.FRETTED:
@@ -97,7 +115,7 @@ def build_candidate(
         # authoritative for ordinary chromatic fretless instruction. A target
         # displaced by cents is a fractional position and uses the continuous
         # reference instead.
-        if cents_offset == 0.0 and _is_integral(physical):
+        if _is_effectively_zero(cents_offset) and _is_integral(physical):
             reference_type = SpatialReferenceType.IMAGINARY_SEMITONE
         else:
             reference_type = SpatialReferenceType.CONTINUOUS_POSITION

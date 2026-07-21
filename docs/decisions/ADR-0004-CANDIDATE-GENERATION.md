@@ -49,6 +49,24 @@ Generation answers where the canonical note is anchored on the instrument. It do
 
 Exactly one candidate per viable string, never a sampled continuum. `IMAGINARY_SEMITONE` for exact semitone targets — authoritative for ordinary chromatic fretless instruction — and `CONTINUOUS_POSITION` for cents-displaced ones. The reference type describes the position measured from the nut, which the semitone markers are anchored to.
 
+### One `StringProfile` per distinct playing location
+
+Generation emits one candidate per admissible `StringProfile`. It assumes a profile
+declares one entry per distinct playing location — a course representative, not each
+physical string. The shipped mandolin profile follows this: four entries for four
+courses, with `string_id` equal to `course_id`.
+
+A profile that instead declares each physical string of a unison course separately
+produces one candidate per string, and those candidates are identical in course,
+pitch, and fret while differing only in `string_id` and `display_order` — two entries
+for one playing location. Collapsing them would require deciding which representative
+survives, which is a selection judgment this phase does not own.
+
+The assumption is recorded rather than enforced: no shipped profile violates it, and
+adding validation would reject a legitimate future profile that models physical
+strings deliberately. Distinguishing physical strings from logical courses is
+deferred to a Dev Order that can define the semantics for both.
+
 ### Hybrid fails explicitly
 
 `FingerboardMode.HYBRID` raises rather than being silently treated as fretted or fretless. Schema permission is not executable behavior. Support requires a representative profile, a defined transition model between discrete and continuous regions, evidence or an explicit product decision, and dedicated tests.

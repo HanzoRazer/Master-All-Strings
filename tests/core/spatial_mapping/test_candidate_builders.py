@@ -77,6 +77,31 @@ def test_fretless_exact_semitone_uses_imaginary_reference() -> None:
     assert candidate.physical_fret_number is None  # type: ignore[attr-defined]
 
 
+@pytest.mark.parametrize("cents", [0.0, -0.0, 1e-15, 1e-12])
+def test_float_noise_in_cents_does_not_flip_the_reference_type(cents: float) -> None:
+    """An exact chromatic target must not be reclassified by numerical dust.
+
+    Exact ``cents_offset == 0.0`` would let a residual ``1e-15`` from an upstream
+    normalizer change an externally visible field.
+    """
+    candidate = _build(fingerboard_mode=FingerboardMode.FRETLESS, cents_offset=cents)
+    assert candidate.reference_type is SpatialReferenceType.IMAGINARY_SEMITONE  # type: ignore[attr-defined]
+
+
+@pytest.mark.parametrize("cents", [0.5, -0.5, 14.0, 1e-6])
+def test_musically_meaningful_cents_still_selects_the_continuous_reference(
+    cents: float,
+) -> None:
+    candidate = _build(fingerboard_mode=FingerboardMode.FRETLESS, cents_offset=cents)
+    assert candidate.reference_type is SpatialReferenceType.CONTINUOUS_POSITION  # type: ignore[attr-defined]
+
+
+def test_cents_offset_is_preserved_verbatim_even_when_treated_as_zero() -> None:
+    """Tolerance governs classification only; the carried value is never rewritten."""
+    candidate = _build(fingerboard_mode=FingerboardMode.FRETLESS, cents_offset=1e-15)
+    assert candidate.cents_offset == 1e-15  # type: ignore[attr-defined]
+
+
 def test_fretless_fractional_position_uses_continuous_reference() -> None:
     candidate = _build(
         fingerboard_mode=FingerboardMode.FRETLESS,

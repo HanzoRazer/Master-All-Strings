@@ -242,6 +242,63 @@ class TestDeterministicOrdering:
         ]
 
 
+class TestOrderingGuaranteeDependencies:
+    """The sort key is total only because duplicate display_order cannot exist."""
+
+    def test_ordering_relies_on_profile_display_order_uniqueness(self) -> None:
+        # Pins the upstream invariant generate_candidates depends on. If this ever
+        # stops raising, ties in the sort key would silently fall back to profile
+        # declaration order and the documented ordering guarantee would break.
+        with pytest.raises(SpatialMappingError, match="display_order values must be unique"):
+            _custom_profile(
+                strings=(
+                    StringProfile(
+                        string_id="a", display_label="A", display_order=2, open_midi_note=40,
+                        maximum_semitone_position=22,
+                    ),
+                    StringProfile(
+                        string_id="b", display_label="B", display_order=2, open_midi_note=45,
+                        maximum_semitone_position=22,
+                    ),
+                ),
+                physical_fret_count=22,
+            )
+
+    def test_sort_key_is_total_across_every_candidate(
+        self, guitar: InstrumentProfile
+    ) -> None:
+        keys = [
+            (c.display_order, c.relative_semitone_position)
+            for c in generate_candidates(_event(64), guitar)
+        ]
+        assert len(set(keys)) == len(keys)
+
+
+class TestOpenStringMeansUnstoppedNotAtTheNut:
+    """The field is easy to misread as "fret zero"; this pins the real contract."""
+
+    def test_open_candidate_under_capo_reports_a_nonzero_fret(
+        self, guitar: InstrumentProfile
+    ) -> None:
+        candidates = generate_candidates(
+            _event(67), guitar, MappingConstraints(capo_position=3.0)
+        )
+        open_candidates = [c for c in candidates if c.is_open_string]
+        assert open_candidates
+        for candidate in open_candidates:
+            assert candidate.relative_semitone_position == 0.0
+            assert candidate.physical_fret_number == 3
+            assert candidate.physical_semitone_position_from_nut == 3.0
+
+    def test_without_a_capo_open_does_coincide_with_the_nut(
+        self, guitar: InstrumentProfile
+    ) -> None:
+        candidate = generate_candidates(_event(64), guitar)[-1]
+        assert candidate.is_open_string is True
+        assert candidate.physical_fret_number == 0
+        assert candidate.normalized_position == 0.0
+
+
 class TestCapoBehavior:
     def test_capo_raises_the_effective_open_pitch(self, guitar: InstrumentProfile) -> None:
         # With a capo at 2 the open 6th string sounds 42, so 40 is no longer playable.
@@ -394,6 +451,37 @@ class TestArbitraryInstrumentShapes:
     def test_courses_yield_one_candidate_per_course(self, mandolin: InstrumentProfile) -> None:
         candidates = generate_candidates(_event(74), mandolin)
         assert [c.course_id for c in candidates] == ["course-g", "course-d", "course-a"]
+
+    def test_a_unison_course_declared_as_two_strings_yields_two_candidates(self) -> None:
+        """Documents the modelling assumption, it does not endorse it.
+
+        Generation emits one candidate per StringProfile and assumes a profile
+        declares one entry per distinct playing location (a course representative,
+        as the shipped mandolin profile does). A profile that declares each physical
+        string of a unison course separately gets two candidates for one playing
+        location. Collapsing them is a selection judgment this phase does not own;
+        see ADR-0004. This test exists so a future change to that behavior is a
+        deliberate decision rather than an unnoticed drift.
+        """
+        unison = _custom_profile(
+            family="mandolin",
+            strings=(
+                StringProfile(
+                    string_id="g1", display_label="G3", display_order=0,
+                    open_midi_note=55, course_id="course-g", maximum_semitone_position=20,
+                ),
+                StringProfile(
+                    string_id="g2", display_label="G3", display_order=1,
+                    open_midi_note=55, course_id="course-g", maximum_semitone_position=20,
+                ),
+            ),
+            physical_fret_count=20,
+        )
+        candidates = generate_candidates(_event(60), unison)
+        assert len(candidates) == 2
+        assert {c.string_id for c in candidates} == {"g1", "g2"}
+        # Identical playing location, distinguished only by string identity.
+        assert len({(c.course_id, c.relative_semitone_position) for c in candidates}) == 1
 
 
 class TestUnsupportedAndInvalid:

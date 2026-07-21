@@ -18,7 +18,7 @@ from master_all_strings.core.foundation import FingerboardMode, SpatialMappingEr
 from master_all_strings.core.musical_events import MusicalEvent
 from master_all_strings.instruments import InstrumentProfile, StringProfile
 
-from .candidate_builders import build_candidate
+from .candidate_builders import HYBRID_UNSUPPORTED_MESSAGE, build_candidate
 from .geometry import geometry_tolerance
 from .models import MappingConstraints, SpatialPosition
 
@@ -137,11 +137,7 @@ def generate_candidates(
     """
 
     if instrument.fingerboard_mode is FingerboardMode.HYBRID:
-        raise SpatialMappingError(
-            "hybrid candidate generation is not yet defined; "
-            "it requires a representative instrument profile and a defined "
-            "transition model between discrete and continuous regions",
-        )
+        raise SpatialMappingError(HYBRID_UNSUPPORTED_MESSAGE)
     # A capo clamps behind a fret, so a fractional capo on a fretted instrument is
     # internally inconsistent data. It is also silently corrupting: positions from
     # the nut stay integral (they are midi_note - open_midi_note), so nothing else
@@ -165,5 +161,11 @@ def generate_candidates(
     # is the instrument-defined enumeration, and the profile may list strings in any
     # order. Sorting on the candidate's own fields also makes the result independent
     # of how the profile happened to be written.
+    #
+    # That independence rests on an invariant owned elsewhere: InstrumentProfile
+    # rejects duplicate display_order values across its strings, so the sort key is
+    # total and no pair of candidates can tie. If that validation is ever relaxed,
+    # ties here would silently fall back to declaration order and this guarantee
+    # would break -- test_ordering_relies_on_profile_display_order_uniqueness pins it.
     candidates.sort(key=lambda c: (c.display_order, c.relative_semitone_position))
     return tuple(candidates)
