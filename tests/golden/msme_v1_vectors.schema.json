@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/msme-v1-vectors.schema.json",
+  "title": "MSME golden vectors",
+  "description": "Phase-separated expectation envelope. Generation expectations are executable now; selection expectations are either explicitly reserved or carry a resolved result. A missing or malformed expectation must fail validation rather than be silently skipped.",
+  "type": "array",
+  "minItems": 20,
+  "items": {
+    "type": "object",
+    "required": ["vector_id", "instrument_id", "phase", "tags", "inputs", "expected"],
+    "additionalProperties": false,
+    "properties": {
+      "vector_id": {"type": "string", "minLength": 1},
+      "instrument_id": {"type": "string", "minLength": 1},
+      "phase": {"type": "string", "minLength": 1},
+      "tags": {
+        "type": "array",
+        "items": {"type": "string", "minLength": 1},
+        "minItems": 1
+      },
+      "inputs": {
+        "type": "object",
+        "required": ["event"],
+        "additionalProperties": false,
+        "properties": {
+          "event": {
+            "type": "object",
+            "required": ["midi_note"],
+            "additionalProperties": false,
+            "properties": {
+              "midi_note": {"type": "integer", "minimum": 0, "maximum": 127},
+              "cents_offset": {"type": "number"}
+            }
+          },
+          "constraints": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "capo_position": {"type": "number", "minimum": 0},
+              "maximum_relative_semitone_position": {"type": ["number", "null"], "minimum": 0},
+              "allowed_string_ids": {"type": ["array", "null"], "items": {"type": "string"}},
+              "excluded_string_ids": {"type": "array", "items": {"type": "string"}}
+            }
+          },
+          "preferences": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "open_string_policy": {"type": "string"},
+              "lower_position_bias": {"type": "number"},
+              "preferred_string_ids": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        }
+      },
+      "expected": {
+        "type": "object",
+        "required": ["generation", "selection"],
+        "additionalProperties": false,
+        "properties": {
+          "generation": {
+            "type": "object",
+            "required": ["candidates"],
+            "additionalProperties": false,
+            "properties": {
+              "candidates": {
+                "type": "array",
+                "items": {"$ref": "#/$defs/spatialPosition"}
+              }
+            }
+          },
+          "selection": {
+            "oneOf": [
+              {"$ref": "#/$defs/reservedSelection"},
+              {"$ref": "#/$defs/resolvedSelection"}
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "spatialPosition": {
+      "type": "object",
+      "description": "The complete semantic output contract, not merely an identifier.",
+      "required": [
+        "string_id",
+        "course_id",
+        "display_order",
+        "sounding_midi_note",
+        "cents_offset",
+        "relative_semitone_position",
+        "physical_semitone_position_from_nut",
+        "physical_fret_number",
+        "reference_type",
+        "normalized_position",
+        "distance_from_nut_mm",
+        "is_open_string"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "string_id": {"type": "string", "minLength": 1},
+        "course_id": {"type": ["string", "null"], "minLength": 1},
+        "display_order": {"type": "integer", "minimum": 0},
+        "sounding_midi_note": {"type": "integer", "minimum": 0, "maximum": 127},
+        "cents_offset": {"type": "number"},
+        "relative_semitone_position": {"type": "number", "minimum": 0},
+        "physical_semitone_position_from_nut": {"type": "number", "minimum": 0},
+        "physical_fret_number": {"type": ["integer", "null"], "minimum": 0},
+        "reference_type": {
+          "type": "string",
+          "enum": ["physical_fret", "imaginary_semitone", "continuous_position"]
+        },
+        "normalized_position": {"type": "number", "minimum": 0, "maximum": 1},
+        "distance_from_nut_mm": {"type": ["number", "null"], "minimum": 0},
+        "is_open_string": {"type": "boolean"}
+      }
+    },
+    "reservedSelection": {
+      "type": "object",
+      "description": "An expectation deliberately deferred to a later Dev Order.",
+      "required": ["status", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {"const": "reserved"},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "resolvedSelection": {
+      "type": "object",
+      "description": "An executable selection expectation, identified semantically rather than by list index alone.",
+      "required": ["selected_candidate"],
+      "additionalProperties": false,
+      "properties": {
+        "selected_candidate": {
+          "type": "object",
+          "required": ["string_id", "display_order", "relative_semitone_position"],
+          "additionalProperties": false,
+          "properties": {
+            "string_id": {"type": "string", "minLength": 1},
+            "display_order": {"type": "integer", "minimum": 0},
+            "relative_semitone_position": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    }
+  }
+}

@@ -111,10 +111,33 @@ class AuditoryPositionReference:
 
 @dataclass(frozen=True)
 class SpatialPosition:
-    """A single playable spatial location for a sounding pitch."""
+    """A single playable spatial location for a sounding pitch.
+
+    ``display_order`` is copied from the originating :class:`StringProfile` so a
+    candidate stays independently interpretable outside the sequence that produced
+    it. It is the instrument-defined stable display and enumeration order of the
+    candidate's string or course. It is NOT candidate quality, musical ranking,
+    pedagogical priority, preference, or ease of performance.
+
+    ``display_order`` is meaningful **only relative to its originating instrument**.
+    It is an index into one profile's string list, not a global identifier: a
+    ``display_order`` of 0 on a guitar and on a mandolin denote different strings and
+    are not comparable. Do not use it to match, cache, or deduplicate positions
+    across instruments.
+
+    ``is_open_string`` means **unstopped by a finger**, i.e. sounding at the position
+    the string is fretted from -- which a capo redefines. It does NOT mean "at the
+    nut" or "fret zero". With a capo at the 3rd fret, an open candidate carries
+    ``relative_semitone_position == 0.0`` together with
+    ``physical_semitone_position_from_nut == 3.0`` and ``physical_fret_number == 3``.
+    A consumer that suppresses fret numbers for open strings will mis-render capoed
+    notes; read ``physical_fret_number``/``physical_semitone_position_from_nut`` for
+    physical placement and ``is_open_string`` only for stopped-versus-unstopped.
+    """
 
     string_id: str
     course_id: str | None
+    display_order: int
     sounding_midi_note: int
     cents_offset: float
     relative_semitone_position: float
@@ -140,6 +163,7 @@ class SpatialPosition:
         require_non_empty(self.string_id, "string_id")
         if self.course_id is not None:
             require_non_empty(self.course_id, "course_id")
+        require_index(self.display_order, "display_order")
         require_midi_note(self.sounding_midi_note, "sounding_midi_note")
         require_finite(self.cents_offset, "cents_offset")
         require_finite(self.relative_semitone_position, "relative_semitone_position")

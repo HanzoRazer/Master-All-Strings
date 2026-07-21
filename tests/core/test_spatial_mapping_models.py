@@ -20,6 +20,7 @@ def test_spatial_position_requires_physical_fret_number_for_physical_frets() -> 
         SpatialPosition(
             string_id="string-1",
             course_id=None,
+            display_order=0,
             sounding_midi_note=64,
             cents_offset=0.0,
             relative_semitone_position=1.0,
@@ -37,6 +38,7 @@ def test_open_string_position_requires_zero_relative_semitone_position() -> None
         SpatialPosition(
             string_id="string-1",
             course_id=None,
+            display_order=0,
             sounding_midi_note=64,
             cents_offset=0.0,
             relative_semitone_position=1.0,
