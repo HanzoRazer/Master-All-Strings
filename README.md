@@ -8,15 +8,25 @@ Master All Strings is the modern product home for reconstructing, modernizing, a
 
 ## Current scope
 
-This repository currently implements Phase 0 through Phase 2 of the initial foundation plan:
+This repository implements the foundation contracts and the first executable capability of the **Musical Spatial Mapping Engine (MSME)**:
 
 - repository structure and architecture documents;
 - immutable core contracts for musical events, instruments, and spatial positions;
 - validation helpers;
 - pitch-formatting utilities;
-- equal-temperament geometry utilities.
+- equal-temperament geometry utilities;
+- MSME candidate generation.
 
-The first bounded subsystem is the **Musical Spatial Mapping Engine (MSME)**. Candidate generation, scoring, and deterministic selection are intentionally deferred until the Phase 2 stop gate is reviewed.
+### Implementation status
+
+| Capability | Status |
+| --- | --- |
+| Candidate generation | implemented |
+| Deterministic selection | deferred |
+| Pedagogical interpretation | deferred |
+| Phrase and chord planning | deferred |
+
+`generate_candidates(event, instrument, constraints)` returns every valid playable position for a canonical musical event on a configured instrument, preserving ambiguity. Its ordering is stable enumeration and **not** a ranking — index zero is not a recommendation. See [ADR-0004](docs/decisions/ADR-0004-CANDIDATE-GENERATION.md) for the settled decisions.
 
 ## What this repository is not
 
