@@ -54,6 +54,7 @@ def _position(**overrides: Any) -> SpatialPosition:
     base: dict[str, Any] = {
         "string_id": "string-1",
         "course_id": None,
+        "display_order": 0,
         "sounding_midi_note": 66,
         "cents_offset": 0.0,
         "relative_semitone_position": 2.0,
@@ -100,6 +101,21 @@ class TestPhysicalFretNumberIsValidated:
             is_open_string=True,
         )
         assert position.physical_fret_number == 0
+
+
+class TestSpatialPositionDisplayOrder:
+    """``display_order`` keeps a candidate interpretable outside its sequence."""
+
+    @pytest.mark.parametrize("value", [-1, True, 1.5, "0"])
+    def test_rejects_non_index_display_order(self, value: Any) -> None:
+        with pytest.raises(SpatialMappingError, match="display_order"):
+            _position(display_order=value)
+
+    def test_accepts_zero(self) -> None:
+        assert _position(display_order=0).display_order == 0
+
+    def test_is_carried_verbatim(self) -> None:
+        assert _position(display_order=5).display_order == 5
 
 
 class TestReferenceTypeCoercionRaisesDomainError:

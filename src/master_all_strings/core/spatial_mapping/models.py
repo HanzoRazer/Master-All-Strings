@@ -111,10 +111,18 @@ class AuditoryPositionReference:
 
 @dataclass(frozen=True)
 class SpatialPosition:
-    """A single playable spatial location for a sounding pitch."""
+    """A single playable spatial location for a sounding pitch.
+
+    ``display_order`` is copied from the originating :class:`StringProfile` so a
+    candidate stays independently interpretable outside the sequence that produced
+    it. It is the instrument-defined stable display and enumeration order of the
+    candidate's string or course. It is NOT candidate quality, musical ranking,
+    pedagogical priority, preference, or ease of performance.
+    """
 
     string_id: str
     course_id: str | None
+    display_order: int
     sounding_midi_note: int
     cents_offset: float
     relative_semitone_position: float
@@ -140,6 +148,7 @@ class SpatialPosition:
         require_non_empty(self.string_id, "string_id")
         if self.course_id is not None:
             require_non_empty(self.course_id, "course_id")
+        require_index(self.display_order, "display_order")
         require_midi_note(self.sounding_midi_note, "sounding_midi_note")
         require_finite(self.cents_offset, "cents_offset")
         require_finite(self.relative_semitone_position, "relative_semitone_position")

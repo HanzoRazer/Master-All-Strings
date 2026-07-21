@@ -93,6 +93,7 @@ class TestEnumCoercion:
             SpatialPosition(
                 string_id="string-1",
                 course_id=None,
+                display_order=0,
                 sounding_midi_note=64,
                 cents_offset=0.0,
                 relative_semitone_position=1.0,
@@ -111,6 +112,7 @@ class TestTightenedInvariants:
             SpatialPosition(
                 string_id="string-1",
                 course_id=None,
+                display_order=0,
                 sounding_midi_note=64,
                 cents_offset=0.0,
                 relative_semitone_position=0.0,
