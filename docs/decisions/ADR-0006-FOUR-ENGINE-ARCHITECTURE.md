@@ -24,7 +24,7 @@ The system is composed of **four engines**. Each is a constitutional boundary: i
 
 An engine defines authority, dependency direction, roadmap ownership, contracts, and Dev Order namespaces. **It does not require a matching top-level Python package until implementation pressure justifies one.**
 
-The existing packages stay where they are. `core/`, `instruments/`, and `spatial_mapping/` are **not** moved under a `musical_core/` directory. Doing so would break imports and mix an architectural clarification with a repository-wide refactor that delivers no functional value.
+The existing packages stay where they are. `core/` (including its `spatial_mapping` and `musical_events` subpackages) and `instruments/` are **not** moved under a `musical_core/` directory. Doing so would break imports and mix an architectural clarification with a repository-wide refactor that delivers no functional value. (`spatial_mapping` is a subpackage *inside* `core/`, not a top-level package; the package-to-engine table in the system model is authoritative on the physical layout.)
 
 Each package should declare which engine owns it (a one-line statement in its `__init__` docstring is sufficient). Applying those declarations to the existing packages is a small, separate follow-up and is deliberately not bundled with this decision, so the ratification stays reviewable on its own and does not touch Musical Core source while DO-004 is in flight.
 
