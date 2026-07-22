@@ -20,7 +20,7 @@ in the pull-request checks interface. The workflow fails if any gate fails.
 | Step | Command | What it enforces |
 | --- | --- | --- |
 | Ruff lint | `ruff check src tests` | The configured lint rules (`E, F, I, B, UP`). Lint only — no formatter is enforced. |
-| mypy strict | `mypy` | `mypy --strict` over `src`, per `[tool.mypy]`. Tests are not in scope. |
+| mypy strict | `mypy` | Strict-mode type checking over `src`. Strictness is enabled in `[tool.mypy]`, so no CLI flag is passed. Tests are not in scope. |
 | pytest with coverage | `pytest --cov --cov-report=term-missing` | The full suite — including golden-vector and schema validation, which run inside pytest — and a repository-wide coverage floor. |
 
 ## Coverage policy

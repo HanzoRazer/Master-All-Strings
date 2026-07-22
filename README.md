@@ -54,9 +54,9 @@ See `docs/architecture/PRODUCT_CHARTER.md` for the product charter and `docs/arc
 ## Repository verification
 
 Every pull request and every push to `main` runs the engineering gates in GitHub
-Actions (`.github/workflows/verify.yml`): Ruff lint, `mypy --strict`, and the pytest
-suite with a repository-wide coverage floor of 95%. Reproduce the same checks
-locally:
+Actions (`.github/workflows/verify.yml`): Ruff lint, mypy in strict mode (configured
+in `[tool.mypy]`, so the command is just `mypy`), and the pytest suite with a
+repository-wide coverage floor of 95%. Reproduce the same checks locally:
 
 ```bash
 pip install -e ".[dev]"
