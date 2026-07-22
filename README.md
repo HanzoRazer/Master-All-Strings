@@ -50,3 +50,20 @@ Master-All-Strings/
 ```
 
 See `docs/architecture/PRODUCT_CHARTER.md` for the product charter and `docs/architecture/MUSICAL_SPATIAL_MAPPING_ENGINE.md` for subsystem details.
+
+## Repository verification
+
+Every pull request and every push to `main` runs the engineering gates in GitHub
+Actions (`.github/workflows/verify.yml`): Ruff lint, mypy in strict mode (configured
+in `[tool.mypy]`, so the command is just `mypy`), and the pytest suite with a
+repository-wide coverage floor of 95%. Reproduce the same checks locally:
+
+```bash
+pip install -e ".[dev]"
+
+ruff check src tests
+mypy
+pytest --cov --cov-report=term-missing
+```
+
+See [docs/development/CONTINUOUS_VERIFICATION.md](docs/development/CONTINUOUS_VERIFICATION.md) for the full policy.
