@@ -1,3 +1,27 @@
+> ## Preservation snapshot — read first
+>
+> This document is preserved **verbatim** as a historical planning and
+> capability-preservation artifact. It was authored on 2026-07-21 *before* the
+> four-engine architecture ([ADR-0006](../decisions/ADR-0006-FOUR-ENGINE-ARCHITECTURE.md))
+> was ratified, and its internal instructions reflect that earlier context. Read
+> the body below as a record of what was captured, **not** as current build
+> instructions. Specifically:
+>
+> - **Its planned ADR numbers are superseded — do not create them as written.**
+>   `ADR-0005` is **reserved for DO-004** (deterministic candidate selection), not
+>   Learning Objects. `ADR-0006` is the **four-engine architecture**, which absorbs
+>   "notation as projection" as its Seam 1. The `ADR-0005`–`ADR-0008` file-creation
+>   lines in Sections 5 and 6.1 are historical placeholders, not current authority.
+> - Its **"Status: authorized …"** line and its file-creation instructions describe
+>   the document's original authoring context, not current repository state.
+> - The authoritative mapping of this document's capabilities onto the four engines
+>   is the DO-005 decomposition plan (`docs/planning/FOUR_ENGINE_HANDOFF_DECOMPOSITION.md`,
+>   produced by the DO-005 continuation), governed by ADR-0006 — not this file.
+>
+> Everything below this banner is the original content, unaltered.
+
+---
+
 # Dev-Ready Engineering Handoff — Educational Platform, Learning Objects, and AI Smart Notation
 
 **Date:** 2026-07-21  
