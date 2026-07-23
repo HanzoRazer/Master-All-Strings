@@ -4,6 +4,17 @@
 
 Master All Strings is the future-facing musical software product derived from the concepts and workflow evidence of the original Master Producer and related String Master technology. Its mission is to translate canonical musical information into playable, instrument-specific guidance for sequencing, practice, and instrument learning.
 
+## Product architecture
+
+Master All Strings is composed of four cooperating engines, each a constitutional ownership boundary ([ADR-0006](../decisions/ADR-0006-FOUR-ENGINE-ARCHITECTURE.md), [system model](FOUR_ENGINE_SYSTEM_MODEL.md)):
+
+- **Musical Core** — canonical music, spatial mapping, selection, deterministic projection;
+- **Educational Engine** — curriculum, learning objects, interpretation, coaching, assessment;
+- **Creative Engine** — score authoring, composition, AI-assisted entry;
+- **Performance Engine** — live capture, playback, device integration.
+
+This describes the intended architecture, not current implementation status. Today only Musical Core has shipped code (through candidate generation); the other three engines are governance boundaries with planned capabilities, not production subsystems. Canonical music remains authoritative regardless of engine, and Smart Guitar remains a consumer and integration surface (within the Performance Engine), never the architectural source of truth.
+
 ## What Master All Strings is not
 
 Master All Strings is not a luthier CAD/CAM tool, CNC estimating application, manufacturing-planning repository, generic fretboard calculator, or a continuation of the frozen Visual C++ 6 / MFC archive.
