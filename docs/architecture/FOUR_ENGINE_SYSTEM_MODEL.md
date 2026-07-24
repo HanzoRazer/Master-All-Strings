@@ -4,8 +4,6 @@ This document is the operational companion to [ADR-0006](../decisions/ADR-0006-F
 
 An **engine** is a constitutional boundary: an ownership scope, a dependency direction, a roadmap, and a Dev Order namespace. It is **not** (yet) a top-level Python package. See ADR-0006 for why, and for the five conditions under which that changes.
 
-> **Machine-readable source of truth.** The engine set, dependency rules, capability ownership, contract ownership, seams, and ADR assignments are held in `governance/engine_architecture_v1.json` (schema: `schemas/engine_architecture_v1.schema.json`). The generated views — [ENGINE_OWNERSHIP_REGISTRY.md](ENGINE_OWNERSHIP_REGISTRY.md), [ENGINE_DEPENDENCY_MATRIX.md](ENGINE_DEPENDENCY_MATRIX.md), [ENGINE_CONTRACT_OWNERSHIP.md](ENGINE_CONTRACT_OWNERSHIP.md) — are rendered from it and verified against it by `tests/governance/`. A view that disagrees with the JSON, or a JSON change not reflected in the views, fails the suite. The prose in *this* document is the human explanation; the JSON is the authority the validator enforces.
-
 ## The four engines at a glance
 
 | Engine | Answers | Owns, in one line |
@@ -129,24 +127,6 @@ Educational objective
   -> valid, evidence-bearing phrase plans
   -> Educational selection + explanation
 ```
-
-### Seam 4 — Performance evidence | Coaching
-
-The same evidence-versus-interpretation split as Seam 2, on the other side of the system: Performance records what was played; Education decides what it means for the learner. Performance embeds no coaching policy, and Education does not rewrite the observed record.
-
-```text
-Performance Engine
-    PerformanceObservationV1        (what was played: timing, notes, errors — facts)
-              |
-              v
-Educational Engine
-    learner / session interpretation
-              |
-              v
-    CoachingRecommendationV1        (what to do about it — cites the observation)
-```
-
-This is the one cross-engine path where Educational depends *downward on Performance* — as an evidence consumer only. Educational imports Performance's observation contract; it does not depend on Performance device code, and Performance never depends up into curriculum or coaching. `CoachingRecommendationV1` cites `PerformanceObservationV1`, exactly as `EducationalInterpretationV1` cites `SpatialEvidenceV1`.
 
 ## Borderline cases
 
