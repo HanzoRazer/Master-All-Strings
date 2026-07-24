@@ -15,9 +15,8 @@
 > - Its **"Status: authorized …"** line and its file-creation instructions describe
 >   the document's original authoring context, not current repository state.
 > - The authoritative mapping of this document's capabilities onto the four engines
->   is the [DO-005 decomposition plan](../planning/FOUR_ENGINE_HANDOFF_DECOMPOSITION.md),
->   governed by ADR-0006 — not this file. Every capability group in §3.2 is mapped
->   there; none is discarded by engine reassignment.
+>   is the DO-005 decomposition plan (`docs/planning/FOUR_ENGINE_HANDOFF_DECOMPOSITION.md`,
+>   produced by the DO-005 continuation), governed by ADR-0006 — not this file.
 >
 > Everything below this banner is the original content, unaltered.
 
