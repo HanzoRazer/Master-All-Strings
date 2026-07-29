@@ -91,6 +91,60 @@ most likely to stall it.
 source modification is authorized, and neither recorded gap implies one — both have
 untested mitigations at the configuration, scripting, or sidecar level.
 
+## ⚠️ Commit history: do not bisect through this tranche
+
+The branch head is correct. Six of the intermediate commits are not, in two different
+ways, and neither is visible from the commit messages. Anyone running `git bisect`,
+cherry-picking, or reverting part of this range needs this table.
+
+| Commit | | Tests | Coverage | `pytest --cov` | State |
+| --- | --- | --- | --- | --- | --- |
+| `868f40a` | C1 architecture | 329 | 98.85% | exit 0 | clean |
+| `4b51dd5` | C2 governance | 329 | 98.85% | exit 0 | clean |
+| `49e27a3` | C3 licensing | 329 | 98.85% | exit 0 | clean |
+| `f568446` | C4 contracts | 329 | **39.62%** | **exit 1** | **fails the 95% gate** |
+| `7968b03` | C5 schemas | 329 | **39.62%** | **exit 1** | **fails the 95% gate** |
+| `8bf6d6d` | C6 utilities + fake runtime | 329 | **28.04%** | **exit 1** | **fails the 95% gate** |
+| `ddc63c5` | C7 tests | 789 | 97.05% | exit 0 | **green but defective** |
+| `312e69c` | C8 spike prep | 789 | 97.05% | exit 0 | **green but defective** |
+| `e59bb3a` | review fixes | 830 | 96.96% | exit 0 | clean |
+| `ae19a1a` | full-review fixes | 844 | 96.96% | exit 0 | clean |
+
+**C4–C6 fail CI in isolation.** The rollout order placed all tests in Commit 7, so
+three commits carry new code with no tests behind it. The repository's own 95%
+coverage floor rejects them. CI never caught this because the `verify` workflow runs
+on the pull-request head, not on each commit. This was a known trade-off at the time
+and it was the wrong call: the order specified test *content* for Commit 7, not that
+the tree had to be red to get there. Shipping each module's tests alongside the module
+would have kept every commit green.
+
+**C7–C8 are worse, because they look fine.** Both report a passing suite while two
+defects are live:
+
+```text
+$ git checkout ddc63c5
+after start -> readiness.ready = False        # docs say start -> readiness -> prepare
+after stop during capture -> completion_state = in_progress   is_closed = False
+```
+
+The second is a capture permanently claiming to record on a runtime that no longer
+exists — the exact false state ADR-0007 D15 forbids. C7 also contains a test
+(`test_started_but_unprepared_runtime_is_not_ready`) that *asserts the readiness bug is
+correct behaviour*, with a comment rationalising it. A red commit announces itself; a
+green one asserting a defect does not.
+
+Both defects are fixed in `e59bb3a`. Nothing reaches `main` broken.
+
+**Why this history was not rewritten.** Squashing the fixes back into their origin
+commits would mean rewriting `feat/do-005-reland`, which was already merged to `main`.
+Rewriting merged history is a larger hazard than the one it removes, so the history
+stands and this table is the mitigation.
+
+**Practical guidance.** Bisect from `ae19a1a` or later. If you must land inside the
+range, treat `f568446`–`8bf6d6d` as build-red and `ddc63c5`–`312e69c` as
+verified-but-wrong, and take the readiness and capture-closure behaviour from
+`e59bb3a` or later regardless of what the suite says at the commit you are on.
+
 ## Decisions a reviewer should check
 
 1. `piano-roll-projection` is **Musical Core**, not Performance, even though recording
