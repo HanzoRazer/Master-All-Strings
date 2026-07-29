@@ -221,12 +221,16 @@ class TestRemainingBranches:
 
 
 class TestPrimaryContractReferences:
-    """A capability's ``primary_contract`` must resolve and agree with its contract.
+    """A capability's ``primary_contract`` must resolve and be coherent with it.
 
     Closes the gap tracked in issue #9: the JSON schema only requires a non-empty
     string, so before this check a capability could name a contract that does not
     exist and the registry would still validate clean. That asymmetry mattered because
     a contract's ``cites`` reference *was* already validated.
+
+    Two of the rules are deliberately weaker than "must match exactly". The registry
+    contains counterexamples to the stricter reading, and rejecting those would be a
+    worse defect than the gap being closed.
     """
 
     def _capability(self, reg: dict[str, Any], cid: str) -> dict[str, Any]:
@@ -251,18 +255,10 @@ class TestPrimaryContractReferences:
         self._capability(registry, "coaching")["primary_contract"] = "TotallyMadeUpContractXYZ"
         assert "CAP_CONTRACT" in _codes(registry)
 
-    def test_primary_contract_owned_by_another_engine_fails(
-        self, registry: dict[str, Any]
-    ) -> None:
-        # Naming a contract another engine owns would let a capability claim
-        # authority over a record it does not control.
-        self._capability(registry, "coaching")["primary_contract"] = "SpatialEvidenceV1"
-        assert "CAP_CONTRACT" in _codes(registry)
-
-    def test_classification_mismatch_fails(self, registry: dict[str, Any]) -> None:
-        # An evidence capability pointing at an interpretation contract (or the
-        # reverse) is a seam violation hiding behind a valid-looking reference.
-        self._capability(registry, "spatial-evidence")["classification"] = "neither"
+    def test_non_string_primary_contract_fails(self, registry: dict[str, Any]) -> None:
+        # The schema catches this first in normal use; the validator must not depend
+        # on having been run in the right order.
+        self._capability(registry, "coaching")["primary_contract"] = 7
         assert "CAP_CONTRACT" in _codes(registry)
 
     def test_capability_without_a_primary_contract_is_unaffected(
@@ -271,3 +267,130 @@ class TestPrimaryContractReferences:
         capability = self._capability(registry, "curriculum")
         assert "primary_contract" not in capability
         assert eb.validate_registry(registry) == []
+
+
+class TestPrimaryContractEngineRule:
+    """The owner must be the contract's owner *or* its producer."""
+
+    def _capability(self, reg: dict[str, Any], cid: str) -> dict[str, Any]:
+        for cap in reg["capabilities"]:
+            if cap["id"] == cid:
+                return cap
+        raise AssertionError(f"capability {cid!r} not found")
+
+    def test_unrelated_engine_fails(self, registry: dict[str, Any]) -> None:
+        # Naming a contract this engine neither owns nor produces would let a
+        # capability claim authority over a record it does not control.
+        self._capability(registry, "coaching")["primary_contract"] = "SpatialEvidenceV1"
+        assert "CAP_CONTRACT_ENGINE" in _codes(registry)
+
+    def test_owning_engine_is_accepted(self, registry: dict[str, Any]) -> None:
+        assert "CAP_CONTRACT_ENGINE" not in _codes(registry)
+
+    def test_producing_engine_is_accepted(self, registry: dict[str, Any]) -> None:
+        # ScoreEditCommandSet is owned by Musical Core and produced by Creative --
+        # the established pattern where Core owns the vocabulary for changing the
+        # canonical model and another engine speaks it. A Creative capability naming
+        # the command set it produces is correct, and an owner-only rule would
+        # wrongly reject it.
+        capability = self._capability(registry, "semantic-edit-proposals")
+        capability["primary_contract"] = "ScoreEditCommandSet"
+        assert "CAP_CONTRACT_ENGINE" not in _codes(registry)
+
+    def test_the_registry_really_contains_that_asymmetry(
+        self, registry: dict[str, Any]
+    ) -> None:
+        # Guards the rationale above: if the asymmetry ever disappears, the weaker
+        # rule loses its justification and should be revisited rather than kept out
+        # of habit.
+        split = [
+            c["name"] for c in registry["contracts"] if c["producer"] != c["owning_engine"]
+        ]
+        assert "ScoreEditCommandSet" in split
+        assert "ProjectionRequest" in split
+
+
+class TestPrimaryContractClassificationRule:
+    """Only the direct evidence/interpretation contradiction is rejected."""
+
+    def _capability(self, reg: dict[str, Any], cid: str) -> dict[str, Any]:
+        for cap in reg["capabilities"]:
+            if cap["id"] == cid:
+                return cap
+        raise AssertionError(f"capability {cid!r} not found")
+
+    def test_evidence_capability_naming_an_interpretation_contract_fails(
+        self, registry: dict[str, Any]
+    ) -> None:
+        capability = self._capability(registry, "live-capture")
+        capability["primary_contract"] = "CoachingRecommendationV1"
+        assert "CAP_CONTRACT_CLASS" in _codes(registry)
+
+    def test_interpretation_capability_naming_an_evidence_contract_fails(
+        self, registry: dict[str, Any]
+    ) -> None:
+        capability = self._capability(registry, "educational-interpretation")
+        capability["primary_contract"] = "SpatialEvidenceV1"
+        assert "CAP_CONTRACT_CLASS" in _codes(registry)
+
+    def test_neither_capability_may_name_an_evidence_contract(
+        self, registry: dict[str, Any]
+    ) -> None:
+        # A mechanism that emits evidence is not itself evidence. Requiring exact
+        # equality would reject this, which is stronger than the seam rule needs.
+        capability = self._capability(registry, "candidate-generation")
+        capability["classification"] = "neither"
+        capability["primary_contract"] = "SpatialEvidenceV1"
+        assert "CAP_CONTRACT_CLASS" not in _codes(registry)
+
+    def test_matching_classifications_pass(self, registry: dict[str, Any]) -> None:
+        assert "CAP_CONTRACT_CLASS" not in _codes(registry)
+
+    def test_contradiction_helper_is_symmetric(self) -> None:
+        assert eb._contradicts("evidence", "interpretation") is True
+        assert eb._contradicts("interpretation", "evidence") is True
+        assert eb._contradicts("neither", "evidence") is False
+        assert eb._contradicts("evidence", "neither") is False
+        assert eb._contradicts("evidence", "evidence") is False
+
+
+class TestDuplicateContractNames:
+    """A duplicate name must not produce a misleading capability violation."""
+
+    def _first(self, reg: dict[str, Any], name: str) -> dict[str, Any]:
+        for con in reg["contracts"]:
+            if con["name"] == name:
+                return con
+        raise AssertionError(f"contract {name!r} not found")
+
+    def test_duplicate_contract_name_is_reported_as_con_dup(
+        self, registry: dict[str, Any]
+    ) -> None:
+        shadow = copy.deepcopy(self._first(registry, "SpatialEvidenceV1"))
+        shadow["owning_engine"] = "EDUCATIONAL_ENGINE"
+        shadow["producer"] = "EDUCATIONAL_ENGINE"
+        shadow["versioning_authority"] = "EDUCATIONAL_ENGINE"
+        registry["contracts"].append(shadow)
+        codes = _codes(registry)
+        assert "CON_DUP" in codes
+        # spatial-evidence names SpatialEvidenceV1. Validating it against an
+        # arbitrary winner would emit an engine mismatch that is noise, not signal.
+        assert "CAP_CONTRACT_ENGINE" not in codes
+
+    def test_index_reports_the_duplicated_name(self, registry: dict[str, Any]) -> None:
+        registry["contracts"].append(copy.deepcopy(self._first(registry, "SpatialEvidenceV1")))
+        _, ambiguous = eb._index_contracts(registry)
+        assert ambiguous == frozenset({"SpatialEvidenceV1"})
+
+    def test_index_keeps_the_first_occurrence(self, registry: dict[str, Any]) -> None:
+        shadow = copy.deepcopy(self._first(registry, "SpatialEvidenceV1"))
+        shadow["classification"] = "neither"
+        registry["contracts"].append(shadow)
+        by_name, _ = eb._index_contracts(registry)
+        assert by_name["SpatialEvidenceV1"]["classification"] == "evidence"
+
+    def test_no_duplicates_yields_an_empty_ambiguous_set(
+        self, registry: dict[str, Any]
+    ) -> None:
+        _, ambiguous = eb._index_contracts(registry)
+        assert ambiguous == frozenset()

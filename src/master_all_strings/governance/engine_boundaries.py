@@ -111,7 +111,7 @@ def _check_dependency_matrix(reg: Mapping[str, Any]) -> list[Violation]:
 def _check_capabilities(reg: Mapping[str, Any]) -> list[Violation]:
     v: list[Violation] = []
     seen: set[str] = set()
-    contracts_by_name = {c["name"]: c for c in reg["contracts"]}
+    contracts_by_name, ambiguous = _index_contracts(reg)
     for cap in reg["capabilities"]:
         cid = cap["id"]
         if cid in seen:
@@ -133,47 +133,101 @@ def _check_capabilities(reg: Mapping[str, Any]) -> list[Violation]:
             v.append(
                 Violation("PERF_POLICY", f"{cid!r}: Performance may not own interpretation")
             )
-        v.extend(_check_primary_contract(cid, cap, contracts_by_name))
+        v.extend(_check_primary_contract(cid, cap, contracts_by_name, ambiguous))
     return v
 
 
+def _index_contracts(reg: Mapping[str, Any]) -> tuple[dict[str, Any], frozenset[str]]:
+    """Index contracts by name, and report which names are duplicated.
+
+    A plain dict comprehension would silently keep the last of any duplicate pair, so
+    a capability could be validated against a contract that is not the one a reader
+    would find first. ``_check_contracts`` already reports the duplicate as
+    ``CON_DUP``; naming the ambiguity here lets the capability checks stand down
+    rather than emit a second, misleading violation derived from an arbitrary winner.
+    """
+    by_name: dict[str, Any] = {}
+    duplicated: set[str] = set()
+    for contract in reg["contracts"]:
+        name = contract["name"]
+        if name in by_name:
+            duplicated.add(name)
+        by_name.setdefault(name, contract)
+    return by_name, frozenset(duplicated)
+
+
 def _check_primary_contract(
-    cid: str, cap: Mapping[str, Any], by_name: Mapping[str, Any]
+    cid: str,
+    cap: Mapping[str, Any],
+    by_name: Mapping[str, Any],
+    ambiguous: frozenset[str],
 ) -> list[Violation]:
-    """A capability's ``primary_contract`` must resolve, and must agree on ownership.
+    """A capability's ``primary_contract`` must resolve and be coherent with it.
 
     This mirrors ``_check_citation``. Without it the reference is unchecked on both
-    sides — the JSON schema only requires a non-empty string — so a capability could
-    name a contract that does not exist, or one owned by a different engine, and the
-    registry would still validate clean.
+    sides -- the JSON schema only requires a non-empty string -- so a capability could
+    name a contract that does not exist and the registry would still validate clean.
+
+    Two rules are deliberately weaker than "must match exactly", because the registry
+    already contains legitimate counterexamples to the stricter reading:
+
+    * **Engine.** The capability's owner must be the contract's owner *or* its
+      producer. ``ScoreEditCommandSet`` and ``ProjectionRequest`` are owned by Musical
+      Core and produced by Creative; ``CanonicalIngestionRequestV1`` is owned by Core
+      and produced by Performance. A Creative capability naming the command set it
+      produces is correct, and requiring same-owner would reject it.
+    * **Classification.** Only the direct contradiction is rejected -- an ``evidence``
+      capability naming an ``interpretation`` contract, or the reverse. A ``neither``
+      capability may name an evidence contract, because a mechanism that emits
+      evidence is not itself evidence.
     """
     named = cap.get("primary_contract")
     if named is None:
         return []
-    v: list[Violation] = []
+    if not isinstance(named, str):
+        return [
+            Violation("CAP_CONTRACT", f"capability {cid!r}: primary_contract must be a string")
+        ]
     if named not in by_name:
-        v.append(
+        return [
             Violation("CAP_CONTRACT", f"capability {cid!r} names unknown contract {named!r}")
-        )
-        return v
+        ]
+    if named in ambiguous:
+        # CON_DUP already reports the real defect; anything derived from an arbitrary
+        # winner here would be noise at best and wrong at worst.
+        return []
+
+    v: list[Violation] = []
     contract = by_name[named]
-    if contract["owning_engine"] != cap["owning_engine"]:
+    permitted_engines = {contract["owning_engine"], contract["producer"]}
+    if cap["owning_engine"] not in permitted_engines:
         v.append(
             Violation(
-                "CAP_CONTRACT",
+                "CAP_CONTRACT_ENGINE",
                 f"capability {cid!r} is owned by {cap['owning_engine']} but its primary "
-                f"contract {named!r} is owned by {contract['owning_engine']}",
+                f"contract {named!r} is owned by {contract['owning_engine']} and produced "
+                f"by {contract['producer']}",
             )
         )
-    if contract["classification"] != cap["classification"]:
+    if _contradicts(cap["classification"], contract["classification"]):
         v.append(
             Violation(
-                "CAP_CONTRACT",
+                "CAP_CONTRACT_CLASS",
                 f"capability {cid!r} is classified {cap['classification']} but its primary "
                 f"contract {named!r} is classified {contract['classification']}",
             )
         )
     return v
+
+
+def _contradicts(capability_class: str, contract_class: str) -> bool:
+    """Whether two classifications are opposites rather than merely different."""
+    opposed = {"evidence", "interpretation"}
+    return (
+        capability_class in opposed
+        and contract_class in opposed
+        and capability_class != contract_class
+    )
 
 
 def _check_contracts(reg: Mapping[str, Any]) -> list[Violation]:
