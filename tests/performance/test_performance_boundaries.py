@@ -137,7 +137,7 @@ class TestMusicalCoreRemainsCanonical:
         # owns ScoreEditCommandSet that Creative produces.
         contract = _contract(registry, "CanonicalIngestionRequestV1")
         assert contract["owning_engine"] == "MUSICAL_CORE"
-        assert contract["producer"] == "PERFORMANCE_ENGINE"
+        assert contract["producers"] == ["PERFORMANCE_ENGINE"]
         assert contract["versioning_authority"] == "MUSICAL_CORE"
 
     @pytest.mark.parametrize(
@@ -160,8 +160,8 @@ class TestMusicalCoreRemainsCanonical:
         self, registry: dict[str, Any]
     ) -> None:
         # Displaying a projection during review is legitimate; owning a note model
-        # is not. ProjectionResult is the sanctioned route.
-        assert "PERFORMANCE_ENGINE" in _contract(registry, "ProjectionResult")["consumers"]
+        # is not. ProjectionResultV1 is the sanctioned route.
+        assert "PERFORMANCE_ENGINE" in _contract(registry, "ProjectionResultV1")["consumers"]
 
     def test_no_performance_module_defines_a_score_revision(self) -> None:
         for path in PERFORMANCE_ROOT.rglob("*.py"):

@@ -299,7 +299,7 @@ A projection and an interaction surface that produces validated canonical edit
 commands. It maintains no independent authoritative note collection (ADR-0007 D8).
 The semantic projection is Musical Core's `piano-roll-projection`; the interactive
 editing experience is Creative's; the Performance Engine may display a projection
-during review through `ProjectionResult` and owns no note model.
+during review through `ProjectionResultV1` and owns no note model.
 
 ## Notation
 

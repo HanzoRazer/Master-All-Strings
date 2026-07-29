@@ -63,11 +63,11 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "owning_engine", "producer", "consumers", "mutability", "classification", "versioning_authority"],
+        "required": ["name", "owning_engine", "producers", "consumers", "mutability", "classification", "versioning_authority"],
         "properties": {
           "name": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$"},
           "owning_engine": {"$ref": "#/$defs/engineId"},
-          "producer": {"$ref": "#/$defs/engineId"},
+          "producers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/engineId"}},
           "consumers": {"type": "array", "items": {"$ref": "#/$defs/engineId"}, "uniqueItems": true},
           "mutability": {"enum": ["immutable", "versioned"]},
           "classification": {"$ref": "#/$defs/classification"},

@@ -149,7 +149,7 @@ verified-but-wrong, and take the readiness and capture-closure behaviour from
 
 1. `piano-roll-projection` is **Musical Core**, not Performance, even though recording
    happens in Performance. Creative owns the interactive editing experience;
-   Performance owns no note model and reaches projections via `ProjectionResult`.
+   Performance owns no note model and reaches projections via `ProjectionResultV1`.
 2. `CanonicalIngestionRequestV1` is **Core-owned, Performance-produced**, mirroring
    `ScoreEditCommandSet`. `with_revision` refuses to overwrite and refuses a revision
    id equal to the session id.

@@ -152,7 +152,7 @@ The piano roll is a projection and an interaction surface that produces validate
 canonical edit commands. It maintains no independent authoritative note collection.
 The semantic projection is owned by **Musical Core** (`piano-roll-projection`); the
 interactive editing experience is owned by **Creative Engine**; the Performance
-Engine may display a projection during review via `ProjectionResult` but owns no
+Engine may display a projection during review via `ProjectionResultV1` but owns no
 note model.
 
 ### D9 — Notation and TAB remain Musical Core projections
