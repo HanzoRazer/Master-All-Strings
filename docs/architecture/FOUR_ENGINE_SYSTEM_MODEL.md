@@ -13,7 +13,7 @@ An **engine** is a constitutional boundary: an ownership scope, a dependency dir
 | **Musical Core** | *What is the music, and where can it be played?* | Canonical music, MSME, selection, mechanical planning, spatial evidence, deterministic projection. |
 | **Educational Engine** | *What does this mean for a learner?* | Learning Objects, curriculum, interpretation, coaching, assessment, pedagogical sequencing. |
 | **Creative Engine** | *How does a human change the music?* | Smart Score Entry, composition, arrangement, AI proposals, authoring UX. |
-| **Performance Engine** | *What actually happened when it was played?* | Live capture, playback, Smart Guitar, telemetry, device adapters. |
+| **Performance Engine** | *What actually happened when it was played?* | Live capture, playback, Smart Guitar, telemetry, device adapters, the embedded performance runtime. |
 
 ## Dependency direction
 
@@ -148,6 +148,21 @@ Educational Engine
 
 This is the one cross-engine path where Educational depends *downward on Performance* — as an evidence consumer only. Educational imports Performance's observation contract; it does not depend on Performance device code, and Performance never depends up into curriculum or coaching. `CoachingRecommendationV1` cites `PerformanceObservationV1`, exactly as `EducationalInterpretationV1` cites `SpatialEvidenceV1`.
 
+## Implementation example — the Embedded Performance Runtime
+
+The first substantial Performance Engine subsystem is the **Embedded Performance
+Runtime** (product name: *Performance Studio*), ratified by [ADR-0007](../decisions/ADR-0007-EMBEDDED-PERFORMANCE-RUNTIME.md) and detailed in [EMBEDDED_PERFORMANCE_RUNTIME.md](EMBEDDED_PERFORMANCE_RUNTIME.md). It hosts a real-time MIDI/audio runtime — Ardour on a Raspberry Pi 5 is the first candidate — so a player can hear a synth, record a take, and review it.
+
+It is included here as a worked example of the taxonomy holding under pressure, because a recording subsystem is exactly where engine boundaries erode. Five statements are constitutional:
+
+- **Ardour is not a fifth engine.** It is one implementation of a replaceable audio infrastructure layer that sits *below* all four engines and owns no music. `PipeWire`, `JACK`, `ALSA`, and LV2 hosting are in that same layer. A runtime may be replaced without touching any engine contract.
+- **Performance depends on Musical Core**, through permitted contracts only — the same single downward arrow every non-Core engine has.
+- **Educational consumes Performance evidence** (`PerformanceObservationV1`) under Seam 4, and nothing else from Performance.
+- **Creative does not depend on Performance at all.** Captured content reaches Creative through canonical music, never through runtime internals or session files.
+- **Captured performance is not canonical music.** A runtime session file is an operational artifact. Raw capture becomes canonical only by an ingestion request that Musical Core owns and answers with a revision identifier that Performance may reference but never mint.
+
+The piano roll is the sharpest case the example settles. It splits across two engines rather than landing in Performance where the recording happens: Musical Core owns the semantic `piano-roll-projection`, Creative owns the interactive editing experience, and Performance owns neither — it may display a projection during review via `ProjectionResult`, but maintaining an editable note collection inside Performance would create a second authoritative score. Piano roll, notation, and TAB are three interpretations that must all cite one canonical revision.
+
 ## Borderline cases
 
 The seam language is clear in principle but disputable at the margin. These are the recurring hard calls, decided once here so they are not relitigated per Dev Order. The test in each case is the same: **does the operation require a judgment about a human (a learner, an author's intent), or only a deterministic fact about the music?**
@@ -192,6 +207,7 @@ Packages are physically arranged by current repository convention; the engine co
 | `adapters/` | boundary (Core today) | Hosts boundary adapters behind the interface of whichever engine owns it. Today that is Musical Core (projection/renderer, I/O); a future Performance device adapter would live here under Performance ownership, with its own table row. |
 | `practice/` (placeholder) | Educational | Foreshadows the Educational Engine. |
 | `sequencer/` (placeholder) | Performance | Transport/playback foreshadows the Performance Engine. |
+| `performance/` | Performance | Embedded Performance Runtime: contracts, runtime-neutral port, and adapters (ADR-0007). `performance/adapters/ardour/` is adapter-private; its vocabulary may not cross the port. |
 
 This table lists every top-level package present today; there is no current package it omits. `core/` groups the `foundation`, `musical_events`, and `spatial_mapping` subpackages — `spatial_mapping` is *inside* `core/`, not a sibling. No package moves as a result of ADR-0006. For the packages listed, this table is authoritative on engine ownership until a future, separately-authorized reorganization changes the physical layout; for a package not yet listed, see the authority-precedence rule above.
 

@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/performance/raw-performance-capture-v1.schema.json",
+  "title": "RawPerformanceCaptureV1",
+  "description": "The immutable record of one take (ADR-0007 D6). Closure is explicit: a terminal completion_state requires ended_at, and in_progress forbids it, so a crashed take can never be read as a finished one. The embedded event definition is kept identical to captured_midi_event_v1.schema.json and a drift test asserts it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "capture_id",
+    "session_id",
+    "runtime_identity",
+    "source_identity",
+    "started_at",
+    "ended_at",
+    "completion_state",
+    "tempo_context",
+    "meter_context",
+    "events",
+    "warnings",
+    "faults",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "capture_id": {"type": "string", "minLength": 1},
+    "session_id": {"type": "string", "minLength": 1},
+    "runtime_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "runtime_id", "runtime_kind", "reported_version", "version_policy", "version_supported"],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "runtime_id": {"type": "string", "minLength": 1},
+        "runtime_kind": {"type": "string", "enum": ["fake", "ardour", "lightweight"]},
+        "reported_version": {"type": ["string", "null"], "minLength": 1},
+        "version_policy": {"type": "string", "minLength": 1},
+        "version_supported": {"type": "boolean"}
+      },
+      "allOf": [
+        {
+          "description": "An unresolved version cannot be a supported one.",
+          "if": {"properties": {"reported_version": {"type": "null"}}, "required": ["reported_version"]},
+          "then": {"properties": {"version_supported": {"const": false}}}
+        }
+      ]
+    },
+    "source_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "source_id", "port", "device", "supplies_string_identity"],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "source_id": {"type": "string", "minLength": 1},
+        "port": {"type": "string", "minLength": 1},
+        "device": {"type": "string", "minLength": 1},
+        "supplies_string_identity": {"type": "boolean"}
+      }
+    },
+    "started_at": {"$ref": "#/$defs/utcTimestamp"},
+    "ended_at": {"oneOf": [{"$ref": "#/$defs/utcTimestamp"}, {"type": "null"}]},
+    "completion_state": {
+      "type": "string",
+      "enum": ["in_progress", "complete", "interrupted", "failed", "cancelled"]
+    },
+    "tempo_context": {"type": "number"},
+    "meter_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "beats_per_bar", "beat_unit"],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "beats_per_bar": {"type": "integer", "minimum": 1, "maximum": 64},
+        "beat_unit": {"type": "integer", "enum": [1, 2, 4, 8, 16, 32]}
+      }
+    },
+    "events": {"type": "array", "items": {"$ref": "#/$defs/capturedMidiEvent"}},
+    "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "faults": {"type": "array", "items": {"$ref": "#/$defs/fault"}},
+    "provenance": {"type": "object", "additionalProperties": {"type": "string"}}
+  },
+  "allOf": [
+    {
+      "description": "A closed capture must say when it closed.",
+      "if": {
+        "properties": {"completion_state": {"enum": ["complete", "interrupted", "failed", "cancelled"]}},
+        "required": ["completion_state"]
+      },
+      "then": {"properties": {"ended_at": {"$ref": "#/$defs/utcTimestamp"}}},
+      "else": {"properties": {"ended_at": {"type": "null"}}}
+    }
+  ],
+  "$defs": {
+    "utcTimestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "capturedMidiEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "event_id",
+        "sequence_number",
+        "event_type",
+        "capture_time_ns",
+        "channel",
+        "source_port",
+        "source_device",
+        "note",
+        "velocity",
+        "controller",
+        "controller_value",
+        "pitch_bend",
+        "source_string",
+        "raw_payload"
+      ],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "event_id": {"type": "string", "minLength": 1},
+        "sequence_number": {"type": "integer", "minimum": 0},
+        "event_type": {
+          "type": "string",
+          "enum": ["note_on", "note_off", "control_change", "pitch_bend", "program_change", "channel_pressure"]
+        },
+        "capture_time_ns": {"type": "integer", "minimum": 0},
+        "channel": {"type": "integer", "minimum": 0, "maximum": 15},
+        "source_port": {"type": "string", "minLength": 1},
+        "source_device": {"type": "string", "minLength": 1},
+        "note": {"type": ["integer", "null"], "minimum": 0, "maximum": 127},
+        "velocity": {"type": ["integer", "null"], "minimum": 0, "maximum": 127},
+        "controller": {"type": ["integer", "null"], "minimum": 0, "maximum": 127},
+        "controller_value": {"type": ["integer", "null"], "minimum": 0, "maximum": 127},
+        "pitch_bend": {"type": ["integer", "null"], "minimum": -8192, "maximum": 8191},
+        "source_string": {"type": ["integer", "null"], "minimum": 0, "maximum": 15},
+        "raw_payload": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {"type": "integer", "minimum": 0, "maximum": 255}
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"event_type": {"enum": ["note_on", "note_off"]}}, "required": ["event_type"]},
+          "then": {"properties": {"note": {"type": "integer"}, "velocity": {"type": "integer"}}},
+          "else": {"properties": {"note": {"type": "null"}, "velocity": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"event_type": {"const": "control_change"}}, "required": ["event_type"]},
+          "then": {"properties": {"controller": {"type": "integer"}, "controller_value": {"type": "integer"}}},
+          "else": {"properties": {"controller": {"type": "null"}, "controller_value": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"event_type": {"const": "pitch_bend"}}, "required": ["event_type"]},
+          "then": {"properties": {"pitch_bend": {"type": "integer"}}},
+          "else": {"properties": {"pitch_bend": {"type": "null"}}}
+        }
+      ]
+    },
+    "fault": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "fault_id", "code", "subsystem", "detail", "occurred_at", "recoverable"],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "fault_id": {"type": "string", "minLength": 1},
+        "code": {
+          "type": "string",
+          "enum": [
+            "startup_timeout",
+            "health_timeout",
+            "shutdown_timeout",
+            "executable_missing",
+            "session_template_missing",
+            "control_endpoint_unavailable",
+            "unsupported_runtime_version",
+            "midi_input_missing",
+            "audio_output_missing",
+            "synth_missing",
+            "synth_load_failed",
+            "synth_load_timeout",
+            "runtime_crashed",
+            "malformed_midi_event",
+            "stuck_note",
+            "panic_failed",
+            "capability_unsupported",
+            "invalid_state"
+          ]
+        },
+        "subsystem": {"type": "string", "minLength": 1},
+        "detail": {"type": "string", "minLength": 1},
+        "occurred_at": {"$ref": "#/$defs/utcTimestamp"},
+        "recoverable": {"type": "boolean"}
+      }
+    }
+  }
+}

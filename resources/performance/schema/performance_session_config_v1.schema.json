@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/performance/performance-session-config-v1.schema.json",
+  "title": "PerformanceSessionConfigV1",
+  "description": "A prepared session: what exists before the player touches anything. The first-target bound of one MIDI track is expressed here as maxItems, not left to reviewer discipline (DO-006 §3.2). Audio tracks are rejected until Stage 6 is separately authorized.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "session_id", "runtime_id", "tracks", "transport", "metronome", "template_id"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "session_id": {"type": "string", "minLength": 1},
+    "runtime_id": {"type": "string", "minLength": 1},
+    "template_id": {"type": "string", "minLength": 1},
+    "tracks": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {"$ref": "#/$defs/track"}
+    },
+    "transport": {"$ref": "#/$defs/transport"},
+    "metronome": {"$ref": "#/$defs/metronome"}
+  },
+  "$defs": {
+    "track": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "track_id", "name", "kind", "midi_input", "synth_id", "record_armed", "channel"],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "track_id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "kind": {"const": "midi"},
+        "midi_input": {"type": ["string", "null"], "minLength": 1},
+        "synth_id": {"type": ["string", "null"], "minLength": 1},
+        "record_armed": {"type": "boolean"},
+        "channel": {"type": ["integer", "null"], "minimum": 0, "maximum": 15}
+      },
+      "allOf": [
+        {
+          "description": "An armed track with no input records nothing while appearing to work.",
+          "if": {"properties": {"record_armed": {"const": true}}, "required": ["record_armed"]},
+          "then": {"properties": {"midi_input": {"type": "string"}}}
+        }
+      ]
+    },
+    "meter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "beats_per_bar", "beat_unit"],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "beats_per_bar": {"type": "integer", "minimum": 1, "maximum": 64},
+        "beat_unit": {"type": "integer", "enum": [1, 2, 4, 8, 16, 32]}
+      }
+    },
+    "loop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "start_tick", "end_tick", "enabled"],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "start_tick": {"type": "integer", "minimum": 0},
+        "end_tick": {"type": "integer", "minimum": 1},
+        "enabled": {"type": "boolean"}
+      }
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "mode", "position_tick", "tempo_bpm", "meter", "ticks_per_quarter", "loop"],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "mode": {"type": "string", "enum": ["stopped", "playing", "recording"]},
+        "position_tick": {"type": "integer", "minimum": 0},
+        "tempo_bpm": {"type": "number", "minimum": 20.0, "maximum": 400.0},
+        "meter": {"$ref": "#/$defs/meter"},
+        "ticks_per_quarter": {"type": "integer", "exclusiveMinimum": 0},
+        "loop": {"oneOf": [{"$ref": "#/$defs/loop"}, {"type": "null"}]}
+      }
+    },
+    "metronome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "enabled", "count_in_bars", "level"],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "enabled": {"type": "boolean"},
+        "count_in_bars": {"type": "integer", "minimum": 0},
+        "level": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+      }
+    }
+  }
+}

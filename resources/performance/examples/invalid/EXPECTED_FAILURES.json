@@ -1,0 +1,110 @@
+{
+  "schema_version": "1.0.0",
+  "fixtures": {
+    "capture_complete_without_ended_at.json": {
+      "schema": "raw_performance_capture_v1",
+      "rejected_by": "schema",
+      "reason": "a complete capture must record when it closed"
+    },
+    "capture_controller_event_with_note.json": {
+      "schema": "raw_performance_capture_v1",
+      "rejected_by": "schema",
+      "reason": "a control_change event must not carry note"
+    },
+    "capture_duplicate_sequence_number.json": {
+      "schema": "raw_performance_capture_v1",
+      "rejected_by": "python",
+      "reason": "sequence_number must strictly increase"
+    },
+    "capture_in_progress_with_ended_at.json": {
+      "schema": "raw_performance_capture_v1",
+      "rejected_by": "schema",
+      "reason": "an in_progress capture must not have ended_at"
+    },
+    "capture_note_event_missing_note.json": {
+      "schema": "raw_performance_capture_v1",
+      "rejected_by": "schema",
+      "reason": "a note event must carry note"
+    },
+    "capture_raw_payload_too_long.json": {
+      "schema": "raw_performance_capture_v1",
+      "rejected_by": "schema",
+      "reason": "raw_payload exceeds the 64-byte bound"
+    },
+    "capture_source_string_out_of_range.json": {
+      "schema": "raw_performance_capture_v1",
+      "rejected_by": "schema",
+      "reason": "source_string must be between 0 and 15"
+    },
+    "capture_unknown_completion_state.json": {
+      "schema": "raw_performance_capture_v1",
+      "rejected_by": "schema",
+      "reason": "completion_state is not a known state"
+    },
+    "health_ready_with_unavailable_subsystem.json": {
+      "schema": "runtime_health_v1",
+      "rejected_by": "schema",
+      "reason": "state ready requires every subsystem to be ready"
+    },
+    "runtime_config_blank_session_template.json": {
+      "schema": "performance_runtime_config_v1",
+      "rejected_by": "schema",
+      "reason": "session_template must not be blank"
+    },
+    "runtime_config_duplicate_midi_inputs.json": {
+      "schema": "performance_runtime_config_v1",
+      "rejected_by": "schema",
+      "reason": "midi_inputs must be unique"
+    },
+    "runtime_config_negative_timeout.json": {
+      "schema": "performance_runtime_config_v1",
+      "rejected_by": "schema",
+      "reason": "startup_timeout_ms must be positive"
+    },
+    "runtime_config_no_midi_inputs.json": {
+      "schema": "performance_runtime_config_v1",
+      "rejected_by": "schema",
+      "reason": "midi_inputs must declare at least one source"
+    },
+    "runtime_config_offline_requires_network.json": {
+      "schema": "performance_runtime_config_v1",
+      "rejected_by": "schema",
+      "reason": "offline_required is true, so requires_network must be false"
+    },
+    "runtime_config_unknown_runtime_kind.json": {
+      "schema": "performance_runtime_config_v1",
+      "rejected_by": "schema",
+      "reason": "runtime_kind is not a known runtime family"
+    },
+    "runtime_config_unsupported_sample_rate.json": {
+      "schema": "performance_runtime_config_v1",
+      "rejected_by": "schema",
+      "reason": "sample_rate_hz 22050 is not a supported rate"
+    },
+    "runtime_config_zero_buffer.json": {
+      "schema": "performance_runtime_config_v1",
+      "rejected_by": "schema",
+      "reason": "buffer_frames 0 is not an allowed buffer size"
+    },
+    "session_armed_track_without_input.json": {
+      "schema": "performance_session_config_v1",
+      "rejected_by": "schema",
+      "reason": "a record-armed track must declare a midi_input"
+    },
+    "session_audio_track.json": {
+      "schema": "performance_session_config_v1",
+      "rejected_by": "schema",
+      "reason": "audio tracks are out of scope for the first target"
+    },
+    "session_tempo_out_of_range.json": {
+      "schema": "performance_session_config_v1",
+      "rejected_by": "schema",
+      "reason": "tempo_bpm must be between 20 and 400"
+    },
+    "session_two_tracks.json": {
+      "schema": "performance_session_config_v1",
+      "rejected_by": "schema",
+      "reason": "the first target permits at most one track"
+    }
+  }
+}

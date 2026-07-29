@@ -14,6 +14,7 @@ Every capability has exactly one authoritative owning engine. Generated from the
 | `deterministic-selection` | Deterministic selection | Musical Core | Educational, Creative | evidence | planned |
 | `spatial-evidence` | Spatial evidence | Musical Core | Educational | evidence | planned |
 | `mechanical-phrase-planning` | Mechanical phrase and chord planning | Musical Core | Educational | neither | planned |
+| `piano-roll-projection` | Piano-roll projection (semantic) | Musical Core | Creative, Educational | neither | planned |
 | `notation-projection` | Notation projection (semantic) | Musical Core | Creative, Educational | neither | planned |
 | `tab-projection` | TAB projection (semantic) | Musical Core | Creative, Educational | neither | planned |
 | `midi-projection` | MIDI projection (semantic) | Musical Core | Creative, Performance | neither | planned |
@@ -41,4 +42,12 @@ Every capability has exactly one authoritative owning engine. Generated from the
 | `telemetry` | Performance telemetry | Performance | Educational | evidence | planned |
 | `teacher-student-sync` | Teacher/student synchronization | Performance | Educational | evidence | planned |
 | `smart-guitar-adapters` | Smart Guitar device adapters | Performance | — | neither | planned |
+| `embedded-performance-runtime` | Embedded performance runtime | Performance | — | neither | planned |
+| `runtime-orchestration` | Runtime process orchestration | Performance | — | neither | planned |
+| `midi-device-ingestion` | MIDI device ingestion | Performance | — | neither | planned |
+| `synth-routing` | Synthesizer selection and routing | Performance | — | neither | planned |
+| `transport-control` | Transport control | Performance | — | neither | planned |
+| `raw-performance-capture` | Raw performance capture | Performance | Educational | evidence | planned |
+| `runtime-diagnostics` | Runtime health and diagnostics | Performance | — | evidence | planned |
+| `performance-studio` | Performance Studio experience | Performance | — | neither | planned |
 | `user-library-import` | User-library import workflows | Educational | Creative | neither | planned |

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/performance/runtime-capability-registry-v1.schema.json",
+  "title": "RuntimeCapabilityRegistryV1",
+  "description": "What each runtime adapter claims to support, held as data so UI and controller logic can ask rather than hardcode. Runtimes legitimately differ -- a lightweight practice runtime will never offer multitrack, and a studio runtime need not offer a tuner -- so callers perform capability discovery. A claim here is a declaration, not proof: verified_by records how it was established, and 'conformance_test' is the only value that means an executable check passed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "runtimes"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "runtimes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/runtime"}
+    }
+  },
+  "$defs": {
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime_id", "runtime_kind", "display_name", "version_policy", "capabilities", "verified_by", "notes"],
+      "properties": {
+        "runtime_id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+        "runtime_kind": {"type": "string", "enum": ["fake", "ardour", "lightweight"]},
+        "display_name": {"type": "string", "minLength": 1},
+        "version_policy": {"type": "string", "minLength": 1},
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "transport",
+              "midi_capture",
+              "synth_hosting",
+              "metronome",
+              "looping",
+              "panic",
+              "diagnostics",
+              "multitrack",
+              "automation",
+              "mixdown",
+              "session_recovery"
+            ]
+          }
+        },
+        "verified_by": {
+          "type": "string",
+          "enum": ["conformance_test", "source_inspection", "unverified"]
+        },
+        "notes": {"type": "string"}
+      }
+    }
+  }
+}

@@ -50,6 +50,7 @@
     {"id": "deterministic-selection", "name": "Deterministic selection", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["EDUCATIONAL_ENGINE", "CREATIVE_ENGINE"], "classification": "evidence", "implementation_status": "planned"},
     {"id": "spatial-evidence", "name": "Spatial evidence", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["EDUCATIONAL_ENGINE"], "classification": "evidence", "primary_contract": "SpatialEvidenceV1", "implementation_status": "planned"},
     {"id": "mechanical-phrase-planning", "name": "Mechanical phrase and chord planning", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["EDUCATIONAL_ENGINE"], "classification": "neither", "implementation_status": "planned"},
+    {"id": "piano-roll-projection", "name": "Piano-roll projection (semantic)", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["CREATIVE_ENGINE", "EDUCATIONAL_ENGINE"], "classification": "neither", "implementation_status": "planned"},
     {"id": "notation-projection", "name": "Notation projection (semantic)", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["CREATIVE_ENGINE", "EDUCATIONAL_ENGINE"], "classification": "neither", "implementation_status": "planned"},
     {"id": "tab-projection", "name": "TAB projection (semantic)", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["CREATIVE_ENGINE", "EDUCATIONAL_ENGINE"], "classification": "neither", "implementation_status": "planned"},
     {"id": "midi-projection", "name": "MIDI projection (semantic)", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["CREATIVE_ENGINE", "PERFORMANCE_ENGINE"], "classification": "neither", "implementation_status": "planned"},
@@ -77,6 +78,14 @@
     {"id": "telemetry", "name": "Performance telemetry", "owning_engine": "PERFORMANCE_ENGINE", "permitted_consumers": ["EDUCATIONAL_ENGINE"], "classification": "evidence", "implementation_status": "planned"},
     {"id": "teacher-student-sync", "name": "Teacher/student synchronization", "owning_engine": "PERFORMANCE_ENGINE", "permitted_consumers": ["EDUCATIONAL_ENGINE"], "classification": "evidence", "implementation_status": "planned"},
     {"id": "smart-guitar-adapters", "name": "Smart Guitar device adapters", "owning_engine": "PERFORMANCE_ENGINE", "permitted_consumers": [], "classification": "neither", "implementation_status": "planned"},
+    {"id": "embedded-performance-runtime", "name": "Embedded performance runtime", "owning_engine": "PERFORMANCE_ENGINE", "permitted_consumers": [], "classification": "neither", "implementation_status": "planned"},
+    {"id": "runtime-orchestration", "name": "Runtime process orchestration", "owning_engine": "PERFORMANCE_ENGINE", "permitted_consumers": [], "classification": "neither", "implementation_status": "planned"},
+    {"id": "midi-device-ingestion", "name": "MIDI device ingestion", "owning_engine": "PERFORMANCE_ENGINE", "permitted_consumers": [], "classification": "neither", "implementation_status": "planned"},
+    {"id": "synth-routing", "name": "Synthesizer selection and routing", "owning_engine": "PERFORMANCE_ENGINE", "permitted_consumers": [], "classification": "neither", "implementation_status": "planned"},
+    {"id": "transport-control", "name": "Transport control", "owning_engine": "PERFORMANCE_ENGINE", "permitted_consumers": [], "classification": "neither", "implementation_status": "planned"},
+    {"id": "raw-performance-capture", "name": "Raw performance capture", "owning_engine": "PERFORMANCE_ENGINE", "permitted_consumers": ["EDUCATIONAL_ENGINE"], "classification": "evidence", "primary_contract": "RawPerformanceCaptureV1", "implementation_status": "planned"},
+    {"id": "runtime-diagnostics", "name": "Runtime health and diagnostics", "owning_engine": "PERFORMANCE_ENGINE", "permitted_consumers": [], "classification": "evidence", "primary_contract": "RuntimeHealthV1", "implementation_status": "planned"},
+    {"id": "performance-studio", "name": "Performance Studio experience", "owning_engine": "PERFORMANCE_ENGINE", "permitted_consumers": [], "classification": "neither", "implementation_status": "planned"},
     {"id": "user-library-import", "name": "User-library import workflows", "owning_engine": "EDUCATIONAL_ENGINE", "permitted_consumers": ["CREATIVE_ENGINE"], "classification": "neither", "implementation_status": "planned"}
   ],
   "contracts": [
@@ -96,6 +105,12 @@
     {"name": "ScoreEditProposal", "owning_engine": "CREATIVE_ENGINE", "producer": "CREATIVE_ENGINE", "consumers": [], "mutability": "immutable", "classification": "neither", "versioning_authority": "CREATIVE_ENGINE"},
     {"name": "ScoreEditCommandSet", "owning_engine": "MUSICAL_CORE", "producer": "CREATIVE_ENGINE", "consumers": ["MUSICAL_CORE"], "mutability": "immutable", "classification": "neither", "versioning_authority": "MUSICAL_CORE"},
     {"name": "PerformanceObservationV1", "owning_engine": "PERFORMANCE_ENGINE", "producer": "PERFORMANCE_ENGINE", "consumers": ["EDUCATIONAL_ENGINE"], "mutability": "immutable", "classification": "evidence", "versioning_authority": "PERFORMANCE_ENGINE"},
+    {"name": "PerformanceRuntimeConfigV1", "owning_engine": "PERFORMANCE_ENGINE", "producer": "PERFORMANCE_ENGINE", "consumers": [], "mutability": "versioned", "classification": "neither", "versioning_authority": "PERFORMANCE_ENGINE"},
+    {"name": "PerformanceSessionConfigV1", "owning_engine": "PERFORMANCE_ENGINE", "producer": "PERFORMANCE_ENGINE", "consumers": [], "mutability": "versioned", "classification": "neither", "versioning_authority": "PERFORMANCE_ENGINE"},
+    {"name": "CapturedMidiEventV1", "owning_engine": "PERFORMANCE_ENGINE", "producer": "PERFORMANCE_ENGINE", "consumers": ["EDUCATIONAL_ENGINE"], "mutability": "immutable", "classification": "evidence", "versioning_authority": "PERFORMANCE_ENGINE"},
+    {"name": "RawPerformanceCaptureV1", "owning_engine": "PERFORMANCE_ENGINE", "producer": "PERFORMANCE_ENGINE", "consumers": ["EDUCATIONAL_ENGINE"], "mutability": "immutable", "classification": "evidence", "versioning_authority": "PERFORMANCE_ENGINE"},
+    {"name": "RuntimeHealthV1", "owning_engine": "PERFORMANCE_ENGINE", "producer": "PERFORMANCE_ENGINE", "consumers": [], "mutability": "immutable", "classification": "evidence", "versioning_authority": "PERFORMANCE_ENGINE"},
+    {"name": "CanonicalIngestionRequestV1", "owning_engine": "MUSICAL_CORE", "producer": "PERFORMANCE_ENGINE", "consumers": ["MUSICAL_CORE"], "mutability": "immutable", "classification": "neither", "versioning_authority": "MUSICAL_CORE"},
     {"name": "PracticeSession", "owning_engine": "EDUCATIONAL_ENGINE", "producer": "EDUCATIONAL_ENGINE", "consumers": [], "mutability": "versioned", "classification": "interpretation", "versioning_authority": "EDUCATIONAL_ENGINE"}
   ],
   "seam_assignments": [
@@ -106,6 +121,7 @@
   ],
   "adr_assignments": [
     {"adr": "ADR-0005", "title": "Deterministic candidate selection", "status": "reserved", "owner": "DO-004", "engine": "MUSICAL_CORE"},
-    {"adr": "ADR-0006", "title": "Four-Engine Architecture", "status": "accepted", "owner": "DO-005", "engine": null}
+    {"adr": "ADR-0006", "title": "Four-Engine Architecture", "status": "accepted", "owner": "DO-005", "engine": null},
+    {"adr": "ADR-0007", "title": "Embedded Performance Runtime", "status": "proposed", "owner": "DO-006", "engine": "PERFORMANCE_ENGINE"}
   ]
 }
