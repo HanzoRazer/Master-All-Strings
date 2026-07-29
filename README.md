@@ -49,6 +49,10 @@ Master-All-Strings/
 └── docs/
 ```
 
+## Architecture
+
+The platform is organized into four cooperating engines — **Musical Core**, **Educational**, **Creative**, and **Performance** — each a constitutional ownership and dependency boundary. Only Musical Core has shipped code so far; the others are governance boundaries with planned capabilities. See [ADR-0006](docs/decisions/ADR-0006-FOUR-ENGINE-ARCHITECTURE.md) and the [four-engine system model](docs/architecture/FOUR_ENGINE_SYSTEM_MODEL.md). Ownership is held in a machine-readable registry (`governance/engine_architecture_v1.json`) and enforced by `tests/governance/`.
+
 See `docs/architecture/PRODUCT_CHARTER.md` for the product charter and `docs/architecture/MUSICAL_SPATIAL_MAPPING_ENGINE.md` for subsystem details.
 
 ## Repository verification
