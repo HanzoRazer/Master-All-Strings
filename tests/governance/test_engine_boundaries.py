@@ -218,3 +218,56 @@ class TestRemainingBranches:
         monkeypatch.setattr(eb, "REGISTRY_PATH", tmp_path / "reg.json")
         assert eb.main([]) == 1
         assert "violations" in capsys.readouterr().out
+
+
+class TestPrimaryContractReferences:
+    """A capability's ``primary_contract`` must resolve and agree with its contract.
+
+    Closes the gap tracked in issue #9: the JSON schema only requires a non-empty
+    string, so before this check a capability could name a contract that does not
+    exist and the registry would still validate clean. That asymmetry mattered because
+    a contract's ``cites`` reference *was* already validated.
+    """
+
+    def _capability(self, reg: dict[str, Any], cid: str) -> dict[str, Any]:
+        for cap in reg["capabilities"]:
+            if cap["id"] == cid:
+                return cap
+        raise AssertionError(f"capability {cid!r} not found")
+
+    def test_committed_registry_resolves_every_primary_contract(
+        self, registry: dict[str, Any]
+    ) -> None:
+        names = {c["name"] for c in registry["contracts"]}
+        referenced = [
+            cap["primary_contract"]
+            for cap in registry["capabilities"]
+            if cap.get("primary_contract")
+        ]
+        assert referenced, "expected at least one capability to name a primary contract"
+        assert set(referenced) <= names
+
+    def test_unknown_primary_contract_fails(self, registry: dict[str, Any]) -> None:
+        self._capability(registry, "coaching")["primary_contract"] = "TotallyMadeUpContractXYZ"
+        assert "CAP_CONTRACT" in _codes(registry)
+
+    def test_primary_contract_owned_by_another_engine_fails(
+        self, registry: dict[str, Any]
+    ) -> None:
+        # Naming a contract another engine owns would let a capability claim
+        # authority over a record it does not control.
+        self._capability(registry, "coaching")["primary_contract"] = "SpatialEvidenceV1"
+        assert "CAP_CONTRACT" in _codes(registry)
+
+    def test_classification_mismatch_fails(self, registry: dict[str, Any]) -> None:
+        # An evidence capability pointing at an interpretation contract (or the
+        # reverse) is a seam violation hiding behind a valid-looking reference.
+        self._capability(registry, "spatial-evidence")["classification"] = "neither"
+        assert "CAP_CONTRACT" in _codes(registry)
+
+    def test_capability_without_a_primary_contract_is_unaffected(
+        self, registry: dict[str, Any]
+    ) -> None:
+        capability = self._capability(registry, "curriculum")
+        assert "primary_contract" not in capability
+        assert eb.validate_registry(registry) == []

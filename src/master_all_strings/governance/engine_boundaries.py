@@ -111,6 +111,7 @@ def _check_dependency_matrix(reg: Mapping[str, Any]) -> list[Violation]:
 def _check_capabilities(reg: Mapping[str, Any]) -> list[Violation]:
     v: list[Violation] = []
     seen: set[str] = set()
+    contracts_by_name = {c["name"]: c for c in reg["contracts"]}
     for cap in reg["capabilities"]:
         cid = cap["id"]
         if cid in seen:
@@ -132,6 +133,46 @@ def _check_capabilities(reg: Mapping[str, Any]) -> list[Violation]:
             v.append(
                 Violation("PERF_POLICY", f"{cid!r}: Performance may not own interpretation")
             )
+        v.extend(_check_primary_contract(cid, cap, contracts_by_name))
+    return v
+
+
+def _check_primary_contract(
+    cid: str, cap: Mapping[str, Any], by_name: Mapping[str, Any]
+) -> list[Violation]:
+    """A capability's ``primary_contract`` must resolve, and must agree on ownership.
+
+    This mirrors ``_check_citation``. Without it the reference is unchecked on both
+    sides — the JSON schema only requires a non-empty string — so a capability could
+    name a contract that does not exist, or one owned by a different engine, and the
+    registry would still validate clean.
+    """
+    named = cap.get("primary_contract")
+    if named is None:
+        return []
+    v: list[Violation] = []
+    if named not in by_name:
+        v.append(
+            Violation("CAP_CONTRACT", f"capability {cid!r} names unknown contract {named!r}")
+        )
+        return v
+    contract = by_name[named]
+    if contract["owning_engine"] != cap["owning_engine"]:
+        v.append(
+            Violation(
+                "CAP_CONTRACT",
+                f"capability {cid!r} is owned by {cap['owning_engine']} but its primary "
+                f"contract {named!r} is owned by {contract['owning_engine']}",
+            )
+        )
+    if contract["classification"] != cap["classification"]:
+        v.append(
+            Violation(
+                "CAP_CONTRACT",
+                f"capability {cid!r} is classified {cap['classification']} but its primary "
+                f"contract {named!r} is classified {contract['classification']}",
+            )
+        )
     return v
 
 
