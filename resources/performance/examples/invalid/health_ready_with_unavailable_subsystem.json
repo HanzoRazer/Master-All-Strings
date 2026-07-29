@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "runtime_id": "fake",
+  "checked_at": "2026-07-24T10:00:00Z",
+  "state": "ready",
+  "process": "ready",
+  "audio_backend": "ready",
+  "audio_output": "ready",
+  "midi_input": "unavailable",
+  "synth": "ready",
+  "session": "ready",
+  "capture": "ready",
+  "faults": []
+}

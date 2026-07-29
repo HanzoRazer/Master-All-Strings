@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0.0",
+  "capture_id": "capture-runtime-fault",
+  "session_id": "session-001",
+  "runtime_identity": {
+    "schema_version": "1.0.0",
+    "runtime_id": "fake",
+    "runtime_kind": "fake",
+    "reported_version": "1.0.0",
+    "version_policy": "1.0.0",
+    "version_supported": true
+  },
+  "source_identity": {
+    "schema_version": "1.0.0",
+    "source_id": "midi-in-0",
+    "port": "port-0",
+    "device": "generic-midi-guitar",
+    "supplies_string_identity": false
+  },
+  "started_at": "2026-07-24T10:00:00Z",
+  "ended_at": "2026-07-24T10:00:12Z",
+  "completion_state": "failed",
+  "tempo_context": 120.0,
+  "meter_context": {
+    "schema_version": "1.0.0",
+    "beats_per_bar": 4,
+    "beat_unit": 4
+  },
+  "events": [
+    {
+      "schema_version": "1.0.0",
+      "event_id": "evt-0000",
+      "sequence_number": 0,
+      "event_type": "note_on",
+      "capture_time_ns": 1000000000,
+      "channel": 0,
+      "source_port": "port-0",
+      "source_device": "generic-midi-guitar",
+      "note": 48,
+      "velocity": 80,
+      "controller": null,
+      "controller_value": null,
+      "pitch_bend": null,
+      "source_string": null,
+      "raw_payload": []
+    }
+  ],
+  "warnings": [],
+  "faults": [
+    {
+      "schema_version": "1.0.0",
+      "fault_id": "fault-0002",
+      "code": "midi_input_missing",
+      "subsystem": "midi_input",
+      "detail": "configured MIDI input disappeared mid-capture",
+      "occurred_at": "2026-07-24T10:00:05Z",
+      "recoverable": true
+    }
+  ],
+  "provenance": {
+    "fixture": "capture-runtime-fault"
+  }
+}

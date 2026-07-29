@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "runtimes": [
+    {
+      "runtime_id": "fake",
+      "runtime_kind": "fake",
+      "display_name": "Fake Runtime",
+      "version_policy": "1.0.0",
+      "capabilities": [
+        "transport",
+        "midi_capture",
+        "synth_hosting",
+        "metronome",
+        "looping",
+        "panic",
+        "diagnostics"
+      ],
+      "verified_by": "conformance_test",
+      "notes": "The only runtime whose capabilities are established by an executable check. Deliberately does NOT claim multitrack, automation, mixdown, or session_recovery, so tests exercise the capability-unsupported path rather than assuming every runtime does everything."
+    },
+    {
+      "runtime_id": "pi-ardour-reference",
+      "runtime_kind": "ardour",
+      "display_name": "Ardour (Raspberry Pi reference)",
+      "version_policy": ">=9.7,<10",
+      "capabilities": [],
+      "verified_by": "unverified",
+      "notes": "Capabilities are empty on purpose. Ardour 9.7 source shows OSC transport, record, panic, metronome, and loop paths exist, but no Ardour runtime has been built or started, so nothing is claimed here. Populate only from Commit 8 conformance results. Note GAP-001 (no OSC tempo or meter) and GAP-002 (no OSC version)."
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0.0",
+  "capture_id": "capture-mono",
+  "session_id": "session-001",
+  "runtime_identity": {
+    "schema_version": "1.0.0",
+    "runtime_id": "fake",
+    "runtime_kind": "fake",
+    "reported_version": "1.0.0",
+    "version_policy": "1.0.0",
+    "version_supported": true
+  },
+  "source_identity": {
+    "schema_version": "1.0.0",
+    "source_id": "midi-in-0",
+    "port": "port-0",
+    "device": "generic-midi-guitar",
+    "supplies_string_identity": false
+  },
+  "started_at": "2026-07-24T10:00:00Z",
+  "ended_at": "2026-07-24T10:00:12Z",
+  "completion_state": "finished",
+  "tempo_context": 120.0,
+  "meter_context": {
+    "schema_version": "1.0.0",
+    "beats_per_bar": 4,
+    "beat_unit": 4
+  },
+  "events": [
+    {
+      "schema_version": "1.0.0",
+      "event_id": "evt-0000",
+      "sequence_number": 0,
+      "event_type": "note_on",
+      "capture_time_ns": 1000000000,
+      "channel": 0,
+      "source_port": "port-0",
+      "source_device": "generic-midi-guitar",
+      "note": 64,
+      "velocity": 96,
+      "controller": null,
+      "controller_value": null,
+      "pitch_bend": null,
+      "source_string": null,
+      "raw_payload": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "event_id": "evt-0001",
+      "sequence_number": 1,
+      "event_type": "note_off",
+      "capture_time_ns": 1500000000,
+      "channel": 0,
+      "source_port": "port-0",
+      "source_device": "generic-midi-guitar",
+      "note": 64,
+      "velocity": 0,
+      "controller": null,
+      "controller_value": null,
+      "pitch_bend": null,
+      "source_string": null,
+      "raw_payload": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "event_id": "evt-0002",
+      "sequence_number": 2,
+      "event_type": "note_on",
+      "capture_time_ns": 2000000000,
+      "channel": 0,
+      "source_port": "port-0",
+      "source_device": "generic-midi-guitar",
+      "note": 67,
+      "velocity": 88,
+      "controller": null,
+      "controller_value": null,
+      "pitch_bend": null,
+      "source_string": null,
+      "raw_payload": []
+    },
+    {
+      "schema_version": "1.0.0",
+      "event_id": "evt-0003",
+      "sequence_number": 3,
+      "event_type": "note_off",
+      "capture_time_ns": 2400000000,
+      "channel": 0,
+      "source_port": "port-0",
+      "source_device": "generic-midi-guitar",
+      "note": 67,
+      "velocity": 0,
+      "controller": null,
+      "controller_value": null,
+      "pitch_bend": null,
+      "source_string": null,
+      "raw_payload": []
+    }
+  ],
+  "warnings": [],
+  "faults": [],
+  "provenance": {
+    "fixture": "capture-mono"
+  }
+}

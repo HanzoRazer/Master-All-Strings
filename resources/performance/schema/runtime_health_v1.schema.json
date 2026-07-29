@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/performance/runtime-health-v1.schema.json",
+  "title": "RuntimeHealthV1",
+  "description": "Per-subsystem runtime health. Seven subsystems are reported separately and deliberately (ADR-0007 §6.4): a single aggregate boolean cannot distinguish a missing MIDI device from a crashed synth, and those need different responses. State 'ready' is a claim about every subsystem and is refused while any of them is not ready.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "runtime_id",
+    "checked_at",
+    "state",
+    "process",
+    "audio_backend",
+    "audio_output",
+    "midi_input",
+    "synth",
+    "session",
+    "capture",
+    "faults"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "runtime_id": {"type": "string", "minLength": 1},
+    "checked_at": {"$ref": "#/$defs/utcTimestamp"},
+    "state": {
+      "type": "string",
+      "enum": ["off", "starting", "probing", "ready", "degraded", "failed", "stopping"]
+    },
+    "process": {"$ref": "#/$defs/subsystemState"},
+    "audio_backend": {"$ref": "#/$defs/subsystemState"},
+    "audio_output": {"$ref": "#/$defs/subsystemState"},
+    "midi_input": {"$ref": "#/$defs/subsystemState"},
+    "synth": {"$ref": "#/$defs/subsystemState"},
+    "session": {"$ref": "#/$defs/subsystemState"},
+    "capture": {"$ref": "#/$defs/subsystemState"},
+    "faults": {"type": "array", "items": {"$ref": "#/$defs/fault"}}
+  },
+  "allOf": [
+    {
+      "description": "state 'ready' requires every subsystem to be ready.",
+      "if": {"properties": {"state": {"const": "ready"}}, "required": ["state"]},
+      "then": {
+        "properties": {
+          "process": {"const": "ready"},
+          "audio_backend": {"const": "ready"},
+          "audio_output": {"const": "ready"},
+          "midi_input": {"const": "ready"},
+          "synth": {"const": "ready"},
+          "session": {"const": "ready"},
+          "capture": {"const": "ready"}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "subsystemState": {
+      "type": "string",
+      "enum": ["unknown", "ready", "unavailable", "faulted"]
+    },
+    "utcTimestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "fault": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "fault_id", "code", "subsystem", "detail", "occurred_at", "recoverable"],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "fault_id": {"type": "string", "minLength": 1},
+        "code": {
+          "type": "string",
+          "enum": [
+            "startup_timeout",
+            "health_timeout",
+            "shutdown_timeout",
+            "executable_missing",
+            "session_template_missing",
+            "control_endpoint_unavailable",
+            "unsupported_runtime_version",
+            "midi_input_missing",
+            "audio_output_missing",
+            "synth_missing",
+            "synth_load_failed",
+            "synth_load_timeout",
+            "runtime_crashed",
+            "malformed_midi_event",
+            "stuck_note",
+            "panic_failed",
+            "capability_unsupported",
+            "invalid_state"
+          ]
+        },
+        "subsystem": {"type": "string", "minLength": 1},
+        "detail": {"type": "string", "minLength": 1},
+        "occurred_at": {"$ref": "#/$defs/utcTimestamp"},
+        "recoverable": {"type": "boolean"}
+      }
+    }
+  }
+}
