@@ -26,8 +26,26 @@ from master_all_strings.performance.contracts.runtime import (
     RuntimeKind,
 )
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-RESOURCE_DIR = _REPO_ROOT / "resources" / "performance"
+
+def _find_resource_dir() -> Path:
+    """Locate ``resources/performance`` by walking up from this module.
+
+    A fixed ``parents[3]`` hop encodes the current source layout and breaks silently
+    if the package is moved or installed somewhere the layout differs. Walking up for
+    the directory itself fails loudly and correctly instead, and still resolves in one
+    step for the normal checkout.
+    """
+    for candidate in Path(__file__).resolve().parents:
+        resources = candidate / "resources" / "performance"
+        if resources.is_dir():
+            return resources
+    raise PerformanceContractError(
+        "could not locate resources/performance above "
+        f"{Path(__file__).resolve()}; the package layout is not as expected"
+    )
+
+
+RESOURCE_DIR = _find_resource_dir()
 SCHEMA_DIR = RESOURCE_DIR / "schema"
 EXAMPLE_DIR = RESOURCE_DIR / "examples"
 

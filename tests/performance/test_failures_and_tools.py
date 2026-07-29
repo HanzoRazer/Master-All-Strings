@@ -112,9 +112,44 @@ def _health(
 
 
 class TestHealthRefusesToOverstate:
-    def test_ready_state_requires_every_subsystem(self) -> None:
-        with pytest.raises(PerformanceContractError, match="every subsystem"):
+    def test_ready_state_requires_every_infrastructure_subsystem(self) -> None:
+        with pytest.raises(PerformanceContractError, match="every infrastructure subsystem"):
             _health(RuntimeState.READY, midi_input=SubsystemState.UNAVAILABLE)
+
+    def test_ready_state_does_not_require_a_prepared_session(self) -> None:
+        # Session-scoped subsystems are UNKNOWN before prepare_session. Requiring
+        # them here would make start -> readiness -> prepare_session unreachable.
+        health = _health(
+            RuntimeState.READY,
+            session=SubsystemState.UNKNOWN,
+            capture=SubsystemState.UNKNOWN,
+        )
+        assert health.infrastructure_blocking() == ()
+        assert health.session_blocking() == ("session", "capture")
+
+    def test_readiness_is_true_before_a_session_exists(self) -> None:
+        readiness = check_runtime_readiness(
+            _health(
+                RuntimeState.READY,
+                session=SubsystemState.UNKNOWN,
+                capture=SubsystemState.UNKNOWN,
+            )
+        )
+        assert readiness.ready is True
+        assert readiness.capture_ready is False
+        assert readiness.capture_blocking_subsystems == ("session", "capture")
+
+    def test_capture_ready_requires_ready(self) -> None:
+        from master_all_strings.performance.contracts.runtime import RuntimeReadinessV1
+
+        with pytest.raises(PerformanceContractError, match="capture_ready requires ready"):
+            RuntimeReadinessV1(
+                schema_version=RuntimeReadinessV1.SCHEMA_VERSION,
+                runtime_id="fake",
+                ready=False,
+                health=_health(RuntimeState.READY),
+                capture_ready=True,
+            )
 
     def test_blocking_subsystems_are_listed_in_declaration_order(self) -> None:
         health = _health(
@@ -129,7 +164,9 @@ class TestHealthRefusesToOverstate:
         assert check_runtime_readiness(_health(RuntimeState.PROBING)).ready is False
 
     def test_readiness_is_true_only_when_everything_agrees(self) -> None:
-        assert check_runtime_readiness(_health(RuntimeState.READY)).ready is True
+        readiness = check_runtime_readiness(_health(RuntimeState.READY))
+        assert readiness.ready is True
+        assert readiness.capture_ready is True
 
     def test_readiness_cannot_claim_ready_with_blockers(self) -> None:
         from master_all_strings.performance.contracts.runtime import RuntimeReadinessV1
@@ -797,3 +834,145 @@ class TestConfigContractGuards:
     def test_event_channel_bounds_are_enforced(self) -> None:
         with pytest.raises(PerformanceContractError, match="channel"):
             make_event(0, channel=16)
+
+
+class TestDeterministicClock:
+    """Time enters the Performance package here and nowhere else."""
+
+    def test_ticks_advance_one_second(self) -> None:
+        from master_all_strings.performance.adapters.clock import DeterministicClock
+
+        clock = DeterministicClock()
+        assert clock.now() == "2026-07-24T10:00:00Z"
+        assert clock.now() == "2026-07-24T10:00:01Z"
+
+    def test_minutes_and_hours_roll_over(self) -> None:
+        from master_all_strings.performance.adapters.clock import DeterministicClock
+
+        clock = DeterministicClock(origin_second=3661)
+        assert clock.now() == "2026-07-24T11:01:01Z"
+
+    def test_running_past_midnight_is_refused(self) -> None:
+        from master_all_strings.performance.adapters.clock import DeterministicClock
+
+        # Better to fail loudly than to emit an hour-24 timestamp the contract would
+        # then reject with a confusing message far from the cause.
+        clock = DeterministicClock(origin_second=14 * 3600)
+        with pytest.raises(ValueError, match="past midnight"):
+            clock.now()
+
+    def test_an_explicit_date_is_honoured(self) -> None:
+        from master_all_strings.performance.adapters.clock import DeterministicClock
+
+        assert DeterministicClock(date="2026-01-01").now().startswith("2026-01-01T")
+
+
+class TestArdourVersionParsing:
+    """`ardour --version` and revision.cc do not agree on format."""
+
+    @pytest.mark.parametrize(
+        ("reported", "expected"),
+        [
+            ("9.7", (9, 7)),
+            ("9.7.0", (9, 7)),
+            ("Ardour 9.7.0", (9, 7)),
+            ("ardour 9.7", (9, 7)),
+            ("v9.7", (9, 7)),
+            ("9.7-rc1", (9, 7)),
+            ("9.7.0~ppa1", (9, 7)),
+            ("9.7.0+build2", (9, 7)),
+            ("  9.7  ", (9, 7)),
+        ],
+    )
+    def test_real_world_forms_parse(self, reported: str, expected: tuple[int, int]) -> None:
+        assert ardour_models.parse_version(reported) == expected
+
+    @pytest.mark.parametrize("reported", ["", "nonsense", "9", "9.x", "x.7"])
+    def test_unparseable_forms_are_rejected(self, reported: str) -> None:
+        with pytest.raises(ValueError, match="unparseable"):
+            ardour_models.parse_version(reported)
+
+    @pytest.mark.parametrize("reported", ["9.7", "9.7.0", "Ardour 9.7.0", "9.8", "9.99"])
+    def test_supported_versions(self, reported: str) -> None:
+        assert ardour_models.is_supported_version(reported) is True
+
+    @pytest.mark.parametrize("reported", ["9.6", "10.0", "8.12", "nonsense"])
+    def test_unsupported_versions(self, reported: str) -> None:
+        assert ardour_models.is_supported_version(reported) is False
+
+
+class TestRetrieveCaptureCommand:
+    def test_command_requires_a_capture_id(self) -> None:
+        from master_all_strings.performance.contracts.commands import RetrieveCaptureCommandV1
+
+        with pytest.raises(PerformanceContractError, match="capture_id"):
+            RetrieveCaptureCommandV1(
+                schema_version=RetrieveCaptureCommandV1.SCHEMA_VERSION, capture_id=""
+            )
+
+    def test_session_id_is_optional(self) -> None:
+        from master_all_strings.performance.contracts.commands import RetrieveCaptureCommandV1
+
+        command = RetrieveCaptureCommandV1(
+            schema_version=RetrieveCaptureCommandV1.SCHEMA_VERSION, capture_id="capture-1"
+        )
+        assert command.session_id is None
+
+    def test_blank_session_id_is_rejected(self) -> None:
+        from master_all_strings.performance.contracts.commands import RetrieveCaptureCommandV1
+
+        with pytest.raises(PerformanceContractError, match="session_id"):
+            RetrieveCaptureCommandV1(
+                schema_version=RetrieveCaptureCommandV1.SCHEMA_VERSION,
+                capture_id="capture-1",
+                session_id="  ",
+            )
+
+
+class TestResourceDiscovery:
+    def test_resource_directory_resolves(self) -> None:
+        from master_all_strings.performance.configuration import EXAMPLE_DIR, SCHEMA_DIR
+
+        assert SCHEMA_DIR.is_dir()
+        assert EXAMPLE_DIR.is_dir()
+
+    def test_discovery_walks_up_rather_than_counting_parents(self) -> None:
+        # A fixed parents[N] hop encodes the current layout and breaks silently if
+        # the package moves; walking up fails loudly instead.
+        import inspect
+
+        from master_all_strings.performance import configuration
+
+        source = inspect.getsource(configuration._find_resource_dir)
+        assert "parents" in source
+        assert "is_dir()" in source
+
+
+class TestDiagnosticsNotesValidation:
+    def test_blank_note_is_rejected(self) -> None:
+        from master_all_strings.performance.contracts.runtime import (
+            RuntimeCapabilitySetV1,
+            RuntimeDiagnosticsV1,
+        )
+
+        with pytest.raises(PerformanceContractError, match="notes entry"):
+            RuntimeDiagnosticsV1(
+                schema_version=RuntimeDiagnosticsV1.SCHEMA_VERSION,
+                runtime_id="fake",
+                collected_at=T0,
+                identity=RuntimeIdentityV1(
+                    schema_version=RuntimeIdentityV1.SCHEMA_VERSION,
+                    runtime_id="fake",
+                    runtime_kind=RuntimeKind.FAKE,
+                    reported_version="1.0.0",
+                    version_policy="1.0.0",
+                    version_supported=True,
+                ),
+                capabilities=RuntimeCapabilitySetV1(
+                    schema_version=RuntimeCapabilitySetV1.SCHEMA_VERSION,
+                    runtime_id="fake",
+                    capabilities=(),
+                ),
+                health=_health(),
+                notes=("  ",),
+            )

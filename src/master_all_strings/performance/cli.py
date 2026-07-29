@@ -52,9 +52,15 @@ def validate_main(argv: list[str] | None = None) -> int:
     if not problems:
         print(f"performance runtime config: OK ({config.runtime_id})")
         return 0
+    placeholders = [p for p in problems if "placeholder" in p]
     print(f"performance runtime config findings ({config.runtime_id}):")
     for problem in problems:
         print(f"  - {problem}")
+    if placeholders and len(placeholders) == len(problems):
+        # Expected for a committed reference file; it is a template, not a
+        # deployable configuration. Said plainly so the exit code is not read as
+        # "the validator is broken".
+        print("not deployable: this is a reference template; replace the placeholders")
     return 1
 
 
@@ -105,8 +111,12 @@ def _fake_runtime_report() -> list[str]:
     )
     readiness = runtime.readiness()
     result = runtime.export_diagnostics()
-    assert result.diagnostics is not None  # export_diagnostics always succeeds
-    lines = [f"fake runtime readiness: {'ready' if readiness.ready else 'not ready'}"]
+    if result.diagnostics is None:  # pragma: no cover - defensive
+        raise PerformanceContractError("diagnostics export succeeded without diagnostics")
+    lines = [
+        f"fake runtime readiness: {'ready' if readiness.ready else 'not ready'}",
+        f"fake runtime capture-ready: {'yes' if readiness.capture_ready else 'no'}",
+    ]
     if readiness.blocking_subsystems:
         lines.append(f"  blocking: {', '.join(readiness.blocking_subsystems)}")
     lines.append("")

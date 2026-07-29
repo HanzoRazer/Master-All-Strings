@@ -27,20 +27,27 @@ _STATE_MARK = {
 
 
 def check_runtime_readiness(health: RuntimeHealthV1) -> RuntimeReadinessV1:
-    """Aggregate per-subsystem health into a readiness verdict.
+    """Aggregate per-subsystem health into two readiness verdicts.
 
-    Ready means every subsystem is ready *and* the runtime state says so. Both are
-    required: a runtime can report healthy subsystems while still starting up, and
-    treating that as ready is how a caller ends up issuing commands too early.
+    ``ready`` requires the infrastructure subsystems *and* the runtime state to agree.
+    Both are needed: a runtime can report healthy subsystems while still starting up,
+    and treating that as ready is how a caller issues commands too early.
+
+    ``capture_ready`` additionally requires the session-scoped subsystems. It is false
+    between ``start`` and ``prepare_session``, which is the normal path rather than a
+    failure — the caller is expected to prepare a session next.
     """
-    blocking = health.blocking_subsystems()
-    ready = not blocking and health.state is RuntimeState.READY
+    infrastructure_blocking = health.infrastructure_blocking()
+    ready = not infrastructure_blocking and health.state is RuntimeState.READY
+    session_blocking = health.session_blocking()
     return RuntimeReadinessV1(
         schema_version=RuntimeReadinessV1.SCHEMA_VERSION,
         runtime_id=health.runtime_id,
         ready=ready,
         health=health,
-        blocking_subsystems=blocking,
+        capture_ready=ready and not session_blocking,
+        blocking_subsystems=infrastructure_blocking,
+        capture_blocking_subsystems=infrastructure_blocking + session_blocking,
     )
 
 

@@ -38,7 +38,7 @@
   },
   "allOf": [
     {
-      "description": "state 'ready' requires every subsystem to be ready.",
+      "description": "state 'ready' requires every INFRASTRUCTURE subsystem to be ready. The session-scoped subsystems (session, capture) are deliberately excluded: they are 'unknown' until a session is prepared, which is a normal point in the lifecycle rather than a fault. Requiring them here would make start -> readiness -> prepare_session unreachable.",
       "if": {"properties": {"state": {"const": "ready"}}, "required": ["state"]},
       "then": {
         "properties": {
@@ -46,9 +46,7 @@
           "audio_backend": {"const": "ready"},
           "audio_output": {"const": "ready"},
           "midi_input": {"const": "ready"},
-          "synth": {"const": "ready"},
-          "session": {"const": "ready"},
-          "capture": {"const": "ready"}
+          "synth": {"const": "ready"}
         }
       }
     }

@@ -14,7 +14,6 @@ from master_all_strings.performance.contracts.errors import (
     PerformanceContractError,
     require_bool,
     require_identifier,
-    require_nonnegative_int,
     require_optional_identifier,
     require_positive_int,
     require_schema_version,
@@ -216,6 +215,18 @@ class RuntimeHealthV1:
     Seven subsystems are reported separately and deliberately (ADR-0007 §6.4). A
     single boolean would collapse "MIDI device unplugged" and "synth crashed" into
     one indistinguishable failure.
+
+    The seven split into two groups, and the distinction is load-bearing:
+
+    * **Infrastructure** — process, audio backend, audio output, MIDI input, synth.
+      These describe whether the runtime is up and able to accept commands. They are
+      what ``RuntimeState.READY`` asserts.
+    * **Session-scoped** — session, capture. These are meaningfully ``UNKNOWN`` until
+      a session is prepared, which is a normal state rather than a fault.
+
+    Folding the session group into ``READY`` would make the documented lifecycle
+    (``start`` → ``readiness`` → ``prepare session``) impossible, because readiness
+    could never be reached before the step that follows it.
     """
 
     schema_version: str
@@ -233,15 +244,17 @@ class RuntimeHealthV1:
 
     SCHEMA_VERSION = "1.0.0"
 
-    SUBSYSTEM_FIELDS = (
+    # Up and able to accept commands. What RuntimeState.READY asserts.
+    INFRASTRUCTURE_SUBSYSTEMS = (
         "process",
         "audio_backend",
         "audio_output",
         "midi_input",
         "synth",
-        "session",
-        "capture",
     )
+    # Meaningfully UNKNOWN until a session is prepared.
+    SESSION_SUBSYSTEMS = ("session", "capture")
+    SUBSYSTEM_FIELDS = INFRASTRUCTURE_SUBSYSTEMS + SESSION_SUBSYSTEMS
 
     def __post_init__(self) -> None:
         require_schema_version(self.schema_version, self.SCHEMA_VERSION)
@@ -256,37 +269,68 @@ class RuntimeHealthV1:
         for fault in self.faults:
             if not isinstance(fault, RuntimeFaultV1):
                 raise PerformanceContractError("faults must contain RuntimeFaultV1 values")
-        # READY is a claim about every subsystem, so it cannot be asserted while one
-        # of them is not ready. Without this, a caller could report READY and then
-        # fail on the first command.
-        if self.state is RuntimeState.READY and not self.all_subsystems_ready():
+        # READY is a claim about the infrastructure subsystems, so it cannot be
+        # asserted while one of them is not ready. Without this, a caller could report
+        # READY and then fail on the first command. Session-scoped subsystems are
+        # deliberately excluded: they are UNKNOWN before prepare_session, which is a
+        # normal state on the way to READY, not a fault.
+        if self.state is RuntimeState.READY and self.infrastructure_blocking():
             raise PerformanceContractError(
-                "state READY requires every subsystem to be READY; "
-                f"blocking: {list(self.blocking_subsystems())}"
+                "state READY requires every infrastructure subsystem to be READY; "
+                f"blocking: {list(self.infrastructure_blocking())}"
             )
 
+    def _not_ready(self, names: tuple[str, ...]) -> tuple[str, ...]:
+        return tuple(name for name in names if getattr(self, name) is not SubsystemState.READY)
+
     def all_subsystems_ready(self) -> bool:
-        """Whether every reported subsystem is ``READY``."""
+        """Whether every reported subsystem — infrastructure and session — is ready."""
         return not self.blocking_subsystems()
 
     def blocking_subsystems(self) -> tuple[str, ...]:
-        """Names of subsystems that are not ``READY``, in declaration order."""
-        return tuple(
-            name
-            for name in self.SUBSYSTEM_FIELDS
-            if getattr(self, name) is not SubsystemState.READY
-        )
+        """Every subsystem that is not ``READY``, in declaration order."""
+        return self._not_ready(self.SUBSYSTEM_FIELDS)
+
+    def infrastructure_blocking(self) -> tuple[str, ...]:
+        """Infrastructure subsystems that are not ``READY``.
+
+        These block the runtime accepting commands at all.
+        """
+        return self._not_ready(self.INFRASTRUCTURE_SUBSYSTEMS)
+
+    def session_blocking(self) -> tuple[str, ...]:
+        """Session-scoped subsystems that are not ``READY``.
+
+        These block capture, not command acceptance. Non-empty before a session is
+        prepared, which is expected rather than a problem.
+        """
+        return self._not_ready(self.SESSION_SUBSYSTEMS)
 
 
 @dataclass(frozen=True)
 class RuntimeReadinessV1:
-    """Whether the runtime is usable, and what is stopping it if not."""
+    """Whether the runtime is usable, and what is stopping it if not.
+
+    Two readiness questions, answered separately because they gate different things
+    and become true at different points in the lifecycle:
+
+    * ``ready`` — the runtime is up and will accept commands. True after ``start``
+      succeeds, *before* a session exists. This is what a caller checks between
+      ``start`` and ``prepare_session``.
+    * ``capture_ready`` — a session is prepared and capture may begin.
+
+    Collapsing them into one flag was the original design and it was wrong: it made
+    ``start`` → ``readiness`` → ``prepare session`` unreachable, because the session
+    subsystem could not be ready before the step that creates it.
+    """
 
     schema_version: str
     runtime_id: str
     ready: bool
     health: RuntimeHealthV1
+    capture_ready: bool = False
     blocking_subsystems: tuple[str, ...] = ()
+    capture_blocking_subsystems: tuple[str, ...] = ()
 
     SCHEMA_VERSION = "1.0.0"
 
@@ -294,13 +338,29 @@ class RuntimeReadinessV1:
         require_schema_version(self.schema_version, self.SCHEMA_VERSION)
         require_identifier(self.runtime_id, "runtime_id")
         require_bool(self.ready, "ready")
+        require_bool(self.capture_ready, "capture_ready")
         if not isinstance(self.health, RuntimeHealthV1):
             raise PerformanceContractError("health must be a RuntimeHealthV1")
         require_tuple(self.blocking_subsystems, "blocking_subsystems")
+        require_tuple(self.capture_blocking_subsystems, "capture_blocking_subsystems")
         if self.ready and self.blocking_subsystems:
             raise PerformanceContractError("ready cannot be true with blocking subsystems")
-        if self.ready and not self.health.all_subsystems_ready():
-            raise PerformanceContractError("ready cannot be true while health reports a gap")
+        if self.ready and self.health.infrastructure_blocking():
+            raise PerformanceContractError(
+                "ready cannot be true while health reports an infrastructure gap"
+            )
+        if self.capture_ready and self.capture_blocking_subsystems:
+            raise PerformanceContractError(
+                "capture_ready cannot be true with blocking subsystems"
+            )
+        # Capture readiness is strictly stronger. A runtime that cannot accept a
+        # command certainly cannot capture.
+        if self.capture_ready and not self.ready:
+            raise PerformanceContractError("capture_ready requires ready")
+        if self.capture_ready and not self.health.all_subsystems_ready():
+            raise PerformanceContractError(
+                "capture_ready cannot be true while health reports a gap"
+            )
 
 
 @dataclass(frozen=True)
@@ -407,4 +467,5 @@ class RuntimeDiagnosticsV1:
         if not isinstance(self.health, RuntimeHealthV1):
             raise PerformanceContractError("health must be a RuntimeHealthV1")
         require_tuple(self.notes, "notes")
-        require_nonnegative_int(len(self.notes), "notes length")
+        for note in self.notes:
+            require_identifier(note, "notes entry")

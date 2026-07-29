@@ -196,6 +196,17 @@ A crash may not mark a partial session complete, invent note endings, overwrite 
 prior take, silently discard accepted raw events, or mutate canonical music.
 Interrupted sessions are explicit.
 
+This binds every abnormal end, not only a crash. Stopping the runtime while a capture
+is active closes that capture as `INTERRUPTED` too — abandoning it would leave a
+record permanently `IN_PROGRESS`, claiming to be recording on a runtime that no
+longer exists.
+
+Readiness is reported as two questions rather than one: whether the runtime accepts
+commands, and whether a session exists such that capture may begin. Health separates
+its subsystems the same way. Collapsing them would make `start` → `readiness` →
+`prepare session` unreachable, since the session subsystem cannot be ready before the
+step that creates it.
+
 ### D16 — Licensing is a release gate
 
 Every distributed component — Ardour, OS image, audio and MIDI services, synth,

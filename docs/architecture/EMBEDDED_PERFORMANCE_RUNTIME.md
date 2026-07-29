@@ -154,10 +154,14 @@ result contract; no step is implied by another's success.
     v
  PROBING ----- health timeout -----> FAILED
     |
-    | all subsystems report
+    | infrastructure subsystems report
     v
-  READY <-------------------+
-    |                       | recovered
+  READY <-------------------+          ready: accepts commands
+    |   |                   | recovered            (session still UNKNOWN)
+    |   | prepare session   |
+    |   v                   |
+    | CAPTURE-READY         |          capture_ready: a session exists
+    |                       |
     | subsystem fault       |
     v                       |
  DEGRADED ------------------+
@@ -167,8 +171,24 @@ result contract; no step is implied by another's success.
   FAILED
 ```
 
-`READY` requires every subsystem in `RuntimeHealthV1` to report ready. A single
-aggregate boolean is insufficient and is rejected by contract.
+Readiness is **two questions, not one**, because they gate different things and
+become true at different points:
+
+| | Means | True when |
+| --- | --- | --- |
+| `ready` | the runtime is up and accepts commands | after `start`, **before** a session exists |
+| `capture_ready` | a session is prepared and capture may begin | after `prepare_session` |
+
+`RuntimeHealthV1` splits its seven subsystems to match. The five **infrastructure**
+subsystems — process, audio backend, audio output, MIDI input, synth — are what
+`RuntimeState.READY` asserts. The two **session-scoped** subsystems — session,
+capture — are `UNKNOWN` until a session is prepared, which is a normal point in the
+lifecycle rather than a fault.
+
+Folding the session group into `READY` would make the lifecycle above unreachable:
+readiness could never be true before `prepare session`, which is the step that
+follows it. All seven are still reported separately (ADR-0007 §6.4) — a single
+aggregate boolean remains insufficient and is rejected by contract.
 
 ## Device discovery
 
@@ -317,8 +337,9 @@ are never read as canonical music.
 ## Diagnostics
 
 `RuntimeHealthV1` reports process, audio backend, audio output, MIDI input, synth,
-session, and capture subsystem separately. Diagnostics are read-only and never
-mutate the operating system.
+session, and capture separately, split into infrastructure and session-scoped groups
+as described under Diagram 7. Diagnostics are read-only and never mutate the
+operating system.
 
 ## Recovery
 

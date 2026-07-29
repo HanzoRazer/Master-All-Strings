@@ -7,6 +7,7 @@ appear in a contract, in the port, or in any signature a caller outside
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -46,12 +47,28 @@ class ArdourTrackRef:
     record_armed: bool
 
 
+# Leading "Ardour", an optional "v", then major.minor with anything after it:
+# a patch component, a pre-release suffix, or packaging metadata. `ardour --version`
+# and revision.cc do not agree on format -- revision.cc carries "9.7" while a built
+# binary may report "Ardour 9.7.0" or "9.7-rc1" -- so the parser must accept both
+# without treating the extra detail as a parse failure.
+_VERSION_RE = re.compile(
+    r"^(?:ardour\s+)?v?(?P<major>\d+)\.(?P<minor>\d+)(?:[.\-+~].*)?$",
+    re.IGNORECASE,
+)
+
+
 def parse_version(reported: str) -> tuple[int, int]:
-    """Parse an Ardour version string such as ``"9.7"`` into ``(major, minor)``."""
-    parts = reported.strip().split(".")
-    if len(parts) < 2 or not all(p.isdigit() for p in parts[:2]):
+    """Parse an Ardour version string into ``(major, minor)``.
+
+    Accepts ``"9.7"``, ``"9.7.0"``, ``"Ardour 9.7.0"``, ``"9.7-rc1"``, and
+    ``"9.7.0~ppa1"``. Rejecting a usable runtime because its version string carried a
+    patch component would be a worse failure than the strictness buys.
+    """
+    match = _VERSION_RE.match(reported.strip())
+    if match is None:
         raise ValueError(f"unparseable Ardour version {reported!r}")
-    return int(parts[0]), int(parts[1])
+    return int(match.group("major")), int(match.group("minor"))
 
 
 def is_supported_version(reported: str | None) -> bool:

@@ -24,6 +24,7 @@ from master_all_strings.performance.contracts.commands import (
     ArmTrackCommandV1,
     PanicCommandV1,
     PrepareSessionCommandV1,
+    RetrieveCaptureCommandV1,
     SelectSynthCommandV1,
     SetLoopCommandV1,
     SetTransportCommandV1,
@@ -119,7 +120,7 @@ class PerformanceRuntimePort(Protocol):
         """Silence every sounding note. Valid in any state."""
         ...
 
-    def retrieve_capture(self, capture_id: str) -> CaptureResultV1:
+    def retrieve_capture(self, command: RetrieveCaptureCommandV1) -> CaptureResultV1:
         """Return a capture record.
 
         Retrieval before a session exists, or before a capture has started, is

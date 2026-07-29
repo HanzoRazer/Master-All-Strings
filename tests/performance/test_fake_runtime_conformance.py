@@ -21,6 +21,7 @@ from master_all_strings.performance.contracts.commands import (
     ArmTrackCommandV1,
     PanicCommandV1,
     PrepareSessionCommandV1,
+    RetrieveCaptureCommandV1,
     SelectSynthCommandV1,
     SetLoopCommandV1,
     SetTransportCommandV1,
@@ -105,6 +106,14 @@ def stop_capture_cmd(
         capture_id=capture_id,
         ended_at=END,
         cancelled=cancelled,
+    )
+
+
+def retrieve_cmd(capture_id: str = CAPTURE_ID) -> RetrieveCaptureCommandV1:
+    return RetrieveCaptureCommandV1(
+        schema_version=RetrieveCaptureCommandV1.SCHEMA_VERSION,
+        capture_id=capture_id,
+        session_id=SESSION_ID,
     )
 
 
@@ -302,7 +311,7 @@ class TestCapture:
         armed_runtime.feed_note_on(64, 100)
         armed_runtime.feed_note_off(64)
         armed_runtime.stop_capture(stop_capture_cmd())
-        result = armed_runtime.retrieve_capture(CAPTURE_ID)
+        result = armed_runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID))
         assert result.succeeded is True
         assert result.capture is not None
         assert result.capture.event_count == 2
@@ -327,18 +336,18 @@ class TestCapture:
     def test_cancelled_capture_records_cancellation(self, armed_runtime: FakeRuntime) -> None:
         armed_runtime.start_capture(start_capture_cmd())
         armed_runtime.stop_capture(stop_capture_cmd(cancelled=True))
-        result = armed_runtime.retrieve_capture(CAPTURE_ID)
+        result = armed_runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID))
         assert result.capture is not None
         assert result.capture.completion_state is CaptureCompletionState.CANCELLED
 
     def test_19_retrieval_before_session_is_rejected(self, runtime: FakeRuntime) -> None:
-        result = runtime.retrieve_capture(CAPTURE_ID)
+        result = runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID))
         assert result.succeeded is False
         assert result.capture is None
 
     def test_20_retrieval_before_capture_is_rejected(self, armed_runtime: FakeRuntime) -> None:
         # An empty record and a never-started one must not look alike.
-        result = armed_runtime.retrieve_capture("never-started")
+        result = armed_runtime.retrieve_capture(retrieve_cmd("never-started"))
         assert result.succeeded is False
         assert result.capture is None
 
@@ -353,7 +362,7 @@ class TestCapture:
         armed_runtime.feed_control_change(64, 127)
         armed_runtime.feed_pitch_bend(2048)
         armed_runtime.stop_capture(stop_capture_cmd())
-        capture = armed_runtime.retrieve_capture(CAPTURE_ID).capture
+        capture = armed_runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID)).capture
         assert capture is not None
         assert capture.event_count == 2
 
@@ -407,7 +416,7 @@ class TestCrashAndInterruption:
         armed_runtime.start_capture(start_capture_cmd())
         armed_runtime.feed_note_on(64, 100)
         armed_runtime.crash()
-        capture = armed_runtime.retrieve_capture(CAPTURE_ID).capture
+        capture = armed_runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID)).capture
         assert capture is not None
         assert capture.completion_state is CaptureCompletionState.INTERRUPTED
 
@@ -418,7 +427,7 @@ class TestCrashAndInterruption:
         armed_runtime.feed_note_on(64, 100)
         armed_runtime.feed_note_on(67, 90)
         armed_runtime.crash()
-        capture = armed_runtime.retrieve_capture(CAPTURE_ID).capture
+        capture = armed_runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID)).capture
         assert capture is not None
         assert capture.event_count == 2
 
@@ -426,7 +435,7 @@ class TestCrashAndInterruption:
         armed_runtime.start_capture(start_capture_cmd())
         armed_runtime.feed_note_on(64, 100)
         armed_runtime.crash()
-        capture = armed_runtime.retrieve_capture(CAPTURE_ID).capture
+        capture = armed_runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID)).capture
         assert capture is not None
         assert capture.faults[0].code is FaultCode.RUNTIME_CRASHED
 
@@ -436,9 +445,43 @@ class TestCrashAndInterruption:
         armed_runtime.start_capture(start_capture_cmd())
         armed_runtime.feed_note_on(64, 100)
         armed_runtime.crash()
-        capture = armed_runtime.retrieve_capture(CAPTURE_ID).capture
+        capture = armed_runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID)).capture
         assert capture is not None
         assert any("without note-off" in w for w in capture.warnings)
+
+    def test_stopping_the_runtime_mid_capture_interrupts_the_capture(
+        self, armed_runtime: FakeRuntime
+    ) -> None:
+        # Abandoning it would leave a capture permanently IN_PROGRESS -- a record
+        # claiming to be recording on a runtime that no longer exists.
+        armed_runtime.start_capture(start_capture_cmd())
+        armed_runtime.feed_note_on(64, 100)
+        assert armed_runtime.stop(stop_cmd()).succeeded is True
+        result = armed_runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID))
+        assert result.capture is not None
+        assert result.capture.completion_state is CaptureCompletionState.INTERRUPTED
+        assert result.capture.is_closed is True
+
+    def test_stopping_mid_capture_preserves_accepted_events(
+        self, armed_runtime: FakeRuntime
+    ) -> None:
+        armed_runtime.start_capture(start_capture_cmd())
+        armed_runtime.feed_note_on(64, 100)
+        armed_runtime.feed_note_on(67, 90)
+        armed_runtime.stop(stop_cmd())
+        capture = armed_runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID)).capture
+        assert capture is not None
+        assert capture.event_count == 2
+        assert capture.faults
+
+    def test_no_capture_is_left_in_progress_after_stop(
+        self, armed_runtime: FakeRuntime
+    ) -> None:
+        armed_runtime.start_capture(start_capture_cmd())
+        armed_runtime.stop(stop_cmd())
+        capture = armed_runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID)).capture
+        assert capture is not None
+        assert capture.completion_state is not CaptureCompletionState.IN_PROGRESS
 
     def test_crash_without_an_active_capture_is_safe(self, armed_runtime: FakeRuntime) -> None:
         result = armed_runtime.crash()
@@ -499,10 +542,27 @@ class TestHealthAndDiagnostics:
     ) -> None:
         assert armed_runtime.health().all_subsystems_ready() is True
 
-    def test_started_but_unprepared_runtime_is_not_ready(self, runtime: FakeRuntime) -> None:
-        # Healthy subsystems while still probing must not read as ready.
+    def test_started_runtime_is_ready_before_a_session_exists(
+        self, runtime: FakeRuntime
+    ) -> None:
+        # The documented lifecycle is start -> readiness -> prepare session, so
+        # readiness must be reachable before the session exists.
         runtime.start(start_cmd())
-        assert runtime.readiness().ready is False
+        readiness = runtime.readiness()
+        assert readiness.ready is True
+        assert readiness.capture_ready is False
+
+    def test_capture_readiness_arrives_with_the_session(self, armed_runtime: FakeRuntime) -> None:
+        readiness = armed_runtime.readiness()
+        assert readiness.ready is True
+        assert readiness.capture_ready is True
+
+    def test_a_stopped_runtime_is_neither_ready_nor_capture_ready(
+        self, runtime: FakeRuntime
+    ) -> None:
+        readiness = runtime.readiness()
+        assert readiness.ready is False
+        assert readiness.capture_ready is False
 
     def test_diagnostics_export_succeeds(self, armed_runtime: FakeRuntime) -> None:
         result = armed_runtime.export_diagnostics()
@@ -524,6 +584,6 @@ class TestHealthAndDiagnostics:
         runtime.start_capture(start_capture_cmd())
         runtime.feed_note_on(64, 100)
         runtime.stop_capture(stop_capture_cmd())
-        capture = runtime.retrieve_capture(CAPTURE_ID).capture
+        capture = runtime.retrieve_capture(retrieve_cmd(CAPTURE_ID)).capture
         assert capture is not None
         assert any("still sounding" in w for w in capture.warnings)

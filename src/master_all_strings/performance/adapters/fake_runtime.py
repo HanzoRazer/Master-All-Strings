@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from master_all_strings.performance.adapters.clock import DeterministicClock
 from master_all_strings.performance.capture_normalization import (
     append_events,
     build_raw_capture,
@@ -36,6 +37,7 @@ from master_all_strings.performance.contracts.commands import (
     ArmTrackCommandV1,
     PanicCommandV1,
     PrepareSessionCommandV1,
+    RetrieveCaptureCommandV1,
     SelectSynthCommandV1,
     SetLoopCommandV1,
     SetTransportCommandV1,
@@ -107,23 +109,6 @@ class FakeRuntimeScenario:
     stuck_notes: bool = False
 
 
-class _Clock:
-    """A deterministic timestamp source.
-
-    Advances one second per call from a fixed origin. Real time never enters a test.
-    """
-
-    def __init__(self, origin_epoch_second: int = 0) -> None:
-        self._tick = origin_epoch_second
-
-    def now(self) -> str:
-        value = self._tick
-        self._tick += 1
-        hours, remainder = divmod(value, 3600)
-        minutes, seconds = divmod(remainder, 60)
-        return f"2026-07-24T{10 + hours:02d}:{minutes:02d}:{seconds:02d}Z"
-
-
 @dataclass
 class _SessionRecord:
     config: PerformanceSessionConfigV1
@@ -141,11 +126,11 @@ class FakeRuntime:
         scenario: FakeRuntimeScenario | None = None,
         *,
         runtime_id: str = FAKE_RUNTIME_ID,
-        clock: _Clock | None = None,
+        clock: DeterministicClock | None = None,
     ) -> None:
         self.scenario = scenario or FakeRuntimeScenario()
         self.runtime_id = runtime_id
-        self._clock = clock or _Clock()
+        self._clock = clock or DeterministicClock()
         self._state = RuntimeState.OFF
         self._session: _SessionRecord | None = None
         self._captures: dict[str, RawPerformanceCaptureV1] = {}
@@ -191,10 +176,23 @@ class FakeRuntime:
         return self._success("start")
 
     def stop(self, command: StopRuntimeCommandV1) -> RuntimeCommandResultV1:
-        """Stop. Idempotent: stopping a stopped runtime succeeds."""
+        """Stop. Idempotent: stopping a stopped runtime succeeds.
+
+        An active capture is closed as ``INTERRUPTED``, never abandoned. Dropping it
+        would leave a capture permanently ``IN_PROGRESS`` — a record that claims to be
+        still recording on a runtime that no longer exists, which is exactly the
+        false state ADR-0007 D15 forbids.
+        """
+        if self._active_capture_id is not None:
+            self._interrupt_active_capture(
+                FaultCode.SHUTDOWN_TIMEOUT
+                if command.force
+                else FaultCode.INVALID_STATE,
+                "runtime stopped while a capture was active",
+                recoverable=True,
+            )
         self._state = RuntimeState.OFF
         self._session = None
-        self._active_capture_id = None
         return self._success("stop")
 
     def readiness(self) -> RuntimeReadinessV1:
@@ -249,16 +247,16 @@ class FakeRuntime:
             )
 
         degraded = bool(faults) or self._state is RuntimeState.FAILED
+        # Session-scoped subsystems stay UNKNOWN until a session is prepared. That is
+        # a normal point in the lifecycle, not a fault, and it must not block
+        # RuntimeState.READY -- doing so would make start -> readiness ->
+        # prepare_session unreachable, because readiness could never be true before
+        # the step that follows it.
         session_state = SubsystemState.READY if self._session else SubsystemState.UNKNOWN
-        capture_state = (
-            SubsystemState.READY
-            if self._state is not RuntimeState.FAILED
-            else SubsystemState.FAULTED
-        )
+        capture_state = SubsystemState.READY if self._session else SubsystemState.UNKNOWN
+        if self._state is RuntimeState.FAILED:
+            capture_state = SubsystemState.FAULTED
 
-        # A session that has not been prepared is not a fault, but it does mean the
-        # runtime is not fully READY -- so state follows the subsystems rather than
-        # being asserted independently.
         state = self._state
         if degraded:
             state = (
@@ -266,8 +264,6 @@ class FakeRuntime:
                 if self._state is not RuntimeState.FAILED
                 else RuntimeState.FAILED
             )
-        elif session_state is not SubsystemState.READY and state is RuntimeState.READY:
-            state = RuntimeState.PROBING
 
         return self._health(
             state=state,
@@ -530,8 +526,9 @@ class FakeRuntime:
             self._session.transport_mode = TransportMode.STOPPED
         return self._success("stop_capture")
 
-    def retrieve_capture(self, capture_id: str) -> CaptureResultV1:
+    def retrieve_capture(self, command: RetrieveCaptureCommandV1) -> CaptureResultV1:
         """Return a capture record, or a fault explaining why it is not available."""
+        capture_id = command.capture_id
         if self._session is None and capture_id not in self._captures:
             return self._capture_failure(
                 capture_id, FaultCode.INVALID_STATE, "session", "no session prepared"
@@ -569,6 +566,32 @@ class FakeRuntime:
         )
 
     # --- internals --------------------------------------------------------
+
+    def _interrupt_active_capture(
+        self, code: FaultCode, detail: str, *, recoverable: bool
+    ) -> RuntimeFaultV1:
+        """Close the active capture as INTERRUPTED and return the fault.
+
+        The single path by which an in-flight capture ends abnormally, shared by
+        ``crash`` and ``stop`` so neither can quietly diverge into abandoning a
+        record. Events accepted so far are preserved exactly; no note endings are
+        invented.
+        """
+        fault = self._fault(code, "process", detail, recoverable=recoverable)
+        if self._active_capture_id is None:
+            return fault
+        capture = self._captures[self._active_capture_id]
+        sounding = len(self._session.sounding_notes) if self._session else 0
+        warning = (
+            f"capture ended without note-off for {sounding} sounding note(s)"
+            if sounding
+            else None
+        )
+        self._captures[self._active_capture_id] = mark_capture_interrupted(
+            capture, ended_at=self._clock.now(), fault=fault, warning=warning
+        )
+        self._active_capture_id = None
+        return fault
 
     def _feed(
         self, event_type: MidiEventType, *, channel: int, time_ns: int | None, **fields_: int | None

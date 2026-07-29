@@ -165,6 +165,28 @@ class StopCaptureCommandV1:
 
 
 @dataclass(frozen=True)
+class RetrieveCaptureCommandV1:
+    """Fetch a capture record.
+
+    A command contract rather than a bare identifier, so retrieval matches every
+    other port operation and can later carry session context, a retrieval mode, or a
+    provenance check without changing the port's method shape.
+    """
+
+    schema_version: str
+    capture_id: str
+    session_id: str | None = None
+
+    SCHEMA_VERSION = "1.0.0"
+
+    def __post_init__(self) -> None:
+        require_schema_version(self.schema_version, self.SCHEMA_VERSION)
+        require_identifier(self.capture_id, "capture_id")
+        if self.session_id is not None:
+            require_identifier(self.session_id, "session_id")
+
+
+@dataclass(frozen=True)
 class SelectSynthCommandV1:
     """Load an approved synthesizer by registry identifier.
 
