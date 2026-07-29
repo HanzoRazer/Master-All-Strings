@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/performance/synth-registry-v1.schema.json",
+  "title": "SynthRegistryV1",
+  "description": "The approved-synthesizer registry. Selection is by synth_id against this file, never by plugin URI or filesystem path, so unrestricted plugin loading is impossible by construction (ADR-0007 D17). Development availability is not redistribution approval: distribution_status and license_status are required and default to unresolved, and measured_cpu/measured_memory stay null until something is actually measured on target hardware.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "synths"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "synths": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/synth"}
+    }
+  },
+  "$defs": {
+    "synth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "synth_id",
+        "display_name",
+        "plugin_format",
+        "plugin_identifier",
+        "version",
+        "preset",
+        "license_status",
+        "distribution_status",
+        "pi_status",
+        "measured_cpu",
+        "measured_memory",
+        "requires_sound_library",
+        "notes"
+      ],
+      "properties": {
+        "synth_id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+        "display_name": {"type": "string", "minLength": 1},
+        "plugin_format": {"type": "string", "enum": ["lv2", "vst3", "internal"]},
+        "plugin_identifier": {"type": "string", "minLength": 1},
+        "version": {"type": ["string", "null"], "minLength": 1},
+        "preset": {"type": ["string", "null"], "minLength": 1},
+        "license_status": {"type": "string", "enum": ["approved", "unresolved", "prohibited"]},
+        "distribution_status": {"type": "string", "enum": ["approved", "unresolved", "prohibited"]},
+        "pi_status": {"type": "string", "enum": ["verified", "unverified", "incompatible"]},
+        "measured_cpu": {"type": ["number", "null"], "minimum": 0},
+        "measured_memory": {"type": ["integer", "null"], "minimum": 0},
+        "requires_sound_library": {"type": "boolean"},
+        "notes": {"type": "string"}
+      },
+      "allOf": [
+        {
+          "description": "A synth cannot be distribution-approved while its own license is unresolved.",
+          "if": {"properties": {"distribution_status": {"const": "approved"}}, "required": ["distribution_status"]},
+          "then": {"properties": {"license_status": {"const": "approved"}}}
+        },
+        {
+          "description": "Pi status may only claim verified once resource use has been measured.",
+          "if": {"properties": {"pi_status": {"const": "verified"}}, "required": ["pi_status"]},
+          "then": {
+            "properties": {
+              "measured_cpu": {"type": "number"},
+              "measured_memory": {"type": "integer"}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

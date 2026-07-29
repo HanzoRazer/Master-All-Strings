@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0.0",
+  "session_id": "session-001",
+  "runtime_id": "fake",
+  "tracks": [
+    {
+      "schema_version": "1.0.0",
+      "track_id": "track-1",
+      "name": "Guitar MIDI",
+      "kind": "midi",
+      "midi_input": "midi-in-0",
+      "synth_id": "reasonablesynth",
+      "record_armed": true,
+      "channel": 0
+    }
+  ],
+  "transport": {
+    "schema_version": "1.0.0",
+    "mode": "stopped",
+    "position_tick": 0,
+    "tempo_bpm": 120.0,
+    "meter": {
+      "schema_version": "1.0.0",
+      "beats_per_bar": 4,
+      "beat_unit": 4
+    },
+    "ticks_per_quarter": 960,
+    "loop": null
+  },
+  "metronome": {
+    "schema_version": "1.0.0",
+    "enabled": true,
+    "count_in_bars": 1,
+    "level": 0.5
+  },
+  "template_id": "single-midi-track-v1"
+}

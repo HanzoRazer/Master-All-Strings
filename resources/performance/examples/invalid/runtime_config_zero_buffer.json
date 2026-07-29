@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "runtime_id": "pi-ardour-reference",
+  "runtime_kind": "ardour",
+  "runtime_version_policy": ">=9.7,<10",
+  "executable": "REPLACE_WITH_RUNTIME_EXECUTABLE_PATH",
+  "session_template": "REPLACE_WITH_SESSION_TEMPLATE_PATH",
+  "audio_backend": "alsa",
+  "sample_rate_hz": 48000,
+  "buffer_frames": 0,
+  "audio_output": "REPLACE_WITH_AUDIO_OUTPUT_IDENTIFIER",
+  "midi_inputs": [
+    "REPLACE_WITH_MIDI_INPUT_IDENTIFIER"
+  ],
+  "synth_id": "reasonablesynth",
+  "startup_timeout_ms": 30000,
+  "health_timeout_ms": 10000,
+  "shutdown_timeout_ms": 10000,
+  "offline_required": true,
+  "requires_network": false,
+  "metadata": {
+    "buffer_frames_rationale": "UNMEASURED placeholder. 256 frames at 48 kHz is a conventional starting point, not a target-hardware result. The acceptable value comes from the Commit 9 Pi measurement, not from this file.",
+    "device_identifiers": "Deliberately placeholders. Real device names are machine-specific and must not be committed.",
+    "status": "reference configuration; no runtime has been built, started, or measured",
+    "target": "Raspberry Pi 5",
+    "verified_runtime_versions": "none"
+  }
+}

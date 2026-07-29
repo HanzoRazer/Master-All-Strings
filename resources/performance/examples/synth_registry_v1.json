@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0.0",
+  "synths": [
+    {
+      "synth_id": "fake-synth",
+      "display_name": "Fake Synth (tests only)",
+      "plugin_format": "internal",
+      "plugin_identifier": "internal:fake-synth",
+      "version": "1.0.0",
+      "preset": null,
+      "license_status": "approved",
+      "distribution_status": "approved",
+      "pi_status": "unverified",
+      "measured_cpu": null,
+      "measured_memory": null,
+      "requires_sound_library": false,
+      "notes": "Deterministic stand-in used by the fake runtime. Never shipped in an image; approved because it is our own code under the repository license."
+    },
+    {
+      "synth_id": "reasonablesynth",
+      "display_name": "Reasonable Synth",
+      "plugin_format": "lv2",
+      "plugin_identifier": "reasonablesynth.lv2",
+      "version": null,
+      "preset": null,
+      "license_status": "unresolved",
+      "distribution_status": "unresolved",
+      "pi_status": "unverified",
+      "measured_cpu": null,
+      "measured_memory": null,
+      "requires_sound_library": false,
+      "notes": "First-proof default. Ships in-tree with Ardour 9.7 and needs no soundfont, so the acceptance path carries no unresolved sound-library question. Per-plugin license text has not yet been read; identity comes from the libs/plugins listing."
+    },
+    {
+      "synth_id": "a-fluidsynth",
+      "display_name": "A-Fluid Synth (SF2 player)",
+      "plugin_format": "lv2",
+      "plugin_identifier": "a-fluidsynth.lv2",
+      "version": null,
+      "preset": null,
+      "license_status": "unresolved",
+      "distribution_status": "unresolved",
+      "pi_status": "unverified",
+      "measured_cpu": null,
+      "measured_memory": null,
+      "requires_sound_library": true,
+      "notes": "Available but not the acceptance-path synth. Requires an approved SF2 whose identity and redistribution status are both unresolved; soundfont licensing is a common source of redistribution problems, so the first proof deliberately avoids it."
+    }
+  ]
+}

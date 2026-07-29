@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/performance/captured-midi-event-v1.schema.json",
+  "title": "CapturedMidiEventV1",
+  "description": "One captured MIDI event, exactly as received. Optional fields are always present and null when unresolved, so a serialized event and its Python contract round-trip without ambiguity. source_string null means the source did not report a string; it never means string 0, and it is never inferred.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "sequence_number",
+    "event_type",
+    "capture_time_ns",
+    "channel",
+    "source_port",
+    "source_device",
+    "note",
+    "velocity",
+    "controller",
+    "controller_value",
+    "pitch_bend",
+    "source_string",
+    "raw_payload"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "event_id": {"type": "string", "minLength": 1},
+    "sequence_number": {"type": "integer", "minimum": 0},
+    "event_type": {
+      "type": "string",
+      "enum": ["note_on", "note_off", "control_change", "pitch_bend", "program_change", "channel_pressure"]
+    },
+    "capture_time_ns": {"type": "integer", "minimum": 0},
+    "channel": {"type": "integer", "minimum": 0, "maximum": 15},
+    "source_port": {"type": "string", "minLength": 1},
+    "source_device": {"type": "string", "minLength": 1},
+    "note": {"type": ["integer", "null"], "minimum": 0, "maximum": 127},
+    "velocity": {"type": ["integer", "null"], "minimum": 0, "maximum": 127},
+    "controller": {"type": ["integer", "null"], "minimum": 0, "maximum": 127},
+    "controller_value": {"type": ["integer", "null"], "minimum": 0, "maximum": 127},
+    "pitch_bend": {"type": ["integer", "null"], "minimum": -8192, "maximum": 8191},
+    "source_string": {"type": ["integer", "null"], "minimum": 0, "maximum": 15},
+    "raw_payload": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {"type": "integer", "minimum": 0, "maximum": 255}
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"event_type": {"enum": ["note_on", "note_off"]}}, "required": ["event_type"]},
+      "then": {"properties": {"note": {"type": "integer"}, "velocity": {"type": "integer"}}},
+      "else": {"properties": {"note": {"type": "null"}, "velocity": {"type": "null"}}}
+    },
+    {
+      "if": {"properties": {"event_type": {"const": "control_change"}}, "required": ["event_type"]},
+      "then": {"properties": {"controller": {"type": "integer"}, "controller_value": {"type": "integer"}}},
+      "else": {"properties": {"controller": {"type": "null"}, "controller_value": {"type": "null"}}}
+    },
+    {
+      "if": {"properties": {"event_type": {"const": "pitch_bend"}}, "required": ["event_type"]},
+      "then": {"properties": {"pitch_bend": {"type": "integer"}}},
+      "else": {"properties": {"pitch_bend": {"type": "null"}}}
+    }
+  ]
+}

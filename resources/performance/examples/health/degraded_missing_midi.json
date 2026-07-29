@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "runtime_id": "fake",
+  "checked_at": "2026-07-24T10:00:00Z",
+  "state": "degraded",
+  "process": "ready",
+  "audio_backend": "ready",
+  "audio_output": "ready",
+  "midi_input": "unavailable",
+  "synth": "ready",
+  "session": "ready",
+  "capture": "ready",
+  "faults": [
+    {
+      "schema_version": "1.0.0",
+      "fault_id": "fault-0003",
+      "code": "midi_input_missing",
+      "subsystem": "midi_input",
+      "detail": "no configured MIDI input present",
+      "occurred_at": "2026-07-24T10:00:00Z",
+      "recoverable": true
+    }
+  ]
+}
