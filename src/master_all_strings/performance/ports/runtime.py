@@ -5,7 +5,7 @@ Master All Strings; everything below it is replaceable audio infrastructure.
 
 **No implementation-specific type may appear in this file.** No ``Ardour``, no OSC,
 no LV2, no process handle, no session file path. A test asserts it
-(``tests/performance/test_engine_boundaries.py``), because this is exactly the file
+(``tests/performance/test_performance_boundaries.py``), because this is exactly the file
 where coupling would enter first and be hardest to remove later.
 
 A ``Protocol`` rather than an abstract base class: adapters do not inherit from the

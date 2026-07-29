@@ -341,3 +341,135 @@ class TestRoundTrip:
         path = CAPTURE_DIR / "capture_monophonic_complete.json"
         capture = deserialize_raw_capture(load_json(path))
         assert serialize_raw_capture(capture) == serialize_raw_capture(capture)
+
+
+class TestSessionAndRegistrySchemasMatchTheirContracts:
+    """Drift protection for the schemas the original suite missed.
+
+    ``TestRequiredFieldsAndBoundsMatch`` covered event, capture, and health only. The
+    session-config and synth-registry schemas — including every nested ``$defs``
+    object — were verified by hand and never by test, which is exactly the drift risk
+    the duplication was flagged for. Hand-verification does not survive the next edit.
+    """
+
+    def _required(self, schema: dict[str, Any], *path: str) -> set[str]:
+        node = schema
+        for key in path:
+            node = node[key]
+        return set(node["required"])
+
+    def _fields(self, cls: type) -> set[str]:
+        import dataclasses
+
+        return {f.name for f in dataclasses.fields(cls)}
+
+    def test_session_config_required_fields_match(self) -> None:
+        from master_all_strings.performance.contracts.session import (
+            PerformanceSessionConfigV1,
+        )
+
+        schema = load_schema("performance_session_config_v1")
+        assert set(schema["required"]) == self._fields(PerformanceSessionConfigV1)
+
+    def test_track_required_fields_match(self) -> None:
+        from master_all_strings.performance.contracts.session import (
+            PerformanceTrackConfigV1,
+        )
+
+        schema = load_schema("performance_session_config_v1")
+        assert self._required(schema, "$defs", "track") == self._fields(PerformanceTrackConfigV1)
+
+    def test_transport_required_fields_match(self) -> None:
+        from master_all_strings.performance.contracts.session import TransportStateV1
+
+        schema = load_schema("performance_session_config_v1")
+        assert self._required(schema, "$defs", "transport") == self._fields(TransportStateV1)
+
+    def test_meter_required_fields_match(self) -> None:
+        from master_all_strings.performance.contracts.session import MeterV1
+
+        schema = load_schema("performance_session_config_v1")
+        assert self._required(schema, "$defs", "meter") == self._fields(MeterV1)
+
+    def test_loop_required_fields_match(self) -> None:
+        from master_all_strings.performance.contracts.session import LoopRegionV1
+
+        schema = load_schema("performance_session_config_v1")
+        assert self._required(schema, "$defs", "loop") == self._fields(LoopRegionV1)
+
+    def test_metronome_required_fields_match(self) -> None:
+        from master_all_strings.performance.contracts.session import MetronomeConfigV1
+
+        schema = load_schema("performance_session_config_v1")
+        assert self._required(schema, "$defs", "metronome") == self._fields(MetronomeConfigV1)
+
+    def test_synth_entry_required_fields_match(self) -> None:
+        from master_all_strings.performance.configuration import SynthEntry
+
+        schema = load_schema("synth_registry_v1")
+        assert self._required(schema, "$defs", "synth") == self._fields(SynthEntry)
+
+    def test_transport_mode_enum_matches(self) -> None:
+        from master_all_strings.performance.contracts.session import TransportMode
+
+        schema = load_schema("performance_session_config_v1")
+        assert set(schema["$defs"]["transport"]["properties"]["mode"]["enum"]) == {
+            m.value for m in TransportMode
+        }
+
+    def test_meter_beat_units_match(self) -> None:
+        from master_all_strings.performance.contracts.session import MeterV1
+
+        schema = load_schema("performance_session_config_v1")
+        assert tuple(schema["$defs"]["meter"]["properties"]["beat_unit"]["enum"]) == (
+            MeterV1.SUPPORTED_BEAT_UNITS
+        )
+
+    def test_tempo_bounds_match(self) -> None:
+        from master_all_strings.performance.contracts.session import (
+            MAX_TEMPO_BPM,
+            MIN_TEMPO_BPM,
+        )
+
+        tempo = load_schema("performance_session_config_v1")["$defs"]["transport"][
+            "properties"
+        ]["tempo_bpm"]
+        assert tempo["minimum"] == MIN_TEMPO_BPM
+        assert tempo["maximum"] == MAX_TEMPO_BPM
+
+    def test_track_kind_is_restricted_to_midi(self) -> None:
+        from master_all_strings.performance.contracts.session import TrackKind
+
+        # The enum carries AUDIO so it need not change when Stage 6 is authorized,
+        # but the schema pins the serialized form to MIDI and the contract rejects
+        # AUDIO outright. Both sides must agree that AUDIO is currently unreachable.
+        schema = load_schema("performance_session_config_v1")
+        assert schema["$defs"]["track"]["properties"]["kind"] == {"const": TrackKind.MIDI.value}
+
+    def test_capability_registry_enum_matches_the_contract(self) -> None:
+        from master_all_strings.performance.contracts.runtime import RuntimeCapability
+
+        schema = load_schema("runtime_capability_registry_v1")
+        enum = schema["$defs"]["runtime"]["properties"]["capabilities"]["items"]["enum"]
+        assert set(enum) == {c.value for c in RuntimeCapability}
+
+    def test_capability_registry_runtime_kind_matches(self) -> None:
+        from master_all_strings.performance.contracts.runtime import RuntimeKind
+
+        schema = load_schema("runtime_capability_registry_v1")
+        enum = schema["$defs"]["runtime"]["properties"]["runtime_kind"]["enum"]
+        assert set(enum) == {k.value for k in RuntimeKind}
+
+    def test_every_schema_with_a_contract_is_covered_by_a_drift_test(self) -> None:
+        # A schema added without a matching drift test is the failure mode this whole
+        # class exists to prevent, so the omission itself is asserted.
+        covered = {
+            "captured_midi_event_v1",
+            "raw_performance_capture_v1",
+            "runtime_health_v1",
+            "performance_runtime_config_v1",
+            "performance_session_config_v1",
+            "synth_registry_v1",
+            "runtime_capability_registry_v1",
+        }
+        assert covered == SCHEMAS

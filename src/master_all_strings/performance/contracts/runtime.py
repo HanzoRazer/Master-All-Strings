@@ -2,7 +2,7 @@
 
 Every name here is runtime-neutral. No Ardour type, field, or vocabulary appears in
 this module or may cross ``PerformanceRuntimePort`` (ADR-0007 D2, enforced by
-``tests/performance/test_engine_boundaries.py``).
+``tests/performance/test_performance_boundaries.py``).
 """
 
 from __future__ import annotations

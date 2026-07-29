@@ -15,13 +15,19 @@ can reconstruct the state without conversation history (acceptance criterion 30)
 | 2 | 9 capabilities + 6 contracts + ADR-0007 in the governance registry; views regenerated |
 | 3 | Component register, Ardour adapter boundary, gap audit, fork gate |
 | 4 | Runtime-neutral contracts and `PerformanceRuntimePort` |
-| 5 | 7 JSON schemas, 30 fixtures under `resources/performance/` |
+| 5 | 7 JSON schemas, 38 fixtures under `resources/performance/` (21 invalid) |
 | 6 | Configuration, session builder, capture normalization, observations, diagnostics, export, ingestion, fake runtime, Ardour scaffold, 2 read-only CLIs |
-| 7 | 460 tests across 8 modules |
-| — | Pi qualification template, spike procedure, this report |
+| 7 | 501 tests across 8 modules |
+| 8 | Pi qualification template, spike procedure, this report |
+| 9 | Review-pass fixes: readiness lifecycle, stop-during-capture, port API, version parsing |
 
-**Verification:** 772 tests pass, coverage 97.01% (floor 95%), ruff clean, mypy
-strict clean, governance validator `OK`, generated views match the registry.
+**Verification:** 818 tests pass, coverage 96.94% (floor 95%), ruff clean, mypy
+strict clean, governance validator `OK`, generated views match the registry, 0 broken
+doc links.
+
+> **Base.** This tranche is stacked on the DO-005 re-land (PR #12), not on `main`
+> directly. `main` had reverted DO-005 (PR #10, a procedural revert of a premature
+> merge), and DO-006 depends on the registry and validator that re-land restores.
 
 ## Not delivered, and why
 

@@ -67,9 +67,13 @@ registry. That duplication is deliberate and each pair has a test:
 
 | Pair | Test |
 | --- | --- |
-| contract ↔ schema (enums, required fields, bounds) | `test_schemas.py::TestEnumsMatchBetweenPythonAndSchema`, `::TestRequiredFieldsAndBoundsMatch` |
+| contract ↔ schema — event, capture, health, config | `test_schemas.py::TestEnumsMatchBetweenPythonAndSchema`, `::TestRequiredFieldsAndBoundsMatch` |
+| contract ↔ schema — session, track, transport, meter, loop, metronome, synth entry, capability registry | `test_schemas.py::TestSessionAndRegistrySchemasMatchTheirContracts` |
 | schema ↔ fixtures (valid and invalid, by named validator) | `test_schemas.py::TestValidFixturesPass`, `::TestInvalidFixturesFailForANamedReason` |
 | contract ↔ serialized form (lossless round-trip) | `test_schemas.py::TestRoundTrip` |
 | embedded ↔ standalone event schema | `test_schemas.py::TestEmbeddedEventDefinitionDoesNotDrift` |
 | registry ↔ generated views | `tests/governance/test_engine_markdown_views.py` |
 | registry ↔ code ownership | `test_performance_boundaries.py` |
+
+A schema added without a matching drift test is itself asserted against, in
+`TestSessionAndRegistrySchemasMatchTheirContracts::test_every_schema_with_a_contract_is_covered_by_a_drift_test`.

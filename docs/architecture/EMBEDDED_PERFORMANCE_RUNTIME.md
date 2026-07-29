@@ -69,6 +69,11 @@ Educational consumes `PerformanceObservationV1` as evidence. Creative never
 consumes runtime records at all — captured content reaches Creative through
 canonical music, never through runtime internals.
 
+> **Diagram numbering** follows the DO-006 §5.1 list, so the numbers are traceable to
+> the order. They appear here in *reading* order instead — Diagram 7, the readiness
+> state machine, sits with the lifecycle section it explains rather than after
+> Diagram 6.
+
 ## Diagram 1 — Pi hardware and software stack
 
 ```text
