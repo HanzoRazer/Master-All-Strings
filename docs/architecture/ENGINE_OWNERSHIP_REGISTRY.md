@@ -7,7 +7,7 @@ Every capability has exactly one authoritative owning engine. Generated from the
 
 | Capability ID | Capability | Owning engine | Permitted consumers | Classification | Status |
 | --- | --- | --- | --- | --- | --- |
-| `canonical-music` | Canonical musical model | Musical Core | Educational, Creative, Performance | neither | partial |
+| `canonical-music` | Canonical musical model | Musical Core | Educational, Creative, Performance | neither | implemented |
 | `instrument-profiles` | Instrument and tuning profiles | Musical Core | Educational, Creative, Performance | neither | implemented |
 | `msme` | Musical Spatial Mapping Engine | Musical Core | Educational, Creative | neither | partial |
 | `candidate-generation` | Candidate generation | Musical Core | Educational, Creative | evidence | implemented |

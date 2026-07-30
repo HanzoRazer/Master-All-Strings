@@ -29,4 +29,7 @@ Every cross-engine contract has exactly one owning engine and one versioning aut
 | `RawPerformanceCaptureV1` | Performance | Performance | Educational | immutable | evidence | — | Performance |
 | `RuntimeHealthV1` | Performance | Performance | — | immutable | evidence | — | Performance |
 | `CanonicalIngestionRequestV1` | Musical Core | Performance | Musical Core | immutable | neither | — | Musical Core |
+| `ScoreDocumentV1` | Musical Core | Musical Core | Educational, Creative, Performance | versioned | neither | — | Musical Core |
+| `CanonicalScoreRevisionV1` | Musical Core | Musical Core | Educational, Creative, Performance | immutable | neither | — | Musical Core |
+| `CanonicalIngestionResultV1` | Musical Core | Musical Core | Performance | immutable | neither | — | Musical Core |
 | `PracticeSession` | Educational | Educational | — | versioned | interpretation | — | Educational |

@@ -52,7 +52,10 @@ from master_all_strings.performance.contracts.commands import (
 from master_all_strings.performance.contracts.errors import PerformanceContractError
 from master_all_strings.performance.contracts.ingestion import (
     CanonicalIngestionRequestV1,
+    CanonicalIngestionResultV1,
     ProjectionType,
+    SourceMidiEventKind,
+    SourceMidiEventV1,
 )
 from master_all_strings.performance.contracts.results import (
     CaptureResultV1,
@@ -91,6 +94,7 @@ from master_all_strings.performance.ports.runtime import PerformanceRuntimePort
 __all__ = [
     "ArmTrackCommandV1",
     "CanonicalIngestionRequestV1",
+    "CanonicalIngestionResultV1",
     "CaptureCompletionState",
     "CaptureResultV1",
     "CaptureSourceV1",
@@ -129,6 +133,8 @@ __all__ = [
     "SessionState",
     "SetLoopCommandV1",
     "SetTransportCommandV1",
+    "SourceMidiEventKind",
+    "SourceMidiEventV1",
     "StartCaptureCommandV1",
     "StartRuntimeCommandV1",
     "StopCaptureCommandV1",

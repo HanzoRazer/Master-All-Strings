@@ -283,11 +283,19 @@ class TestAdaptersDoNotMutateCanonicalState:
                     assert "core.spatial_mapping" not in node.module, path.name
 
     def test_performance_never_mints_a_revision_identifier(self) -> None:
+        # DO-006 proved this by asserting the request was built with
+        # canonical_revision_id=None. DO-007A removed the field entirely, which is a
+        # stronger guarantee: there is nothing to populate, by mistake or otherwise.
+        import dataclasses
+
+        from master_all_strings.core.ingestion.contracts import CanonicalIngestionRequestV1
         from master_all_strings.performance import ingestion
 
-        source = inspect.getsource(ingestion)
-        assert "canonical_revision_id=None" in source
-        # There must be no function here capable of producing a revision.
+        names = {f.name for f in dataclasses.fields(CanonicalIngestionRequestV1)}
+        assert "canonical_revision_id" not in names
+        assert "revision_id" not in names
+        assert "document_id" not in names
+        # There must be no function here capable of producing a revision either.
         for name in dir(ingestion):
             assert "revision" not in name.lower() or name.startswith("_"), name
 

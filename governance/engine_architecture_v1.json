@@ -43,7 +43,7 @@
     {"from": "PERFORMANCE_ENGINE", "to": "CREATIVE_ENGINE", "relation": "prohibited"}
   ],
   "capabilities": [
-    {"id": "canonical-music", "name": "Canonical musical model", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["EDUCATIONAL_ENGINE", "CREATIVE_ENGINE", "PERFORMANCE_ENGINE"], "classification": "neither", "implementation_status": "partial"},
+    {"id": "canonical-music", "name": "Canonical musical model", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["EDUCATIONAL_ENGINE", "CREATIVE_ENGINE", "PERFORMANCE_ENGINE"], "classification": "neither", "implementation_status": "implemented"},
     {"id": "instrument-profiles", "name": "Instrument and tuning profiles", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["EDUCATIONAL_ENGINE", "CREATIVE_ENGINE", "PERFORMANCE_ENGINE"], "classification": "neither", "implementation_status": "implemented"},
     {"id": "msme", "name": "Musical Spatial Mapping Engine", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["EDUCATIONAL_ENGINE", "CREATIVE_ENGINE"], "classification": "neither", "implementation_status": "partial"},
     {"id": "candidate-generation", "name": "Candidate generation", "owning_engine": "MUSICAL_CORE", "permitted_consumers": ["EDUCATIONAL_ENGINE", "CREATIVE_ENGINE"], "classification": "evidence", "implementation_status": "implemented"},
@@ -111,6 +111,9 @@
     {"name": "RawPerformanceCaptureV1", "owning_engine": "PERFORMANCE_ENGINE", "producers": ["PERFORMANCE_ENGINE"], "consumers": ["EDUCATIONAL_ENGINE"], "mutability": "immutable", "classification": "evidence", "versioning_authority": "PERFORMANCE_ENGINE"},
     {"name": "RuntimeHealthV1", "owning_engine": "PERFORMANCE_ENGINE", "producers": ["PERFORMANCE_ENGINE"], "consumers": [], "mutability": "immutable", "classification": "evidence", "versioning_authority": "PERFORMANCE_ENGINE"},
     {"name": "CanonicalIngestionRequestV1", "owning_engine": "MUSICAL_CORE", "producers": ["PERFORMANCE_ENGINE"], "consumers": ["MUSICAL_CORE"], "mutability": "immutable", "classification": "neither", "versioning_authority": "MUSICAL_CORE"},
+    {"name": "ScoreDocumentV1", "owning_engine": "MUSICAL_CORE", "producers": ["MUSICAL_CORE"], "consumers": ["EDUCATIONAL_ENGINE", "CREATIVE_ENGINE", "PERFORMANCE_ENGINE"], "mutability": "versioned", "classification": "neither", "versioning_authority": "MUSICAL_CORE"},
+    {"name": "CanonicalScoreRevisionV1", "owning_engine": "MUSICAL_CORE", "producers": ["MUSICAL_CORE"], "consumers": ["EDUCATIONAL_ENGINE", "CREATIVE_ENGINE", "PERFORMANCE_ENGINE"], "mutability": "immutable", "classification": "neither", "versioning_authority": "MUSICAL_CORE"},
+    {"name": "CanonicalIngestionResultV1", "owning_engine": "MUSICAL_CORE", "producers": ["MUSICAL_CORE"], "consumers": ["PERFORMANCE_ENGINE"], "mutability": "immutable", "classification": "neither", "versioning_authority": "MUSICAL_CORE"},
     {"name": "PracticeSession", "owning_engine": "EDUCATIONAL_ENGINE", "producers": ["EDUCATIONAL_ENGINE"], "consumers": [], "mutability": "versioned", "classification": "interpretation", "versioning_authority": "EDUCATIONAL_ENGINE"}
   ],
   "seam_assignments": [

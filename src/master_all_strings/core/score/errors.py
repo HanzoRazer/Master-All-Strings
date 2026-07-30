@@ -80,6 +80,12 @@ def require_nonnegative_int(value: int, field_name: str) -> None:
         raise ScoreContractError(f"{field_name} must be nonnegative")
 
 
+def require_bool(value: bool, field_name: str) -> None:
+    """Require an actual ``bool``, not a truthy value."""
+    if not isinstance(value, bool):
+        raise ScoreContractError(f"{field_name} must be a boolean")
+
+
 def require_tuple(value: object, field_name: str) -> None:
     """Require a ``tuple``.
 

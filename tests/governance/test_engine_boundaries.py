@@ -507,15 +507,66 @@ class TestProjectionContractRename:
 
 
 class TestCanonicalMusicStatus:
-    """``canonical-music`` was overstated before DO-007."""
+    """``canonical-music`` was overstated before DO-007, and is earned after it.
 
-    def test_canonical_music_is_partial(self, registry: dict[str, Any]) -> None:
-        # An atomic MusicalEvent exists; a score document, revision identity, and
-        # lineage do not. It returns to `implemented` when those land.
+    A1 corrected it to ``partial`` because only an atomic ``MusicalEvent`` existed. A5
+    returns it to ``implemented`` -- but only because the things it claims now exist,
+    which is what this test checks rather than taking the status at its word.
+    """
+
+    def test_canonical_music_is_implemented(self, registry: dict[str, Any]) -> None:
         capability = next(
             c for c in registry["capabilities"] if c["id"] == "canonical-music"
         )
-        assert capability["implementation_status"] == "partial"
+        assert capability["implementation_status"] == "implemented"
+
+    def test_the_status_is_backed_by_real_code(self) -> None:
+        # Every claim the promotion rests on, imported rather than assumed.
+        from master_all_strings.core.ingestion.service import CanonicalIngestionService
+        from master_all_strings.core.score.digest import compute_revision_digest
+        from master_all_strings.core.score.models import (
+            CanonicalScoreRevisionV1,
+            ScoreDocumentV1,
+        )
+        from master_all_strings.core.score.repository import (
+            CanonicalScoreRepositoryPort,
+        )
+        from master_all_strings.core.score.revision_service import (
+            CanonicalRevisionService,
+        )
+
+        for thing in (
+            ScoreDocumentV1,
+            CanonicalScoreRevisionV1,
+            compute_revision_digest,
+            CanonicalScoreRepositoryPort,
+            CanonicalRevisionService,
+            CanonicalIngestionService,
+        ):
+            assert thing is not None
+
+    def test_the_registry_records_the_new_core_contracts(
+        self, registry: dict[str, Any]
+    ) -> None:
+        names = {c["name"] for c in registry["contracts"]}
+        for expected in (
+            "ScoreDocumentV1",
+            "CanonicalScoreRevisionV1",
+            "CanonicalIngestionResultV1",
+        ):
+            assert expected in names
+
+    def test_musical_core_owns_every_new_score_contract(
+        self, registry: dict[str, Any]
+    ) -> None:
+        for name in (
+            "ScoreDocumentV1",
+            "CanonicalScoreRevisionV1",
+            "CanonicalIngestionResultV1",
+        ):
+            contract = next(c for c in registry["contracts"] if c["name"] == name)
+            assert contract["owning_engine"] == "MUSICAL_CORE"
+            assert contract["producers"] == ["MUSICAL_CORE"]
 
     def test_no_score_capability_claims_more_than_it_delivers(
         self, registry: dict[str, Any]
