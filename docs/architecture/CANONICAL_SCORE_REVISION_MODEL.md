@@ -166,11 +166,40 @@ whether the revision is complete relative to accepted input.
 
 ## Idempotency
 
-The key is `(request_id, raw_capture_digest, ingestion_policy_version)`. Repeating an
-accepted request returns the existing result rather than creating a second document or
-revision. Reusing a `request_id` with different content is rejected as
-`INGESTION_IDEMPOTENCY_CONFLICT` — the same name meaning two things is a defect, not a
-new version.
+The key is `request_id` plus a **request fingerprint**: a digest over every field that
+changes what the ingestion produces. Repeating an identical request returns the existing
+result rather than creating a second document or revision. Reusing a `request_id` with
+any different result-affecting field is rejected as `INGESTION_IDEMPOTENCY_CONFLICT` —
+the same name meaning two things is a defect, not a new version.
+
+The fingerprint covers `capture_id`, `raw_capture_digest`, `capture_origin_ns`,
+`tempo_microseconds_per_quarter`, `meter`, the effective `ticks_per_quarter`, the
+ingestion policy version, and a digest of the submitted source events.
+
+It has to cover more than the capture digest. The capture digest says which take was
+played; it says nothing about the tempo, meter, tick grid, or capture origin the caller
+asked Core to interpret that take under, and every one of those changes the revision.
+Keying on the capture digest alone meant replaying one capture under a corrected tempo
+came back as a duplicate carrying the *uncorrected* revision — silently, and reported as
+a success. The source events are fingerprinted rather than trusted to follow the capture
+digest for the same reason: the digest is a value the caller asserts, the events are
+what Core actually converts.
+
+`requested_at` is excluded on purpose — a retry may legitimately restamp it, and letting
+that split the key would defeat the retry safety the key exists for. So are
+`source_session_id`, the instrument and tuning profile ids, and
+`requested_projection_types`, none of which reach the revision or the result today. When
+a profile or a projection request starts affecting what Core stores, it joins the
+fingerprint.
+
+A rejected request reserves its `request_id` too. A rejection creates nothing, but the
+id has been spent; leaving it free would mean the conflict guard only worked on the
+happy path. Re-sending the same rejected request is still rejected rather than
+conflicting.
+
+A caller that genuinely wants a second interpretation of one capture — a corrected
+tempo, a different meter — issues a new `request_id`. That is a distinct ingestion
+intent, and it produces a distinct document and revision.
 
 ## Persistence
 

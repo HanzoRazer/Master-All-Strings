@@ -41,6 +41,7 @@ from master_all_strings.core.score.errors import (
     require_utc_timestamp,
 )
 from master_all_strings.core.score.meter import MeterChangeV1
+from master_all_strings.core.score.models import SUPPORTED_TICKS_PER_QUARTER
 from master_all_strings.core.score.provenance import MAX_MIDI_CHANNEL, MAX_SOURCE_STRING
 
 MAX_VELOCITY = 127
@@ -172,6 +173,16 @@ class CanonicalIngestionRequestV1:
         require_optional_identifier(self.tuning_profile_id, "tuning_profile_id")
         if self.ticks_per_quarter is not None:
             require_positive_int(self.ticks_per_quarter, "ticks_per_quarter")
+            # The revision contract accepts only the conventional divisions, so a
+            # request naming any other value can never produce a revision. Refusing it
+            # here turns what was an unhandled contract error thrown from the middle of
+            # Core's ingestion service into a validation failure the caller can act on,
+            # and does it before a document id has been spent.
+            if self.ticks_per_quarter not in SUPPORTED_TICKS_PER_QUARTER:
+                raise ScoreContractError(
+                    "ticks_per_quarter must be one of "
+                    f"{list(SUPPORTED_TICKS_PER_QUARTER)}, got {self.ticks_per_quarter}"
+                )
 
         require_tuple(self.source_events, "source_events")
         for event in self.source_events:

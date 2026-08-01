@@ -242,6 +242,46 @@ class TestProvenanceEvidence:
         codes = {w.code for w in outcome.warnings}
         assert IngestionWarningCode.ROUNDING_APPLIED in codes
 
+    def test_the_rounding_warning_names_source_events_not_canonical_ones(self) -> None:
+        # A caller correlates a warning back to the capture it sent. Reporting the
+        # canonical id here would hand it an id that appears nowhere in its request.
+        events = note(0, onset_ns=1000, release_ns=NS_PER_QUARTER + 1000)
+        outcome = import_direct_events(make_request(source_events=events))
+        warning = next(
+            w for w in outcome.warnings if w.code is IngestionWarningCode.ROUNDING_APPLIED
+        )
+        submitted = {event.source_event_id for event in events}
+        assert set(warning.source_event_ids) <= submitted
+        canonical = {event.event_id for event in outcome.events}
+        assert set(warning.source_event_ids).isdisjoint(canonical)
+
+    def test_every_warning_id_is_an_id_the_caller_submitted(self) -> None:
+        # The invariant behind the previous test, asserted across every warning code so a
+        # new warning cannot reintroduce the mismatch.
+        events = note(0, onset_ns=1000, release_ns=NS_PER_QUARTER + 1000, channel=3)
+        outcome = import_direct_events(make_request(source_events=events))
+        submitted = {event.source_event_id for event in events}
+        assert outcome.warnings
+        for warning in outcome.warnings:
+            assert set(warning.source_event_ids) <= submitted, warning.code
+
+    def test_every_rejection_id_is_an_id_the_caller_submitted(self) -> None:
+        events = note(0) + (source_event(9, SourceMidiEventKind.NOTE_ON, 0, midi_note=67),)
+        outcome = import_direct_events(make_request(source_events=events))
+        submitted = {event.source_event_id for event in events}
+        assert outcome.rejections
+        for rejection in outcome.rejections:
+            assert set(rejection.source_event_ids) <= submitted, rejection.reason
+
+    def test_rounding_attribution_follows_which_conversion_rounded(self) -> None:
+        # Only the onset is off the grid, so the release is not implicated.
+        events = note(0, onset_ns=1000, release_ns=NS_PER_QUARTER + 1000)
+        outcome = import_direct_events(make_request(source_events=events))
+        warning = next(
+            w for w in outcome.warnings if w.code is IngestionWarningCode.ROUNDING_APPLIED
+        )
+        assert warning.source_event_ids == (events[0].source_event_id,)
+
     def test_one_provenance_record_per_canonical_event(self) -> None:
         events = note(0) + note(1, onset_ns=NS_PER_QUARTER, release_ns=NS_PER_QUARTER * 2)
         outcome = import_direct_events(make_request(source_events=events))

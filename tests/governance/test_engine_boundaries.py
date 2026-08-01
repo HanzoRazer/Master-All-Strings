@@ -370,7 +370,10 @@ class TestDuplicateContractNames:
     ) -> None:
         shadow = copy.deepcopy(self._first(registry, "SpatialEvidenceV1"))
         shadow["owning_engine"] = "EDUCATIONAL_ENGINE"
-        shadow["producer"] = "EDUCATIONAL_ENGINE"
+        # `producers`, not `producer`: the singular key the rename left behind here set
+        # a field nothing reads, so the shadow silently kept the original engine's
+        # producer list while claiming to be a different engine's contract.
+        shadow["producers"] = ["EDUCATIONAL_ENGINE"]
         shadow["versioning_authority"] = "EDUCATIONAL_ENGINE"
         registry["contracts"].append(shadow)
         codes = _codes(registry)

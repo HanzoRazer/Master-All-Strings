@@ -107,7 +107,9 @@ def import_direct_events(request: CanonicalIngestionRequestV1) -> ImportOutcome:
 
     open_notes: defaultdict[tuple[int, int], deque[_OpenNote]] = defaultdict(deque)
     unresolved_string_ids: list[str] = []
-    rounded_ids: list[str] = []
+    # Source ids, never canonical ids: every id a caller reads off a warning or a
+    # rejection has to be one it can find in the capture it sent.
+    rounded_source_ids: set[str] = set()
 
     # Order by capture time, then by the source order the capture recorded. A capture
     # already guarantees non-decreasing timestamps, so this is a stability measure
@@ -156,10 +158,14 @@ def import_direct_events(request: CanonicalIngestionRequestV1) -> ImportOutcome:
             provenance.append(event_provenance)
             if onset.source_event.observed_source_string is None:
                 unresolved_string_ids.append(onset.source_event.source_event_id)
-            if event_provenance.rounding_delta_start_ns or (
-                event_provenance.rounding_delta_duration_ns
-            ):
-                rounded_ids.append(musical_event.event_id)
+            # Attribute the residue to the events that produced it: the start is the
+            # onset's alone, the duration is the pair's. The per-event detail stays in
+            # provenance; this is only the pointer back to the capture.
+            if event_provenance.rounding_delta_start_ns:
+                rounded_source_ids.add(onset.source_event.source_event_id)
+            if event_provenance.rounding_delta_duration_ns:
+                rounded_source_ids.add(onset.source_event.source_event_id)
+                rounded_source_ids.add(event.source_event_id)
             continue
 
         open_notes[key].append(_OpenNote(source_event=event, ordinal=ordinal))
@@ -193,16 +199,16 @@ def import_direct_events(request: CanonicalIngestionRequestV1) -> ImportOutcome:
                 source_event_ids=tuple(sorted(unresolved_string_ids)),
             )
         )
-    if rounded_ids:
+    if rounded_source_ids:
         warnings.append(
             IngestionWarningV1(
                 schema_version=IngestionWarningV1.SCHEMA_VERSION,
                 code=IngestionWarningCode.ROUNDING_APPLIED,
                 detail=(
-                    f"{len(rounded_ids)} event(s) required tick-grid rounding; "
-                    "the residue is recorded per event in provenance"
+                    f"{len(rounded_source_ids)} source event(s) required tick-grid "
+                    "rounding; the residue is recorded per event in provenance"
                 ),
-                source_event_ids=tuple(sorted(rounded_ids)),
+                source_event_ids=tuple(sorted(rounded_source_ids)),
             )
         )
     if any(event.channel != 0 for event in request.source_events):

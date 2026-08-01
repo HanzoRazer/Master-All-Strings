@@ -87,6 +87,7 @@ def make_request(
     capture_origin_ns: int = 0,
     mpq: int = MPQ_120,
     ticks_per_quarter: int | None = None,
+    meter: MeterChangeV1 = METER_4_4,
 ) -> CanonicalIngestionRequestV1:
     return CanonicalIngestionRequestV1(
         schema_version=CanonicalIngestionRequestV1.SCHEMA_VERSION,
@@ -96,7 +97,7 @@ def make_request(
         raw_capture_digest=digest,
         capture_origin_ns=capture_origin_ns,
         tempo_microseconds_per_quarter=mpq,
-        meter=METER_4_4,
+        meter=meter,
         requested_at=T0,
         source_events=source_events,
         instrument_profile_id="guitar-standard-6",

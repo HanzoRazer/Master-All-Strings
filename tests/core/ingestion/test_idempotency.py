@@ -9,21 +9,33 @@ from __future__ import annotations
 import pytest
 
 from conftest import (  # type: ignore[import-not-found]
+    METER_4_4,
+    MPQ_120,
     NS_PER_QUARTER,
     T0,
     make_request,
     note,
     source_event,
 )
-from master_all_strings.core.ingestion.contracts import SourceMidiEventKind
+from master_all_strings.core.ingestion.contracts import (
+    CanonicalIngestionRequestV1,
+    SourceMidiEventKind,
+)
 from master_all_strings.core.ingestion.results import IngestionStatus, RejectionReason
 from master_all_strings.core.ingestion.service import (
     CanonicalIngestionService,
     IngestionIdempotencyConflictError,
+    fingerprint_fields,
+    request_fingerprint,
 )
+from master_all_strings.core.score.errors import ScoreContractError
+from master_all_strings.core.score.meter import MeterChangeV1
 from master_all_strings.core.score.repository import InMemoryCanonicalScoreRepository
 
 LATER = "2026-07-30T11:00:00Z"
+METER_3_4 = MeterChangeV1(
+    schema_version=MeterChangeV1.SCHEMA_VERSION, tick=0, numerator=3, denominator=4
+)
 
 
 class TestFirstIngestion:
@@ -187,6 +199,215 @@ class TestIdempotency:
         assert (
             service.find_result(request_id="req-absent", raw_capture_digest="sha256:x") is None
         )
+
+
+class TestIdempotencyCoversInterpretation:
+    """A request id names one *interpretation* of a capture, not just a capture.
+
+    The capture digest says which take was played. Tempo, meter, tick grid, and capture
+    origin say what Core was asked to make of it, and each of them changes the revision.
+    Keying only on the capture digest meant a corrected tempo came back as a duplicate
+    carrying the uncorrected revision — the wrong answer, reported as a success.
+    """
+
+    def test_a_different_tempo_is_not_a_duplicate(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        service.ingest(make_request(source_events=note(0), mpq=500_000), completed_at=T0)
+        with pytest.raises(
+            IngestionIdempotencyConflictError, match="tempo_microseconds_per_quarter"
+        ):
+            service.ingest(
+                make_request(source_events=note(0), mpq=1_000_000), completed_at=LATER
+            )
+
+    def test_a_different_meter_is_not_a_duplicate(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        service.ingest(make_request(source_events=note(0)), completed_at=T0)
+        with pytest.raises(IngestionIdempotencyConflictError, match="meter"):
+            service.ingest(
+                make_request(source_events=note(0), meter=METER_3_4), completed_at=LATER
+            )
+
+    def test_a_different_tick_grid_is_not_a_duplicate(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        service.ingest(
+            make_request(source_events=note(0), ticks_per_quarter=960), completed_at=T0
+        )
+        with pytest.raises(IngestionIdempotencyConflictError, match="ticks_per_quarter"):
+            service.ingest(
+                make_request(source_events=note(0), ticks_per_quarter=480),
+                completed_at=LATER,
+            )
+
+    def test_an_omitted_tick_grid_matches_the_default(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        # 960 is the default, so naming it and omitting it are the same request.
+        service.ingest(make_request(source_events=note(0)), completed_at=T0)
+        repeat = service.ingest(
+            make_request(source_events=note(0), ticks_per_quarter=960), completed_at=LATER
+        )
+        assert repeat.status is IngestionStatus.DUPLICATE
+
+    def test_a_different_capture_origin_is_not_a_duplicate(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        events = note(0, onset_ns=1_000_000, release_ns=501_000_000)
+        service.ingest(
+            make_request(source_events=events, capture_origin_ns=0), completed_at=T0
+        )
+        with pytest.raises(IngestionIdempotencyConflictError, match="capture_origin_ns"):
+            service.ingest(
+                make_request(source_events=events, capture_origin_ns=1_000_000),
+                completed_at=LATER,
+            )
+
+    def test_different_source_events_are_not_a_duplicate(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        # The capture digest is asserted by the caller; the events are what Core
+        # converts. Identity follows what was actually submitted.
+        service.ingest(make_request(source_events=note(0)), completed_at=T0)
+        with pytest.raises(IngestionIdempotencyConflictError, match="source_events"):
+            service.ingest(
+                make_request(source_events=note(0, midi_note=64)), completed_at=LATER
+            )
+
+    def test_a_conflict_names_the_field_that_changed(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        service.ingest(make_request(source_events=note(0)), completed_at=T0)
+        with pytest.raises(IngestionIdempotencyConflictError) as caught:
+            service.ingest(
+                make_request(source_events=note(0), mpq=600_000), completed_at=LATER
+            )
+        message = str(caught.value)
+        assert "tempo_microseconds_per_quarter" in message
+        assert "meter" not in message
+
+    def test_a_rejected_request_still_reserves_its_id(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        # A rejection creates nothing, but the id has still been spent. Leaving it free
+        # would mean the conflict guard only worked on the happy path.
+        rejected = service.ingest(
+            make_request(source_events=(), digest="sha256:aaa"), completed_at=T0
+        )
+        assert rejected.status is IngestionStatus.REJECTED
+        with pytest.raises(
+            IngestionIdempotencyConflictError, match="INGESTION_IDEMPOTENCY_CONFLICT"
+        ):
+            service.ingest(
+                make_request(source_events=note(0), digest="sha256:bbb"), completed_at=LATER
+            )
+
+    def test_repeating_a_rejected_request_is_still_rejected(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        request = make_request(source_events=())
+        assert service.ingest(request, completed_at=T0).status is IngestionStatus.REJECTED
+        assert service.ingest(request, completed_at=LATER).status is IngestionStatus.REJECTED
+
+    def test_a_repeat_under_a_new_request_id_is_a_distinct_ingestion(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        # The escape hatch a caller with a corrected tempo actually wants.
+        first = service.ingest(
+            make_request(request_id="req-1", source_events=note(0), mpq=500_000),
+            completed_at=T0,
+        )
+        second = service.ingest(
+            make_request(request_id="req-2", source_events=note(0), mpq=1_000_000),
+            completed_at=LATER,
+        )
+        assert second.status is IngestionStatus.ACCEPTED
+        assert second.revision_id != first.revision_id
+
+    def test_a_result_is_not_found_under_the_wrong_digest(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        request = make_request(source_events=note(0))
+        service.ingest(request, completed_at=T0)
+        assert (
+            service.find_result(
+                request_id=request.request_id, raw_capture_digest="sha256:not-this-one"
+            )
+            is None
+        )
+
+
+class TestFingerprintPolicy:
+    """The fingerprint is asserted directly, not re-derived from behaviour."""
+
+    def test_every_field_that_reaches_the_revision_is_fingerprinted(self) -> None:
+        fields = set(fingerprint_fields(make_request(source_events=note(0))))
+        assert {
+            "capture_id",
+            "raw_capture_digest",
+            "capture_origin_ns",
+            "tempo_microseconds_per_quarter",
+            "meter",
+            "ticks_per_quarter",
+            "policy_version",
+            "source_events",
+        } == fields
+
+    def test_a_retry_may_restamp_requested_at(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        # requested_at is excluded on purpose: a client that restamps a retry must not
+        # be told its own retry is a conflict.
+        service.ingest(make_request(source_events=note(0)), completed_at=T0)
+        restamped = CanonicalIngestionRequestV1(
+            schema_version=CanonicalIngestionRequestV1.SCHEMA_VERSION,
+            request_id="req-0001",
+            capture_id="capture-0001",
+            source_session_id="session-0001",
+            raw_capture_digest="sha256:abc123",
+            capture_origin_ns=0,
+            tempo_microseconds_per_quarter=MPQ_120,
+            meter=METER_4_4,
+            requested_at=LATER,
+            source_events=note(0),
+            instrument_profile_id="guitar-standard-6",
+            tuning_profile_id="standard-e",
+        )
+        assert service.ingest(restamped, completed_at=LATER).status is (
+            IngestionStatus.DUPLICATE
+        )
+
+    def test_source_event_order_is_part_of_identity(self) -> None:
+        # Equal-timestamp ties are broken by submitted order, so two orderings are not
+        # interchangeable and must not share a fingerprint.
+        events = note(0) + note(1, onset_ns=0, release_ns=NS_PER_QUARTER, midi_note=64)
+        forward = request_fingerprint(make_request(source_events=events))
+        reversed_ = request_fingerprint(make_request(source_events=tuple(reversed(events))))
+        assert forward != reversed_
+
+
+class TestRequestValidation:
+    def test_an_unsupported_tick_grid_is_refused_at_the_request(self) -> None:
+        # The revision contract accepts only the conventional divisions. Catching it at
+        # the request turns an unhandled contract error thrown from inside the service
+        # into a validation failure, before a document id has been spent.
+        with pytest.raises(ScoreContractError, match="ticks_per_quarter must be one of"):
+            make_request(source_events=note(0), ticks_per_quarter=1000)
+
+    def test_the_supported_tick_grids_are_accepted(self) -> None:
+        for ppq in (96, 120, 192, 240, 384, 480, 960, 1920):
+            assert make_request(source_events=note(0), ticks_per_quarter=ppq)
+
+    def test_an_unsupported_tick_grid_never_reaches_the_service(
+        self, service: CanonicalIngestionService, repository: InMemoryCanonicalScoreRepository
+    ) -> None:
+        with pytest.raises(ScoreContractError):
+            service.ingest(
+                make_request(source_events=note(0), ticks_per_quarter=1000), completed_at=T0
+            )
+        assert repository.has_document("score-test-0001") is False
 
 
 class TestDeterminism:

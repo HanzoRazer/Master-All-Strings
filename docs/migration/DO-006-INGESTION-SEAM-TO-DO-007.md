@@ -97,6 +97,27 @@ Always check `result.status` before trusting `revision_id`. A capture with unmat
 note-ons yields `ACCEPTED_WITH_REJECTIONS` and a revision that is real but incomplete;
 `result.revision_is_complete_for_input` answers that directly.
 
+### A `request_id` names one interpretation, not one capture
+
+Re-sending a byte-identical request is free and returns `DUPLICATE`. Re-sending the same
+`request_id` with a **different** tempo, meter, tick grid, capture origin, capture id, or
+set of source events raises `INGESTION_IDEMPOTENCY_CONFLICT` naming the field that
+changed, because those change the revision Core would produce.
+
+```python
+# Retry after a lost response — same request, free, returns DUPLICATE.
+ingestion_service.ingest(request, completed_at=now)
+
+# Re-interpreting one capture at a corrected tempo — issue a new request id.
+corrected = build_ingestion_request(
+    capture, request_id="req-2", requested_at=now, beats_per_minute=132.0
+)
+ingestion_service.ingest(corrected, completed_at=now)  # a distinct document
+```
+
+`requested_at` is deliberately outside the key, so a client that restamps its retries is
+not told its own retry is a conflict. A rejected request still reserves its id.
+
 ## What did not change
 
 - `RawPerformanceCaptureV1`, `CapturedMidiEventV1`, and every other Performance contract.

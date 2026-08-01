@@ -186,7 +186,15 @@ class CanonicalIngestionResultV1:
 
     @property
     def succeeded(self) -> bool:
-        """Whether a revision exists for this request."""
+        """Whether a revision exists for this request.
+
+        Deliberately narrow, and the name is the one thing about this contract most
+        likely to be misread. It is true for ``DUPLICATE``, where nothing was created,
+        and true for ``ACCEPTED_WITH_REJECTIONS``, where part of the capture never
+        reached the revision. A caller asking "did I get usable music" wants
+        ``revision_is_complete_for_input``; a caller asking "did this create anything"
+        wants ``created_new_revision``; a caller branching on outcome wants ``status``.
+        """
         return self.revision_id is not None
 
     @property
