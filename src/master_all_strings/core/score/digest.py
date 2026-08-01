@@ -55,7 +55,11 @@ from master_all_strings.core.score.tempo import TempoChangeV1
 # Bumping this changes every revision id, so it is a deliberate, breaking act.
 CONTENT_SERIALIZATION_VERSION = "1"
 
-# Named so tests can assert the policy rather than re-deriving it from behaviour.
+# Named so tests can assert the policy rather than re-deriving it from behaviour, and
+# so a field added to CanonicalScoreRevisionV1 without a decision recorded here fails a
+# test instead of silently defaulting to "not part of identity". Together these three
+# tuples must account for every field of the revision -- see
+# ``test_digest.TestFieldPolicyCoverage``.
 DIGEST_INCLUDED_FIELDS = (
     "document_id",
     "revision_number",
@@ -65,7 +69,13 @@ DIGEST_INCLUDED_FIELDS = (
     "tempo_changes",
     "meter_changes",
 )
-DIGEST_EXCLUDED_FIELDS = ("created_at", "provenance", "title", "description")
+DIGEST_EXCLUDED_FIELDS = ("created_at", "provenance")
+# Not inputs to the digest because they are outputs of it, or of the contract itself.
+# Feeding any of them back in would be circular.
+DIGEST_DERIVED_FIELDS = ("schema_version", "revision_id", "content_digest")
+# Document-level fields, listed because "does renaming a work change its music?" is a
+# real question with a recorded answer, not because they are revision fields.
+DIGEST_EXCLUDED_DOCUMENT_FIELDS = ("title", "description")
 
 
 def _event_row(event: MusicalEvent) -> list[Any]:

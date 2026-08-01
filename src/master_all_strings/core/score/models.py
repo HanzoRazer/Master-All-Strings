@@ -23,6 +23,7 @@ from master_all_strings.core.score.errors import (
     require_identifier,
     require_optional_identifier,
     require_positive_int,
+    require_prose,
     require_schema_version,
     require_tuple,
     require_unique,
@@ -64,27 +65,36 @@ class ScoreDocumentV1:
         require_utc_timestamp(self.created_at, "created_at")
         require_identifier(self.current_revision_id, "current_revision_id")
         require_positive_int(self.revision_count, "revision_count")
-        require_optional_identifier(self.title, "title")
-        require_optional_identifier(self.external_reference, "external_reference")
-        # Description may legitimately contain newlines and formatting, so it is only
-        # required to be a non-empty string when present.
+        # Title and description are prose; external_reference is a key into some other
+        # system and is held to identifier rules. Title was validated as an identifier
+        # too, which forbade the inner formatting a real title may carry for no benefit:
+        # nothing keys on a title and the digest excludes it, so an identifier rule was
+        # borrowed strictness with no invariant behind it.
+        if self.title is not None:
+            require_prose(self.title, "title")
         if self.description is not None:
-            if not isinstance(self.description, str) or not self.description.strip():
-                raise ScoreContractError("description must be a non-empty string when present")
+            require_prose(self.description, "description")
+        require_optional_identifier(self.external_reference, "external_reference")
 
     def with_revision(
         self, *, current_revision_id: str, revision_count: int
     ) -> ScoreDocumentV1:
         """Return a copy advanced to a new current revision.
 
-        Revision count may only increase. A document that could move backwards would
-        let a stale write silently undo an accepted revision.
+        The count must strictly increase. Refusing a decrease stops a stale write from
+        silently undoing an accepted revision; refusing an *equal* count closes the
+        other half of the same hole. ``revision_count`` is how many revisions the
+        document has, so repointing at a different revision without advancing it would
+        leave the number disagreeing with the history the repository can list, and would
+        describe adding a revision as if none had been added. Advancing the pointer is
+        the only reason to call this, and every advance is a new revision.
         """
         require_identifier(current_revision_id, "current_revision_id")
         require_positive_int(revision_count, "revision_count")
-        if revision_count < self.revision_count:
+        if revision_count <= self.revision_count:
             raise ScoreContractError(
-                f"revision_count must not decrease ({revision_count} < {self.revision_count})"
+                f"revision_count must increase ({revision_count} does not follow "
+                f"{self.revision_count})"
             )
         return ScoreDocumentV1(
             schema_version=self.schema_version,

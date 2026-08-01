@@ -7,6 +7,7 @@ its business, lineage and digests are not.
 
 from __future__ import annotations
 
+import dataclasses
 import inspect
 
 import pytest
@@ -19,6 +20,7 @@ from master_all_strings.core.score.repository import (
     DuplicateDocumentError,
     DuplicateRevisionError,
     InMemoryCanonicalScoreRepository,
+    RevisionIdCollisionError,
     RevisionNotFoundError,
     ScoreRepositoryError,
 )
@@ -35,8 +37,7 @@ def stored(
     document: ScoreDocumentV1,
     origin_revision: CanonicalScoreRevisionV1,
 ) -> InMemoryCanonicalScoreRepository:
-    repository.create_document(document)
-    repository.save_revision(origin_revision)
+    repository.create_document_with_origin_revision(document, origin_revision)
     return repository
 
 
@@ -49,32 +50,52 @@ class TestPortConformance:
     def test_every_port_operation_exists(
         self, repository: InMemoryCanonicalScoreRepository
     ) -> None:
-        for name in (
-            "create_document",
-            "save_document",
-            "save_revision",
-            "get_document",
-            "get_revision",
-            "get_current_revision",
-            "list_revisions",
-            "has_document",
-        ):
+        # Derived from the Protocol rather than restated. A hand-written list is a
+        # second declaration of the port that drifts the moment the first one changes --
+        # this one still named create_document after it was removed.
+        for name in dir(CanonicalScoreRepositoryPort):
+            if name.startswith("_"):
+                continue
             assert callable(getattr(repository, name)), name
+
+    def test_signatures_match_the_port(
+        self, repository: InMemoryCanonicalScoreRepository
+    ) -> None:
+        # isinstance() against a runtime_checkable Protocol compares names only, so it
+        # would pass for an adapter whose methods take the wrong arguments. Behaviour is
+        # covered by test_repository_contract.py; shape is covered here.
+        for name in dir(CanonicalScoreRepositoryPort):
+            if name.startswith("_"):
+                continue
+            expected = inspect.signature(getattr(CanonicalScoreRepositoryPort, name))
+            actual = inspect.signature(getattr(type(repository), name))
+            assert list(actual.parameters) == list(expected.parameters), name
 
 
 class TestDocuments:
     def test_create_and_retrieve(
-        self, repository: InMemoryCanonicalScoreRepository, document: ScoreDocumentV1
+        self, stored: InMemoryCanonicalScoreRepository, document: ScoreDocumentV1
     ) -> None:
-        repository.create_document(document)
-        assert repository.get_document(DOCUMENT_ID) == document
+        assert stored.get_document(DOCUMENT_ID) == document
+
+    def test_there_is_no_way_to_create_a_document_without_its_origin(
+        self, repository: InMemoryCanonicalScoreRepository
+    ) -> None:
+        # ScoreDocumentV1 requires a current_revision_id, so a lone create could only
+        # ever store a pointer to a revision that is not there. The primitive is gone
+        # rather than merely unused: leaving it would keep the failure the paired method
+        # exists to prevent one call away.
+        assert not hasattr(repository, "create_document")
+        assert not hasattr(CanonicalScoreRepositoryPort, "create_document")
 
     def test_duplicate_document_rejected(
-        self, repository: InMemoryCanonicalScoreRepository, document: ScoreDocumentV1
+        self,
+        stored: InMemoryCanonicalScoreRepository,
+        document: ScoreDocumentV1,
+        origin_revision: CanonicalScoreRevisionV1,
     ) -> None:
-        repository.create_document(document)
         with pytest.raises(DuplicateDocumentError, match="already exists"):
-            repository.create_document(document)
+            stored.create_document_with_origin_revision(document, origin_revision)
 
     def test_missing_document_has_a_named_error(
         self, repository: InMemoryCanonicalScoreRepository
@@ -106,8 +127,6 @@ class TestDocuments:
     def test_wrong_type_rejected(
         self, repository: InMemoryCanonicalScoreRepository
     ) -> None:
-        with pytest.raises(ScoreRepositoryError, match="ScoreDocumentV1"):
-            repository.create_document("not-a-document")  # type: ignore[arg-type]
         with pytest.raises(ScoreRepositoryError, match="ScoreDocumentV1"):
             repository.save_document(42)  # type: ignore[arg-type]
 
@@ -141,20 +160,129 @@ class TestRevisions:
         assert stored.save_revision(origin_revision) == origin_revision
         assert len(stored.list_revisions(DOCUMENT_ID)) == 1
 
-    def test_same_id_with_different_content_is_refused(
+    def test_a_restamped_retry_is_still_the_same_revision(
         self, stored: InMemoryCanonicalScoreRepository, origin_revision: CanonicalScoreRevisionV1
     ) -> None:
+        # This case used to raise "already exists with different content". It is the
+        # ordinary retry: identity is content-addressed and the digest deliberately
+        # excludes created_at, so the same music re-ingested a second later is the same
+        # revision. Comparing whole objects called that corruption and rejected exactly
+        # the retry save_revision exists to make harmless.
         import dataclasses
 
-        impostor = dataclasses.replace(origin_revision, created_at="2099-01-01T00:00:00Z")
-        with pytest.raises(DuplicateRevisionError, match="different content"):
-            stored.save_revision(impostor)
+        retried = dataclasses.replace(origin_revision, created_at="2099-01-01T00:00:00Z")
+        assert retried.revision_id == origin_revision.revision_id
+        assert stored.save_revision(retried) == origin_revision
+        assert len(stored.list_revisions(DOCUMENT_ID)) == 1
+
+    def test_one_id_over_two_digests_is_a_named_collision(
+        self, stored: InMemoryCanonicalScoreRepository, origin_revision: CanonicalScoreRevisionV1
+    ) -> None:
+        # The one failure the 24-character revision id could actually cause, and storage
+        # is the only place that can observe it. Simulated by rewriting the digest past
+        # the prefix the id is derived from, because a real 96-bit collision cannot be
+        # constructed; the point is that the repository names it rather than reporting a
+        # generic duplicate.
+        import copy
+
+        collided = copy.deepcopy(origin_revision)
+        object.__setattr__(
+            collided, "content_digest", origin_revision.content_digest[:24] + "0" * 40
+        )
+        assert collided.revision_id == origin_revision.revision_id
+        assert collided.content_digest != origin_revision.content_digest
+        with pytest.raises(RevisionIdCollisionError, match="REVISION_ID_COLLISION"):
+            stored.save_revision(collided)
+        # Still a DuplicateRevisionError, so an existing caller catching that keeps
+        # working; the new type only lets one that cares tell the cases apart.
+        assert issubclass(RevisionIdCollisionError, DuplicateRevisionError)
 
     def test_wrong_type_rejected(
         self, stored: InMemoryCanonicalScoreRepository
     ) -> None:
         with pytest.raises(ScoreRepositoryError, match="CanonicalScoreRevisionV1"):
             stored.save_revision("not-a-revision")  # type: ignore[arg-type]
+
+
+class TestAtomicOriginCreation:
+    """A document and its origin revision are stored as one act, or not at all.
+
+    Neither ordering of two separate calls is correct: a document is born already
+    pointing at its origin, so creating it first publishes a pointer to a revision that
+    is not stored, and saving the revision first is refused because its document is not
+    there. The service used to do the former and its comment claimed the opposite.
+    """
+
+    def test_both_are_stored(
+        self,
+        repository: InMemoryCanonicalScoreRepository,
+        document: ScoreDocumentV1,
+        origin_revision: CanonicalScoreRevisionV1,
+    ) -> None:
+        stored_document, stored_revision = repository.create_document_with_origin_revision(
+            document, origin_revision
+        )
+        assert stored_document == document
+        assert stored_revision == origin_revision
+        assert repository.get_current_revision(DOCUMENT_ID) == origin_revision
+        assert len(repository.list_revisions(DOCUMENT_ID)) == 1
+
+    def test_a_rejected_write_leaves_nothing_behind(
+        self,
+        repository: InMemoryCanonicalScoreRepository,
+        document: ScoreDocumentV1,
+        origin_revision: CanonicalScoreRevisionV1,
+    ) -> None:
+        # The property the old two-call sequence could not offer: on refusal there is no
+        # half-written document whose current_revision_id resolves to nothing.
+        foreign = make_revision(document_id="score-other")
+        with pytest.raises(ScoreRepositoryError, match="belongs to"):
+            repository.create_document_with_origin_revision(document, foreign)
+        assert repository.has_document(DOCUMENT_ID) is False
+        with pytest.raises(RevisionNotFoundError):
+            repository.get_revision(foreign.revision_id)
+
+    def test_a_document_must_point_at_the_revision_it_is_created_with(
+        self,
+        repository: InMemoryCanonicalScoreRepository,
+        document: ScoreDocumentV1,
+        origin_revision: CanonicalScoreRevisionV1,
+    ) -> None:
+        misdirected = dataclasses.replace(document, current_revision_id="rev-" + "c" * 24)
+        with pytest.raises(ScoreRepositoryError, match="points at"):
+            repository.create_document_with_origin_revision(misdirected, origin_revision)
+        assert repository.has_document(DOCUMENT_ID) is False
+
+    def test_a_duplicate_document_is_refused(
+        self,
+        stored: InMemoryCanonicalScoreRepository,
+        document: ScoreDocumentV1,
+        origin_revision: CanonicalScoreRevisionV1,
+    ) -> None:
+        with pytest.raises(DuplicateDocumentError):
+            stored.create_document_with_origin_revision(document, origin_revision)
+
+    def test_wrong_types_rejected(
+        self,
+        repository: InMemoryCanonicalScoreRepository,
+        document: ScoreDocumentV1,
+        origin_revision: CanonicalScoreRevisionV1,
+    ) -> None:
+        with pytest.raises(ScoreRepositoryError, match="ScoreDocumentV1"):
+            repository.create_document_with_origin_revision(
+                "not-a-document",  # type: ignore[arg-type]
+                origin_revision,
+            )
+        with pytest.raises(ScoreRepositoryError, match="CanonicalScoreRevisionV1"):
+            repository.create_document_with_origin_revision(
+                document,
+                "not-a-revision",  # type: ignore[arg-type]
+            )
+
+    def test_the_port_declares_it(self) -> None:
+        # A persistent adapter has to know this must be one transaction, which it can
+        # only learn from the port.
+        assert hasattr(CanonicalScoreRepositoryPort, "create_document_with_origin_revision")
 
 
 class TestCurrentRevisionAndHistory:
@@ -188,11 +316,13 @@ class TestCurrentRevisionAndHistory:
         with pytest.raises(DocumentNotFoundError, match="DOCUMENT_NOT_FOUND"):
             repository.list_revisions("score-absent")
 
-    def test_history_of_a_new_document_is_empty(
-        self, repository: InMemoryCanonicalScoreRepository, document: ScoreDocumentV1
+    def test_history_of_a_new_document_is_exactly_its_origin(
+        self, stored: InMemoryCanonicalScoreRepository, origin_revision: CanonicalScoreRevisionV1
     ) -> None:
-        repository.create_document(document)
-        assert repository.list_revisions(DOCUMENT_ID) == ()
+        # It used to be possible to assert an *empty* history here, because a document
+        # could be created on its own. That state was the dangling pointer, not a
+        # legitimate one: a new document always has exactly the revision it points at.
+        assert stored.list_revisions(DOCUMENT_ID) == (origin_revision,)
 
 
 class TestReturnedObjectsCannotBeMutated:

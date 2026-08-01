@@ -84,6 +84,30 @@ def _source_events_digest(events: tuple[SourceMidiEventV1, ...]) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+# The request fields deliberately outside the fingerprint, each for a stated reason.
+# Named rather than left to prose so a field added to CanonicalIngestionRequestV1
+# without a decision fails a test instead of defaulting to "does not affect identity" --
+# which is the silent way this key goes wrong. See
+# ``test_idempotency.TestFingerprintPolicy``.
+FINGERPRINT_EXCLUDED_FIELDS = (
+    # The key the fingerprint is stored under; fingerprinting it would be circular.
+    "request_id",
+    # Contract version, not a musical input.
+    "schema_version",
+    # A retry may legitimately restamp this, and letting that split the key would defeat
+    # the retry safety the key exists to provide.
+    "requested_at",
+    # Provenance about who asked, not what Core produces.
+    "source_session_id",
+    # None of these reach the revision or the result today. The day a profile changes
+    # how a capture is converted, or a projection request changes what Core stores, that
+    # field moves into the fingerprint in the same commit.
+    "instrument_profile_id",
+    "tuning_profile_id",
+    "requested_projection_types",
+)
+
+
 def fingerprint_fields(request: CanonicalIngestionRequestV1) -> dict[str, str]:
     """Every field of ``request`` that changes what the ingestion produces.
 
@@ -91,12 +115,7 @@ def fingerprint_fields(request: CanonicalIngestionRequestV1) -> dict[str, str]:
     conflict can say *which* field changed, and so a test can assert the policy instead
     of re-deriving it from behaviour.
 
-    Excluded deliberately: ``requested_at``, because a retry may legitimately restamp it
-    and letting that split the key would defeat retry safety; ``source_session_id``,
-    ``instrument_profile_id``, ``tuning_profile_id``, and
-    ``requested_projection_types``, because none of them reach the revision or the
-    result. When a profile or a projection request starts affecting what Core stores, it
-    belongs in this list on the same day.
+    What is left out, and why, is ``FINGERPRINT_EXCLUDED_FIELDS``.
     """
     return {
         "capture_id": request.capture_id,
@@ -292,7 +311,13 @@ class CanonicalIngestionService:
         completed_at: str,
         rejections: tuple[IngestionRejectionV1, ...],
     ) -> CanonicalIngestionResultV1:
-        rejected_count = sum(len(r.source_event_ids) for r in rejections)
+        # The distinct source events the rejections name -- which is legitimately zero
+        # when nothing convertible was submitted. Reported as counted rather than
+        # floored at one: a caller reconciles this against what it sent, and inventing
+        # a rejected event for an empty capture would make that reconciliation wrong.
+        rejected_count = len(
+            {source_id for r in rejections for source_id in r.source_event_ids}
+        )
         return CanonicalIngestionResultV1(
             schema_version=CanonicalIngestionResultV1.SCHEMA_VERSION,
             request_id=request.request_id,
@@ -301,6 +326,6 @@ class CanonicalIngestionService:
             source_capture_digest=request.raw_capture_digest,
             policy_version=POLICY_VERSION,
             completed_at=completed_at,
-            rejected_event_count=max(rejected_count, 1),
+            rejected_event_count=rejected_count,
             rejections=rejections,
         )

@@ -17,6 +17,10 @@ from master_all_strings.core.score.revision_service import CanonicalRevisionServ
 
 T0 = "2026-07-30T10:00:00Z"
 MPQ_120 = 500_000
+# Digests are validated for shape, so fixtures carry real ones. Two distinct values, so
+# a test can change the capture a request claims without hand-rolling a digest.
+DIGEST_A = "sha256:" + "a1" * 32
+DIGEST_B = "sha256:" + "b2" * 32
 NS_PER_QUARTER = 500_000_000
 METER_4_4 = MeterChangeV1(
     schema_version=MeterChangeV1.SCHEMA_VERSION, tick=0, numerator=4, denominator=4
@@ -82,7 +86,9 @@ def make_request(
     *,
     request_id: str = "req-0001",
     capture_id: str = "capture-0001",
-    digest: str = "sha256:abc123",
+    # A real sha256-shaped digest, not a stand-in. The contract validates the shape now,
+    # and a fixture that could not pass its own contract is not testing the seam.
+    digest: str = DIGEST_A,
     source_events: tuple[SourceMidiEventV1, ...] = (),
     capture_origin_ns: int = 0,
     mpq: int = MPQ_120,

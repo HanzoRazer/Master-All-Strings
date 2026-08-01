@@ -6,9 +6,13 @@ response. These tests fix that a repeat is free and a collision is loud.
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 
 from conftest import (  # type: ignore[import-not-found]
+    DIGEST_A,
+    DIGEST_B,
     METER_4_4,
     MPQ_120,
     NS_PER_QUARTER,
@@ -23,6 +27,7 @@ from master_all_strings.core.ingestion.contracts import (
 )
 from master_all_strings.core.ingestion.results import IngestionStatus, RejectionReason
 from master_all_strings.core.ingestion.service import (
+    FINGERPRINT_EXCLUDED_FIELDS,
     CanonicalIngestionService,
     IngestionIdempotencyConflictError,
     fingerprint_fields,
@@ -113,6 +118,52 @@ class TestPartialAcceptance:
         assert result.status is IngestionStatus.REJECTED
         assert RejectionReason.NO_CONVERTIBLE_EVENTS.value in result.rejection_reasons()
 
+    def test_an_empty_request_reports_zero_rejected_events(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        # It used to report one. The contract required a nonzero count whenever any
+        # rejection existed, and NO_CONVERTIBLE_EVENTS names no source event, so the
+        # service floored the count at one to satisfy it. That put a fabricated number
+        # in the field a caller reconciles against what it actually sent.
+        result = service.ingest(make_request(source_events=()), completed_at=T0)
+        assert result.rejected_event_count == 0
+        assert result.rejections  # the reason is still reported
+
+    def test_the_count_still_covers_events_a_rejection_names(
+        self, service: CanonicalIngestionService
+    ) -> None:
+        events = (source_event(0, SourceMidiEventKind.NOTE_ON, 0),)
+        result = service.ingest(make_request(source_events=events), completed_at=T0)
+        cited = {sid for r in result.rejections for sid in r.source_event_ids}
+        assert cited
+        assert result.rejected_event_count >= len(cited)
+
+    @pytest.mark.parametrize(
+        "events",
+        [
+            (),
+            (source_event(0, SourceMidiEventKind.NOTE_ON, 0),),
+            (source_event(0, SourceMidiEventKind.NOTE_OFF, 0),),
+            (
+                source_event(0, SourceMidiEventKind.NOTE_ON, 0),
+                source_event(1, SourceMidiEventKind.NOTE_ON, 1, midi_note=67),
+            ),
+        ],
+    )
+    def test_this_policy_always_reports_the_exact_count(
+        self, service: CanonicalIngestionService, events: tuple[object, ...]
+    ) -> None:
+        # The contract only requires the count to *cover* the events rejections name, so
+        # a future policy could refuse a whole capture without enumerating it. This pins
+        # that DIRECT_EVENT_IMPORT_V1 is not that policy: for it the count is exact, and
+        # a caller reconciling against what it sent can rely on that.
+        result = service.ingest(
+            make_request(source_events=events),  # type: ignore[arg-type]
+            completed_at=T0,
+        )
+        cited = {sid for r in result.rejections for sid in r.source_event_ids}
+        assert result.rejected_event_count == len(cited)
+
     def test_a_rejected_ingestion_creates_nothing(
         self, service: CanonicalIngestionService, repository: InMemoryCanonicalScoreRepository
     ) -> None:
@@ -162,24 +213,24 @@ class TestIdempotency:
     ) -> None:
         # One name meaning two captures makes the request id useless as a retry key.
         service.ingest(
-            make_request(source_events=note(0), digest="sha256:aaa"), completed_at=T0
+            make_request(source_events=note(0), digest=DIGEST_A), completed_at=T0
         )
         with pytest.raises(
             IngestionIdempotencyConflictError, match="INGESTION_IDEMPOTENCY_CONFLICT"
         ):
             service.ingest(
-                make_request(source_events=note(0), digest="sha256:bbb"), completed_at=LATER
+                make_request(source_events=note(0), digest=DIGEST_B), completed_at=LATER
             )
 
     def test_distinct_requests_create_distinct_documents(
         self, service: CanonicalIngestionService
     ) -> None:
         first = service.ingest(
-            make_request(request_id="req-1", digest="sha256:a", source_events=note(0)),
+            make_request(request_id="req-1", digest=DIGEST_A, source_events=note(0)),
             completed_at=T0,
         )
         second = service.ingest(
-            make_request(request_id="req-2", digest="sha256:b", source_events=note(0)),
+            make_request(request_id="req-2", digest=DIGEST_B, source_events=note(0)),
             completed_at=T0,
         )
         assert first.document_id != second.document_id
@@ -197,7 +248,7 @@ class TestIdempotency:
 
     def test_an_unknown_result_is_none(self, service: CanonicalIngestionService) -> None:
         assert (
-            service.find_result(request_id="req-absent", raw_capture_digest="sha256:x") is None
+            service.find_result(request_id="req-absent", raw_capture_digest=DIGEST_A) is None
         )
 
 
@@ -294,14 +345,14 @@ class TestIdempotencyCoversInterpretation:
         # A rejection creates nothing, but the id has still been spent. Leaving it free
         # would mean the conflict guard only worked on the happy path.
         rejected = service.ingest(
-            make_request(source_events=(), digest="sha256:aaa"), completed_at=T0
+            make_request(source_events=(), digest=DIGEST_A), completed_at=T0
         )
         assert rejected.status is IngestionStatus.REJECTED
         with pytest.raises(
             IngestionIdempotencyConflictError, match="INGESTION_IDEMPOTENCY_CONFLICT"
         ):
             service.ingest(
-                make_request(source_events=note(0), digest="sha256:bbb"), completed_at=LATER
+                make_request(source_events=note(0), digest=DIGEST_B), completed_at=LATER
             )
 
     def test_repeating_a_rejected_request_is_still_rejected(
@@ -333,7 +384,7 @@ class TestIdempotencyCoversInterpretation:
         service.ingest(request, completed_at=T0)
         assert (
             service.find_result(
-                request_id=request.request_id, raw_capture_digest="sha256:not-this-one"
+                request_id=request.request_id, raw_capture_digest=DIGEST_B
             )
             is None
         )
@@ -355,6 +406,29 @@ class TestFingerprintPolicy:
             "source_events",
         } == fields
 
+    def test_every_request_field_has_a_recorded_fingerprint_decision(self) -> None:
+        # The failure this prevents is silent. A field added to the request that affects
+        # what Core stores, but that nobody adds here, does not raise and does not fail
+        # any existing test -- it just quietly stops distinguishing two different
+        # ingestion intents, which is the exact defect this key was rewritten to fix.
+        # Asserted against the dataclass, so the next field cannot slip through.
+        request_fields = {f.name for f in dataclasses.fields(CanonicalIngestionRequestV1)}
+        fingerprinted = set(fingerprint_fields(make_request(source_events=note(0))))
+        # policy_version is not a request field; it is the policy the request is read
+        # under, and it belongs in the key for the same reason the request fields do.
+        decided = (fingerprinted - {"policy_version"}) | set(FINGERPRINT_EXCLUDED_FIELDS)
+        assert request_fields - decided == set(), (
+            "a request field is neither fingerprinted nor listed in "
+            "FINGERPRINT_EXCLUDED_FIELDS; decide which it is and say why"
+        )
+        assert decided - request_fields == set(), (
+            "the fingerprint policy names a request field that no longer exists"
+        )
+
+    def test_the_excluded_fields_do_not_overlap_the_fingerprint(self) -> None:
+        fingerprinted = set(fingerprint_fields(make_request(source_events=note(0))))
+        assert fingerprinted & set(FINGERPRINT_EXCLUDED_FIELDS) == set()
+
     def test_a_retry_may_restamp_requested_at(
         self, service: CanonicalIngestionService
     ) -> None:
@@ -366,7 +440,7 @@ class TestFingerprintPolicy:
             request_id="req-0001",
             capture_id="capture-0001",
             source_session_id="session-0001",
-            raw_capture_digest="sha256:abc123",
+            raw_capture_digest=DIGEST_A,
             capture_origin_ns=0,
             tempo_microseconds_per_quarter=MPQ_120,
             meter=METER_4_4,
@@ -408,6 +482,28 @@ class TestRequestValidation:
                 make_request(source_events=note(0), ticks_per_quarter=1000), completed_at=T0
             )
         assert repository.has_document("score-test-0001") is False
+
+    @pytest.mark.parametrize(
+        "bad",
+        [
+            "not-a-digest",
+            "sha256:abc123",  # right label, body far too short
+            "sha256:" + "A1" * 32,  # uppercase hex
+            "sha256:" + "a1" * 31,  # one byte short
+            "md5:" + "a1" * 32,  # a digest, but not the one this field means
+            "a1" * 32,  # correct body, no algorithm label
+        ],
+    )
+    def test_a_capture_digest_that_is_not_one_is_refused(self, bad: str) -> None:
+        # This field was validated as any non-blank string. It stands in for the capture
+        # Core is never handed, and the service fingerprints it into request identity,
+        # so an unchecked value would let a fabricated or truncated digest key a
+        # duplicate check on nothing.
+        with pytest.raises(ScoreContractError, match="raw_capture_digest"):
+            make_request(source_events=note(0), digest=bad)
+
+    def test_a_well_formed_digest_is_accepted(self) -> None:
+        assert make_request(source_events=note(0), digest="sha256:" + "0" * 64)
 
 
 class TestDeterminism:

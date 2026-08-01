@@ -23,6 +23,7 @@ from master_all_strings.core.score.digest import (
     verify_revision_digest,
 )
 from master_all_strings.core.score.errors import (
+    DIGEST_ALGORITHM_PREFIX,
     DIGEST_LENGTH,
     REVISION_ID_DIGEST_PREFIX,
     REVISION_ID_PREFIX,
@@ -53,6 +54,7 @@ from master_all_strings.core.score.repository import (
     DuplicateDocumentError,
     DuplicateRevisionError,
     InMemoryCanonicalScoreRepository,
+    RevisionIdCollisionError,
     RevisionNotFoundError,
     ScoreRepositoryError,
 )
@@ -64,6 +66,7 @@ from master_all_strings.core.score.revision_service import (
     RevisionDocumentMismatchError,
     RevisionServiceError,
 )
+from master_all_strings.core.score.rounding import divide_round_half_away_from_zero
 from master_all_strings.core.score.tempo import (
     DEFAULT_MICROSECONDS_PER_QUARTER,
     MICROSECONDS_PER_MINUTE,
@@ -85,6 +88,7 @@ __all__ = [
     "CanonicalScoreRevisionV1",
     "DEFAULT_MICROSECONDS_PER_QUARTER",
     "DEFAULT_TICKS_PER_QUARTER",
+    "DIGEST_ALGORITHM_PREFIX",
     "DIGEST_LENGTH",
     "DeterministicDocumentIdAuthority",
     "DocumentIdAuthority",
@@ -102,6 +106,7 @@ __all__ = [
     "REVISION_ID_PREFIX",
     "RevisionCreation",
     "RevisionDocumentMismatchError",
+    "RevisionIdCollisionError",
     "RevisionNotFoundError",
     "RevisionProvenanceV1",
     "RevisionServiceError",
@@ -123,6 +128,7 @@ __all__ = [
     "convert_duration",
     "convert_elapsed",
     "derive_revision_id",
+    "divide_round_half_away_from_zero",
     "nanoseconds_to_ticks",
     "serialize_revision_content",
     "tempo_from_bpm",
