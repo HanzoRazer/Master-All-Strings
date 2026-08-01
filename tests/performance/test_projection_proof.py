@@ -1,16 +1,21 @@
-"""Canonical projection proof (DO-006 §8.8).
+"""The Performance side of the Musical Core seam, in isolation (DO-006, revised by DO-007A).
 
-Musical Core has no score-document or revision implementation yet, so this seam is
-proved **structurally, with a test double**. That limitation is deliberate and
-recorded: DO-006 defines the Performance side of the handoff only, and real
-revisions, ingestion, and the notation/TAB/MIDI projections are a later Musical Core
-Dev Order.
+This suite keeps a Musical Core **test double** on purpose. Its job is to prove what the
+*Performance Engine* does at the seam without depending on Core's implementation, so a
+Core regression shows up in the Core integration proof
+(``tests/core/ingestion/test_do006_integration.py``) rather than here.
 
-What is actually proved here: one closed capture produces one ingestion request, a
-Musical Core stand-in answers with exactly one revision id, all three projection
-requests cite that same id, and the raw capture is unchanged throughout. What is
-**not** proved: that any projection produces correct notation, TAB, or a piano roll.
-Nothing in this file should be read as evidence that it does.
+DO-007A changed the seam's shape and this file follows it. The old
+``CanonicalIngestionRequestV1`` carried an optional ``canonical_revision_id`` that Core
+would fill in, and Performance had a ``with_revision`` helper. That was the wrong model:
+a request is what Performance *asks*, and a revision id is what Core *answers*. The
+request now has no revision field at all — the strongest possible form of "Performance
+may not mint one", since there is nothing to populate — and Core's answer arrives on
+``CanonicalIngestionResultV1``.
+
+What is proved here: the request cites its capture, carries a digest rather than the
+capture itself, carries no identity, and preserves observed string evidence. What is not
+proved here: that any projection produces correct notation, TAB, or a piano roll.
 """
 
 from __future__ import annotations
@@ -19,9 +24,16 @@ import dataclasses
 from dataclasses import dataclass
 
 import pytest
-from helpers import T1
+from helpers import T1, make_event
 
-from master_all_strings.performance.contracts.capture import RawPerformanceCaptureV1
+from master_all_strings.performance.capture_normalization import (
+    build_raw_capture,
+    close_capture,
+)
+from master_all_strings.performance.contracts.capture import (
+    MidiEventType,
+    RawPerformanceCaptureV1,
+)
 from master_all_strings.performance.contracts.errors import PerformanceContractError
 from master_all_strings.performance.contracts.ingestion import (
     CanonicalIngestionRequestV1,
@@ -31,6 +43,7 @@ from master_all_strings.performance.export import capture_digest, serialize_raw_
 from master_all_strings.performance.ingestion import build_ingestion_request
 
 REQUESTED_AT = "2026-07-24T10:30:00Z"
+BPM = 120.0
 
 
 @dataclass(frozen=True)
@@ -48,9 +61,8 @@ class ProjectionRequestDouble:
 class MusicalCoreDouble:
     """A stand-in for Musical Core's ingestion endpoint.
 
-    Mints exactly one revision id per capture and records what it was asked to
-    ingest. It verifies the digest, which is the property that makes handing over a
-    digest instead of the capture itself meaningful.
+    Mints exactly one revision id per capture and verifies the digest, which is the
+    property that makes handing over a digest instead of the capture meaningful.
     """
 
     def __init__(self) -> None:
@@ -60,15 +72,14 @@ class MusicalCoreDouble:
     def ingest(
         self, request: CanonicalIngestionRequestV1, capture: RawPerformanceCaptureV1
     ) -> str:
-        if request.canonical_revision_id is not None:
-            raise AssertionError("Performance must not supply a revision id")
+        if hasattr(request, "canonical_revision_id"):
+            raise AssertionError("a request must not carry a revision id")
         if request.raw_capture_digest != capture_digest(capture):
             raise AssertionError("digest does not match the capture offered")
         self.ingested.append(request)
-        revision = self._revisions.setdefault(
+        return self._revisions.setdefault(
             request.capture_id, f"revision-{len(self._revisions) + 1:04d}"
         )
-        return revision
 
     def project(
         self, revision_id: str, projection_type: ProjectionType
@@ -88,9 +99,10 @@ def request_for(closed_capture: RawPerformanceCaptureV1) -> CanonicalIngestionRe
     return build_ingestion_request(
         closed_capture,
         request_id="req-0001",
+        requested_at=REQUESTED_AT,
+        beats_per_minute=BPM,
         instrument_profile_id="guitar-standard-6",
         tuning_profile_id="standard-e",
-        requested_at=REQUESTED_AT,
     )
 
 
@@ -107,11 +119,15 @@ class TestIngestionRequest:
         assert request_for.raw_capture_digest == capture_digest(closed_capture)
         assert request_for.raw_capture_digest.startswith("sha256:")
 
-    def test_request_leaves_the_revision_unset(
+    def test_request_has_no_revision_field_at_all(
         self, request_for: CanonicalIngestionRequestV1
     ) -> None:
-        # Performance may reference a revision; it may never mint one.
-        assert request_for.canonical_revision_id is None
+        # The strongest form of "Performance may not mint one": there is nothing to
+        # populate, by mistake or otherwise.
+        names = {f.name for f in dataclasses.fields(request_for)}
+        assert "canonical_revision_id" not in names
+        assert "document_id" not in names
+        assert "revision_id" not in names
 
     def test_request_defaults_to_the_three_projections(
         self, request_for: CanonicalIngestionRequestV1
@@ -122,6 +138,19 @@ class TestIngestionRequest:
             ProjectionType.TAB,
         }
 
+    def test_request_carries_an_authoritative_tempo(
+        self, request_for: CanonicalIngestionRequestV1
+    ) -> None:
+        # Integer microseconds-per-quarter, not float BPM: a float would let two tempo
+        # maps a musician considers identical produce different content digests.
+        assert request_for.tempo_microseconds_per_quarter == 500_000
+
+    def test_request_carries_a_capture_origin(
+        self, request_for: CanonicalIngestionRequestV1
+    ) -> None:
+        # Elapsed time needs an origin, and the capture has only an ISO wall clock.
+        assert request_for.capture_origin_ns == 0
+
     def test_an_open_capture_cannot_be_ingested(
         self, open_capture: RawPerformanceCaptureV1
     ) -> None:
@@ -131,69 +160,28 @@ class TestIngestionRequest:
             build_ingestion_request(
                 open_capture,
                 request_id="req-0002",
-                instrument_profile_id="guitar-standard-6",
-                tuning_profile_id="standard-e",
                 requested_at=REQUESTED_AT,
+                beats_per_minute=BPM,
             )
 
-    def test_empty_projection_set_is_rejected(
-        self, closed_capture: RawPerformanceCaptureV1
+    def test_only_note_events_cross_the_seam(
+        self, closed_capture: RawPerformanceCaptureV1, request_for: CanonicalIngestionRequestV1
     ) -> None:
-        with pytest.raises(PerformanceContractError, match="must not be empty"):
-            build_ingestion_request(
-                closed_capture,
-                request_id="req-0003",
-                instrument_profile_id="guitar-standard-6",
-                tuning_profile_id="standard-e",
-                requested_at=REQUESTED_AT,
-                projections=(),
-            )
+        # DIRECT_EVENT_IMPORT_V1 has no canonical representation for controller or
+        # pitch-bend events, so they stay in the capture rather than being dropped
+        # into a "converted" pile.
+        assert request_for.event_count == closed_capture.event_count
 
 
 class TestRevisionIdentityIsCoreOwned:
-    def test_revision_is_supplied_by_core(
+    def test_the_revision_is_supplied_by_core(
         self,
         core: MusicalCoreDouble,
         request_for: CanonicalIngestionRequestV1,
         closed_capture: RawPerformanceCaptureV1,
     ) -> None:
         revision = core.ingest(request_for, closed_capture)
-        answered = request_for.with_revision(revision)
-        assert answered.canonical_revision_id == revision
-
-    def test_a_revision_cannot_be_overwritten(
-        self,
-        core: MusicalCoreDouble,
-        request_for: CanonicalIngestionRequestV1,
-        closed_capture: RawPerformanceCaptureV1,
-    ) -> None:
-        # A second Core answer must not silently replace the first.
-        answered = request_for.with_revision(core.ingest(request_for, closed_capture))
-        with pytest.raises(PerformanceContractError, match="already set"):
-            answered.with_revision("revision-9999")
-
-    def test_a_session_id_cannot_masquerade_as_a_revision(
-        self, closed_capture: RawPerformanceCaptureV1
-    ) -> None:
-        # The exact shape of reaching for the nearest available identifier.
-        with pytest.raises(PerformanceContractError, match="must not be the runtime session id"):
-            build_ingestion_request(
-                closed_capture,
-                request_id="req-0004",
-                instrument_profile_id="guitar-standard-6",
-                tuning_profile_id="standard-e",
-                requested_at=REQUESTED_AT,
-            ).with_revision(closed_capture.session_id)
-
-    def test_core_rejects_a_request_that_arrives_with_a_revision(
-        self,
-        core: MusicalCoreDouble,
-        request_for: CanonicalIngestionRequestV1,
-        closed_capture: RawPerformanceCaptureV1,
-    ) -> None:
-        answered = request_for.with_revision("revision-0001")
-        with pytest.raises(AssertionError, match="must not supply a revision"):
-            core.ingest(answered, closed_capture)
+        assert revision.startswith("revision-")
 
     def test_core_rejects_a_digest_mismatch(
         self,
@@ -204,6 +192,14 @@ class TestRevisionIdentityIsCoreOwned:
         tampered = dataclasses.replace(closed_capture, capture_id="capture-tampered")
         with pytest.raises(AssertionError, match="digest does not match"):
             core.ingest(request_for, tampered)
+
+    def test_performance_defines_no_revision_minting_helper(self) -> None:
+        # DO-006 had `with_revision`. It is gone: the answer belongs on Core's result.
+        from master_all_strings.performance import ingestion
+
+        assert not hasattr(ingestion, "with_revision")
+        public = [n for n in dir(ingestion) if not n.startswith("_")]
+        assert not any("revision" in name.lower() for name in public)
 
 
 class TestThreeProjectionsCiteOneRevision:
@@ -249,9 +245,8 @@ class TestThreeProjectionsCiteOneRevision:
             build_ingestion_request(
                 closed_capture,
                 request_id="req-0005",
-                instrument_profile_id="guitar-standard-6",
-                tuning_profile_id="standard-e",
                 requested_at=REQUESTED_AT,
+                beats_per_minute=BPM,
             ),
             closed_capture,
         )
@@ -306,26 +301,17 @@ class TestRawCaptureSurvivesProjection:
         assert closed_capture.completion_state.value == "complete"
 
 
-class TestPerStringEvidenceReachesTabProjection:
+class TestPerStringEvidenceReachesTheSeam:
     def test_per_string_capture_carries_string_evidence_into_the_request(
         self,
         core: MusicalCoreDouble,
         per_string_source: object,
-        closed_capture: RawPerformanceCaptureV1,
         runtime_identity: object,
         meter: object,
     ) -> None:
-        from helpers import make_event
-
-        from master_all_strings.performance.capture_normalization import (
-            build_raw_capture,
-            close_capture,
-        )
-        from master_all_strings.performance.contracts.capture import MidiEventType
-
         events = (
             make_event(0, MidiEventType.NOTE_ON, note=40, velocity=100, source_string=0),
-            make_event(1, MidiEventType.NOTE_ON, note=47, velocity=98, source_string=1),
+            make_event(1, MidiEventType.NOTE_OFF, note=40, velocity=0, source_string=0),
         )
         capture = close_capture(
             build_raw_capture(
@@ -343,15 +329,14 @@ class TestPerStringEvidenceReachesTabProjection:
         request = build_ingestion_request(
             capture,
             request_id="req-strings",
-            instrument_profile_id="guitar-standard-6",
-            tuning_profile_id="standard-e",
             requested_at=REQUESTED_AT,
+            beats_per_minute=BPM,
             projections=(ProjectionType.TAB,),
         )
-        revision = core.ingest(request, capture)
-        # The evidence TAB projection would use is present and unmodified.
-        assert [e.source_string for e in capture.events] == [0, 1]
-        assert core.project(revision, ProjectionType.TAB).canonical_revision_id == revision
+        # The observed string survives the crossing without being inferred anywhere.
+        assert [e.observed_source_string for e in request.source_events] == [0, 0]
+        assert [e.source_string for e in capture.events] == [0, 0]
+        assert core.ingest(request, capture).startswith("revision-")
 
     def test_unresolved_strings_are_not_filled_in_before_ingestion(
         self, request_for: CanonicalIngestionRequestV1, closed_capture: RawPerformanceCaptureV1
@@ -359,4 +344,5 @@ class TestPerStringEvidenceReachesTabProjection:
         # TAB fingering is a projection Core produces later; recording a guess here
         # would make an inference indistinguishable from a measurement.
         assert all(e.source_string is None for e in closed_capture.events)
+        assert all(e.observed_source_string is None for e in request_for.source_events)
         assert request_for.instrument_profile_id == "guitar-standard-6"

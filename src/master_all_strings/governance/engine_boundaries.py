@@ -172,7 +172,7 @@ def _check_primary_contract(
     already contains legitimate counterexamples to the stricter reading:
 
     * **Engine.** The capability's owner must be the contract's owner *or* its
-      producer. ``ScoreEditCommandSet`` and ``ProjectionRequest`` are owned by Musical
+      producer. ``ScoreEditCommandSet`` and ``ProjectionRequestV1`` are owned by Musical
       Core and produced by Creative; ``CanonicalIngestionRequestV1`` is owned by Core
       and produced by Performance. A Creative capability naming the command set it
       produces is correct, and requiring same-owner would reject it.
@@ -199,14 +199,14 @@ def _check_primary_contract(
 
     v: list[Violation] = []
     contract = by_name[named]
-    permitted_engines = {contract["owning_engine"], contract["producer"]}
+    permitted_engines = {contract["owning_engine"], *contract["producers"]}
     if cap["owning_engine"] not in permitted_engines:
         v.append(
             Violation(
                 "CAP_CONTRACT_ENGINE",
                 f"capability {cid!r} is owned by {cap['owning_engine']} but its primary "
                 f"contract {named!r} is owned by {contract['owning_engine']} and produced "
-                f"by {contract['producer']}",
+                f"by {', '.join(contract['producers'])}",
             )
         )
     if _contradicts(cap["classification"], contract["classification"]):
@@ -244,11 +244,16 @@ def _check_contracts(reg: Mapping[str, Any]) -> list[Violation]:
             v.append(
                 Violation("CON_VERSION", f"{name!r}: versioning authority must be owner")
             )
-        producer = con["producer"]
-        if producer != owner and _relation(reg, producer, owner) not in _NON_PROHIBITED:
-            v.append(
-                Violation("CON_DEP", f"{name!r}: producer {producer} cannot depend on {owner}")
-            )
+        producers = con["producers"]
+        if not producers:
+            v.append(Violation("CON_PRODUCER", f"{name!r}: must declare at least one producer"))
+        if len(producers) != len(set(producers)):
+            v.append(Violation("CON_PRODUCER", f"{name!r}: duplicate producer"))
+        for producer in producers:
+            if producer != owner and _relation(reg, producer, owner) not in _NON_PROHIBITED:
+                v.append(
+                    Violation("CON_DEP", f"{name!r}: producer {producer} cannot depend on {owner}")
+                )
         for consumer in con["consumers"]:
             if consumer == owner:
                 continue
@@ -380,16 +385,17 @@ def render_contract_ownership(reg: Mapping[str, Any]) -> str:
         "# Engine Contract Ownership\n",
         "Every cross-engine contract has exactly one owning engine and one versioning "
         "authority. Generated from the constitutional registry.\n",
-        "| Contract | Owning engine | Producer | Consumers | Mutability "
+        "| Contract | Owning engine | Producers | Consumers | Mutability "
         "| Classification | Cites | Versioning authority |",
         "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for con in reg["contracts"]:
         consumers = ", ".join(_ENGINE_NAME[c] for c in con["consumers"]) or "—"
         cites = con.get("cites") or "—"
+        producers = ", ".join(_ENGINE_NAME[p] for p in con["producers"])
         lines.append(
             f"| `{con['name']}` | {_ENGINE_NAME[con['owning_engine']]} "
-            f"| {_ENGINE_NAME[con['producer']]} | {consumers} | {con['mutability']} "
+            f"| {producers} | {consumers} | {con['mutability']} "
             f"| {con['classification']} | {cites} | {_ENGINE_NAME[con['versioning_authority']]} |"
         )
     return "\n".join(lines) + "\n"

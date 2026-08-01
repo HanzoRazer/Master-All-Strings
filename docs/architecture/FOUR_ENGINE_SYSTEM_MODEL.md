@@ -161,7 +161,7 @@ It is included here as a worked example of the taxonomy holding under pressure, 
 - **Creative does not depend on Performance at all.** Captured content reaches Creative through canonical music, never through runtime internals or session files.
 - **Captured performance is not canonical music.** A runtime session file is an operational artifact. Raw capture becomes canonical only by an ingestion request that Musical Core owns and answers with a revision identifier that Performance may reference but never mint.
 
-The piano roll is the sharpest case the example settles. It splits across two engines rather than landing in Performance where the recording happens: Musical Core owns the semantic `piano-roll-projection`, Creative owns the interactive editing experience, and Performance owns neither — it may display a projection during review via `ProjectionResult`, but maintaining an editable note collection inside Performance would create a second authoritative score. Piano roll, notation, and TAB are three interpretations that must all cite one canonical revision.
+The piano roll is the sharpest case the example settles. It splits across two engines rather than landing in Performance where the recording happens: Musical Core owns the semantic `piano-roll-projection`, Creative owns the interactive editing experience, and Performance owns neither — it may display a projection during review via `ProjectionResultV1`, but maintaining an editable note collection inside Performance would create a second authoritative score. Piano roll, notation, and TAB are three interpretations that must all cite one canonical revision.
 
 ## Borderline cases
 
@@ -216,6 +216,7 @@ This table lists every top-level package present today; there is no current pack
 - [ADR-0001](../decisions/ADR-0001-REPOSITORY-OWNERSHIP.md) — repository ownership; unchanged. This repository still owns the musical core and the layers above it, and still is not luthiers-toolbox or CNC-Production-Shop.
 - [ADR-0003](../decisions/ADR-0003-MUSIC-CANONICAL.md) — music is canonical; the four engines sit *around* that principle, they do not weaken it. Musical Core is where "canonical" lives.
 - [ADR-0004](../decisions/ADR-0004-CANDIDATE-GENERATION.md) — candidate generation; Musical Core.
+- [ADR-0008](../decisions/ADR-0008-CANONICAL-SCORE-REVISION-IDENTITY.md) — canonical score document and revision identity; Musical Core. Gives Seam 1 something concrete to project *from*: see [CANONICAL_SCORE_REVISION_MODEL.md](CANONICAL_SCORE_REVISION_MODEL.md) and [PROJECTION_AUTHORITY_BOUNDARY.md](PROJECTION_AUTHORITY_BOUNDARY.md).
 - [SYSTEM_BOUNDARIES.md](SYSTEM_BOUNDARIES.md) — the earlier per-subsystem boundary sketch; the four engines are the coarser constitutional grouping above those subsystems.
 - The captured planning handoff is retained as preservation and queue authority by the ratifying decision (ADR-0006), which directs that it later split into a Learning-Object/curriculum foundation (Educational) and a separate Creative Engine handoff rather than be rewritten now. Its validity is a consequence of that decision, not an independent claim of this file.
 

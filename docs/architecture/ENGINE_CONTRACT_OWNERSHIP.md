@@ -5,7 +5,7 @@
 
 Every cross-engine contract has exactly one owning engine and one versioning authority. Generated from the constitutional registry.
 
-| Contract | Owning engine | Producer | Consumers | Mutability | Classification | Cites | Versioning authority |
+| Contract | Owning engine | Producers | Consumers | Mutability | Classification | Cites | Versioning authority |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `MusicalEvent` | Musical Core | Musical Core | Educational, Creative, Performance | immutable | neither | — | Musical Core |
 | `InstrumentProfile` | Musical Core | Musical Core | Educational, Creative, Performance | immutable | neither | — | Musical Core |
@@ -13,8 +13,8 @@ Every cross-engine contract has exactly one owning engine and one versioning aut
 | `SpatialPositionCollection` | Musical Core | Musical Core | Educational, Creative | immutable | evidence | — | Musical Core |
 | `SelectedSpatialPath` | Musical Core | Musical Core | Educational | immutable | evidence | — | Musical Core |
 | `SpatialEvidenceV1` | Musical Core | Musical Core | Educational | immutable | evidence | — | Musical Core |
-| `ProjectionRequest` | Musical Core | Creative | Musical Core | immutable | neither | — | Musical Core |
-| `ProjectionResult` | Musical Core | Musical Core | Creative, Educational, Performance | immutable | neither | — | Musical Core |
+| `ProjectionRequestV1` | Musical Core | Creative, Educational, Performance | Musical Core | immutable | neither | — | Musical Core |
+| `ProjectionResultV1` | Musical Core | Musical Core | Creative, Educational, Performance | immutable | neither | — | Musical Core |
 | `EducationalInterpretationV1` | Educational | Educational | Creative | immutable | interpretation | SpatialEvidenceV1 | Educational |
 | `LearningObject` | Educational | Educational | Creative | versioned | neither | — | Educational |
 | `CurriculumRegistry` | Educational | Educational | — | versioned | neither | — | Educational |
@@ -29,4 +29,7 @@ Every cross-engine contract has exactly one owning engine and one versioning aut
 | `RawPerformanceCaptureV1` | Performance | Performance | Educational | immutable | evidence | — | Performance |
 | `RuntimeHealthV1` | Performance | Performance | — | immutable | evidence | — | Performance |
 | `CanonicalIngestionRequestV1` | Musical Core | Performance | Musical Core | immutable | neither | — | Musical Core |
+| `ScoreDocumentV1` | Musical Core | Musical Core | Educational, Creative, Performance | versioned | neither | — | Musical Core |
+| `CanonicalScoreRevisionV1` | Musical Core | Musical Core | Educational, Creative, Performance | immutable | neither | — | Musical Core |
+| `CanonicalIngestionResultV1` | Musical Core | Musical Core | Performance | immutable | neither | — | Musical Core |
 | `PracticeSession` | Educational | Educational | — | versioned | interpretation | — | Educational |

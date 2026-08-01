@@ -49,7 +49,7 @@ for changing it, even when another engine speaks it. Performance may reference a
 **Piano roll appears twice.** The semantic projection and the interactive editing
 experience are different capabilities with different owners. Collapsing them is how
 a second authoritative note model gets created (ADR-0007 D8). Performance appears in
-neither row: it may *display* a projection during review via `ProjectionResult`,
+neither row: it may *display* a projection during review via `ProjectionResultV1`,
 which already lists Performance as a permitted consumer, but it owns no note model
 and maintains no note collection.
 

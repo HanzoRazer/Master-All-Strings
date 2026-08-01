@@ -137,7 +137,7 @@ class TestMusicalCoreRemainsCanonical:
         # owns ScoreEditCommandSet that Creative produces.
         contract = _contract(registry, "CanonicalIngestionRequestV1")
         assert contract["owning_engine"] == "MUSICAL_CORE"
-        assert contract["producer"] == "PERFORMANCE_ENGINE"
+        assert contract["producers"] == ["PERFORMANCE_ENGINE"]
         assert contract["versioning_authority"] == "MUSICAL_CORE"
 
     @pytest.mark.parametrize(
@@ -160,8 +160,8 @@ class TestMusicalCoreRemainsCanonical:
         self, registry: dict[str, Any]
     ) -> None:
         # Displaying a projection during review is legitimate; owning a note model
-        # is not. ProjectionResult is the sanctioned route.
-        assert "PERFORMANCE_ENGINE" in _contract(registry, "ProjectionResult")["consumers"]
+        # is not. ProjectionResultV1 is the sanctioned route.
+        assert "PERFORMANCE_ENGINE" in _contract(registry, "ProjectionResultV1")["consumers"]
 
     def test_no_performance_module_defines_a_score_revision(self) -> None:
         for path in PERFORMANCE_ROOT.rglob("*.py"):
@@ -283,11 +283,19 @@ class TestAdaptersDoNotMutateCanonicalState:
                     assert "core.spatial_mapping" not in node.module, path.name
 
     def test_performance_never_mints_a_revision_identifier(self) -> None:
+        # DO-006 proved this by asserting the request was built with
+        # canonical_revision_id=None. DO-007A removed the field entirely, which is a
+        # stronger guarantee: there is nothing to populate, by mistake or otherwise.
+        import dataclasses
+
+        from master_all_strings.core.ingestion.contracts import CanonicalIngestionRequestV1
         from master_all_strings.performance import ingestion
 
-        source = inspect.getsource(ingestion)
-        assert "canonical_revision_id=None" in source
-        # There must be no function here capable of producing a revision.
+        names = {f.name for f in dataclasses.fields(CanonicalIngestionRequestV1)}
+        assert "canonical_revision_id" not in names
+        assert "revision_id" not in names
+        assert "document_id" not in names
+        # There must be no function here capable of producing a revision either.
         for name in dir(ingestion):
             assert "revision" not in name.lower() or name.startswith("_"), name
 

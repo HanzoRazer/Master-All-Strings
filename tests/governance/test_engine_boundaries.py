@@ -304,10 +304,12 @@ class TestPrimaryContractEngineRule:
         # rule loses its justification and should be revisited rather than kept out
         # of habit.
         split = [
-            c["name"] for c in registry["contracts"] if c["producer"] != c["owning_engine"]
+            c["name"]
+            for c in registry["contracts"]
+            if c["owning_engine"] not in c["producers"]
         ]
         assert "ScoreEditCommandSet" in split
-        assert "ProjectionRequest" in split
+        assert "ProjectionRequestV1" in split
 
 
 class TestPrimaryContractClassificationRule:
@@ -368,7 +370,10 @@ class TestDuplicateContractNames:
     ) -> None:
         shadow = copy.deepcopy(self._first(registry, "SpatialEvidenceV1"))
         shadow["owning_engine"] = "EDUCATIONAL_ENGINE"
-        shadow["producer"] = "EDUCATIONAL_ENGINE"
+        # `producers`, not `producer`: the singular key the rename left behind here set
+        # a field nothing reads, so the shadow silently kept the original engine's
+        # producer list while claiming to be a different engine's contract.
+        shadow["producers"] = ["EDUCATIONAL_ENGINE"]
         shadow["versioning_authority"] = "EDUCATIONAL_ENGINE"
         registry["contracts"].append(shadow)
         codes = _codes(registry)
@@ -394,3 +399,186 @@ class TestDuplicateContractNames:
     ) -> None:
         _, ambiguous = eb._index_contracts(registry)
         assert ambiguous == frozenset()
+
+
+class TestContractProducers:
+    """``producers`` is a list, because a contract can have more than one issuer.
+
+    ``ProjectionRequestV1`` is the reason: Creative requests a projection while
+    authoring, Educational while interpreting, and Performance after ingesting a
+    capture. A single ``producer`` field forced the registry to state that only
+    Creative may request a projection, which the accepted architecture contradicts.
+    """
+
+    def _contract(self, reg: dict[str, Any], name: str) -> dict[str, Any]:
+        for con in reg["contracts"]:
+            if con["name"] == name:
+                return con
+        raise AssertionError(f"contract {name!r} not found")
+
+    def test_every_contract_declares_a_producer_list(self, registry: dict[str, Any]) -> None:
+        for con in registry["contracts"]:
+            assert isinstance(con["producers"], list), con["name"]
+            assert con["producers"], con["name"]
+
+    def test_empty_producer_list_fails(self, registry: dict[str, Any]) -> None:
+        self._contract(registry, "MusicalEvent")["producers"] = []
+        assert "CON_PRODUCER" in _codes(registry)
+
+    def test_duplicate_producer_fails(self, registry: dict[str, Any]) -> None:
+        self._contract(registry, "MusicalEvent")["producers"] = [
+            "MUSICAL_CORE",
+            "MUSICAL_CORE",
+        ]
+        assert "CON_PRODUCER" in _codes(registry)
+
+    def test_a_producer_violating_dependency_direction_fails(
+        self, registry: dict[str, Any]
+    ) -> None:
+        # Performance producing a Core-owned contract is legal -- Performance depends
+        # on Core, which is how CanonicalIngestionRequestV1 works. The prohibited
+        # direction is the reverse: Core may not depend on Educational, so Core
+        # cannot produce an Educational-owned contract.
+        self._contract(registry, "LearningObject")["producers"] = ["MUSICAL_CORE"]
+        assert "CON_DEP" in _codes(registry)
+
+    def test_performance_producing_a_core_owned_contract_is_permitted(
+        self, registry: dict[str, Any]
+    ) -> None:
+        # The established asymmetry: Core owns the vocabulary, another engine speaks
+        # it. Rejecting this would break the DO-006 ingestion seam.
+        self._contract(registry, "SpatialEvidenceV1")["producers"] = ["PERFORMANCE_ENGINE"]
+        assert "CON_DEP" not in _codes(registry)
+
+    def test_every_producer_of_every_contract_is_permitted(
+        self, registry: dict[str, Any]
+    ) -> None:
+        assert "CON_DEP" not in _codes(registry)
+
+
+class TestProjectionContractRename:
+    """The unversioned names are gone and the V1 names carry correct authority."""
+
+    def test_obsolete_unversioned_names_are_absent(self, registry: dict[str, Any]) -> None:
+        names = [c["name"] for c in registry["contracts"]]
+        assert "ProjectionRequest" not in names
+        assert "ProjectionResult" not in names
+
+    def test_versioned_names_appear_exactly_once(self, registry: dict[str, Any]) -> None:
+        names = [c["name"] for c in registry["contracts"]]
+        assert names.count("ProjectionRequestV1") == 1
+        assert names.count("ProjectionResultV1") == 1
+
+    def test_three_engines_may_request_a_projection(self, registry: dict[str, Any]) -> None:
+        request = next(
+            c for c in registry["contracts"] if c["name"] == "ProjectionRequestV1"
+        )
+        assert set(request["producers"]) == {
+            "CREATIVE_ENGINE",
+            "EDUCATIONAL_ENGINE",
+            "PERFORMANCE_ENGINE",
+        }
+        assert request["owning_engine"] == "MUSICAL_CORE"
+        assert request["consumers"] == ["MUSICAL_CORE"]
+
+    def test_only_musical_core_produces_a_projection_result(
+        self, registry: dict[str, Any]
+    ) -> None:
+        # A projection result is Core stating what the revision looks like. Another
+        # engine producing one would be a second interpretation authority.
+        result = next(c for c in registry["contracts"] if c["name"] == "ProjectionResultV1")
+        assert result["producers"] == ["MUSICAL_CORE"]
+        assert set(result["consumers"]) == {
+            "CREATIVE_ENGINE",
+            "EDUCATIONAL_ENGINE",
+            "PERFORMANCE_ENGINE",
+        }
+
+    def test_no_document_still_refers_to_the_unversioned_names(self) -> None:
+        # A rename that leaves prose behind is a rename that did not happen.
+        import re
+
+        root = eb.REGISTRY_PATH.parents[1]
+        stale: list[str] = []
+        for path in list((root / "docs").rglob("*.md")) + [eb.REGISTRY_PATH]:
+            if "handoff" in path.parts:
+                continue  # preserved historical text, deliberately not rewritten
+            text = path.read_text(encoding="utf-8")
+            for match in re.finditer(r"\bProjection(?:Request|Result)\b(?!V1)", text):
+                stale.append(f"{path.name}: {match.group(0)}")
+        assert stale == []
+
+
+class TestCanonicalMusicStatus:
+    """``canonical-music`` was overstated before DO-007, and is earned after it.
+
+    A1 corrected it to ``partial`` because only an atomic ``MusicalEvent`` existed. A5
+    returns it to ``implemented`` -- but only because the things it claims now exist,
+    which is what this test checks rather than taking the status at its word.
+    """
+
+    def test_canonical_music_is_implemented(self, registry: dict[str, Any]) -> None:
+        capability = next(
+            c for c in registry["capabilities"] if c["id"] == "canonical-music"
+        )
+        assert capability["implementation_status"] == "implemented"
+
+    def test_the_status_is_backed_by_real_code(self) -> None:
+        # Every claim the promotion rests on, imported rather than assumed.
+        from master_all_strings.core.ingestion.service import CanonicalIngestionService
+        from master_all_strings.core.score.digest import compute_revision_digest
+        from master_all_strings.core.score.models import (
+            CanonicalScoreRevisionV1,
+            ScoreDocumentV1,
+        )
+        from master_all_strings.core.score.repository import (
+            CanonicalScoreRepositoryPort,
+        )
+        from master_all_strings.core.score.revision_service import (
+            CanonicalRevisionService,
+        )
+
+        for thing in (
+            ScoreDocumentV1,
+            CanonicalScoreRevisionV1,
+            compute_revision_digest,
+            CanonicalScoreRepositoryPort,
+            CanonicalRevisionService,
+            CanonicalIngestionService,
+        ):
+            assert thing is not None
+
+    def test_the_registry_records_the_new_core_contracts(
+        self, registry: dict[str, Any]
+    ) -> None:
+        names = {c["name"] for c in registry["contracts"]}
+        for expected in (
+            "ScoreDocumentV1",
+            "CanonicalScoreRevisionV1",
+            "CanonicalIngestionResultV1",
+        ):
+            assert expected in names
+
+    def test_musical_core_owns_every_new_score_contract(
+        self, registry: dict[str, Any]
+    ) -> None:
+        for name in (
+            "ScoreDocumentV1",
+            "CanonicalScoreRevisionV1",
+            "CanonicalIngestionResultV1",
+        ):
+            contract = next(c for c in registry["contracts"] if c["name"] == name)
+            assert contract["owning_engine"] == "MUSICAL_CORE"
+            assert contract["producers"] == ["MUSICAL_CORE"]
+
+    def test_no_score_capability_claims_more_than_it_delivers(
+        self, registry: dict[str, Any]
+    ) -> None:
+        for cid in (
+            "piano-roll-projection",
+            "notation-projection",
+            "tab-projection",
+            "midi-projection",
+        ):
+            capability = next(c for c in registry["capabilities"] if c["id"] == cid)
+            assert capability["implementation_status"] == "planned"
