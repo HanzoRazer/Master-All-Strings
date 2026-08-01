@@ -15,10 +15,10 @@ Two design choices are load-bearing:
 
 * **Integer arithmetic throughout.** Floating point would make the conversion
   irreproducible across platforms and languages, and the digest depends on it.
-* **A named tie rule.** Python's built-in ``round`` uses banker's rounding, so
-  ``round(0.5)`` is 0 and ``round(1.5)`` is 2. That is a surprising basis for an
-  identity, and impossible to reimplement correctly by accident. This module rounds
-  half away from zero, which for nonnegative elapsed time is half-up.
+* **A named tie rule.** Halves round away from zero, which for nonnegative elapsed time
+  is half-up. The rule itself lives in ``core.score.rounding`` because tempo conversion
+  needs the same one, and two derivations of canonical values must not round
+  differently.
 
 This module converts a single elapsed duration. Deciding *which* note-on and note-off
 belong together is a separate concern and belongs to the ingestion policy (A5).
@@ -34,26 +34,27 @@ from master_all_strings.core.score.errors import (
     require_positive_int,
 )
 from master_all_strings.core.score.provenance import RoundingPolicy
+from master_all_strings.core.score.rounding import divide_round_half_away_from_zero
 
 NANOSECONDS_PER_SECOND = 1_000_000_000
 MICROSECONDS_PER_SECOND = 1_000_000
 # The DO-007 conversion basis.
 DEFAULT_TICKS_PER_QUARTER = 960
 
-
-def divide_round_half_away_from_zero(numerator: int, denominator: int) -> int:
-    """Integer division rounding halves away from zero.
-
-    ``5/2 -> 3``, ``-5/2 -> -3``, ``1/2 -> 1``, ``-1/2 -> -1``. Chosen over Python's
-    ``round`` so the rule is stated rather than inherited, and so another
-    implementation can reproduce it exactly.
-    """
-    if not isinstance(numerator, int) or isinstance(numerator, bool):
-        raise ScoreContractError("numerator must be an integer")
-    require_positive_int(denominator, "denominator")
-    if numerator >= 0:
-        return (2 * numerator + denominator) // (2 * denominator)
-    return -((-2 * numerator + denominator) // (2 * denominator))
+__all__ = [
+    "DEFAULT_TICKS_PER_QUARTER",
+    "MICROSECONDS_PER_SECOND",
+    "NANOSECONDS_PER_SECOND",
+    "TickConversion",
+    "convert_duration",
+    "convert_elapsed",
+    # Re-exported: the rule now lives in ``rounding`` so ``tempo`` can use it too, but
+    # it is still part of this module's vocabulary for anyone reading the conversion.
+    "divide_round_half_away_from_zero",
+    "nanoseconds_to_ticks",
+    "require_convertible_tempo",
+    "ticks_to_nanoseconds",
+]
 
 
 def require_convertible_tempo(microseconds_per_quarter: int | None) -> int:

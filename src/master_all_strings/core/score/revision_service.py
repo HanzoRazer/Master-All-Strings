@@ -127,11 +127,14 @@ class CanonicalRevisionService:
             description=description,
             external_reference=external_reference,
         )
-        # Document first: save_revision requires its document to exist, so this order
-        # is what makes a partial failure leave no revision pointing at nothing.
-        self._repository.create_document(document)
-        self._repository.save_revision(revision)
-        return RevisionCreation(document=document, revision=revision)
+        # One call, because no ordering of two calls is correct here. The document is
+        # built already pointing at its origin revision, so creating it first publishes
+        # a pointer to a revision that is not stored yet, and saving the revision first
+        # is refused because its document does not exist. The port owns the atomicity.
+        stored_document, stored_revision = (
+            self._repository.create_document_with_origin_revision(document, revision)
+        )
+        return RevisionCreation(document=stored_document, revision=stored_revision)
 
     def create_child_revision(
         self,

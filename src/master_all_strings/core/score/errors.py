@@ -23,6 +23,9 @@ _T = TypeVar("_T")
 
 # sha256 hex, lowercase.
 DIGEST_LENGTH = 64
+# Digests that cross an engine boundary carry their algorithm, so the value stays
+# self-describing once it is out of the hands of the code that computed it.
+DIGEST_ALGORITHM_PREFIX = "sha256:"
 # How much of the digest the public revision id carries. Documented and
 # collision-tested; the full digest is always stored alongside it.
 REVISION_ID_DIGEST_PREFIX = 24
@@ -110,3 +113,36 @@ def require_digest(value: str, field_name: str) -> None:
         raise ScoreContractError(
             f"{field_name} must be {DIGEST_LENGTH} lowercase hex characters (sha256)"
         )
+
+
+def require_prefixed_digest(value: str, field_name: str) -> None:
+    """Require an algorithm-labelled digest: ``sha256:`` followed by 64 hex characters.
+
+    Labelled rather than bare so the algorithm travels with the value and a second
+    algorithm could never be mistaken for this one.
+
+    Checked rather than accepted as free text because this kind of digest is
+    load-bearing: it is what a caller hands over *instead of* the record it describes,
+    and ingestion fingerprints it into request identity. An unvalidated field would let
+    a truncated or invented value stand in for a capture and key a duplicate check on
+    nothing, which is exactly the case a digest exists to rule out.
+    """
+    require_identifier(value, field_name)
+    if not value.startswith(DIGEST_ALGORITHM_PREFIX):
+        raise ScoreContractError(
+            f"{field_name} must be an algorithm-labelled digest "
+            f"beginning {DIGEST_ALGORITHM_PREFIX!r}"
+        )
+    require_digest(value[len(DIGEST_ALGORITHM_PREFIX) :], f"{field_name} digest body")
+
+
+def require_prose(value: str, field_name: str) -> None:
+    """Require a non-blank human-readable string.
+
+    Deliberately looser than ``require_identifier``: prose is written by a person and
+    may carry inner whitespace, punctuation, and newlines that an identifier may not.
+    Nothing keys on these fields and none of them reach a digest, so the only thing
+    worth refusing is a value that says nothing at all.
+    """
+    if not isinstance(value, str) or not value.strip():
+        raise ScoreContractError(f"{field_name} must be a non-empty string when present")

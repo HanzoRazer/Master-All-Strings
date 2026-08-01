@@ -20,6 +20,7 @@ from master_all_strings.core.score.errors import (
     require_identifier,
     require_nonnegative_int,
     require_optional_identifier,
+    require_prefixed_digest,
     require_schema_version,
     require_tuple,
     require_utc_timestamp,
@@ -131,7 +132,7 @@ class CanonicalIngestionResultV1:
         if not isinstance(self.status, IngestionStatus):
             raise ScoreContractError("status must be an IngestionStatus")
         require_identifier(self.source_capture_id, "source_capture_id")
-        require_identifier(self.source_capture_digest, "source_capture_digest")
+        require_prefixed_digest(self.source_capture_digest, "source_capture_digest")
         require_identifier(self.policy_version, "policy_version")
         require_utc_timestamp(self.completed_at, "completed_at")
         require_optional_identifier(self.document_id, "document_id")
@@ -179,9 +180,22 @@ class CanonicalIngestionResultV1:
             )
         if self.status is IngestionStatus.DUPLICATE and self.created_new_revision:
             raise ScoreContractError("a duplicate ingestion cannot have created a revision")
-        if len(self.rejections) and self.rejected_event_count == 0:
+        # The count counts *source events* named by rejections, so it may legitimately
+        # be zero while rejections exist: NO_CONVERTIBLE_EVENTS on an empty capture
+        # rejects the request without any event to point at. Requiring a nonzero count
+        # there forced the service to report one rejected event where there were none,
+        # which is a fabricated number in the field a caller would use to reconcile
+        # against what it sent. What must hold is that the count covers every event a
+        # rejection actually named.
+        cited = {
+            source_id
+            for rejection in self.rejections
+            for source_id in rejection.source_event_ids
+        }
+        if self.rejected_event_count < len(cited):
             raise ScoreContractError(
-                "rejected_event_count must account for the reported rejections"
+                f"rejected_event_count ({self.rejected_event_count}) must account for the "
+                f"{len(cited)} source event(s) the rejections name"
             )
 
     @property

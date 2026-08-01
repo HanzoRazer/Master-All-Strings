@@ -84,6 +84,19 @@ refuses rather than tolerates.
 Two callers submitting the same content in different order produce the same digest and
 therefore the same revision id. The full digest is stored alongside the shortened id.
 
+Every field of `CanonicalScoreRevisionV1` carries a recorded decision about the digest —
+`DIGEST_INCLUDED_FIELDS`, `DIGEST_EXCLUDED_FIELDS`, or `DIGEST_DERIVED_FIELDS` — and a
+test asserts the three account for the dataclass exactly. A field added without a
+decision would silently fall outside identity, so two revisions differing only in it
+would share one `revision_id` and one of them would be unreachable. Nothing else would
+notice; the test fails on the next field instead of on the next incident.
+
+Because the id carries only the first 24 hex characters of the digest, the repository is
+where a prefix collision would surface, and it is checked there: saving a revision whose
+id already exists compares the **full digest**, accepts a match as the ordinary retry,
+and raises `REVISION_ID_COLLISION` on a genuine divergence. Comparing whole objects
+instead would reject a legitimate retry, because the digest excludes `created_at`.
+
 Document ids do not come from content — a document survives its content changing — so
 they come from an injected `DocumentIdAuthority`: deterministic in tests, UUID-backed in
 normal use, never a timestamp.
@@ -94,9 +107,17 @@ Captured performance carries monotonic nanoseconds. Canonical music carries inte
 ticks. Something has to bridge them, and the honest name for it matters.
 
 ```text
-elapsed_seconds = (event_ns - capture_origin_ns) / 1_000_000_000
-ticks = round(elapsed_seconds * 960 * beats_per_minute / 60)
+elapsed_ns = event_ns - capture_origin_ns
+ticks      = round_half_away_from_zero(elapsed_ns * ppq, mpq * 1000)
 ```
+
+Integer arithmetic throughout, and the tie rule is named rather than inherited: halves
+round **away from zero**, never Python's `round`, which is banker's rounding and would
+be impossible to reimplement correctly by accident. The rule lives in one module
+(`core.score.rounding`) because tempo conversion needs the same one — `tempo_from_bpm`
+feeds the tempo map, the tempo map is inside the digest, and two derivations of
+canonical values rounding differently would mean two implementations disagreeing about
+a revision id.
 
 **This is tick-grid rounding.** At 120 BPM and 960 PPQ one tick is about 0.52 ms, so the
 rounding is numerical, not musical.
@@ -192,6 +213,13 @@ that split the key would defeat the retry safety the key exists for. So are
 a profile or a projection request starts affecting what Core stores, it joins the
 fingerprint.
 
+Those exclusions are a named list (`FINGERPRINT_EXCLUDED_FIELDS`), not prose, and a test
+asserts that every field of `CanonicalIngestionRequestV1` is either fingerprinted or on
+it. This is the same drift the digest guard prevents, on the other side of the seam: a
+new request field that affects what Core stores but that nobody adds to the key does not
+raise and does not fail any existing test — it just quietly stops telling two different
+ingestion intents apart, which is the exact defect this key was rewritten to fix.
+
 A rejected request reserves its `request_id` too. A rejection creates nothing, but the
 id has been spent; leaving it free would mean the conflict guard only worked on the
 happy path. Re-sending the same rejected request is still rejected rather than
@@ -207,3 +235,13 @@ intent, and it produces a distinct document and revision.
 database, ORM, filesystem authority, or network service in DO-007. The port exists so
 the storage decision can be made later against a settled model rather than earlier
 against a guess.
+
+**Creating a document and its origin revision is one port method, not two calls.** A
+document is born already pointing at its origin, so no ordering of two writes is
+correct: creating the document first publishes a `current_revision_id` that resolves to
+nothing, and saving the revision first is refused because its document does not exist.
+`create_document_with_origin_revision` owns that atomicity — the in-memory adapter by
+validating fully before it writes anything, a future persistent one inside a
+transaction. Leaving the sequencing to the service made the requirement invisible to
+whoever writes that adapter, and the service's own comment claimed a guarantee the
+ordering did not provide.

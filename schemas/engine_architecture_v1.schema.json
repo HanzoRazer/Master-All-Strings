@@ -81,10 +81,19 @@
       "minItems": 4,
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["seam", "rule"],
         "properties": {
           "seam": {"type": "string", "minLength": 1},
-          "rule": {"type": "string", "minLength": 1}
+          "rule": {"type": "string", "minLength": 1},
+          "authoring_owner": {"$ref": "#/$defs/engineId"},
+          "projection_owner": {"$ref": "#/$defs/engineId"},
+          "evidence_owner": {"$ref": "#/$defs/engineId"},
+          "interpretation_owner": {"$ref": "#/$defs/engineId"},
+          "mechanical_owner": {"$ref": "#/$defs/engineId"},
+          "pedagogical_owner": {"$ref": "#/$defs/engineId"},
+          "evidence_contract": {"type": "string", "minLength": 1},
+          "interpretation_contract": {"type": "string", "minLength": 1}
         }
       }
     },

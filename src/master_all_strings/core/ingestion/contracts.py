@@ -35,6 +35,7 @@ from master_all_strings.core.score.errors import (
     require_nonnegative_int,
     require_optional_identifier,
     require_positive_int,
+    require_prefixed_digest,
     require_schema_version,
     require_tuple,
     require_unique,
@@ -159,7 +160,11 @@ class CanonicalIngestionRequestV1:
         require_identifier(self.request_id, "request_id")
         require_identifier(self.capture_id, "capture_id")
         require_identifier(self.source_session_id, "source_session_id")
-        require_identifier(self.raw_capture_digest, "raw_capture_digest")
+        # A real digest, not any non-blank string. This value stands in for the capture
+        # Core is never handed, and ingestion fingerprints it into request identity, so
+        # an unchecked field would let a fabricated or truncated digest key a duplicate
+        # check on nothing.
+        require_prefixed_digest(self.raw_capture_digest, "raw_capture_digest")
         require_nonnegative_int(self.capture_origin_ns, "capture_origin_ns")
         require_positive_int(
             self.tempo_microseconds_per_quarter, "tempo_microseconds_per_quarter"

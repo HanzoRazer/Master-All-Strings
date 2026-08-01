@@ -10,12 +10,15 @@ compares exactly.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from fractions import Fraction
 
 from master_all_strings.core.score.errors import (
+    ScoreContractError,
     require_nonnegative_int,
     require_positive_int,
     require_schema_version,
 )
+from master_all_strings.core.score.rounding import divide_round_half_away_from_zero
 
 MICROSECONDS_PER_MINUTE = 60_000_000
 # 120 BPM. Named rather than inlined so tests and fixtures agree on one reference.
@@ -46,17 +49,38 @@ class TempoChangeV1:
 def tempo_from_bpm(beats_per_minute: float, *, tick: int = 0) -> TempoChangeV1:
     """Build a tempo change from BPM, rounding to whole microseconds.
 
-    Provided so callers need not do the conversion by hand, and so the rounding
-    happens in exactly one place.
+    Provided so callers need not do the conversion by hand, and so the rounding happens
+    in exactly one place.
+
+    The division is exact and the rounding is named. ``Fraction`` represents the BPM
+    the caller actually passed — including a float's true binary value — so the quotient
+    is a rational rather than an approximation, and the tie is then broken by the
+    repository's one rounding rule. Python's ``round`` was used here originally, which
+    contradicted the rule ``timing`` states at length: this value becomes a
+    ``TempoChangeV1`` in the tempo map, the tempo map is inside the content digest, and
+    the Performance seam calls this function to build every ingestion request. Banker's
+    rounding on that path meant a BPM landing on a half-microsecond produced a different
+    revision id than a faithful reimplementation of the documented rule would.
+
+    Rejects a non-numeric or non-positive BPM the same way, with ``ScoreContractError``.
+    A caller catching contract failures should not have to also catch ``TypeError`` to
+    handle one bad argument, and every other validator in this package raises the
+    contract error for a wrong type.
     """
     if isinstance(beats_per_minute, bool) or not isinstance(beats_per_minute, (int, float)):
-        raise TypeError("beats_per_minute must be a number")
+        raise ScoreContractError("beats_per_minute must be a number")
+    if beats_per_minute != beats_per_minute or beats_per_minute in (
+        float("inf"),
+        float("-inf"),
+    ):
+        raise ScoreContractError("beats_per_minute must be finite")
     if beats_per_minute <= 0:
-        from master_all_strings.core.score.errors import ScoreContractError
-
         raise ScoreContractError("beats_per_minute must be positive")
+    exact = Fraction(MICROSECONDS_PER_MINUTE) / Fraction(beats_per_minute)
     return TempoChangeV1(
         schema_version=TempoChangeV1.SCHEMA_VERSION,
         tick=tick,
-        microseconds_per_quarter=round(MICROSECONDS_PER_MINUTE / beats_per_minute),
+        microseconds_per_quarter=divide_round_half_away_from_zero(
+            exact.numerator, exact.denominator
+        ),
     )

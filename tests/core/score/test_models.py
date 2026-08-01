@@ -76,6 +76,21 @@ class TestScoreDocument:
         with pytest.raises(ScoreContractError, match="title"):
             dataclasses.replace(document, title="   ")
 
+    def test_title_is_prose_not_an_identifier(self, document: ScoreDocumentV1) -> None:
+        # A title was held to identifier rules, which forbade the inner formatting a
+        # real one may carry. Nothing keys on a title and the digest excludes it, so
+        # that was borrowed strictness with no invariant behind it.
+        titled = dataclasses.replace(document, title="Étude  No. 1 — 2nd movement")
+        assert titled.title == "Étude  No. 1 — 2nd movement"
+
+    def test_external_reference_is_still_an_identifier(
+        self, document: ScoreDocumentV1
+    ) -> None:
+        # Unlike a title, this is a key into another system, so surrounding whitespace
+        # is a defect rather than formatting.
+        with pytest.raises(ScoreContractError, match="external_reference"):
+            dataclasses.replace(document, external_reference=" ext-1 ")
+
     def test_blank_description_rejected(self, document: ScoreDocumentV1) -> None:
         with pytest.raises(ScoreContractError, match="description"):
             dataclasses.replace(document, description="  ")
@@ -89,8 +104,16 @@ class TestScoreDocument:
         # A document that could move backwards would let a stale write silently undo
         # an accepted revision.
         advanced = document.with_revision(current_revision_id="rev-" + "a" * 24, revision_count=3)
-        with pytest.raises(ScoreContractError, match="must not decrease"):
+        with pytest.raises(ScoreContractError, match="must increase"):
             advanced.with_revision(current_revision_id="rev-" + "b" * 24, revision_count=2)
+
+    def test_with_revision_refuses_to_stand_still(self, document: ScoreDocumentV1) -> None:
+        # The other half of the same hole: repointing at a different revision without
+        # advancing the count would leave the number disagreeing with the stored
+        # history, and would describe adding a revision as if none had been added.
+        advanced = document.with_revision(current_revision_id="rev-" + "a" * 24, revision_count=3)
+        with pytest.raises(ScoreContractError, match="must increase"):
+            advanced.with_revision(current_revision_id="rev-" + "b" * 24, revision_count=3)
 
     def test_with_revision_preserves_metadata(self, document: ScoreDocumentV1) -> None:
         titled = dataclasses.replace(document, title="Etude")
@@ -235,12 +258,30 @@ class TestTempoMap:
             tempo_from_bpm(0.0)
 
     def test_non_numeric_bpm_rejected(self) -> None:
-        with pytest.raises(TypeError):
+        # ScoreContractError, not TypeError. One bad argument should not need a caller
+        # to catch two exception families, and every other validator in the package
+        # raises the contract error for a wrong type.
+        with pytest.raises(ScoreContractError, match="beats_per_minute"):
             tempo_from_bpm("fast")  # type: ignore[arg-type]
 
     def test_bool_bpm_rejected(self) -> None:
-        with pytest.raises(TypeError):
+        with pytest.raises(ScoreContractError, match="beats_per_minute"):
             tempo_from_bpm(True)  # type: ignore[arg-type]
+
+    def test_non_finite_bpm_rejected(self) -> None:
+        for value in (float("nan"), float("inf")):
+            with pytest.raises(ScoreContractError, match="beats_per_minute"):
+                tempo_from_bpm(value)
+
+    def test_bpm_conversion_rounds_half_away_from_zero(self) -> None:
+        # The tempo map is inside the content digest and the Performance seam builds
+        # every request through this function, so the tie rule here is identity-
+        # affecting. Python's round() is banker's: it would answer 333_332 for a value
+        # landing exactly on .5 with an even floor, diverging from the documented rule
+        # any reimplementation would follow.
+        bpm = 120_000_000 / 666_665  # 60_000_000 / bpm == 333_332.5 exactly
+        assert tempo_from_bpm(bpm).microseconds_per_quarter == 333_333
+        assert round(60_000_000 / bpm) == 333_332
 
     def test_tempo_at_tick_resolves(self) -> None:
         revision = make_revision(

@@ -8,12 +8,15 @@ whatever the implementation happens to hash.
 from __future__ import annotations
 
 import dataclasses
+import inspect
 
 import pytest
 
 from conftest import make_event, make_revision  # type: ignore[import-not-found]
 from master_all_strings.core.score.digest import (
     CONTENT_SERIALIZATION_VERSION,
+    DIGEST_DERIVED_FIELDS,
+    DIGEST_EXCLUDED_DOCUMENT_FIELDS,
     DIGEST_EXCLUDED_FIELDS,
     DIGEST_INCLUDED_FIELDS,
     compute_revision_digest,
@@ -28,6 +31,7 @@ from master_all_strings.core.score.errors import (
     ScoreContractError,
 )
 from master_all_strings.core.score.meter import MeterChangeV1
+from master_all_strings.core.score.models import CanonicalScoreRevisionV1
 from master_all_strings.core.score.tempo import tempo_from_bpm
 
 METER_4_4 = MeterChangeV1(
@@ -178,7 +182,39 @@ class TestExclusionsDoNotChangeTheDigest:
         assert make_revision().content_digest == make_revision(provenance=other).content_digest
 
     def test_the_excluded_field_list_is_the_documented_one(self) -> None:
-        assert DIGEST_EXCLUDED_FIELDS == ("created_at", "provenance", "title", "description")
+        assert DIGEST_EXCLUDED_FIELDS == ("created_at", "provenance")
+
+    def test_document_metadata_is_excluded(self) -> None:
+        assert DIGEST_EXCLUDED_DOCUMENT_FIELDS == ("title", "description")
+
+
+class TestFieldPolicyCoverage:
+    """Every revision field must have a recorded digest decision.
+
+    The failure this prevents is silent. Adding a field to ``CanonicalScoreRevisionV1``
+    without touching ``digest`` does not raise, does not change any existing id, and
+    leaves the new field simply outside identity — so two revisions differing only in it
+    would share one ``revision_id`` and one of them would be unreachable. Nothing else
+    in the suite would notice, because every existing test asserts on fields that were
+    already decided. This test fails on the *next* field instead.
+    """
+
+    def test_every_revision_field_is_included_excluded_or_derived(self) -> None:
+        decided = set(DIGEST_INCLUDED_FIELDS) | set(DIGEST_EXCLUDED_FIELDS) | set(
+            DIGEST_DERIVED_FIELDS
+        )
+        actual = {f.name for f in dataclasses.fields(CanonicalScoreRevisionV1)}
+        assert actual - decided == set(), (
+            "a revision field has no recorded digest decision; add it to "
+            "DIGEST_INCLUDED_FIELDS, DIGEST_EXCLUDED_FIELDS, or DIGEST_DERIVED_FIELDS "
+            "and say why in the module docstring"
+        )
+        assert decided - actual == set(), "the digest policy names a field that no longer exists"
+
+    def test_the_included_fields_are_what_the_digest_actually_reads(self) -> None:
+        # The list is only worth asserting if it matches the function's real signature.
+        parameters = set(inspect.signature(compute_revision_digest).parameters)
+        assert parameters == set(DIGEST_INCLUDED_FIELDS)
 
 
 class TestOrderIndependence:

@@ -26,6 +26,7 @@ from dataclasses import dataclass
 import pytest
 from helpers import T1, make_event
 
+from master_all_strings.core.score.errors import require_prefixed_digest
 from master_all_strings.performance.capture_normalization import (
     build_raw_capture,
     close_capture,
@@ -118,6 +119,14 @@ class TestIngestionRequest:
     ) -> None:
         assert request_for.raw_capture_digest == capture_digest(closed_capture)
         assert request_for.raw_capture_digest.startswith("sha256:")
+
+    def test_the_digest_performance_produces_satisfies_the_contract_core_enforces(
+        self, closed_capture: RawPerformanceCaptureV1
+    ) -> None:
+        # Core validates this field's shape rather than accepting any string. The two
+        # sides of the seam have to agree on that shape, so the producer is checked
+        # against the consumer's rule here rather than both being asserted separately.
+        require_prefixed_digest(capture_digest(closed_capture), "raw_capture_digest")
 
     def test_request_has_no_revision_field_at_all(
         self, request_for: CanonicalIngestionRequestV1
