@@ -37,8 +37,7 @@ def stored(
     document: ScoreDocumentV1,
     origin_revision: CanonicalScoreRevisionV1,
 ) -> InMemoryCanonicalScoreRepository:
-    repository.create_document(document)
-    repository.save_revision(origin_revision)
+    repository.create_document_with_origin_revision(document, origin_revision)
     return repository
 
 
@@ -51,32 +50,52 @@ class TestPortConformance:
     def test_every_port_operation_exists(
         self, repository: InMemoryCanonicalScoreRepository
     ) -> None:
-        for name in (
-            "create_document",
-            "save_document",
-            "save_revision",
-            "get_document",
-            "get_revision",
-            "get_current_revision",
-            "list_revisions",
-            "has_document",
-        ):
+        # Derived from the Protocol rather than restated. A hand-written list is a
+        # second declaration of the port that drifts the moment the first one changes --
+        # this one still named create_document after it was removed.
+        for name in dir(CanonicalScoreRepositoryPort):
+            if name.startswith("_"):
+                continue
             assert callable(getattr(repository, name)), name
+
+    def test_signatures_match_the_port(
+        self, repository: InMemoryCanonicalScoreRepository
+    ) -> None:
+        # isinstance() against a runtime_checkable Protocol compares names only, so it
+        # would pass for an adapter whose methods take the wrong arguments. Behaviour is
+        # covered by test_repository_contract.py; shape is covered here.
+        for name in dir(CanonicalScoreRepositoryPort):
+            if name.startswith("_"):
+                continue
+            expected = inspect.signature(getattr(CanonicalScoreRepositoryPort, name))
+            actual = inspect.signature(getattr(type(repository), name))
+            assert list(actual.parameters) == list(expected.parameters), name
 
 
 class TestDocuments:
     def test_create_and_retrieve(
-        self, repository: InMemoryCanonicalScoreRepository, document: ScoreDocumentV1
+        self, stored: InMemoryCanonicalScoreRepository, document: ScoreDocumentV1
     ) -> None:
-        repository.create_document(document)
-        assert repository.get_document(DOCUMENT_ID) == document
+        assert stored.get_document(DOCUMENT_ID) == document
+
+    def test_there_is_no_way_to_create_a_document_without_its_origin(
+        self, repository: InMemoryCanonicalScoreRepository
+    ) -> None:
+        # ScoreDocumentV1 requires a current_revision_id, so a lone create could only
+        # ever store a pointer to a revision that is not there. The primitive is gone
+        # rather than merely unused: leaving it would keep the failure the paired method
+        # exists to prevent one call away.
+        assert not hasattr(repository, "create_document")
+        assert not hasattr(CanonicalScoreRepositoryPort, "create_document")
 
     def test_duplicate_document_rejected(
-        self, repository: InMemoryCanonicalScoreRepository, document: ScoreDocumentV1
+        self,
+        stored: InMemoryCanonicalScoreRepository,
+        document: ScoreDocumentV1,
+        origin_revision: CanonicalScoreRevisionV1,
     ) -> None:
-        repository.create_document(document)
         with pytest.raises(DuplicateDocumentError, match="already exists"):
-            repository.create_document(document)
+            stored.create_document_with_origin_revision(document, origin_revision)
 
     def test_missing_document_has_a_named_error(
         self, repository: InMemoryCanonicalScoreRepository
@@ -108,8 +127,6 @@ class TestDocuments:
     def test_wrong_type_rejected(
         self, repository: InMemoryCanonicalScoreRepository
     ) -> None:
-        with pytest.raises(ScoreRepositoryError, match="ScoreDocumentV1"):
-            repository.create_document("not-a-document")  # type: ignore[arg-type]
         with pytest.raises(ScoreRepositoryError, match="ScoreDocumentV1"):
             repository.save_document(42)  # type: ignore[arg-type]
 
@@ -299,11 +316,13 @@ class TestCurrentRevisionAndHistory:
         with pytest.raises(DocumentNotFoundError, match="DOCUMENT_NOT_FOUND"):
             repository.list_revisions("score-absent")
 
-    def test_history_of_a_new_document_is_empty(
-        self, repository: InMemoryCanonicalScoreRepository, document: ScoreDocumentV1
+    def test_history_of_a_new_document_is_exactly_its_origin(
+        self, stored: InMemoryCanonicalScoreRepository, origin_revision: CanonicalScoreRevisionV1
     ) -> None:
-        repository.create_document(document)
-        assert repository.list_revisions(DOCUMENT_ID) == ()
+        # It used to be possible to assert an *empty* history here, because a document
+        # could be created on its own. That state was the dangling pointer, not a
+        # legitimate one: a new document always has exactly the revision it points at.
+        assert stored.list_revisions(DOCUMENT_ID) == (origin_revision,)
 
 
 class TestReturnedObjectsCannotBeMutated:

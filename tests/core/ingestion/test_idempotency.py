@@ -138,6 +138,32 @@ class TestPartialAcceptance:
         assert cited
         assert result.rejected_event_count >= len(cited)
 
+    @pytest.mark.parametrize(
+        "events",
+        [
+            (),
+            (source_event(0, SourceMidiEventKind.NOTE_ON, 0),),
+            (source_event(0, SourceMidiEventKind.NOTE_OFF, 0),),
+            (
+                source_event(0, SourceMidiEventKind.NOTE_ON, 0),
+                source_event(1, SourceMidiEventKind.NOTE_ON, 1, midi_note=67),
+            ),
+        ],
+    )
+    def test_this_policy_always_reports_the_exact_count(
+        self, service: CanonicalIngestionService, events: tuple[object, ...]
+    ) -> None:
+        # The contract only requires the count to *cover* the events rejections name, so
+        # a future policy could refuse a whole capture without enumerating it. This pins
+        # that DIRECT_EVENT_IMPORT_V1 is not that policy: for it the count is exact, and
+        # a caller reconciling against what it sent can rely on that.
+        result = service.ingest(
+            make_request(source_events=events),  # type: ignore[arg-type]
+            completed_at=T0,
+        )
+        cited = {sid for r in result.rejections for sid in r.source_event_ids}
+        assert result.rejected_event_count == len(cited)
+
     def test_a_rejected_ingestion_creates_nothing(
         self, service: CanonicalIngestionService, repository: InMemoryCanonicalScoreRepository
     ) -> None:

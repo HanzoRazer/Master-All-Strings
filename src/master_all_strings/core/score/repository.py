@@ -16,6 +16,13 @@ revision is.
 origin revision is one act, so it is one method. Leaving the caller to sequence two
 writes cannot be made correct in any order, and the requirement would then be invisible
 to whoever writes the first persistent adapter.
+
+There is deliberately **no bare ``create_document``**. ``ScoreDocumentV1`` requires a
+``current_revision_id``, so a document cannot exist before the revision it points at —
+which means a lone create could only ever store a dangling pointer. Keeping it as a
+convenience would have left the exact failure the paired method exists to prevent
+sitting one call away, reachable by any adapter author or caller who did not read this
+paragraph. A document is always created with its origin.
 """
 
 from __future__ import annotations
@@ -60,10 +67,6 @@ class RevisionIdCollisionError(DuplicateRevisionError):
 class CanonicalScoreRepositoryPort(Protocol):
     """What Musical Core needs from storage."""
 
-    def create_document(self, document: ScoreDocumentV1) -> ScoreDocumentV1:
-        """Store a new document. Fails if the id already exists."""
-        ...
-
     def create_document_with_origin_revision(
         self, document: ScoreDocumentV1, revision: CanonicalScoreRevisionV1
     ) -> tuple[ScoreDocumentV1, CanonicalScoreRevisionV1]:
@@ -77,7 +80,16 @@ class CanonicalScoreRepositoryPort(Protocol):
         document that cannot be resolved.
 
         Every adapter must make this atomic -- a persistent one inside a transaction,
-        the in-memory one by validating fully before it writes anything.
+        the in-memory one by validating fully before it writes anything. On refusal an
+        adapter must leave storage exactly as it found it: no document, no revision. An
+        adapter that writes the document and then fails on the revision reintroduces the
+        dangling ``current_revision_id`` this method exists to prevent.
+
+        Revision sameness and first-write-wins follow ``save_revision``.
+
+        ``tests/core/score/test_repository_contract.py`` is the conformance suite. Any
+        new adapter runs it -- ``isinstance`` against this Protocol proves only that the
+        method *names* exist, not that they behave.
         """
         ...
 
@@ -86,7 +98,13 @@ class CanonicalScoreRepositoryPort(Protocol):
         ...
 
     def save_revision(self, revision: CanonicalScoreRevisionV1) -> CanonicalScoreRevisionV1:
-        """Store a revision. Fails if the id exists with different content."""
+        """Store a revision. Fails if the id exists with a different digest.
+
+        Sameness is decided by ``content_digest``, not by whole-object equality: the
+        digest excludes ``created_at`` and ``provenance``, so a retry differing only in
+        those is the same revision. First write wins, and the **stored** revision is
+        returned, which may not be the one submitted.
+        """
         ...
 
     def get_document(self, document_id: str) -> ScoreDocumentV1:
@@ -122,18 +140,6 @@ class InMemoryCanonicalScoreRepository:
         self._documents: dict[str, ScoreDocumentV1] = {}
         self._revisions: dict[str, CanonicalScoreRevisionV1] = {}
         self._by_document: dict[str, list[str]] = {}
-
-    def create_document(self, document: ScoreDocumentV1) -> ScoreDocumentV1:
-        """Store a new document."""
-        if not isinstance(document, ScoreDocumentV1):
-            raise ScoreRepositoryError("create_document requires a ScoreDocumentV1")
-        if document.document_id in self._documents:
-            raise DuplicateDocumentError(
-                f"document {document.document_id!r} already exists"
-            )
-        self._documents[document.document_id] = document
-        self._by_document.setdefault(document.document_id, [])
-        return document
 
     def create_document_with_origin_revision(
         self, document: ScoreDocumentV1, revision: CanonicalScoreRevisionV1
@@ -175,10 +181,15 @@ class InMemoryCanonicalScoreRepository:
 
         self._documents[document.document_id] = document
         self._by_document.setdefault(document.document_id, [])
-        self._revisions[revision.revision_id] = revision
+        # First write wins, exactly as in ``save_revision``. Overwriting here instead
+        # would make two methods resolve the identical situation in opposite directions
+        # -- one keeping the stored revision, the other replacing it -- so which
+        # ``created_at`` survived a retry would depend on which entry point ran.
+        stored = existing if existing is not None else revision
+        self._revisions[revision.revision_id] = stored
         if revision.revision_id not in self._by_document[document.document_id]:
             self._by_document[document.document_id].append(revision.revision_id)
-        return document, revision
+        return document, stored
 
     def save_document(self, document: ScoreDocumentV1) -> ScoreDocumentV1:
         """Store an updated document."""
@@ -194,9 +205,16 @@ class InMemoryCanonicalScoreRepository:
     def save_revision(self, revision: CanonicalScoreRevisionV1) -> CanonicalScoreRevisionV1:
         """Store a revision.
 
-        Re-saving an identical revision is accepted: identity is content-addressed, so
-        the same id necessarily means the same content, which makes ingestion retries
-        harmless. The same id with *different* content is a corruption and is refused.
+        Re-saving a revision whose digest matches the stored one is accepted, which is
+        what makes ingestion retries harmless. A differing digest under the same id is
+        refused as a collision.
+
+        **First write wins, and the stored revision is what comes back.** The digest
+        excludes ``created_at`` and ``provenance``, so a retry may differ in those and
+        still be the same revision — and when it does, the earlier values are kept. A
+        caller that needs its own ``created_at`` to be the one recorded is not retrying;
+        it is trying to change a revision, which is what a new revision is for. Read the
+        returned object rather than assuming the submitted one was stored.
         """
         if not isinstance(revision, CanonicalScoreRevisionV1):
             raise ScoreRepositoryError("save_revision requires a CanonicalScoreRevisionV1")

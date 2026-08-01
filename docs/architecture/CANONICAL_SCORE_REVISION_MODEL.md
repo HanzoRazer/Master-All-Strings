@@ -245,3 +245,20 @@ validating fully before it writes anything, a future persistent one inside a
 transaction. Leaving the sequencing to the service made the requirement invisible to
 whoever writes that adapter, and the service's own comment claimed a guarantee the
 ordering did not provide.
+
+There is **no bare `create_document`**. A `ScoreDocumentV1` requires a
+`current_revision_id`, so a lone create could only ever store a dangling pointer; keeping
+it as a convenience would have left the failure the paired method prevents one call
+away. A document is always created with its origin, and a new document's history is
+therefore exactly one revision rather than none.
+
+Revision sameness is decided by `content_digest`, and **first write wins**: a retry
+differing only in `created_at` or `provenance` is the same revision, the stored one is
+kept, and the stored one is what comes back. A caller should read the returned object
+rather than assume the submitted one was written.
+
+`tests/core/score/test_repository_contract.py` is the adapter conformance suite. A new
+adapter is added to its `ADAPTERS` list and inherits every rule above. That indirection
+is necessary because `isinstance` against the `runtime_checkable` port compares method
+*names* only — a hollow class with no behaviour passes it, which the suite demonstrates
+rather than asserts in prose.

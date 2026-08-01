@@ -273,6 +273,17 @@ class TestTempoMap:
             with pytest.raises(ScoreContractError, match="beats_per_minute"):
                 tempo_from_bpm(value)
 
+    def test_a_fraction_bpm_is_accepted_and_exact(self) -> None:
+        # The escape hatch for callers that need decimal semantics: a float BPM is read
+        # as the binary double it actually is, which is reproducible but is not the
+        # decimal that was typed. Fraction("120.1") is the decimal, exactly.
+        from fractions import Fraction
+
+        assert tempo_from_bpm(Fraction(120)).microseconds_per_quarter == 500_000
+        assert tempo_from_bpm(Fraction("120.1")).microseconds_per_quarter == (
+            tempo_from_bpm(120.1).microseconds_per_quarter
+        )
+
     def test_bpm_conversion_rounds_half_away_from_zero(self) -> None:
         # The tempo map is inside the content digest and the Performance seam builds
         # every request through this function, so the tie rule here is identity-

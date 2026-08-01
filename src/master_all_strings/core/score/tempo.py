@@ -46,7 +46,9 @@ class TempoChangeV1:
         return MICROSECONDS_PER_MINUTE / self.microseconds_per_quarter
 
 
-def tempo_from_bpm(beats_per_minute: float, *, tick: int = 0) -> TempoChangeV1:
+def tempo_from_bpm(
+    beats_per_minute: float | Fraction, *, tick: int = 0
+) -> TempoChangeV1:
     """Build a tempo change from BPM, rounding to whole microseconds.
 
     Provided so callers need not do the conversion by hand, and so the rounding happens
@@ -66,10 +68,24 @@ def tempo_from_bpm(beats_per_minute: float, *, tick: int = 0) -> TempoChangeV1:
     A caller catching contract failures should not have to also catch ``TypeError`` to
     handle one bad argument, and every other validator in this package raises the
     contract error for a wrong type.
+
+    **A float BPM is read as the binary value it actually is, not as the decimal that
+    was typed.** ``Fraction(120.1)`` is the exact IEEE-754 double nearest 120.1, not the
+    rational 1201/10, so the result is reproducible for a given float but is not
+    "decimal BPM". That is deliberate: the alternative is guessing which decimal a
+    caller meant, and a guess would put a fabricated tempo into the content digest. It
+    is also not a change -- the previous implementation divided in float too. A caller
+    that needs exact decimal semantics should pass ``Fraction("120.1")``, which is
+    accepted and converted exactly, or supply ``microseconds_per_quarter`` directly.
     """
-    if isinstance(beats_per_minute, bool) or not isinstance(beats_per_minute, (int, float)):
+    if isinstance(beats_per_minute, bool) or not isinstance(
+        beats_per_minute, (int, float, Fraction)
+    ):
         raise ScoreContractError("beats_per_minute must be a number")
-    if beats_per_minute != beats_per_minute or beats_per_minute in (
+    # NaN fails both comparisons below, so it has to be caught by its own identity.
+    if beats_per_minute != beats_per_minute:  # noqa: PLR0124 - NaN check
+        raise ScoreContractError("beats_per_minute must be finite")
+    if isinstance(beats_per_minute, float) and beats_per_minute in (
         float("inf"),
         float("-inf"),
     ):

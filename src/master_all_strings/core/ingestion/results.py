@@ -106,7 +106,21 @@ class IngestionWarningV1:
 
 @dataclass(frozen=True)
 class CanonicalIngestionResultV1:
-    """Musical Core's answer to an ingestion request."""
+    """Musical Core's answer to an ingestion request.
+
+    ``rejected_event_count`` counts **source events** that did not reach the revision,
+    not rejection objects: one ``IngestionRejectionV1`` may name several events, and
+    ``NO_CONVERTIBLE_EVENTS`` names none at all, which is why zero is a legitimate count
+    on a ``REJECTED`` result. Do not read it as ``len(rejections)``.
+
+    The contract requires only that it *cover* the events the rejections name, rather
+    than equal them, so a future policy can refuse a whole capture without enumerating
+    every event in it. ``DIRECT_EVENT_IMPORT_V1`` always reports the exact number --
+    ``TestPartialAcceptance`` pins that -- so for today's only policy the count is
+    exact, and a caller reconciling against what it sent can rely on that. A caller
+    written against the contract rather than the policy should treat it as a lower
+    bound.
+    """
 
     schema_version: str
     request_id: str
