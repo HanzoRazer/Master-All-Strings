@@ -62,3 +62,61 @@ def test_schema_id_constant() -> None:
 def test_resolver_class_wrapper(minimal_assignment) -> None:
     resolved = LessonAssignmentResolver().resolve(minimal_assignment)
     assert resolved.assignment_id == minimal_assignment.assignment_id
+
+
+def _mutated_assignment_dict(minimal_assignment, mutator) -> dict:
+    from master_all_strings.lesson.serialization import to_dict
+
+    data = to_dict(minimal_assignment)
+    mutator(data)
+    return data
+
+
+def test_deserialize_rejects_string_loop_enabled(minimal_assignment) -> None:
+    data = _mutated_assignment_dict(
+        minimal_assignment,
+        lambda d: d["playback"].__setitem__("loop_enabled", "false"),
+    )
+    with pytest.raises(LessonValidationError, match="loop_enabled"):
+        deserialize_lesson_assignment(data)
+
+
+def test_deserialize_rejects_int_assessment_enabled(minimal_assignment) -> None:
+    data = _mutated_assignment_dict(
+        minimal_assignment,
+        lambda d: d["assessment"].__setitem__("enabled", 1),
+    )
+    with pytest.raises(LessonValidationError, match="enabled"):
+        deserialize_lesson_assignment(data)
+
+
+def test_deserialize_rejects_unknown_top_level_key(minimal_assignment) -> None:
+    data = _mutated_assignment_dict(
+        minimal_assignment,
+        lambda d: d.__setitem__("extra", True),
+    )
+    with pytest.raises(LessonValidationError, match="unexpected keys"):
+        deserialize_lesson_assignment(data)
+
+
+def test_deserialize_rejects_unknown_identity_key(minimal_assignment) -> None:
+    data = _mutated_assignment_dict(
+        minimal_assignment,
+        lambda d: d["identity"].__setitem__("foo", "bar"),
+    )
+    with pytest.raises(LessonValidationError, match="unexpected keys"):
+        deserialize_lesson_assignment(data)
+
+
+def test_deserialize_rejects_unknown_routing_key(minimal_assignment) -> None:
+    def mutate(data: dict) -> None:
+        data["routing"] = {
+            "sender_device_id": "a",
+            "recipient_device_id": "b",
+            "classroom_id": "c",
+            "extra": True,
+        }
+
+    data = _mutated_assignment_dict(minimal_assignment, mutate)
+    with pytest.raises(LessonValidationError, match="unexpected keys"):
+        deserialize_lesson_assignment(data)

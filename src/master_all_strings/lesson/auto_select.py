@@ -78,6 +78,8 @@ def select_automatic_position(
             pool = region
 
     # MSME already returns (display_order, relative_semitone_position) order.
-    # Re-sort explicitly so this scaffold stays stable if generation order changes.
+    # Re-sort explicitly so this MVP scaffold stays stable if generation order changes.
+    # string_id is only a temporary deterministic tie-breaker for this scaffold; it is
+    # not a musical rule and should be replaced when DO-004 / ADR-0005 lands.
     pool.sort(key=lambda c: (c.display_order, c.relative_semitone_position, c.string_id))
     return pool[0]

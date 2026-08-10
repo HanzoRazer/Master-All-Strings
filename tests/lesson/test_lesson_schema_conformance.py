@@ -75,14 +75,13 @@ def test_invalid_fixtures_fail_with_named_reason(
 
     schema_errors = sorted(schema_validator.iter_errors(data), key=lambda e: e.path)
     if meta["rejected_by"] == "schema":
+        # Catalogued schema-owned failures must fail JSON Schema. Python deserialize
+        # may also reject them, but schema is the named authority for these fixtures.
         assert schema_errors, f"{path.name} should fail JSON Schema"
         return
 
-    # Python-owned invariants may still be schema-valid.
-    if schema_errors:
-        # Some python cases also fail schema (e.g. empty events); that is fine.
-        pass
-
+    # Catalogued python-owned failures must fail Python deserialize/validate.
+    # These fixtures are typically still schema-valid.
     with pytest.raises(LessonAssignmentError) as excinfo:
         assignment = deserialize_lesson_assignment(data)
         validate_assignment(assignment, instrument_profiles=profiles)
