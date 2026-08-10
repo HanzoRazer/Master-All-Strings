@@ -20,6 +20,12 @@ Will own timeline, transport, playback, track handling, and synchronization. It 
 
 Will own repetitions, tempo progression, looping, ear-training flows, and student guidance. It is intentionally a placeholder at this phase.
 
+## Lesson assignment (Educational Engine)
+
+Owns the portable `LessonAssignmentV1` envelope: assignment/content identity, instructional intent, playback policy requests, spatial guidance, teacher overrides, preserve-only assessment metadata, provenance, and semantically inert routing fields. See [LESSON_ASSIGNMENT_BOUNDARY.md](LESSON_ASSIGNMENT_BOUNDARY.md) and [MVP1_LESSON_PIPELINE.md](MVP1_LESSON_PIPELINE.md).
+
+MVP-1 shall normalize all lesson input through a portable, versioned `LessonAssignment` envelope before canonical musical resolution. Networking is deferred, but the object shall be serializable, reloadable, teacher-override capable, and transport-neutral so later device-to-device communication does not require redesign of the musical, spatial, timing, selection, projection, or rendering pipeline.
+
 ## Adapters
 
 Own boundary-specific translation concerns such as file parsing, API validation, or renderer integration. They do not define musical truth.

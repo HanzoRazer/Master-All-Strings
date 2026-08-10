@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0.0",
+  "python_validator_owned": [
+    "duplicate event_id uniqueness beyond JSON Schema array constraints",
+    "teacher override physical validity against MSME",
+    "absolute path policy on provenance.source_name",
+    "unknown instrument only when a profile catalog is supplied",
+    "loop_enabled requires both start_tick and end_tick"
+  ],
+  "fixtures": {
+    "unsupported_schema.json": {
+      "rejected_by": "schema",
+      "reason": "unsupported schema version",
+      "code": "unsupported_schema"
+    },
+    "missing_content.json": {
+      "rejected_by": "schema",
+      "reason": "events must not be empty",
+      "code": "missing_content"
+    },
+    "duplicate_event_id.json": {
+      "rejected_by": "python",
+      "reason": "duplicate event_id",
+      "code": "duplicate_event_id"
+    },
+    "unknown_instrument.json": {
+      "rejected_by": "python",
+      "reason": "unknown instrument when catalog supplied",
+      "code": "unknown_instrument"
+    },
+    "invalid_tempo.json": {
+      "rejected_by": "schema",
+      "reason": "tempo out of range",
+      "code": "invalid_tempo"
+    },
+    "invalid_loop_range.json": {
+      "rejected_by": "python",
+      "reason": "end_tick <= start_tick",
+      "code": "invalid_loop_range"
+    },
+    "override_unknown_event.json": {
+      "rejected_by": "python",
+      "reason": "override unknown event",
+      "code": "override_unknown_event"
+    },
+    "override_impossible_position.json": {
+      "rejected_by": "python",
+      "reason": "physically impossible override",
+      "code": "override_impossible_position"
+    },
+    "absolute_path_dependency.json": {
+      "rejected_by": "python",
+      "reason": "absolute path in provenance",
+      "code": "absolute_path_dependency"
+    },
+    "malformed_timing.json": {
+      "rejected_by": "schema",
+      "reason": "duration_ticks < 1",
+      "code": "malformed_timing"
+    }
+  }
+}

@@ -19,6 +19,7 @@ Every capability has exactly one authoritative owning engine. Generated from the
 | `tab-projection` | TAB projection (semantic) | Musical Core | Creative, Educational | neither | planned |
 | `midi-projection` | MIDI projection (semantic) | Musical Core | Creative, Performance | neither | planned |
 | `learning-objects` | Learning Objects | Educational | Creative | neither | planned |
+| `lesson-assignments` | Lesson assignments | Educational | Creative | neither | implemented |
 | `curriculum` | Curriculum | Educational | — | neither | planned |
 | `etudes` | Etudes | Educational | — | neither | planned |
 | `reference-material` | Reference material | Educational | — | neither | planned |

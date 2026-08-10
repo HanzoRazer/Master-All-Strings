@@ -13,7 +13,9 @@ Master All Strings is composed of four cooperating engines, each a constitutiona
 - **Creative Engine** — score authoring, composition, AI-assisted entry;
 - **Performance Engine** — live capture, playback, device integration.
 
-This describes the intended architecture, not current implementation status. Today only Musical Core has shipped code (through candidate generation); the other three engines are governance boundaries with planned capabilities, not production subsystems. Canonical music remains authoritative regardless of engine, and Smart Guitar remains a consumer and integration surface (within the Performance Engine), never the architectural source of truth.
+This describes the intended architecture, not current implementation status. Musical Core has shipped code through candidate generation; the Educational Engine now also ships the portable `LessonAssignmentV1` lesson-entry boundary (MVP-1E). Creative and Performance remain governance boundaries with planned capabilities. Canonical music remains authoritative regardless of engine, and Smart Guitar remains a consumer and integration surface (within the Performance Engine), never the architectural source of truth.
+
+MVP-1 shall normalize all lesson input through a portable, versioned `LessonAssignment` envelope before canonical musical resolution. Networking is deferred, but the object shall be serializable, reloadable, teacher-override capable, and transport-neutral so later device-to-device communication does not require redesign of the musical, spatial, timing, selection, projection, or rendering pipeline.
 
 ## What Master All Strings is not
 

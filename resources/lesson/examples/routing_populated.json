@@ -1,0 +1,96 @@
+{
+  "schema_id": "master_all_strings.lesson_assignment",
+  "schema_version": "1.0.0",
+  "identity": {
+    "assignment_id": "teacher_smith_student_42_2026_08_10",
+    "content_id": "blues_turnaround_01",
+    "title": "Blues Turnaround",
+    "description": null
+  },
+  "musical_content": {
+    "format": "canonical_events",
+    "ticks_per_quarter": 480,
+    "events": [
+      {
+        "event_id": "ev-1",
+        "midi_note": 64,
+        "start_tick": 0,
+        "duration_ticks": 480,
+        "velocity": 80,
+        "cents_offset": 0.0,
+        "voice_id": null
+      },
+      {
+        "event_id": "ev-2",
+        "midi_note": 67,
+        "start_tick": 480,
+        "duration_ticks": 480,
+        "velocity": 80,
+        "cents_offset": 0.0,
+        "voice_id": null
+      },
+      {
+        "event_id": "ev-3",
+        "midi_note": 69,
+        "start_tick": 960,
+        "duration_ticks": 480,
+        "velocity": 80,
+        "cents_offset": 0.0,
+        "voice_id": null
+      }
+    ],
+    "tempo_changes": [
+      {
+        "tick": 0,
+        "tempo_bpm": 100.0
+      }
+    ],
+    "meter_changes": [
+      {
+        "tick": 0,
+        "numerator": 4,
+        "denominator": 4
+      }
+    ]
+  },
+  "playback": {
+    "tempo_override": null,
+    "start_tick": null,
+    "end_tick": null,
+    "loop_enabled": false,
+    "count_in_bars": null
+  },
+  "spatial_guidance": {
+    "instrument_profile_id": "guitar-standard-6",
+    "fingering_policy_id": "enumeration_v1",
+    "preferred_fret_min": null,
+    "preferred_fret_max": null,
+    "open_string_preference": "allow"
+  },
+  "teacher_overrides": [],
+  "instruction": {
+    "objective": null,
+    "repetitions": null,
+    "difficulty": null,
+    "curriculum_ref": null,
+    "teacher_note": null
+  },
+  "assessment": {
+    "enabled": false,
+    "mode": "disabled",
+    "note_accuracy_required": null,
+    "timing_tolerance_ms": null,
+    "required_successful_repetitions": null
+  },
+  "provenance": {
+    "created_by": "midi_importer",
+    "created_at_utc": "2026-08-10T12:00:00Z",
+    "source_type": "midi_import",
+    "source_name": "exercise.mid"
+  },
+  "routing": {
+    "sender_device_id": "guitar-teacher-01",
+    "recipient_device_id": "guitar-student-42",
+    "classroom_id": "room-a"
+  }
+}
