@@ -17,6 +17,7 @@ Every cross-engine contract has exactly one owning engine and one versioning aut
 | `ProjectionResultV1` | Musical Core | Musical Core | Creative, Educational, Performance | immutable | neither | — | Musical Core |
 | `EducationalInterpretationV1` | Educational | Educational | Creative | immutable | interpretation | SpatialEvidenceV1 | Educational |
 | `LearningObject` | Educational | Educational | Creative | versioned | neither | — | Educational |
+| `LessonAssignmentV1` | Educational | Educational | Creative | versioned | neither | — | Educational |
 | `CurriculumRegistry` | Educational | Educational | — | versioned | neither | — | Educational |
 | `CoachingRecommendationV1` | Educational | Educational | — | immutable | interpretation | PerformanceObservationV1 | Educational |
 | `AssessmentResult` | Educational | Educational | — | immutable | interpretation | — | Educational |
