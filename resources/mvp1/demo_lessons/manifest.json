@@ -7,6 +7,8 @@
       "description": "Ascending scale fragment",
       "lesson_path": "assignments/ascending_scale.json",
       "instrument_profile_id": "guitar-standard-6",
+      "audio_demo": true,
+      "expected_playback_digest": "sha256:c350e6b4cf32835df1b85b53e5df4c0637bee286277a3d5b3532920038425c1b",
       "demonstrates": [
         "ascending",
         "enumeration_v1"
@@ -22,6 +24,8 @@
       "description": "Descending scale fragment",
       "lesson_path": "assignments/descending_scale.json",
       "instrument_profile_id": "guitar-standard-6",
+      "audio_demo": true,
+      "expected_playback_digest": "sha256:20113dbad8ea99c7d913c8ea1238f941b3837a1d835c918db0fcc861c28936a2",
       "demonstrates": [
         "descending"
       ],
@@ -35,6 +39,8 @@
       "description": "Open-string preference",
       "lesson_path": "assignments/open_strings.json",
       "instrument_profile_id": "guitar-standard-6",
+      "audio_demo": true,
+      "expected_playback_digest": "sha256:2bc73046bb297f4a6c2e11aa0736d80b3424799b8fe3bcc5592810b8aa049401",
       "demonstrates": [
         "open_strings"
       ],
@@ -48,6 +54,8 @@
       "description": "First-position guidance",
       "lesson_path": "assignments/first_position.json",
       "instrument_profile_id": "guitar-standard-6",
+      "audio_demo": true,
+      "expected_playback_digest": "sha256:cc7f3dea5f9a624846cfdc1848141ee09ba6aac801023c4bb9cbd76f2716aa0b",
       "demonstrates": [
         "first_position",
         "soft_region"
@@ -62,6 +70,8 @@
       "description": "Register / position change",
       "lesson_path": "assignments/position_shift.json",
       "instrument_profile_id": "guitar-standard-6",
+      "audio_demo": true,
+      "expected_playback_digest": "sha256:cffe44c749155773c8a90d709cee4cb16dc016f167f4f57fec560af8ca0ebdbe",
       "demonstrates": [
         "position_shift"
       ],
@@ -75,6 +85,8 @@
       "description": "String crossing",
       "lesson_path": "assignments/string_crossing.json",
       "instrument_profile_id": "guitar-standard-6",
+      "audio_demo": true,
+      "expected_playback_digest": "sha256:4d76ce486afe1e1e3fb1817af139c2d254cd53f27bbdd776c63ac6e37c3c6207",
       "demonstrates": [
         "string_crossing"
       ],
@@ -88,6 +100,8 @@
       "description": "Simultaneous onsets",
       "lesson_path": "assignments/simultaneous_notes.json",
       "instrument_profile_id": "guitar-standard-6",
+      "audio_demo": true,
+      "expected_playback_digest": "sha256:7c7d03da067ad46ee74715a70d87f436007568a805e9c614df7742b7904e896a",
       "demonstrates": [
         "simultaneous"
       ],
@@ -103,6 +117,8 @@
       "description": "Multiple MSME candidates",
       "lesson_path": "assignments/multiple_candidates.json",
       "instrument_profile_id": "guitar-standard-6",
+      "audio_demo": true,
+      "expected_playback_digest": "sha256:a3ff51a5a72b88803de14f8df6816859da8fc7bd0b6a208682a0cb027819a061",
       "demonstrates": [
         "multiple_candidates"
       ],
@@ -116,6 +132,8 @@
       "description": "Visible unplayable event",
       "lesson_path": "assignments/unplayable_note.json",
       "instrument_profile_id": "guitar-standard-6",
+      "audio_demo": true,
+      "expected_playback_digest": "sha256:e006564b5e8b5c084f37a0415fe9a0d825e1e78187ee59e4cb564f75969e0260",
       "demonstrates": [
         "unplayable"
       ],
@@ -129,6 +147,8 @@
       "description": "Teacher override origin",
       "lesson_path": "assignments/teacher_override.json",
       "instrument_profile_id": "guitar-standard-6",
+      "audio_demo": true,
+      "expected_playback_digest": "sha256:11771e378f97a4a3dc926a88ad02e0a70fc0e4809c334c26ac67af193a2e4c47",
       "demonstrates": [
         "teacher_override"
       ],

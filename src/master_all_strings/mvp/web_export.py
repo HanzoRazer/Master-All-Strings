@@ -88,6 +88,7 @@ def export_demo_catalog(summaries: tuple[MvpLessonSummaryV1, ...], output_path: 
                 "description": item.description,
                 "instrument_profile_id": item.instrument_profile_id,
                 "demonstrates": list(item.demonstrates),
+                "audio_demo": item.audio_demo,
                 "known_limitations": list(item.known_limitations),
             }
             for item in summaries
@@ -154,6 +155,7 @@ def export_manifest_copy(output_path: Path) -> Path:
                 "description": e.description,
                 "instrument_profile_id": e.instrument_profile_id,
                 "demonstrates": list(e.demonstrates),
+                "audio_demo": e.audio_demo,
                 "known_limitations": list(e.known_limitations),
             }
             for e in entries

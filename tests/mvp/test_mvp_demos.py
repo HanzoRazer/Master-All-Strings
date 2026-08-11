@@ -11,3 +11,5 @@ def test_all_demos_match_manifest_digests(app: MvpApplication) -> None:
         response = app.run_demo(entry.demo_id)
         assert entry.expected_behavior_digest == response.behavior_digest
         assert entry.expected_projection_digest == response.projection.projection_digest
+        assert entry.audio_demo is True
+        assert entry.expected_playback_digest == response.playback_plan.playback_digest

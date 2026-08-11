@@ -25,6 +25,7 @@ class MvpLessonSummaryV1:
     description: str
     instrument_profile_id: str
     demonstrates: tuple[str, ...]
+    audio_demo: bool = False
     known_limitations: tuple[str, ...] = ()
 
 
