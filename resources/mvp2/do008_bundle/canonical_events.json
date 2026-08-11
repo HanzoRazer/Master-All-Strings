@@ -1,0 +1,434 @@
+[
+  {
+    "event_id": "comp:000000",
+    "midi_note": 48,
+    "start_tick": 0,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000001",
+    "midi_note": 52,
+    "start_tick": 0,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000002",
+    "midi_note": 55,
+    "start_tick": 0,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000003",
+    "midi_note": 59,
+    "start_tick": 0,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000004",
+    "midi_note": 48,
+    "start_tick": 720,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000005",
+    "midi_note": 52,
+    "start_tick": 720,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000006",
+    "midi_note": 55,
+    "start_tick": 720,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000007",
+    "midi_note": 59,
+    "start_tick": 720,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000008",
+    "midi_note": 48,
+    "start_tick": 1200,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000009",
+    "midi_note": 52,
+    "start_tick": 1200,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000010",
+    "midi_note": 55,
+    "start_tick": 1200,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000011",
+    "midi_note": 59,
+    "start_tick": 1200,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000012",
+    "midi_note": 53,
+    "start_tick": 1920,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000013",
+    "midi_note": 57,
+    "start_tick": 1920,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000014",
+    "midi_note": 60,
+    "start_tick": 1920,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000015",
+    "midi_note": 64,
+    "start_tick": 1920,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000016",
+    "midi_note": 53,
+    "start_tick": 2640,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000017",
+    "midi_note": 57,
+    "start_tick": 2640,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000018",
+    "midi_note": 60,
+    "start_tick": 2640,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000019",
+    "midi_note": 64,
+    "start_tick": 2640,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000020",
+    "midi_note": 53,
+    "start_tick": 3120,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000021",
+    "midi_note": 57,
+    "start_tick": 3120,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000022",
+    "midi_note": 60,
+    "start_tick": 3120,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000023",
+    "midi_note": 64,
+    "start_tick": 3120,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000024",
+    "midi_note": 55,
+    "start_tick": 3840,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000025",
+    "midi_note": 59,
+    "start_tick": 3840,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000026",
+    "midi_note": 62,
+    "start_tick": 3840,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000027",
+    "midi_note": 65,
+    "start_tick": 3840,
+    "duration_ticks": 480,
+    "velocity": 102,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000028",
+    "midi_note": 55,
+    "start_tick": 4560,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000029",
+    "midi_note": 59,
+    "start_tick": 4560,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000030",
+    "midi_note": 62,
+    "start_tick": 4560,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000031",
+    "midi_note": 65,
+    "start_tick": 4560,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000032",
+    "midi_note": 55,
+    "start_tick": 5040,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000033",
+    "midi_note": 59,
+    "start_tick": 5040,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000034",
+    "midi_note": 62,
+    "start_tick": 5040,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "comp:000035",
+    "midi_note": 65,
+    "start_tick": 5040,
+    "duration_ticks": 240,
+    "velocity": 74,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000000",
+    "midi_note": 24,
+    "start_tick": 0,
+    "duration_ticks": 480,
+    "velocity": 92,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000001",
+    "midi_note": 24,
+    "start_tick": 480,
+    "duration_ticks": 480,
+    "velocity": 80,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000002",
+    "midi_note": 24,
+    "start_tick": 960,
+    "duration_ticks": 480,
+    "velocity": 87,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000003",
+    "midi_note": 24,
+    "start_tick": 1440,
+    "duration_ticks": 480,
+    "velocity": 80,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000004",
+    "midi_note": 29,
+    "start_tick": 1920,
+    "duration_ticks": 480,
+    "velocity": 92,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000005",
+    "midi_note": 29,
+    "start_tick": 2400,
+    "duration_ticks": 480,
+    "velocity": 80,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000006",
+    "midi_note": 29,
+    "start_tick": 2880,
+    "duration_ticks": 480,
+    "velocity": 87,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000007",
+    "midi_note": 29,
+    "start_tick": 3360,
+    "duration_ticks": 480,
+    "velocity": 80,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000008",
+    "midi_note": 31,
+    "start_tick": 3840,
+    "duration_ticks": 480,
+    "velocity": 92,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000009",
+    "midi_note": 31,
+    "start_tick": 4320,
+    "duration_ticks": 480,
+    "velocity": 80,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000010",
+    "midi_note": 31,
+    "start_tick": 4800,
+    "duration_ticks": 480,
+    "velocity": 87,
+    "cents_offset": 0.0,
+    "voice_id": null
+  },
+  {
+    "event_id": "bass:000011",
+    "midi_note": 31,
+    "start_tick": 5280,
+    "duration_ticks": 480,
+    "velocity": 80,
+    "cents_offset": 0.0,
+    "voice_id": null
+  }
+]
