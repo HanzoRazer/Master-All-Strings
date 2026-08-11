@@ -133,3 +133,17 @@ test("invalid playback plans are rejected", () => {
   );
   scheduler.destroy();
 });
+
+test("loop wrap cancels the old cycle and reschedules the new cycle", () => {
+  const { transport, synth, scheduler, advance } = harness(melody);
+  transport.setLoop({ startSeconds: 0, endSeconds: 0.5 });
+  transport.play();
+  const panicCount = synth.panics;
+  advance(500);
+  scheduler.tick();
+
+  assert.equal(transport.repetitionCount, 1);
+  assert.equal(synth.panics, panicCount + 1);
+  assert.equal(synth.calls.length, 2);
+  scheduler.destroy();
+});

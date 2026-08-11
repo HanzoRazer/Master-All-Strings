@@ -90,3 +90,61 @@ test("duration and seek reject invalid numbers and clamp valid positions", () =>
   assert.equal(transport.positionSeconds(), 5);
   assert.throws(() => transport.seek(Number.NaN), /finite/);
 });
+
+test("loop wraps visual and audio consumers through one position", () => {
+  const time = clock();
+  const transport = new Transport({ now: time.now });
+  const events = [];
+  transport.subscribe((event) => events.push(event.type));
+  transport.setDuration(10);
+  transport.setLoop({ startSeconds: 2, endSeconds: 3 });
+  transport.seek(2);
+  transport.play();
+
+  for (let repetition = 1; repetition <= 3; repetition += 1) {
+    time.advance(1000);
+    assert.equal(transport.positionSeconds(), 2);
+    assert.equal(transport.repetitionCount, repetition);
+  }
+  assert.equal(events.filter((type) => type === "loop-wrap").length, 3);
+});
+
+test("loop catches up deterministically without accumulating frame deltas", () => {
+  const time = clock();
+  const transport = new Transport({ now: time.now });
+  transport.setDuration(10);
+  transport.setLoop({ startSeconds: 2, endSeconds: 3 });
+  transport.seek(2);
+  transport.play();
+  time.advance(3500);
+
+  assert.equal(transport.positionSeconds(), 2.5);
+  assert.equal(transport.repetitionCount, 3);
+});
+
+test("target repetitions stop at the loop end", () => {
+  const time = clock();
+  const transport = new Transport({ now: time.now });
+  transport.setDuration(10);
+  transport.setLoop({ startSeconds: 2, endSeconds: 3, targetRepetitions: 3 });
+  transport.seek(2);
+  transport.play();
+  time.advance(3000);
+
+  assert.equal(transport.positionSeconds(), 3);
+  assert.equal(transport.repetitionCount, 3);
+  assert.equal(transport.playing, false);
+});
+
+test("pause inside a loop freezes the shared position", () => {
+  const time = clock();
+  const transport = new Transport({ now: time.now });
+  transport.setDuration(10);
+  transport.setLoop({ startSeconds: 2, endSeconds: 4 });
+  transport.seek(2);
+  transport.play();
+  time.advance(500);
+  transport.pause();
+  time.advance(5000);
+  assert.equal(transport.positionSeconds(), 2.5);
+});

@@ -116,7 +116,18 @@ export class AudioScheduler {
   }
 
   _onTransport(event) {
-    if (["pause", "restart", "seek", "rate", "loop", "duration"].includes(event.type)) {
+    if (
+      [
+        "pause",
+        "restart",
+        "seek",
+        "rate",
+        "loop",
+        "duration",
+        "loop-wrap",
+        "loop-complete",
+      ].includes(event.type)
+    ) {
       this.panic(`transport-${event.type}`);
     }
     if (event.type === "play") {

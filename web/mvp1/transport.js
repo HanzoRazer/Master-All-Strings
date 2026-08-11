@@ -57,7 +57,7 @@ export class Transport {
   play(nowMs = this._now()) {
     if (this.playing) return false;
     if (this.durationSeconds > 0 && this.baseSeconds >= this.durationSeconds) {
-      this.baseSeconds = 0;
+      this.baseSeconds = this.loop?.enabled ? this.loop.startSeconds : 0;
     }
     this.playing = true;
     this.anchorWallMs = nowMs;
@@ -134,7 +134,34 @@ export class Transport {
   positionSeconds(nowMs = this._now()) {
     if (!this.playing || this.anchorWallMs == null) return this._clamp(this.baseSeconds);
     const elapsed = ((nowMs - this.anchorWallMs) / 1000) * this.playbackRate;
-    return this._clamp(this.baseSeconds + Math.max(0, elapsed));
+    const rawPosition = this.baseSeconds + Math.max(0, elapsed);
+    if (this.loop?.enabled && rawPosition >= this.loop.endSeconds) {
+      return this._wrapLoop(rawPosition, nowMs);
+    }
+    return this._clamp(rawPosition);
+  }
+
+  _wrapLoop(rawPosition, nowMs) {
+    const loopLength = this.loop.endSeconds - this.loop.startSeconds;
+    const crossings = Math.floor((rawPosition - this.loop.endSeconds) / loopLength) + 1;
+    const nextRepetition = this.repetitionCount + crossings;
+    if (
+      this.loop.targetRepetitions != null &&
+      nextRepetition >= this.loop.targetRepetitions
+    ) {
+      this.repetitionCount = this.loop.targetRepetitions;
+      this.baseSeconds = this.loop.endSeconds;
+      this.playing = false;
+      this.anchorWallMs = null;
+      this._emit("loop-complete", nowMs);
+      return this.baseSeconds;
+    }
+    this.repetitionCount = nextRepetition;
+    this.baseSeconds =
+      this.loop.startSeconds + ((rawPosition - this.loop.endSeconds) % loopLength);
+    this.anchorWallMs = nowMs;
+    this._emit("loop-wrap", nowMs);
+    return this.baseSeconds;
   }
 
   _clamp(seconds) {
