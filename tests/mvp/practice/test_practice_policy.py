@@ -10,7 +10,9 @@ from jsonschema import Draft202012Validator
 from master_all_strings.core.score.tempo import tempo_from_bpm
 from master_all_strings.mvp.errors import PracticePolicyBuildError
 from master_all_strings.mvp.practice import (
+    PRACTICE_SESSION_POLICY_SCHEMA_VERSION,
     PracticeLoopV1,
+    PracticeSessionPolicyV1,
     build_practice_session_policy,
     loop_ticks_to_seconds,
     validate_practice_loop,
@@ -133,3 +135,27 @@ def test_policy_schema_accepts_delivery_shape() -> None:
 def test_validate_loop_rejects_invalid_lesson_end_type() -> None:
     with pytest.raises(PracticePolicyBuildError, match="must be an integer"):
         validate_practice_loop(PracticeLoopV1(True, 0, 480), lesson_end_tick=True)
+
+
+def test_practice_models_defensively_validate_contract_types() -> None:
+    loop = PracticeLoopV1(False, 0, 480)
+    with pytest.raises(PracticePolicyBuildError, match="enabled must be a boolean"):
+        PracticeLoopV1(1, 0, 480)  # type: ignore[arg-type]
+    with pytest.raises(PracticePolicyBuildError, match="schema_version"):
+        PracticeSessionPolicyV1("2.0.0", "a", "c", 480, loop)
+    with pytest.raises(PracticePolicyBuildError, match="assignment_id"):
+        PracticeSessionPolicyV1(
+            PRACTICE_SESSION_POLICY_SCHEMA_VERSION, "", "c", 480, loop
+        )
+    with pytest.raises(PracticePolicyBuildError, match="lesson_end_tick must be positive"):
+        PracticeSessionPolicyV1(
+            PRACTICE_SESSION_POLICY_SCHEMA_VERSION, "a", "c", 0, loop
+        )
+    with pytest.raises(PracticePolicyBuildError, match="loop must be"):
+        PracticeSessionPolicyV1(
+            PRACTICE_SESSION_POLICY_SCHEMA_VERSION,
+            "a",
+            "c",
+            480,
+            "bad",  # type: ignore[arg-type]
+        )

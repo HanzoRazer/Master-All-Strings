@@ -1,5 +1,10 @@
 # MVP-1 User Flow
 
+> Historical MVP-1F flow. For synchronized audio and practice looping, continue with
+> [MVP-2A Audio Architecture](MVP2A_AUDIO_ARCHITECTURE.md),
+> [Practice Loop](MVP2A_PRACTICE_LOOP.md), and the
+> [MVP-2A Release Gate](MVP2A_RELEASE_GATE.md).
+
 ## Launch
 
 ```bash
