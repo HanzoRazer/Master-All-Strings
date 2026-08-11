@@ -21,6 +21,12 @@ from master_all_strings.integrations.zone_harmony.projection import (
     apply_zone_semantics_to_projection,
     zone_projection_for_event,
 )
+from master_all_strings.integrations.zone_harmony.theme import (
+    DEFAULT_ZONE_VISUAL_THEME_V1,
+    ZoneVisualThemeV1,
+    ZoneVisualTokenV1,
+    apply_zone_visual_theme,
+)
 
 __all__ = [
     "ZoneId",
@@ -36,4 +42,8 @@ __all__ = [
     "correlate_zone_semantics",
     "apply_zone_semantics_to_projection",
     "zone_projection_for_event",
+    "DEFAULT_ZONE_VISUAL_THEME_V1",
+    "ZoneVisualThemeV1",
+    "ZoneVisualTokenV1",
+    "apply_zone_visual_theme",
 ]
