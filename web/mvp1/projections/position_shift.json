@@ -1,5 +1,6 @@
 {
   "status": "ready",
+  "demo_id": "position_shift",
   "summary_title": "Position Shift",
   "instrument_id": "guitar-standard-6",
   "behavior_digest": "sha256:5195075467f459dc5775e7ad3206bf583d9661a11182b2147ea55df7213002a2",

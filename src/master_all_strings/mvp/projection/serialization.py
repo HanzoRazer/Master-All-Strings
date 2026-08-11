@@ -29,6 +29,7 @@ __all__ = [
     "serialize_fretboard_projection",
     "to_dict",
     "validate_projection",
+    "verify_projection_digest",
 ]
 
 
@@ -80,8 +81,27 @@ def compute_projection_digest(projection: FretboardScrollProjectionV1) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
+def verify_projection_digest(projection: FretboardScrollProjectionV1) -> None:
+    """Reject a projection whose carried digest does not match its behavior."""
+
+    expected = compute_projection_digest(projection)
+    if projection.projection_digest != expected:
+        raise ProjectionBuildError(
+            "projection_digest does not match projection content "
+            f"(expected {expected}, got {projection.projection_digest})"
+        )
+
+
+_SECONDS_TOLERANCE = 1e-9
+
+
 def validate_projection(projection: FretboardScrollProjectionV1) -> None:
-    """Validate invariants already enforced by models; re-check version gate."""
+    """Validate the delivery contract, including cross-field consistency.
+
+    Field-level shape is enforced by the models. This adds the relational
+    invariants a renderer relies on, so a shape-correct projection built by any
+    path (not just :mod:`builder`) is still rejected when internally inconsistent.
+    """
 
     if projection.projection_type != FRETBOARD_SCROLL_PROJECTION_TYPE:
         raise UnsupportedProjectionVersionError(
@@ -91,14 +111,50 @@ def validate_projection(projection: FretboardScrollProjectionV1) -> None:
         raise UnsupportedProjectionVersionError(
             f"unsupported projection_version: {projection.projection_version!r}"
         )
-    lane_ids = {lane.string_id for lane in projection.instrument.lanes}
+
+    lanes_by_id = {lane.string_id: lane for lane in projection.instrument.lanes}
+    fret_numbers = {fret.fret_number for fret in projection.instrument.frets}
+    timeline = projection.timeline
+
+    seen_event_ids: set[str] = set()
     for note in projection.notes:
-        if note.status is ProjectedNoteStatus.SELECTED:
-            assert note.string_id is not None
-            if note.string_id not in lane_ids:
-                raise ProjectionBuildError(
-                    f"note {note.event_id!r} references unknown string {note.string_id!r}"
-                )
+        if note.event_id in seen_event_ids:
+            raise ProjectionBuildError(f"duplicate event_id in projection: {note.event_id!r}")
+        seen_event_ids.add(note.event_id)
+
+        release_tick = note.onset_tick + note.duration_ticks
+        if release_tick > timeline.total_ticks:
+            raise ProjectionBuildError(
+                f"note {note.event_id!r} ends at tick {release_tick} "
+                f"beyond timeline total_ticks {timeline.total_ticks}"
+            )
+        if note.release_seconds > timeline.total_seconds + _SECONDS_TOLERANCE:
+            raise ProjectionBuildError(
+                f"note {note.event_id!r} ends after timeline total_seconds"
+            )
+
+        if note.status is not ProjectedNoteStatus.SELECTED:
+            continue
+
+        assert note.string_id is not None
+        lane = lanes_by_id.get(note.string_id)
+        if lane is None:
+            raise ProjectionBuildError(
+                f"note {note.event_id!r} references unknown string {note.string_id!r}"
+            )
+        if note.lane_display_order != lane.display_order:
+            raise ProjectionBuildError(
+                f"note {note.event_id!r} lane_display_order {note.lane_display_order} "
+                f"disagrees with lane {note.string_id!r} display_order {lane.display_order}"
+            )
+        if fret_numbers and note.fret_number not in fret_numbers:
+            raise ProjectionBuildError(
+                f"note {note.event_id!r} fret {note.fret_number} is not on the instrument"
+            )
+        if note.is_open_string and note.fret_number != 0:
+            raise ProjectionBuildError(
+                f"note {note.event_id!r} is marked open but has fret {note.fret_number}"
+            )
 
 
 def deserialize_fretboard_projection(
@@ -173,4 +229,5 @@ def deserialize_fretboard_projection(
         teacher_note=data.get("teacher_note"),
     )
     validate_projection(projection)
+    verify_projection_digest(projection)
     return projection

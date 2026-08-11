@@ -1,5 +1,6 @@
 {
   "status": "ready",
+  "demo_id": "string_crossing",
   "summary_title": "String Crossing",
   "instrument_id": "guitar-standard-6",
   "behavior_digest": "sha256:df1be2b92641a24e948027bb76d5759c7d76b3a3bd0a6b3ab3895e0712696a61",

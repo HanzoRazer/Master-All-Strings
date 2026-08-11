@@ -1,5 +1,6 @@
 {
   "status": "ready",
+  "demo_id": "teacher_override",
   "summary_title": "Teacher Override",
   "instrument_id": "guitar-standard-6",
   "behavior_digest": "sha256:93636ae8064316396e4dab54f0467334a4521060ab72f1af6fcd42a89a9555af",

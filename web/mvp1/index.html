@@ -27,9 +27,14 @@
             <select id="demoSelect"></select>
           </label>
           <label class="field">
-            <span>Instrument</span>
-            <select id="instrumentSelect"></select>
+            <span>Exported instrument</span>
+            <select id="instrumentSelect" disabled aria-describedby="instrumentHint"></select>
           </label>
+          <p class="hint subtle" id="instrumentHint">
+            Read-only: the browser never re-orchestrates. Re-export with
+            <code>python scripts/run_mvp1.py --lesson &lt;demo&gt; --instrument &lt;id&gt;</code>
+            to change instrument.
+          </p>
           <p class="hint" id="lessonDescription"></p>
           <p class="hint subtle" id="knownLimitations"></p>
         </section>

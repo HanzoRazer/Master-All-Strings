@@ -37,11 +37,18 @@ def build_core_tempo_map(
         raise ProjectionBuildError(
             "lesson tempo is required for projection; refusing to assume a default tempo"
         )
-    changes = tuple(tempo_from_bpm(bpm, tick=tick) for tick, bpm in source_tempo_changes)
+    for tick, _bpm in source_tempo_changes:
+        if isinstance(tick, bool) or not isinstance(tick, int) or tick < 0:
+            raise ProjectionBuildError("tempo change ticks must be non-negative integers")
+    # Sort first so tick-0 coverage is decided by the earliest tick, never by input
+    # order. Ties keep input order (last-writer-wins is applied by Core normalization).
+    changes = tuple(
+        tempo_from_bpm(bpm, tick=tick)
+        for tick, bpm in sorted(source_tempo_changes, key=lambda item: item[0])
+    )
     if changes[0].tick != 0:
         # Ensure tick 0 coverage using the earliest declared tempo value.
-        earliest = min(changes, key=lambda item: item.tick)
-        changes = (tempo_from_bpm(earliest.beats_per_minute, tick=0), *changes)
+        changes = (tempo_from_bpm(changes[0].beats_per_minute, tick=0), *changes)
     return changes
 
 

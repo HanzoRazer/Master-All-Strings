@@ -22,7 +22,10 @@ from master_all_strings.mvp.projection.models import (
     ProjectedNoteStatus,
     SelectionOrigin,
 )
-from master_all_strings.mvp.projection.serialization import compute_projection_digest
+from master_all_strings.mvp.projection.serialization import (
+    compute_projection_digest,
+    validate_projection,
+)
 from master_all_strings.mvp.projection.timeline import (
     build_projected_timeline,
     event_time_bounds,
@@ -45,6 +48,18 @@ class SelectedNoteInput:
         selection_origin: SelectionOrigin | None = None,
         unresolved_reason: str | None = None,
     ) -> None:
+        if position is None:
+            if selection_origin is not None:
+                raise ProjectionBuildError(
+                    "unresolved selection must not carry a selection_origin"
+                )
+            if unresolved_reason is None or not str(unresolved_reason).strip():
+                raise ProjectionBuildError("unresolved selection requires unresolved_reason")
+        else:
+            if unresolved_reason is not None:
+                raise ProjectionBuildError("resolved selection must not carry unresolved_reason")
+            if selection_origin is None:
+                raise ProjectionBuildError("resolved selection requires a selection_origin")
         self.event = event
         self.position = position
         self.selection_origin = selection_origin
@@ -62,6 +77,12 @@ def build_instrument_projection(instrument: InstrumentProfile) -> FretboardInstr
         )
         for string in sorted(instrument.strings, key=lambda item: item.display_order)
     )
+    # Lane identity/order must be unambiguous: the renderer places notes by
+    # string_id and stacks lanes by display_order.
+    if len({lane.string_id for lane in lanes}) != len(lanes):
+        raise ProjectionBuildError("instrument lanes must have unique string_id values")
+    if len({lane.display_order for lane in lanes}) != len(lanes):
+        raise ProjectionBuildError("instrument lanes must have unique display_order values")
     fret_count = instrument.physical_fret_count or 0
     marker_by_fret = {
         int(marker.semitone_offset): marker.label
@@ -186,8 +207,10 @@ def build_fretboard_scroll_projection(
         objective=objective,
         teacher_note=teacher_note,
     )
+    # The build path is held to the same relational contract as the delivery path.
+    validate_projection(draft)
     digest = compute_projection_digest(draft)
-    return FretboardScrollProjectionV1(
+    final = FretboardScrollProjectionV1(
         schema_version=draft.schema_version,
         projection_type=draft.projection_type,
         projection_version=draft.projection_version,
@@ -207,3 +230,4 @@ def build_fretboard_scroll_projection(
         objective=draft.objective,
         teacher_note=draft.teacher_note,
     )
+    return final

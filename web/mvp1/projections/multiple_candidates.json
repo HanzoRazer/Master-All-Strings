@@ -1,5 +1,6 @@
 {
   "status": "ready",
+  "demo_id": "multiple_candidates",
   "summary_title": "Multiple Candidates",
   "instrument_id": "guitar-standard-6",
   "behavior_digest": "sha256:b4ab590b9601f9d444b041042f9152ba2f31e1532e3bf266de09a18e4affce54",

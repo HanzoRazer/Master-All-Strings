@@ -270,7 +270,16 @@ class FretboardScrollProjectionV1:
         require_non_empty(self.content_id, "content_id")
         require_non_empty(self.title, "title")
         require_non_empty(self.selection_policy, "selection_policy")
+        if not self.notes:
+            raise ProjectionBuildError("projection requires at least one note")
         if not self.tempo_changes:
             raise ProjectionBuildError("projection requires a tempo map")
         if self.tempo_changes[0].tick != 0:
             raise ProjectionBuildError("tempo map must begin at tick 0")
+        previous = self.tempo_changes[0].tick
+        for change in self.tempo_changes[1:]:
+            if change.tick <= previous:
+                raise ProjectionBuildError(
+                    "tempo map ticks must be strictly increasing and deduplicated"
+                )
+            previous = change.tick

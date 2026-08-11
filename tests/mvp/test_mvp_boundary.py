@@ -52,3 +52,47 @@ def test_tempo_override_wins() -> None:
     )
     assert len(tempo) == 1
     assert tempo[0].beats_per_minute == pytest.approx(90.0)
+
+
+def test_build_core_tempo_map_is_input_order_independent() -> None:
+    """Tick-0 coverage is decided by the earliest tick, never by input order."""
+
+    ordered = build_core_tempo_map(
+        tempo_override_bpm=None,
+        source_tempo_changes=((0, 120.0), (480, 90.0), (960, 60.0)),
+    )
+    shuffled = build_core_tempo_map(
+        tempo_override_bpm=None,
+        source_tempo_changes=((960, 60.0), (0, 120.0), (480, 90.0)),
+    )
+    assert ordered == shuffled
+    assert [change.tick for change in shuffled] == [0, 480, 960]
+
+
+def test_build_core_tempo_map_does_not_duplicate_tick_zero() -> None:
+    """An out-of-order tick-0 tempo must not get a synthetic duplicate prepended."""
+
+    changes = build_core_tempo_map(
+        tempo_override_bpm=None,
+        source_tempo_changes=((480, 90.0), (0, 120.0)),
+    )
+    ticks = [change.tick for change in changes]
+    assert ticks == [0, 480]
+    assert ticks.count(0) == 1
+    assert changes[0].beats_per_minute == pytest.approx(120.0)
+
+
+def test_build_core_tempo_map_synthesizes_tick_zero_from_earliest() -> None:
+    changes = build_core_tempo_map(
+        tempo_override_bpm=None,
+        source_tempo_changes=((960, 60.0), (480, 90.0)),
+    )
+    assert [change.tick for change in changes] == [0, 480, 960]
+    # The synthetic leading tempo carries the earliest declared value, not the
+    # first tuple in input order.
+    assert changes[0].beats_per_minute == pytest.approx(90.0)
+
+
+def test_build_core_tempo_map_rejects_negative_ticks() -> None:
+    with pytest.raises(ProjectionBuildError, match="non-negative"):
+        build_core_tempo_map(tempo_override_bpm=None, source_tempo_changes=((-1, 120.0),))

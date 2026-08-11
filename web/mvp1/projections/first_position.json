@@ -1,5 +1,6 @@
 {
   "status": "ready",
+  "demo_id": "first_position",
   "summary_title": "First Position Melody",
   "instrument_id": "guitar-standard-6",
   "behavior_digest": "sha256:d6b56f7e92deaceed7257eaab7a49be4df84671752153140b717752ad667117c",

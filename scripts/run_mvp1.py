@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 import time
 from pathlib import Path
@@ -18,8 +17,8 @@ from master_all_strings.mvp.application import MvpApplication  # noqa: E402
 from master_all_strings.mvp.errors import MvpError, format_mvp_error  # noqa: E402
 from master_all_strings.mvp.local_server import serve_mvp_directory  # noqa: E402
 from master_all_strings.mvp.web_export import (  # noqa: E402
-    export_demo_catalog,
     export_projection_json,
+    export_web_fixtures,
 )
 
 
@@ -36,8 +35,17 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--output",
         type=Path,
-        default=_REPO_ROOT / "web" / "mvp1" / "projection.json",
-        help="Projection JSON output path",
+        default=_REPO_ROOT / "web" / "mvp1" / "runtime" / "projection.json",
+        help="Projection JSON output path (default: gitignored web/mvp1/runtime/)",
+    )
+    parser.add_argument(
+        "--refresh-fixtures",
+        action="store_true",
+        help=(
+            "Regenerate the checked-in demo exports under web/mvp1/ "
+            "(demos.json, instruments.json, projections/). Off by default so "
+            "ordinary runs never dirty tracked fixtures."
+        ),
     )
     parser.add_argument(
         "--open",
@@ -81,37 +89,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Unable to load lesson: {exc}", file=sys.stderr)
         return 1
 
-    export_projection_json(response, args.output)
-    catalog_path = args.output.parent / "demos.json"
-    export_demo_catalog(app.list_demos(), catalog_path)
-    instruments_path = args.output.parent / "instruments.json"
-    instruments_path.write_text(
-        json.dumps(
-            [
-                {
-                    "instrument_id": item.instrument_id,
-                    "display_name": item.display_name,
-                    "experimental": item.experimental,
-                }
-                for item in app.list_instruments()
-            ],
-            indent=2,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    # Prefetch every bundled demo so the static UI can switch without a backend.
-    projections_dir = args.output.parent / "projections"
-    projections_dir.mkdir(parents=True, exist_ok=True)
-    for summary in app.list_demos():
-        demo_response = app.run_demo(
-            summary.demo_id,
-            instrument_profile_id=summary.instrument_profile_id,
-        )
-        export_projection_json(
-            demo_response,
-            projections_dir / f"{summary.demo_id}.json",
-        )
+    export_projection_json(response, args.output, demo_id=args.lesson)
+    if args.refresh_fixtures:
+        written = export_web_fixtures(app, _REPO_ROOT / "web" / "mvp1")
+        print(f"refreshed {written} checked-in fixture files under web/mvp1/")
 
     print(f"title: {response.summary_title}")
     print(f"instrument: {response.instrument_id}")
@@ -125,10 +106,24 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.open_browser or args.no_browser:
         web_root = _REPO_ROOT / "web" / "mvp1"
+        # Point the UI straight at this run's export when it lands inside the
+        # served tree; otherwise the UI opens its checked-in default demo.
+        path = "/index.html"
+        try:
+            relative = args.output.resolve().relative_to(web_root.resolve())
+        except ValueError:
+            print(
+                f"note: {args.output} is outside {web_root}; "
+                "the browser will show the default demo instead",
+                file=sys.stderr,
+            )
+        else:
+            path = f"/index.html?projection={relative.as_posix()}"
         server, _thread, url = serve_mvp_directory(
             web_root,
             port=args.port,
             open_browser=args.open_browser and not args.no_browser,
+            path=path,
         )
         print(f"serving: {url}")
         try:

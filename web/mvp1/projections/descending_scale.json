@@ -1,5 +1,6 @@
 {
   "status": "ready",
+  "demo_id": "descending_scale",
   "summary_title": "Descending Scale",
   "instrument_id": "guitar-standard-6",
   "behavior_digest": "sha256:7253153c85db11175a2bc30b4757da5a9ef7224d3336c5bc53eeb4b60bc82705",

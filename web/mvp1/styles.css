@@ -380,6 +380,14 @@ select {
   background: var(--accent);
   transform: translate(-50%, -50%);
   box-shadow: 0 0 10px rgba(215, 163, 92, 0.65);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Controls that reflect the exported projection but cannot change it. */
+.field select[disabled] {
+  opacity: 0.75;
+  cursor: not-allowed;
 }
 
 .transport {
@@ -435,7 +443,8 @@ select {
   z-index: 20;
 }
 
-.error-overlay.hidden {
+.error-overlay.hidden,
+.hidden {
   display: none;
 }
 

@@ -25,6 +25,7 @@ from master_all_strings.lesson.serialization import (
 from master_all_strings.lesson.validation import validate_assignment
 from master_all_strings.mvp.errors import (
     LessonLoadError,
+    MvpError,
     ProjectionBuildError,
     UnknownInstrumentError,
     UnsupportedMidiError,
@@ -69,11 +70,14 @@ class MvpLessonOrchestrator:
     ) -> MvpOrchestrationResultV1:
         try:
             return self._run(assignment, instrument_profile_id=instrument_profile_id)
-        except UnknownInstrumentError:
+        except MvpError:
+            # MVP boundary errors are already user-facing and semantically specific
+            # (LessonLoadError, ProjectionBuildError, UnknownInstrumentError, ...).
+            # Re-wrapping them would flatten that distinction for callers and tests.
             raise
         except LessonAssignmentError as exc:
             raise LessonLoadError(format_mvp_error(exc)) from exc
-        except Exception as exc:  # noqa: BLE001 - map to user-facing boundary
+        except Exception as exc:  # noqa: BLE001 - map foreign failures to the boundary
             raise ProjectionBuildError(format_mvp_error(exc)) from exc
 
     def load_assignment_json(
@@ -105,9 +109,9 @@ class MvpLessonOrchestrator:
                 source_name=source_name,
                 title=title,
             )
-        except LessonAssignmentError as exc:
-            raise UnsupportedMidiError(format_mvp_error(exc)) from exc
-        except Exception as exc:  # noqa: BLE001
+        except UnsupportedMidiError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - import is a conversion boundary
             raise UnsupportedMidiError(format_mvp_error(exc)) from exc
         return self.load_assignment(
             imported.assignment,
@@ -126,15 +130,14 @@ class MvpLessonOrchestrator:
             raise UnknownInstrumentError(f"Unknown instrument profile: {profile_id}")
 
         # Structural validation without physical override checks first; overrides are
-        # validated against the chosen profile below.
+        # validated against the chosen profile below. An explicit instrument override
+        # at the MVP boundary (demos/CLI) is allowed to differ from the assignment's
+        # declared profile, so no equality check is performed here.
         validate_assignment(
             assignment,
             instrument_profiles=None,
             validate_overrides_physically=False,
         )
-        if assignment.spatial_guidance.instrument_profile_id != profile_id:
-            # Allow explicit instrument override at the MVP boundary for demos/CLI.
-            pass
 
         resolved = resolve_lesson_assignment(assignment)
         if not resolved.events:
@@ -149,7 +152,8 @@ class MvpLessonOrchestrator:
         selected_notes: list[SelectedNoteInput] = []
         candidate_counts: list[tuple[str, int]] = []
         warnings: list[str] = []
-        unsupported: list[str] = []
+        # Order-preserving set semantics: each unsupported feature is reported once.
+        unsupported: dict[str, None] = {}
 
         # Soft spatial guidance for automatic selection uses assignment guidance,
         # even when the runtime instrument id was overridden.
@@ -158,11 +162,12 @@ class MvpLessonOrchestrator:
         for event in resolved.events:
             candidates = generate_candidates(event, profile)
             candidate_counts.append((event.event_id, len(candidates)))
-            if event.event_id in override_positions:
+            override = override_positions.get(event.event_id)
+            if override is not None:
                 selected_notes.append(
                     SelectedNoteInput(
                         event,
-                        position=override_positions[event.event_id],
+                        position=override,
                         selection_origin=SelectionOrigin.TEACHER_OVERRIDE,
                     )
                 )
@@ -204,7 +209,7 @@ class MvpLessonOrchestrator:
 
         onsets = [event.start_tick for event in resolved.events]
         if len(onsets) != len(set(onsets)):
-            unsupported.append("chord_aware_selection")
+            unsupported["chord_aware_selection"] = None
 
         source_tempos = tuple(
             (change.tick, change.tempo_bpm)
@@ -228,7 +233,7 @@ class MvpLessonOrchestrator:
             selection_policy=assignment.spatial_guidance.fingering_policy_id,
             selected_notes=selected_notes,
             warnings=warnings,
-            unsupported_features=unsupported,
+            unsupported_features=tuple(unsupported),
         )
         return MvpOrchestrationResultV1(
             assignment=assignment,

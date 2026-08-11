@@ -1,5 +1,6 @@
 {
   "status": "ready",
+  "demo_id": "ascending_scale",
   "summary_title": "Ascending Scale",
   "instrument_id": "guitar-standard-6",
   "behavior_digest": "sha256:9f86b56c92e9d8e32dbd55275a45b5c4b17e937bad8e4552cb262c73eefd32e9",

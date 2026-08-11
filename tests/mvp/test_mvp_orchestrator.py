@@ -90,3 +90,50 @@ def test_determinism(app: MvpApplication) -> None:
     b = app.run_demo("position_shift")
     assert a.projection.projection_digest == b.projection.projection_digest
     assert a.behavior_digest == b.behavior_digest
+
+
+def test_boundary_errors_are_not_flattened(instrument_catalog) -> None:
+    """MVP errors raised inside ``_run`` keep their type through ``load_assignment``."""
+
+    import json
+
+    from master_all_strings.mvp.errors import ProjectionBuildError
+    from master_all_strings.mvp.orchestrator import MvpLessonOrchestrator
+
+    path = Path("resources/mvp1/demo_lessons/assignments/ascending_scale.json")
+    raw = json.loads(path.read_text(encoding="utf-8"))
+
+    # Missing tempo surfaces the projection-build error verbatim, not a generic wrap.
+    no_tempo = json.loads(json.dumps(raw))
+    no_tempo["musical_content"]["tempo_changes"] = []
+    no_tempo["playback"]["tempo_override"] = None
+    orch = MvpLessonOrchestrator(instrument_catalog)
+    with pytest.raises(ProjectionBuildError, match="tempo is required"):
+        orch.load_assignment_json(no_tempo)
+
+    # An unknown instrument stays an UnknownInstrumentError, not a load/build error.
+    with pytest.raises(UnknownInstrumentError):
+        orch.load_assignment_json(raw, instrument_profile_id="no-such-instrument")
+
+
+def test_no_usable_events_stays_a_lesson_load_error(app: MvpApplication, monkeypatch) -> None:
+    """``LessonLoadError`` from ``_run`` must not be rewritten as a build failure."""
+
+    from master_all_strings.lesson.resolver import ResolvedLessonV1
+    from master_all_strings.mvp import orchestrator as orchestrator_module
+    from master_all_strings.mvp.errors import LessonLoadError
+
+    real_resolve = orchestrator_module.resolve_lesson_assignment
+
+    def _empty(assignment):
+        resolved: ResolvedLessonV1 = real_resolve(assignment)
+        return ResolvedLessonV1(
+            **{
+                **{f: getattr(resolved, f) for f in resolved.__dataclass_fields__},
+                "events": (),
+            }
+        )
+
+    monkeypatch.setattr(orchestrator_module, "resolve_lesson_assignment", _empty)
+    with pytest.raises(LessonLoadError, match="No usable musical events"):
+        app.run_demo("ascending_scale")

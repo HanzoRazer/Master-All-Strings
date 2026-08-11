@@ -5,12 +5,22 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from master_all_strings.mvp.demo_library import load_demo_manifest
 from master_all_strings.mvp.models import MvpLessonSummaryV1, MvpProjectionResponseV1
 from master_all_strings.mvp.projection.serialization import serialize_fretboard_projection
 
-__all__ = ["atomic_write_text", "export_demo_catalog", "export_projection_json"]
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from master_all_strings.mvp.application import MvpApplication
+
+__all__ = [
+    "atomic_write_text",
+    "export_demo_catalog",
+    "export_instrument_catalog",
+    "export_projection_json",
+    "export_web_fixtures",
+]
 
 
 def atomic_write_text(path: Path, text: str) -> None:
@@ -20,9 +30,17 @@ def atomic_write_text(path: Path, text: str) -> None:
     os.replace(tmp, path)
 
 
-def export_projection_json(response: MvpProjectionResponseV1, output_path: Path) -> Path:
+def export_projection_json(
+    response: MvpProjectionResponseV1,
+    output_path: Path,
+    *,
+    demo_id: str | None = None,
+) -> Path:
     payload = {
         "status": response.status.value,
+        # Stable identity for the UI to key on. Titles are display text and must
+        # never be used to correlate a payload with its catalog entry.
+        "demo_id": demo_id,
         "summary_title": response.summary_title,
         "instrument_id": response.instrument_id,
         "behavior_digest": response.behavior_digest,
@@ -50,6 +68,45 @@ def export_demo_catalog(summaries: tuple[MvpLessonSummaryV1, ...], output_path: 
     }
     atomic_write_text(output_path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
     return output_path
+
+
+def export_instrument_catalog(app: MvpApplication, output_path: Path) -> Path:
+    payload = [
+        {
+            "instrument_id": item.instrument_id,
+            "display_name": item.display_name,
+            "experimental": item.experimental,
+        }
+        for item in app.list_instruments()
+    ]
+    atomic_write_text(output_path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
+    return output_path
+
+
+def export_web_fixtures(app: MvpApplication, web_root: Path) -> int:
+    """Write the checked-in static-UI fixture set. Returns the file count.
+
+    This is the single definition of what ``web/mvp1`` carries in git, so the
+    drift test and ``scripts/run_mvp1.py --refresh-fixtures`` cannot diverge.
+    Ad-hoc CLI runs write elsewhere and never touch these files.
+    """
+
+    export_demo_catalog(app.list_demos(), web_root / "demos.json")
+    export_instrument_catalog(app, web_root / "instruments.json")
+    written = 2
+    # Prefetch every bundled demo so the static UI can switch without a backend.
+    for summary in app.list_demos():
+        response = app.run_demo(
+            summary.demo_id,
+            instrument_profile_id=summary.instrument_profile_id,
+        )
+        export_projection_json(
+            response,
+            web_root / "projections" / f"{summary.demo_id}.json",
+            demo_id=summary.demo_id,
+        )
+        written += 1
+    return written
 
 
 def export_manifest_copy(output_path: Path) -> Path:

@@ -1,5 +1,6 @@
 {
   "status": "ready",
+  "demo_id": "simultaneous_notes",
   "summary_title": "Simultaneous Notes",
   "instrument_id": "guitar-standard-6",
   "behavior_digest": "sha256:6e71e32b826198e6ce37982d83eb908c9418dfe5c7c9147153388d6233101d6f",

@@ -75,3 +75,34 @@ def test_seconds_to_ticks_rejects_non_finite() -> None:
         seconds_to_ticks(float("nan"), ticks_per_quarter=480, tempo_changes=tempo)
     with pytest.raises(ScoreContractError, match="finite"):
         seconds_to_ticks(True, ticks_per_quarter=480, tempo_changes=tempo)  # type: ignore[arg-type]
+
+
+def test_seconds_to_ticks_at_exact_breakpoint() -> None:
+    """The tempo breakpoint itself must land on the breakpoint tick."""
+
+    tempo = (_tempo(0, 120.0), _tempo(480, 60.0))
+    breakpoint_seconds = ticks_to_seconds(480, ticks_per_quarter=480, tempo_changes=tempo)
+    assert breakpoint_seconds == pytest.approx(0.5)
+    assert seconds_to_ticks(breakpoint_seconds, ticks_per_quarter=480, tempo_changes=tempo) == 480
+
+
+def test_seconds_to_ticks_just_before_and_after_breakpoint() -> None:
+    """Rounding either side of a breakpoint must not skip or repeat a segment."""
+
+    tempo = (_tempo(0, 120.0), _tempo(480, 60.0))
+    for tick in (478, 479, 480, 481, 482):
+        seconds = ticks_to_seconds(tick, ticks_per_quarter=480, tempo_changes=tempo)
+        assert seconds_to_ticks(seconds, ticks_per_quarter=480, tempo_changes=tempo) == tick
+
+
+def test_seconds_to_ticks_round_trips_across_many_breakpoints() -> None:
+    tempo = (_tempo(0, 137.0), _tempo(97, 61.5), _tempo(613, 180.0), _tempo(1024, 90.0))
+    for tick in (0, 96, 97, 98, 612, 613, 614, 1023, 1024, 1025, 4096):
+        seconds = ticks_to_seconds(tick, ticks_per_quarter=480, tempo_changes=tempo)
+        assert seconds_to_ticks(seconds, ticks_per_quarter=480, tempo_changes=tempo) == tick
+
+
+def test_normalize_tempo_map_is_order_independent() -> None:
+    ordered = (_tempo(0, 120.0), _tempo(480, 60.0))
+    shuffled = (_tempo(480, 60.0), _tempo(0, 120.0))
+    assert normalize_tempo_map(shuffled) == normalize_tempo_map(ordered)

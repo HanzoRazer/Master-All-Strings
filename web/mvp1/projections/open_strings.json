@@ -1,5 +1,6 @@
 {
   "status": "ready",
+  "demo_id": "open_strings",
   "summary_title": "Open Strings",
   "instrument_id": "guitar-standard-6",
   "behavior_digest": "sha256:1f37528340c686032303db7e0aa6128a25001f68479608c29cc64dee1366bec2",

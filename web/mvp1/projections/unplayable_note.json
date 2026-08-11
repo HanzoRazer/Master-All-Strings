@@ -1,5 +1,6 @@
 {
   "status": "ready",
+  "demo_id": "unplayable_note",
   "summary_title": "Unplayable Note",
   "instrument_id": "guitar-standard-6",
   "behavior_digest": "sha256:51c97d74e95fb76582be72a34d18255d62bce4595d47c438feac450c9fd09a56",
