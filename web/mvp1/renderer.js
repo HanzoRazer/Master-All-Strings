@@ -12,6 +12,21 @@ function clamp(value, lo, hi) {
 const NECK_INSET_PCT = 8;
 const NECK_SPAN_PCT = 88;
 
+const ZONE_PRESENTATION_CLASSES = Object.freeze({
+  ZONE_1: "zone-1",
+  ZONE_2: "zone-2",
+  TRITONE_ANCHOR: "tritone-anchor",
+  HALF_STEP_CROSSING: "half-step-crossing",
+});
+
+export function zonePresentationClasses(zoneSemantics) {
+  if (!zoneSemantics) return [];
+  const semanticIds = [zoneSemantics.zone_id, ...(zoneSemantics.semantic_roles || [])];
+  return [...new Set(semanticIds)]
+    .map((semanticId) => ZONE_PRESENTATION_CLASSES[semanticId])
+    .filter(Boolean);
+}
+
 export class FretboardRenderer {
   constructor(roots) {
     this.roots = roots;
@@ -28,6 +43,7 @@ export class FretboardRenderer {
     this.loop = null;
     this.loopRegion = null;
     this.lastPositionSeconds = 0;
+    this.zoneOverlayEnabled = false;
   }
 
   load(projection) {
@@ -57,6 +73,9 @@ export class FretboardRenderer {
     this.loopRegion = null;
 
     if (!projection) return;
+
+    scrollCanvas.classList.toggle("zone-overlay-on", this.zoneOverlayEnabled);
+    neckMap.classList.toggle("zone-overlay-on", this.zoneOverlayEnabled);
 
     instrumentTitle.textContent = projection.instrument.display_name;
     const lanes = this._sortedLanes();
@@ -103,6 +122,12 @@ export class FretboardRenderer {
         if (note.is_open_string) el.classList.add("open");
         if (note.selection_origin === "teacher_override") el.classList.add("override");
         el.dataset.eventId = note.event_id;
+        const zoneClasses = zonePresentationClasses(note.zone_semantics);
+        el.classList.add(...zoneClasses);
+        if (note.zone_semantics) {
+          el.dataset.zoneId = note.zone_semantics.zone_id;
+          el.dataset.semanticRoles = (note.zone_semantics.semantic_roles || []).join(" ");
+        }
 
         const pitch = document.createElement("span");
         pitch.textContent = note.pitch_label;
@@ -123,6 +148,7 @@ export class FretboardRenderer {
           release: note.release_seconds,
           normalized: clamp(note.normalized_position ?? 0, 0, 1),
           active: false,
+          zoneClasses,
         });
       });
 
@@ -209,6 +235,7 @@ export class FretboardRenderer {
       }
       dot.style.left = `${NECK_INSET_PCT + note.normalized * NECK_SPAN_PCT}%`;
       dot.style.top = `${this.laneCenters[note.laneIndex] ?? 50}%`;
+      dot.className = `neck-dot ${note.zoneClasses.join(" ")}`.trim();
       dot.style.opacity = "1";
     });
   }
@@ -225,10 +252,20 @@ export class FretboardRenderer {
     if (this.projection) this._buildStatic();
   }
 
+  setZoneOverlay(enabled) {
+    this.zoneOverlayEnabled = Boolean(enabled);
+    this.roots.scrollCanvas.classList.toggle("zone-overlay-on", this.zoneOverlayEnabled);
+    this.roots.neckMap.classList.toggle("zone-overlay-on", this.zoneOverlayEnabled);
+  }
+
   diagnostics() {
     return Object.freeze({
       positionSeconds: this.lastPositionSeconds,
       activeEventIds: this.notes.filter((note) => note.active).map((note) => note.eventId),
+      zoneOverlayEnabled: this.zoneOverlayEnabled,
+      zoneSemanticEventIds: this.notes
+        .filter((note) => note.zoneClasses.length > 0)
+        .map((note) => note.eventId),
     });
   }
 }

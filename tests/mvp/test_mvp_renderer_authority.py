@@ -51,3 +51,17 @@ def test_browser_never_converts_ticks_or_tempo() -> None:
         text = path.read_text(encoding="utf-8")
         assert "microseconds_per_quarter" not in text
         assert "ticks_per_quarter" not in text
+
+
+def test_zone_renderer_contains_no_zone_or_tritone_calculation() -> None:
+    text = (WEB / "renderer.js").read_text(encoding="utf-8")
+    for forbidden in ("% 2", "%2", "+ 6", "+6", "midi_note %", "interval_semitones"):
+        assert forbidden not in text
+    assert "zone_id" in text
+    assert "semantic_roles" in text
+
+
+def test_official_zone_palette_is_presentation_css_only() -> None:
+    css = (WEB / "styles.css").read_text(encoding="utf-8").lower()
+    for color in ("#1a4d8f", "#d4860f", "#c41e3a", "#2e8b57"):
+        assert color in css

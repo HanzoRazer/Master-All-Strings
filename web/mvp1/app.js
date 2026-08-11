@@ -167,6 +167,13 @@ function applySessionArtifacts(payload, playback, practice) {
   state.playback = playback;
   state.practice = practice;
   renderer.load(projection);
+  const zoneAvailable = projection.notes.some((note) => note.zone_semantics);
+  $("zoneOverlay").disabled = !zoneAvailable;
+  if (!zoneAvailable) $("zoneOverlay").checked = false;
+  renderer.setZoneOverlay(zoneAvailable && $("zoneOverlay").checked);
+  $("zoneStatus").textContent = zoneAvailable
+    ? "Authoritative Zone semantics available"
+    : "No Zone semantic artifact";
   setLessonInfo(projection, payload);
   configureLoopControls(practice, playback.total_seconds);
   $("seek").value = "0";
@@ -318,6 +325,12 @@ $("masterVolume").addEventListener("input", (event) => {
 $("loopEnabled").addEventListener("change", commitLoop);
 $("loopStart").addEventListener("change", commitLoop);
 $("loopEnd").addEventListener("change", commitLoop);
+$("zoneOverlay").addEventListener("change", (event) => {
+  renderer.setZoneOverlay(event.target.checked);
+  $("zoneStatus").textContent = event.target.checked
+    ? "Zone Colors on"
+    : "Zone Colors off";
+});
 
 let resizePending = false;
 window.addEventListener("resize", () => {
