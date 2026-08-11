@@ -32,3 +32,8 @@ Both must pass before the PR is marked ready for review:
 ```bash
 PYTHONPATH=src python3 scripts/run_mvp1.py --lesson ascending_scale --open
 ```
+
+## Status (2026-08-11)
+
+Headless gates and browser smoke both passed. See [MVP1_SMOKE_REPORT.md](MVP1_SMOKE_REPORT.md)
+and screenshots under `docs/mvp/smoke_artifacts/`.
