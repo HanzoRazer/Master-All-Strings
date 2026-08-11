@@ -51,6 +51,9 @@ def export_projection_json(
         "behavior_digest": response.behavior_digest,
         "warnings": list(response.warnings),
         "unsupported_features": list(response.unsupported_features),
+        "teaching_aids": {
+            "one_string": [asdict(item) for item in response.one_string_teaching],
+        },
         "projection": json.loads(serialize_fretboard_projection(response.projection)),
     }
     atomic_write_text(output_path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")

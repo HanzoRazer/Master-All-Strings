@@ -27,6 +27,44 @@ export function zonePresentationClasses(zoneSemantics) {
     .filter(Boolean);
 }
 
+export function oneStringViewProjection(projection, teachingProjection) {
+  const teachingByEvent = new Map(
+    (teachingProjection?.events || []).map((event) => [event.event_id, event]),
+  );
+  return {
+    ...projection,
+    notes: projection.notes.map((note) => {
+      const teaching = teachingByEvent.get(note.event_id);
+      if (!teaching || teaching.status !== "playable") {
+        return {
+          ...note,
+          status: "unplayable",
+          lane_display_order: null,
+          string_id: null,
+          fret_number: null,
+          relative_semitone_position: null,
+          normalized_position: null,
+          is_open_string: null,
+          selection_origin: null,
+          unresolved_reason: teaching?.unresolved_reason || "missing_one_string_projection",
+        };
+      }
+      return {
+        ...note,
+        status: "selected",
+        lane_display_order: teaching.display_order,
+        string_id: teaching.requested_string_id,
+        fret_number: teaching.physical_fret_number,
+        relative_semitone_position: teaching.relative_semitone_position,
+        normalized_position: teaching.normalized_position,
+        is_open_string: teaching.is_open_string,
+        selection_origin: null,
+        unresolved_reason: null,
+      };
+    }),
+  };
+}
+
 export class FretboardRenderer {
   constructor(roots) {
     this.roots = roots;

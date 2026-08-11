@@ -9,6 +9,7 @@ from master_all_strings.mvp.errors import MvpError
 from master_all_strings.mvp.playback.models import LessonPlaybackPlanV1
 from master_all_strings.mvp.practice.models import PracticeSessionPolicyV1
 from master_all_strings.mvp.projection.models import FretboardScrollProjectionV1
+from master_all_strings.mvp.teaching_aids import OneStringTeachingProjectionV1
 
 
 class MvpLoadStatus(StrEnum):
@@ -83,3 +84,4 @@ class MvpProjectionResponseV1:
     practice_policy: PracticeSessionPolicyV1
     warnings: tuple[str, ...] = ()
     unsupported_features: tuple[str, ...] = ()
+    one_string_teaching: tuple[OneStringTeachingProjectionV1, ...] = ()

@@ -46,6 +46,10 @@ from master_all_strings.mvp.projection.models import (
     SelectionOrigin,
 )
 from master_all_strings.mvp.projection.timeline import build_core_tempo_map
+from master_all_strings.mvp.teaching_aids import (
+    OneStringTeachingProjectionV1,
+    build_one_string_teaching_projection,
+)
 
 __all__ = ["MvpLessonOrchestrator", "MvpOrchestrationResultV1"]
 
@@ -60,6 +64,7 @@ class MvpOrchestrationResultV1:
     practice_policy: PracticeSessionPolicyV1
     bundle: MvpPracticeBundleV1
     candidate_counts: tuple[tuple[str, int], ...]
+    one_string_teaching: tuple[OneStringTeachingProjectionV1, ...]
 
 
 class MvpLessonOrchestrator:
@@ -261,6 +266,14 @@ class MvpLessonOrchestrator:
             count_in_bars=resolved.playback.count_in_bars,
             target_repetitions=assignment.instruction.repetitions,
         )
+        one_string_teaching = tuple(
+            build_one_string_teaching_projection(
+                resolved.events,
+                profile,
+                string_id=string.string_id,
+            )
+            for string in sorted(profile.strings, key=lambda item: item.display_order)
+        )
         bundle = MvpPracticeBundleV1(
             schema_version="1.0.0",
             assignment_id=assignment.assignment_id,
@@ -278,4 +291,5 @@ class MvpLessonOrchestrator:
             practice_policy=practice_policy,
             bundle=bundle,
             candidate_counts=tuple(candidate_counts),
+            one_string_teaching=one_string_teaching,
         )

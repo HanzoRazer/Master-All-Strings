@@ -6,6 +6,490 @@
   "behavior_digest": "sha256:df1be2b92641a24e948027bb76d5759c7d76b3a3bd0a6b3ab3895e0712696a61",
   "warnings": [],
   "unsupported_features": [],
+  "teaching_aids": {
+    "one_string": [
+      {
+        "schema_version": "1.0",
+        "instrument_id": "guitar-standard-6",
+        "requested_string_id": "string-6",
+        "display_label": "E2",
+        "events": [
+          {
+            "event_id": "ev-1",
+            "midi_note": 40,
+            "status": "playable",
+            "requested_string_id": "string-6",
+            "display_order": 0,
+            "physical_fret_number": 0,
+            "relative_semitone_position": 0.0,
+            "normalized_position": 0.0,
+            "is_open_string": true,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-2",
+            "midi_note": 55,
+            "status": "playable",
+            "requested_string_id": "string-6",
+            "display_order": 0,
+            "physical_fret_number": 15,
+            "relative_semitone_position": 15.0,
+            "normalized_position": 0.5795517923731428,
+            "is_open_string": false,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-3",
+            "midi_note": 45,
+            "status": "playable",
+            "requested_string_id": "string-6",
+            "display_order": 0,
+            "physical_fret_number": 5,
+            "relative_semitone_position": 5.0,
+            "normalized_position": 0.25084646156165924,
+            "is_open_string": false,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-4",
+            "midi_note": 59,
+            "status": "playable",
+            "requested_string_id": "string-6",
+            "display_order": 0,
+            "physical_fret_number": 19,
+            "relative_semitone_position": 19.0,
+            "normalized_position": 0.6662900364574914,
+            "is_open_string": false,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-5",
+            "midi_note": 50,
+            "status": "playable",
+            "requested_string_id": "string-6",
+            "display_order": 0,
+            "physical_fret_number": 10,
+            "relative_semitone_position": 10.0,
+            "normalized_position": 0.4387689758453135,
+            "is_open_string": false,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-6",
+            "midi_note": 64,
+            "status": "unplayable",
+            "requested_string_id": "string-6",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          }
+        ]
+      },
+      {
+        "schema_version": "1.0",
+        "instrument_id": "guitar-standard-6",
+        "requested_string_id": "string-5",
+        "display_label": "A2",
+        "events": [
+          {
+            "event_id": "ev-1",
+            "midi_note": 40,
+            "status": "unplayable",
+            "requested_string_id": "string-5",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-2",
+            "midi_note": 55,
+            "status": "playable",
+            "requested_string_id": "string-5",
+            "display_order": 1,
+            "physical_fret_number": 10,
+            "relative_semitone_position": 10.0,
+            "normalized_position": 0.4387689758453135,
+            "is_open_string": false,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-3",
+            "midi_note": 45,
+            "status": "playable",
+            "requested_string_id": "string-5",
+            "display_order": 1,
+            "physical_fret_number": 0,
+            "relative_semitone_position": 0.0,
+            "normalized_position": 0.0,
+            "is_open_string": true,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-4",
+            "midi_note": 59,
+            "status": "playable",
+            "requested_string_id": "string-5",
+            "display_order": 1,
+            "physical_fret_number": 14,
+            "relative_semitone_position": 14.0,
+            "normalized_position": 0.5545506409298304,
+            "is_open_string": false,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-5",
+            "midi_note": 50,
+            "status": "playable",
+            "requested_string_id": "string-5",
+            "display_order": 1,
+            "physical_fret_number": 5,
+            "relative_semitone_position": 5.0,
+            "normalized_position": 0.25084646156165924,
+            "is_open_string": false,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-6",
+            "midi_note": 64,
+            "status": "playable",
+            "requested_string_id": "string-5",
+            "display_order": 1,
+            "physical_fret_number": 19,
+            "relative_semitone_position": 19.0,
+            "normalized_position": 0.6662900364574914,
+            "is_open_string": false,
+            "unresolved_reason": null
+          }
+        ]
+      },
+      {
+        "schema_version": "1.0",
+        "instrument_id": "guitar-standard-6",
+        "requested_string_id": "string-4",
+        "display_label": "D3",
+        "events": [
+          {
+            "event_id": "ev-1",
+            "midi_note": 40,
+            "status": "unplayable",
+            "requested_string_id": "string-4",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-2",
+            "midi_note": 55,
+            "status": "playable",
+            "requested_string_id": "string-4",
+            "display_order": 2,
+            "physical_fret_number": 5,
+            "relative_semitone_position": 5.0,
+            "normalized_position": 0.25084646156165924,
+            "is_open_string": false,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-3",
+            "midi_note": 45,
+            "status": "unplayable",
+            "requested_string_id": "string-4",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-4",
+            "midi_note": 59,
+            "status": "playable",
+            "requested_string_id": "string-4",
+            "display_order": 2,
+            "physical_fret_number": 9,
+            "relative_semitone_position": 9.0,
+            "normalized_position": 0.4053964424986395,
+            "is_open_string": false,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-5",
+            "midi_note": 50,
+            "status": "playable",
+            "requested_string_id": "string-4",
+            "display_order": 2,
+            "physical_fret_number": 0,
+            "relative_semitone_position": 0.0,
+            "normalized_position": 0.0,
+            "is_open_string": true,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-6",
+            "midi_note": 64,
+            "status": "playable",
+            "requested_string_id": "string-4",
+            "display_order": 2,
+            "physical_fret_number": 14,
+            "relative_semitone_position": 14.0,
+            "normalized_position": 0.5545506409298304,
+            "is_open_string": false,
+            "unresolved_reason": null
+          }
+        ]
+      },
+      {
+        "schema_version": "1.0",
+        "instrument_id": "guitar-standard-6",
+        "requested_string_id": "string-3",
+        "display_label": "G3",
+        "events": [
+          {
+            "event_id": "ev-1",
+            "midi_note": 40,
+            "status": "unplayable",
+            "requested_string_id": "string-3",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-2",
+            "midi_note": 55,
+            "status": "playable",
+            "requested_string_id": "string-3",
+            "display_order": 3,
+            "physical_fret_number": 0,
+            "relative_semitone_position": 0.0,
+            "normalized_position": 0.0,
+            "is_open_string": true,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-3",
+            "midi_note": 45,
+            "status": "unplayable",
+            "requested_string_id": "string-3",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-4",
+            "midi_note": 59,
+            "status": "playable",
+            "requested_string_id": "string-3",
+            "display_order": 3,
+            "physical_fret_number": 4,
+            "relative_semitone_position": 4.0,
+            "normalized_position": 0.2062994740159002,
+            "is_open_string": false,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-5",
+            "midi_note": 50,
+            "status": "unplayable",
+            "requested_string_id": "string-3",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-6",
+            "midi_note": 64,
+            "status": "playable",
+            "requested_string_id": "string-3",
+            "display_order": 3,
+            "physical_fret_number": 9,
+            "relative_semitone_position": 9.0,
+            "normalized_position": 0.4053964424986395,
+            "is_open_string": false,
+            "unresolved_reason": null
+          }
+        ]
+      },
+      {
+        "schema_version": "1.0",
+        "instrument_id": "guitar-standard-6",
+        "requested_string_id": "string-2",
+        "display_label": "B3",
+        "events": [
+          {
+            "event_id": "ev-1",
+            "midi_note": 40,
+            "status": "unplayable",
+            "requested_string_id": "string-2",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-2",
+            "midi_note": 55,
+            "status": "unplayable",
+            "requested_string_id": "string-2",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-3",
+            "midi_note": 45,
+            "status": "unplayable",
+            "requested_string_id": "string-2",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-4",
+            "midi_note": 59,
+            "status": "playable",
+            "requested_string_id": "string-2",
+            "display_order": 4,
+            "physical_fret_number": 0,
+            "relative_semitone_position": 0.0,
+            "normalized_position": 0.0,
+            "is_open_string": true,
+            "unresolved_reason": null
+          },
+          {
+            "event_id": "ev-5",
+            "midi_note": 50,
+            "status": "unplayable",
+            "requested_string_id": "string-2",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-6",
+            "midi_note": 64,
+            "status": "playable",
+            "requested_string_id": "string-2",
+            "display_order": 4,
+            "physical_fret_number": 5,
+            "relative_semitone_position": 5.0,
+            "normalized_position": 0.25084646156165924,
+            "is_open_string": false,
+            "unresolved_reason": null
+          }
+        ]
+      },
+      {
+        "schema_version": "1.0",
+        "instrument_id": "guitar-standard-6",
+        "requested_string_id": "string-1",
+        "display_label": "E4",
+        "events": [
+          {
+            "event_id": "ev-1",
+            "midi_note": 40,
+            "status": "unplayable",
+            "requested_string_id": "string-1",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-2",
+            "midi_note": 55,
+            "status": "unplayable",
+            "requested_string_id": "string-1",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-3",
+            "midi_note": 45,
+            "status": "unplayable",
+            "requested_string_id": "string-1",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-4",
+            "midi_note": 59,
+            "status": "unplayable",
+            "requested_string_id": "string-1",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-5",
+            "midi_note": 50,
+            "status": "unplayable",
+            "requested_string_id": "string-1",
+            "display_order": null,
+            "physical_fret_number": null,
+            "relative_semitone_position": null,
+            "normalized_position": null,
+            "is_open_string": null,
+            "unresolved_reason": "unplayable_on_requested_string"
+          },
+          {
+            "event_id": "ev-6",
+            "midi_note": 64,
+            "status": "playable",
+            "requested_string_id": "string-1",
+            "display_order": 5,
+            "physical_fret_number": 0,
+            "relative_semitone_position": 0.0,
+            "normalized_position": 0.0,
+            "is_open_string": true,
+            "unresolved_reason": null
+          }
+        ]
+      }
+    ]
+  },
   "projection": {
     "schema_version": "1.0.0",
     "projection_type": "fretboard_scroll",

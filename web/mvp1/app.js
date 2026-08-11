@@ -1,6 +1,6 @@
 import { AudioScheduler } from "./audio_scheduler.js";
 import { AudioReadiness, ReferenceSynth } from "./audio.js";
-import { FretboardRenderer } from "./renderer.js";
+import { FretboardRenderer, oneStringViewProjection } from "./renderer.js";
 import { Transport } from "./transport.js";
 
 const $ = (id) => document.getElementById(id);
@@ -167,6 +167,17 @@ function applySessionArtifacts(payload, playback, practice) {
   state.playback = playback;
   state.practice = practice;
   renderer.load(projection);
+  const oneString = payload.teaching_aids?.one_string || [];
+  $("teachingString").replaceChildren(
+    ...oneString.map((item) => {
+      const option = document.createElement("option");
+      option.value = item.requested_string_id;
+      option.textContent = item.display_label;
+      return option;
+    }),
+  );
+  $("teachingView").value = "normal";
+  $("teachingString").disabled = true;
   const zoneAvailable = projection.notes.some((note) => note.zone_semantics);
   $("zoneOverlay").disabled = !zoneAvailable;
   if (!zoneAvailable) $("zoneOverlay").checked = false;
@@ -187,6 +198,23 @@ function applySessionArtifacts(payload, playback, practice) {
   $("knownLimitations").textContent = (demo?.known_limitations || []).length
     ? `Known limitations: ${demo.known_limitations.join(", ")}`
     : "";
+}
+
+function renderTeachingView() {
+  const projection = state.payload?.projection;
+  if (!projection) return;
+  if ($("teachingView").value === "normal") {
+    $("teachingString").disabled = true;
+    renderer.load(projection);
+  } else {
+    $("teachingString").disabled = false;
+    const options = state.payload.teaching_aids?.one_string || [];
+    const selected = options.find(
+      (item) => item.requested_string_id === $("teachingString").value,
+    );
+    renderer.load(oneStringViewProjection(projection, selected));
+  }
+  renderer.setZoneOverlay($("zoneOverlay").checked);
 }
 
 async function loadJson(path) {
@@ -331,6 +359,8 @@ $("zoneOverlay").addEventListener("change", (event) => {
     ? "Zone Colors on"
     : "Zone Colors off";
 });
+$("teachingView").addEventListener("change", renderTeachingView);
+$("teachingString").addEventListener("change", renderTeachingView);
 
 let resizePending = false;
 window.addEventListener("resize", () => {
