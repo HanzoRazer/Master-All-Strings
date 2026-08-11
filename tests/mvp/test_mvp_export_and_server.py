@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from urllib.request import urlopen
 
@@ -34,7 +35,11 @@ def test_export_projection_and_catalog(app: MvpApplication, tmp_path: Path) -> N
 
     practice = tmp_path / "practice.json"
     export_practice_json(response, practice)
-    assert '"count_in_bars": 0' in practice.read_text(encoding="utf-8")
+    practice_payload = practice.read_text(encoding="utf-8")
+    assert '"count_in_bars": 0' in practice_payload
+    assert json.loads(practice_payload)["runtime"]["loop_end_seconds"] == (
+        response.playback_plan.total_seconds
+    )
 
     catalog = tmp_path / "demos.json"
     export_demo_catalog(app.list_demos(), catalog)

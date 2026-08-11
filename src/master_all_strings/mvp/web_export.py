@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from master_all_strings.mvp.demo_library import load_demo_manifest
 from master_all_strings.mvp.models import MvpLessonSummaryV1, MvpProjectionResponseV1
 from master_all_strings.mvp.playback.serialization import serialize_lesson_playback_plan
+from master_all_strings.mvp.practice import loop_ticks_to_seconds
 from master_all_strings.mvp.projection.serialization import serialize_fretboard_projection
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -62,7 +63,18 @@ def export_playback_json(response: MvpProjectionResponseV1, output_path: Path) -
 
 
 def export_practice_json(response: MvpProjectionResponseV1, output_path: Path) -> Path:
-    payload = asdict(response.practice_policy)
+    loop_start_seconds, loop_end_seconds = loop_ticks_to_seconds(
+        response.practice_policy.loop,
+        ticks_per_quarter=response.playback_plan.timeline.ticks_per_quarter,
+        tempo_changes=response.playback_plan.timeline.tempo_changes,
+    )
+    payload = {
+        "policy": asdict(response.practice_policy),
+        "runtime": {
+            "loop_start_seconds": loop_start_seconds,
+            "loop_end_seconds": loop_end_seconds,
+        },
+    }
     atomic_write_text(output_path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
     return output_path
 

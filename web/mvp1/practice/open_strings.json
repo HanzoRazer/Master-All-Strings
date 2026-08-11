@@ -1,13 +1,19 @@
 {
-  "schema_version": "1.0.0",
-  "assignment_id": "demo-open-strings",
-  "content_id": "open_strings",
-  "lesson_end_tick": 2880,
-  "loop": {
-    "enabled": false,
-    "start_tick": 0,
-    "end_tick": 2880,
-    "target_repetitions": null
+  "policy": {
+    "schema_version": "1.0.0",
+    "assignment_id": "demo-open-strings",
+    "content_id": "open_strings",
+    "lesson_end_tick": 2880,
+    "loop": {
+      "enabled": false,
+      "start_tick": 0,
+      "end_tick": 2880,
+      "target_repetitions": null
+    },
+    "count_in_bars": 0
   },
-  "count_in_bars": 0
+  "runtime": {
+    "loop_start_seconds": 0.0,
+    "loop_end_seconds": 3.5999999999999996
+  }
 }

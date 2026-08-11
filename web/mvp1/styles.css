@@ -129,7 +129,8 @@ body {
 
 select,
 button,
-input[type="range"] {
+input[type="range"],
+input[type="number"] {
   font: inherit;
 }
 
@@ -140,6 +141,43 @@ select {
   color: var(--ink);
   border-radius: 0.45rem;
   padding: 0.45rem 0.55rem;
+}
+
+input[type="number"] {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--ink);
+  border-radius: 0.45rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.toggle-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.88rem;
+}
+
+.repeat-display {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.repeat-display strong {
+  color: var(--accent);
+  font-family: var(--mono);
+}
+
+#audioStatus[data-readiness="ready"] {
+  color: var(--ok);
+}
+
+#audioStatus[data-readiness="failed"] {
+  color: var(--danger);
 }
 
 .hint {

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Master All Strings — MVP-1</title>
+    <title>Master All Strings — Play &amp; Practice</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -13,7 +13,7 @@
           <div class="brand-mark" aria-hidden="true"></div>
           <div>
             <h1>Master All Strings</h1>
-            <p class="subtitle">MVP-1 · Deterministic spatial guidance</p>
+            <p class="subtitle">MVP-2A · Hear, see, slow, and loop</p>
           </div>
         </div>
         <div class="meta" id="sourceMeta">Loading projection…</div>
@@ -37,6 +37,36 @@
           </p>
           <p class="hint" id="lessonDescription"></p>
           <p class="hint subtle" id="knownLimitations"></p>
+        </section>
+        <section>
+          <h2>Reference Synth</h2>
+          <label class="toggle-field">
+            <input id="soundEnabled" type="checkbox" />
+            <span>Sound on</span>
+          </label>
+          <label class="field">
+            <span>Master volume</span>
+            <input id="masterVolume" type="range" min="0" max="1" step="0.05" value="0.6" />
+          </label>
+          <p id="audioStatus" class="status" data-readiness="uninitialized">Sound off</p>
+        </section>
+        <section>
+          <h2>Practice loop</h2>
+          <label class="toggle-field">
+            <input id="loopEnabled" type="checkbox" />
+            <span>Loop passage</span>
+          </label>
+          <label class="field">
+            <span>Loop start (seconds)</span>
+            <input id="loopStart" type="number" min="0" value="0" />
+          </label>
+          <label class="field">
+            <span>Loop end (seconds)</span>
+            <input id="loopEnd" type="number" min="0" value="1" />
+          </label>
+          <p id="loopRange" class="hint subtle">Loop off</p>
+          <p class="repeat-display">Repetitions <strong id="repeatCount">0</strong></p>
+          <p class="hint subtle">Count-in policy preserved; audible count-in deferred.</p>
         </section>
         <section>
           <h2>Lesson info</h2>

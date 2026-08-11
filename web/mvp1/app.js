@@ -1,16 +1,32 @@
+import { AudioScheduler } from "./audio_scheduler.js";
+import { AudioReadiness, ReferenceSynth } from "./audio.js";
 import { FretboardRenderer } from "./renderer.js";
-import { PresentationTransport } from "./transport.js";
+import { Transport } from "./transport.js";
 
 const $ = (id) => document.getElementById(id);
-
 const state = {
   payload: null,
+  playback: null,
+  practice: null,
   demos: [],
   demosById: new Map(),
   instruments: [],
+  diagnostics: [],
 };
 
-const transport = new PresentationTransport();
+const transport = new Transport();
+const synth = new ReferenceSynth();
+const scheduler = new AudioScheduler({
+  transport,
+  synth,
+  onDiagnostic: (item) => {
+    state.diagnostics.push({ ...item, capturedAtMs: performance.now() });
+    if (state.diagnostics.length > 200) state.diagnostics.shift();
+  },
+});
+scheduler.setEnabled(false);
+scheduler.start();
+
 const renderer = new FretboardRenderer({
   laneLabels: $("laneLabels"),
   scrollViewport: $("scrollViewport"),
@@ -30,6 +46,11 @@ function showError(message) {
 
 function clearError() {
   $("errorOverlay").classList.add("hidden");
+}
+
+function setAudioStatus(message, readiness = synth.readiness) {
+  $("audioStatus").textContent = message;
+  $("audioStatus").dataset.readiness = readiness;
 }
 
 function setLessonInfo(projection, payload) {
@@ -63,36 +84,84 @@ function setLessonInfo(projection, payload) {
   );
 }
 
-/**
- * Resolve the catalog entry for a payload using stable identity only.
- * Titles are display text and must never be used to correlate.
- */
 function demoForPayload(payload) {
-  const projection = payload.projection;
   return (
     state.demosById.get(payload.demo_id) ||
-    state.demosById.get(projection?.content_id) ||
+    state.demosById.get(payload.projection?.content_id) ||
     null
   );
 }
 
-function applyProjectionPayload(payload) {
-  const projection = payload?.projection;
-  if (!projection || projection.projection_version !== "1.0.0") {
-    showError("Unsupported projection version");
+function assertSharedIdentity(payload, playback, practice) {
+  const identities = [
+    [payload.projection.assignment_id, payload.projection.content_id],
+    [playback.assignment_id, playback.content_id],
+    [practice.policy.assignment_id, practice.policy.content_id],
+  ].map((pair) => pair.join("\u0000"));
+  if (new Set(identities).size !== 1) {
+    throw new Error("Lesson visual, audio, and practice artifacts do not match");
+  }
+}
+
+function commitLoop() {
+  if (!$("loopEnabled").checked) {
+    transport.clearLoop();
+    $("loopRange").textContent = "Loop off";
     return;
   }
+  const startSeconds = Number($("loopStart").value);
+  const endSeconds = Number($("loopEnd").value);
+  try {
+    transport.setLoop({
+      startSeconds,
+      endSeconds,
+      targetRepetitions: state.practice?.policy.loop.target_repetitions ?? null,
+    });
+    $("loopRange").textContent = `${startSeconds.toFixed(2)}s–${endSeconds.toFixed(2)}s`;
+  } catch (error) {
+    $("loopEnabled").checked = false;
+    transport.clearLoop();
+    $("loopRange").textContent = error.message;
+  }
+}
+
+function configureLoopControls(practice, duration) {
+  for (const input of [$("loopStart"), $("loopEnd")]) {
+    input.max = String(duration);
+    input.step = "0.01";
+  }
+  $("loopStart").value = String(practice.runtime.loop_start_seconds);
+  $("loopEnd").value = String(practice.runtime.loop_end_seconds);
+  $("loopEnabled").checked = practice.policy.loop.enabled;
+  commitLoop();
+}
+
+function applySessionArtifacts(payload, playback, practice) {
+  const projection = payload?.projection;
+  if (!projection || projection.projection_version !== "1.0.0") {
+    throw new Error("Unsupported projection version");
+  }
+  if (playback?.schema_version !== "1.0.0" || !practice?.policy) {
+    throw new Error("Unsupported practice artifact version");
+  }
+  assertSharedIdentity(payload, playback, practice);
   clearError();
-  state.payload = payload;
+  transport.pause();
+  scheduler.panic("lesson-change");
   transport.restart();
-  transport.setDuration(projection.timeline.total_seconds);
+  transport.setDuration(playback.total_seconds);
+  scheduler.loadPlan(playback);
+  state.payload = payload;
+  state.playback = playback;
+  state.practice = practice;
   renderer.load(projection);
   setLessonInfo(projection, payload);
+  configureLoopControls(practice, playback.total_seconds);
   $("seek").value = "0";
   $("statusLine").textContent = "Ready";
+  $("repeatCount").textContent = "0";
 
   const demo = demoForPayload(payload);
-  // Keep the sidebar controls in sync with what is actually rendered.
   if (demo) $("demoSelect").value = demo.demo_id;
   $("instrumentSelect").value = payload.instrument_id || projection.instrument.instrument_id;
   $("lessonDescription").textContent = demo?.description || projection.description || "";
@@ -103,32 +172,38 @@ function applyProjectionPayload(payload) {
 
 async function loadJson(path) {
   const response = await fetch(path, { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`Failed to load ${path}`);
-  }
+  if (!response.ok) throw new Error(`Failed to load ${path}`);
   return response.json();
 }
 
-/**
- * Load an ad-hoc CLI export when one is named via ``?projection=<relative path>``
- * (scripts/run_mvp1.py prints that URL), otherwise a checked-in demo fixture.
- * Probing for the runtime file unconditionally would log a 404 on every clean
- * load, so the caller states the intent instead.
- */
-async function loadInitialPayload() {
+function sessionPathsForDemo(demoId) {
+  return [
+    `./projections/${demoId}.json`,
+    `./playback/${demoId}.json`,
+    `./practice/${demoId}.json`,
+  ];
+}
+
+async function loadSession(paths) {
+  const artifacts = await Promise.all(paths.map((path) => loadJson(path)));
+  applySessionArtifacts(...artifacts);
+}
+
+async function loadInitialSession() {
   const requested = new URLSearchParams(window.location.search).get("projection");
   if (requested) {
-    // Same-origin relative paths only: no scheme, no root, no traversal.
-    const safe = /^[\w-]+(\/[\w-]+)*\.json$/.test(requested);
-    if (!safe) {
+    if (!/^[\w-]+(\/[\w-]+)*\.json$/.test(requested)) {
       throw new Error(`Refusing to load projection path: ${requested}`);
     }
-    return loadJson(`./${requested}`);
+    const directory = requested.split("/").slice(0, -1).join("/");
+    return loadSession([
+      `./${requested}`,
+      `./${directory}/playback.json`,
+      `./${directory}/practice.json`,
+    ]);
   }
-  if (!state.demos.length) {
-    throw new Error("No lesson available. Run scripts/run_mvp1.py to export one.");
-  }
-  return loadJson(`./projections/${state.demos[0].demo_id}.json`);
+  if (!state.demos.length) throw new Error("No lesson available");
+  return loadSession(sessionPathsForDemo(state.demos[0].demo_id));
 }
 
 async function bootstrap() {
@@ -140,7 +215,6 @@ async function bootstrap() {
     state.demos = demos.demos || [];
     state.demosById = new Map(state.demos.map((demo) => [demo.demo_id, demo]));
     state.instruments = instruments;
-
     $("demoSelect").replaceChildren(
       ...state.demos.map((demo) => {
         const option = document.createElement("option");
@@ -159,24 +233,42 @@ async function bootstrap() {
         return option;
       }),
     );
-
-    applyProjectionPayload(await loadInitialPayload());
+    await loadInitialSession();
   } catch (error) {
     showError(error.message || "Unable to load lesson");
   }
 }
 
+async function activateAudio() {
+  setAudioStatus("Initializing Reference Synth…", AudioReadiness.INITIALIZING);
+  try {
+    await synth.initialize();
+    scheduler.setEnabled(true);
+    setAudioStatus("Reference Synth ready", AudioReadiness.READY);
+    return true;
+  } catch (error) {
+    scheduler.setEnabled(false);
+    setAudioStatus(`Audio failed: ${error.message}`, AudioReadiness.FAILED);
+    return false;
+  }
+}
+
 function tick(now) {
   const seconds = transport.positionSeconds(now);
-  $("clockReadout").textContent = `${seconds.toFixed(2)}s · ${transport.playbackRate.toFixed(2)}×`;
+  $("clockReadout").textContent =
+    `${seconds.toFixed(2)}s · ${transport.playbackRate.toFixed(2)}×`;
   if (transport.durationSeconds > 0) {
     $("seek").value = String(Math.round((seconds / transport.durationSeconds) * 1000));
   }
+  $("repeatCount").textContent = String(transport.repetitionCount);
   renderer.renderFrame(seconds);
   requestAnimationFrame(tick);
 }
 
-$("btnPlay").addEventListener("click", () => {
+$("btnPlay").addEventListener("click", async () => {
+  if ($("soundEnabled").checked && synth.readiness !== AudioReadiness.READY) {
+    if (!(await activateAudio())) return;
+  }
   transport.play();
   $("statusLine").textContent = "Playing";
 });
@@ -189,8 +281,7 @@ $("btnRestart").addEventListener("click", () => {
   $("statusLine").textContent = "Restarted";
 });
 $("seek").addEventListener("input", (event) => {
-  const ratio = Number(event.target.value) / 1000;
-  transport.seek(ratio * (transport.durationSeconds || 0));
+  transport.seek((Number(event.target.value) / 1000) * transport.durationSeconds);
 });
 document.querySelectorAll(".rates button").forEach((button) => {
   button.addEventListener("click", () => {
@@ -199,8 +290,21 @@ document.querySelectorAll(".rates button").forEach((button) => {
     transport.setRate(button.dataset.rate);
   });
 });
+$("soundEnabled").addEventListener("change", async (event) => {
+  if (event.target.checked) {
+    if (!(await activateAudio())) event.target.checked = false;
+  } else {
+    scheduler.setEnabled(false);
+    setAudioStatus("Sound off", synth.readiness);
+  }
+});
+$("masterVolume").addEventListener("input", (event) => {
+  synth.setVolume(Number(event.target.value));
+});
+$("loopEnabled").addEventListener("change", commitLoop);
+$("loopStart").addEventListener("change", commitLoop);
+$("loopEnd").addEventListener("change", commitLoop);
 
-// Resize triggers a full static rebuild, so coalesce bursts into one frame.
 let resizePending = false;
 window.addEventListener("resize", () => {
   if (resizePending) return;
@@ -210,20 +314,23 @@ window.addEventListener("resize", () => {
     renderer.resize();
   });
 });
-
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && transport.playing) {
+    transport.pause();
+    $("statusLine").textContent = "Paused while tab hidden";
+  }
+});
 $("demoSelect").addEventListener("change", async (event) => {
-  const demoId = event.target.value;
   transport.pause();
+  scheduler.panic("lesson-change");
   try {
-    applyProjectionPayload(await loadJson(`./projections/${demoId}.json`));
-    $("statusLine").textContent = `Loaded ${demoId}`;
+    await loadSession(sessionPathsForDemo(event.target.value));
+    $("statusLine").textContent = `Loaded ${event.target.value}`;
   } catch (error) {
-    showError(
-      error.message ||
-        "Unable to load lesson. Re-run scripts/run_mvp1.py --open to refresh demos.",
-    );
+    showError(error.message || "Unable to load lesson");
   }
 });
 
+window.__mvp2a = { state, transport, synth, scheduler, renderer, loadSession };
 bootstrap();
 requestAnimationFrame(tick);
