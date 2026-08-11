@@ -138,6 +138,13 @@ export class Transport {
     if (this.loop?.enabled && rawPosition >= this.loop.endSeconds) {
       return this._wrapLoop(rawPosition, nowMs);
     }
+    if (this.durationSeconds > 0 && rawPosition >= this.durationSeconds) {
+      this.baseSeconds = this.durationSeconds;
+      this.playing = false;
+      this.anchorWallMs = null;
+      this._emit("complete", nowMs);
+      return this.baseSeconds;
+    }
     return this._clamp(rawPosition);
   }
 

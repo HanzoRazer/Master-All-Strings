@@ -55,6 +55,7 @@ test("play schedules canonical events inside the lookahead window", () => {
   assert.equal(synth.calls[0][1], 10);
   assert.equal(synth.calls[0][2], 10.5);
   assert.equal(diagnostics.at(-1).eventId, "a");
+  assert.equal(diagnostics.at(-1).mappingErrorMs, 0);
   scheduler.destroy();
 });
 

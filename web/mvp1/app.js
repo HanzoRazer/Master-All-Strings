@@ -22,6 +22,10 @@ const scheduler = new AudioScheduler({
   onDiagnostic: (item) => {
     state.diagnostics.push({ ...item, capturedAtMs: performance.now() });
     if (state.diagnostics.length > 200) state.diagnostics.shift();
+    if (item.type === "scheduled") {
+      $("audioStatus").dataset.lastScheduledEvent = item.eventId;
+      $("audioStatus").dataset.mappingErrorMs = item.mappingErrorMs.toFixed(6);
+    }
   },
 });
 scheduler.setEnabled(false);
@@ -36,6 +40,11 @@ const renderer = new FretboardRenderer({
   unplayableGutter: $("unplayableGutter"),
   neckMap: $("neckMap"),
   instrumentTitle: $("instrumentTitle"),
+});
+
+transport.subscribe((event) => {
+  if (event.type === "complete") $("statusLine").textContent = "Complete";
+  if (event.type === "loop-complete") $("statusLine").textContent = "Loop complete";
 });
 
 function showError(message) {
@@ -106,6 +115,7 @@ function assertSharedIdentity(payload, playback, practice) {
 function commitLoop() {
   if (!$("loopEnabled").checked) {
     transport.clearLoop();
+    renderer.setLoop(null);
     $("loopRange").textContent = "Loop off";
     return;
   }
@@ -117,10 +127,12 @@ function commitLoop() {
       endSeconds,
       targetRepetitions: state.practice?.policy.loop.target_repetitions ?? null,
     });
+    renderer.setLoop(transport.loop);
     $("loopRange").textContent = `${startSeconds.toFixed(2)}s–${endSeconds.toFixed(2)}s`;
   } catch (error) {
     $("loopEnabled").checked = false;
     transport.clearLoop();
+    renderer.setLoop(null);
     $("loopRange").textContent = error.message;
   }
 }
@@ -261,6 +273,8 @@ function tick(now) {
     $("seek").value = String(Math.round((seconds / transport.durationSeconds) * 1000));
   }
   $("repeatCount").textContent = String(transport.repetitionCount);
+  $("audioStatus").dataset.activeVoices = String(synth.registry.size);
+  document.body.dataset.transportPositionSeconds = seconds.toFixed(6);
   renderer.renderFrame(seconds);
   requestAnimationFrame(tick);
 }
@@ -331,6 +345,33 @@ $("demoSelect").addEventListener("change", async (event) => {
   }
 });
 
-window.__mvp2a = { state, transport, synth, scheduler, renderer, loadSession };
+function captureDiagnostics() {
+  const latestSchedule = [...state.diagnostics]
+    .reverse()
+    .find((item) => item.type === "scheduled") || null;
+  const audioContextTime = synth.context?.currentTime ?? null;
+  return Object.freeze({
+    capturedAtMs: performance.now(),
+    transport: transport.snapshot(),
+    visual: renderer.diagnostics(),
+    audio: {
+      readiness: synth.readiness,
+      activeVoices: synth.registry.size,
+      latestSchedule,
+      audioContextTime,
+      mappingErrorMs: latestSchedule?.mappingErrorMs ?? null,
+    },
+  });
+}
+
+window.__mvp2a = {
+  state,
+  transport,
+  synth,
+  scheduler,
+  renderer,
+  loadSession,
+  captureDiagnostics,
+};
 bootstrap();
 requestAnimationFrame(tick);

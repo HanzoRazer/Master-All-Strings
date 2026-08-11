@@ -325,6 +325,17 @@ input[type="number"] {
   z-index: 5;
 }
 
+.loop-region {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(215, 163, 92, 0.08);
+  border-left: 1px dashed rgba(215, 163, 92, 0.55);
+  border-right: 1px dashed rgba(215, 163, 92, 0.55);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .note {
   position: absolute;
   min-width: 2.4rem;

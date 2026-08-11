@@ -25,6 +25,9 @@ export class FretboardRenderer {
     // hide it behind a single marker.
     this.neckDots = [];
     this.laneCenters = [];
+    this.loop = null;
+    this.loopRegion = null;
+    this.lastPositionSeconds = 0;
   }
 
   load(projection) {
@@ -43,12 +46,15 @@ export class FretboardRenderer {
     const { laneLabels, scrollCanvas, playLine, gutterNotes, neckMap, instrumentTitle } =
       this.roots;
     laneLabels.replaceChildren();
-    scrollCanvas.querySelectorAll(".string-lane, .note").forEach((node) => node.remove());
+    scrollCanvas
+      .querySelectorAll(".string-lane, .note, .loop-region")
+      .forEach((node) => node.remove());
     gutterNotes.replaceChildren();
     neckMap.replaceChildren();
     this.notes = [];
     this.neckDots = [];
     this.laneCenters = [];
+    this.loopRegion = null;
 
     if (!projection) return;
 
@@ -78,6 +84,12 @@ export class FretboardRenderer {
     const playFraction = projection.timeline.play_line_fraction ?? 0.22;
     playLine.style.left = `${playFraction * 100}%`;
 
+    if (this.loop?.enabled) {
+      this.loopRegion = document.createElement("div");
+      this.loopRegion.className = "loop-region";
+      scrollCanvas.appendChild(this.loopRegion);
+    }
+
     projection.notes
       .filter((note) => note.status === "selected")
       .forEach((note) => {
@@ -104,6 +116,7 @@ export class FretboardRenderer {
         scrollCanvas.appendChild(el);
 
         this.notes.push({
+          eventId: note.event_id,
           el,
           laneIndex,
           onset: note.onset_seconds,
@@ -164,6 +177,14 @@ export class FretboardRenderer {
     const playFraction = projection.timeline.play_line_fraction ?? 0.22;
     const playX = width * playFraction;
     const pps = this.pixelsPerSecond;
+    this.lastPositionSeconds = positionSeconds;
+
+    if (this.loopRegion && this.loop) {
+      const startX = playX + (this.loop.startSeconds - positionSeconds) * pps;
+      const endX = playX + (this.loop.endSeconds - positionSeconds) * pps;
+      this.loopRegion.style.left = `${startX}px`;
+      this.loopRegion.style.width = `${Math.max(0, endX - startX)}px`;
+    }
 
     const activeNotes = [];
 
@@ -197,5 +218,17 @@ export class FretboardRenderer {
     // Lane geometry is pixel-based, so a viewport change means a static rebuild.
     // Note positions and active classes are restored on the next renderFrame.
     this._buildStatic();
+  }
+
+  setLoop(loop) {
+    this.loop = loop?.enabled ? { ...loop } : null;
+    if (this.projection) this._buildStatic();
+  }
+
+  diagnostics() {
+    return Object.freeze({
+      positionSeconds: this.lastPositionSeconds,
+      activeEventIds: this.notes.filter((note) => note.active).map((note) => note.eventId),
+    });
   }
 }

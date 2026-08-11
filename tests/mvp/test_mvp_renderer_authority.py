@@ -15,6 +15,15 @@ FORBIDDEN = (
     "tempo_map",
 )
 
+AUDIO_FORBIDDEN = (
+    "string_id",
+    "fret_number",
+    "selection_origin",
+    "generate_candidates",
+    "tempo_bpm",
+    "ticks_per_quarter",
+)
+
 
 def test_renderer_sources_have_no_domain_helpers() -> None:
     for path in WEB.glob("*.js"):
@@ -28,3 +37,17 @@ def test_transport_is_anchor_derived() -> None:
     assert "frame_delta" not in text
     assert "baseSeconds" in text
     assert "anchorWallMs" in text
+
+
+def test_browser_audio_has_no_spatial_or_tempo_authority() -> None:
+    for filename in ("audio.js", "audio_scheduler.js"):
+        text = (WEB / filename).read_text(encoding="utf-8")
+        for token in AUDIO_FORBIDDEN:
+            assert token not in text, f"{filename} contains forbidden token {token!r}"
+
+
+def test_browser_never_converts_ticks_or_tempo() -> None:
+    for path in WEB.glob("*.js"):
+        text = path.read_text(encoding="utf-8")
+        assert "microseconds_per_quarter" not in text
+        assert "ticks_per_quarter" not in text

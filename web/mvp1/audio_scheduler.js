@@ -6,8 +6,8 @@ export class AudioScheduler {
     synth,
     lookaheadSeconds = 0.15,
     intervalMs = 25,
-    setIntervalFn = globalThis.setInterval,
-    clearIntervalFn = globalThis.clearInterval,
+    setIntervalFn = (callback, milliseconds) => globalThis.setInterval(callback, milliseconds),
+    clearIntervalFn = (timer) => globalThis.clearInterval(timer),
     onDiagnostic = () => {},
   }) {
     if (!transport || !synth) throw new TypeError("scheduler requires transport and synth");
@@ -89,7 +89,9 @@ export class AudioScheduler {
       if (this.scheduled.has(event.event_id)) continue;
       if (event.release_seconds <= position || event.onset_seconds >= horizon) continue;
       const effectiveOnset = Math.max(position, event.onset_seconds);
-      const startAt = context.currentTime + (effectiveOnset - position) / rate;
+      const expectedLeadSeconds = (effectiveOnset - position) / rate;
+      const audioContextTime = context.currentTime;
+      const startAt = audioContextTime + expectedLeadSeconds;
       const releaseAt = startAt + (event.release_seconds - effectiveOnset) / rate;
       this.synth.scheduleNote(
         {
@@ -109,7 +111,10 @@ export class AudioScheduler {
         musicalOnsetSeconds: event.onset_seconds,
         transportPositionSeconds: position,
         audioStartTime: startAt,
+        audioContextTime,
         playbackRate: rate,
+        expectedLeadSeconds,
+        mappingErrorMs: (startAt - audioContextTime - expectedLeadSeconds) * 1000,
       });
     }
     return count;
@@ -126,6 +131,7 @@ export class AudioScheduler {
         "duration",
         "loop-wrap",
         "loop-complete",
+        "complete",
       ].includes(event.type)
     ) {
       this.panic(`transport-${event.type}`);

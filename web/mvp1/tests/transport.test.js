@@ -148,3 +148,15 @@ test("pause inside a loop freezes the shared position", () => {
   time.advance(5000);
   assert.equal(transport.positionSeconds(), 2.5);
 });
+
+test("natural lesson completion stops and a new play restarts", () => {
+  const time = clock();
+  const transport = new Transport({ now: time.now });
+  transport.setDuration(1);
+  transport.play();
+  time.advance(1000);
+  assert.equal(transport.positionSeconds(), 1);
+  assert.equal(transport.playing, false);
+  transport.play();
+  assert.equal(transport.positionSeconds(), 0);
+});
