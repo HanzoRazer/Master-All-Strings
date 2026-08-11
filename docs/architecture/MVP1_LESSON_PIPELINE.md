@@ -69,3 +69,9 @@ MVP-1E path:            MIDI → LessonAssignmentV1 → MusicalEvent
 must produce identical MSME candidates and identical automatic fingering for the
 same instrument profile and policy. Routing metadata must never participate in
 that comparison.
+
+## Product adapter note (MVP-1F)
+
+`run_mvp_lesson_pipeline` remains a hard-fail path for zero-candidate events.
+The local product UI softens that case only inside `MvpLessonOrchestrator`
+(`status: unplayable` projection rows). See [docs/mvp/MVP1_ARCHITECTURE.md](../mvp/MVP1_ARCHITECTURE.md).

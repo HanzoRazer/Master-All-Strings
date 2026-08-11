@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Master All Strings — MVP-1</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div>
+            <h1>Master All Strings</h1>
+            <p class="subtitle">MVP-1 · Deterministic spatial guidance</p>
+          </div>
+        </div>
+        <div class="meta" id="sourceMeta">Loading projection…</div>
+      </header>
+
+      <aside class="sidebar">
+        <section>
+          <h2>Lesson</h2>
+          <label class="field">
+            <span>Demo</span>
+            <select id="demoSelect"></select>
+          </label>
+          <label class="field">
+            <span>Exported instrument</span>
+            <select id="instrumentSelect" disabled aria-describedby="instrumentHint"></select>
+          </label>
+          <p class="hint subtle" id="instrumentHint">
+            Read-only: the browser never re-orchestrates. Re-export with
+            <code>python scripts/run_mvp1.py --lesson &lt;demo&gt; --instrument &lt;id&gt;</code>
+            to change instrument.
+          </p>
+          <p class="hint" id="lessonDescription"></p>
+          <p class="hint subtle" id="knownLimitations"></p>
+        </section>
+        <section>
+          <h2>Lesson info</h2>
+          <dl class="info" id="lessonInfo"></dl>
+        </section>
+        <section>
+          <h2>Status</h2>
+          <p id="statusLine" class="status">Ready</p>
+          <ul id="warningList" class="warnings"></ul>
+        </section>
+      </aside>
+
+      <main class="stage">
+        <div class="board-shell">
+          <div class="board-header">
+            <div id="instrumentTitle">Instrument</div>
+            <div id="clockReadout">0.00s</div>
+          </div>
+          <div class="board" id="board">
+            <div class="lane-labels" id="laneLabels"></div>
+            <div class="scroll-viewport" id="scrollViewport">
+              <div class="scroll-canvas" id="scrollCanvas">
+                <div class="play-line" id="playLine"></div>
+              </div>
+            </div>
+            <div class="unplayable-gutter" id="unplayableGutter">
+              <div class="gutter-title">Unplayable</div>
+              <div class="gutter-notes" id="gutterNotes"></div>
+            </div>
+          </div>
+          <div class="neck-map" id="neckMap" aria-label="Neck map overview"></div>
+        </div>
+
+        <div class="transport">
+          <button type="button" id="btnPlay">Play</button>
+          <button type="button" id="btnPause">Pause</button>
+          <button type="button" id="btnRestart">Restart</button>
+          <label class="scrub">
+            <span>Seek</span>
+            <input id="seek" type="range" min="0" max="1000" value="0" />
+          </label>
+          <div class="rates" role="group" aria-label="Playback rate">
+            <button type="button" data-rate="0.5">0.50×</button>
+            <button type="button" data-rate="0.75">0.75×</button>
+            <button type="button" data-rate="1" class="active">1.00×</button>
+            <button type="button" data-rate="1.5">1.50×</button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="errorOverlay" class="error-overlay hidden" role="alert">
+      <div class="error-card">
+        <h2>Unable to load lesson</h2>
+        <p id="errorMessage"></p>
+      </div>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/mvp1/fretboard-scroll-projection-v1.schema.json",
+  "title": "FretboardScrollProjectionV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "projection_type",
+    "projection_version",
+    "fidelity",
+    "projection_digest",
+    "assignment_id",
+    "content_id",
+    "title",
+    "timeline",
+    "tempo_changes",
+    "instrument",
+    "selection_policy",
+    "notes",
+    "warnings",
+    "unsupported_features"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "projection_type": {"const": "fretboard_scroll"},
+    "projection_version": {"const": "1.0.0"},
+    "fidelity": {"type": "string", "minLength": 1},
+    "projection_digest": {"type": "string", "minLength": 1},
+    "assignment_id": {"type": "string", "minLength": 1},
+    "content_id": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "description": {"type": ["string", "null"]},
+    "objective": {"type": ["string", "null"]},
+    "teacher_note": {"type": ["string", "null"]},
+    "timeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ticks_per_quarter",
+        "total_ticks",
+        "total_seconds",
+        "seconds_per_screen",
+        "play_line_fraction"
+      ],
+      "properties": {
+        "ticks_per_quarter": {"type": "integer", "minimum": 1},
+        "total_ticks": {"type": "integer", "minimum": 0},
+        "total_seconds": {"type": "number", "minimum": 0},
+        "seconds_per_screen": {"type": "number", "exclusiveMinimum": 0},
+        "play_line_fraction": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "tempo_changes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tick", "tempo_bpm", "microseconds_per_quarter"],
+        "properties": {
+          "tick": {"type": "integer", "minimum": 0},
+          "tempo_bpm": {"type": "number", "exclusiveMinimum": 0},
+          "microseconds_per_quarter": {"type": "integer", "minimum": 1}
+        }
+      }
+    },
+    "instrument": {"type": "object"},
+    "selection_policy": {"type": "string", "minLength": 1},
+    "notes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "event_id",
+          "status",
+          "midi_note",
+          "pitch_label",
+          "onset_tick",
+          "duration_ticks",
+          "onset_seconds",
+          "release_seconds"
+        ],
+        "properties": {
+          "event_id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["selected", "unplayable"]},
+          "midi_note": {"type": "integer", "minimum": 0, "maximum": 127},
+          "pitch_label": {"type": "string", "minLength": 1},
+          "onset_tick": {"type": "integer", "minimum": 0},
+          "duration_ticks": {"type": "integer", "minimum": 1},
+          "onset_seconds": {"type": "number", "minimum": 0},
+          "release_seconds": {"type": "number", "minimum": 0},
+          "lane_display_order": {"type": ["integer", "null"], "minimum": 0},
+          "string_id": {"type": ["string", "null"], "minLength": 1},
+          "fret_number": {"type": ["integer", "null"], "minimum": 0},
+          "relative_semitone_position": {"type": ["number", "null"], "minimum": 0},
+          "normalized_position": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+          "is_open_string": {"type": ["boolean", "null"]},
+          "selection_origin": {
+            "type": ["string", "null"],
+            "enum": ["automatic", "teacher_override", null]
+          },
+          "unresolved_reason": {"type": ["string", "null"], "minLength": 1}
+        },
+        "allOf": [
+          {
+            "if": {"properties": {"status": {"const": "selected"}}, "required": ["status"]},
+            "then": {
+              "required": [
+                "string_id",
+                "fret_number",
+                "lane_display_order",
+                "relative_semitone_position",
+                "normalized_position",
+                "is_open_string",
+                "selection_origin"
+              ]
+            }
+          },
+          {
+            "if": {"properties": {"status": {"const": "unplayable"}}, "required": ["status"]},
+            "then": {"required": ["unresolved_reason"]}
+          }
+        ]
+      }
+    },
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "unsupported_features": {"type": "array", "items": {"type": "string"}}
+  }
+}

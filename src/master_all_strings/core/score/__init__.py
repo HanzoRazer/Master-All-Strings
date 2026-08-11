@@ -42,6 +42,12 @@ from master_all_strings.core.score.models import (
     CanonicalScoreRevisionV1,
     ScoreDocumentV1,
 )
+from master_all_strings.core.score.musical_timeline import (
+    normalize_tempo_map,
+    seconds_to_ticks,
+    ticks_to_microseconds,
+    ticks_to_seconds,
+)
 from master_all_strings.core.score.provenance import (
     RevisionProvenanceV1,
     RoundingPolicy,
@@ -130,8 +136,12 @@ __all__ = [
     "derive_revision_id",
     "divide_round_half_away_from_zero",
     "nanoseconds_to_ticks",
+    "normalize_tempo_map",
+    "seconds_to_ticks",
     "serialize_revision_content",
     "tempo_from_bpm",
+    "ticks_to_microseconds",
     "ticks_to_nanoseconds",
+    "ticks_to_seconds",
     "verify_revision_digest",
 ]

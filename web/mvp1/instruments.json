@@ -1,0 +1,22 @@
+[
+  {
+    "instrument_id": "bass-fretless-4",
+    "display_name": "Fretless Bass (4-string)",
+    "experimental": true
+  },
+  {
+    "instrument_id": "guitar-standard-6",
+    "display_name": "Standard Guitar (6-string)",
+    "experimental": false
+  },
+  {
+    "instrument_id": "mandolin-standard",
+    "display_name": "Standard Mandolin",
+    "experimental": true
+  },
+  {
+    "instrument_id": "violin-standard",
+    "display_name": "Standard Violin",
+    "experimental": true
+  }
+]

@@ -1,0 +1,140 @@
+{
+  "schema_version": "1.0.0",
+  "demos": [
+    {
+      "demo_id": "ascending_scale",
+      "title": "Ascending Scale",
+      "description": "Ascending scale fragment",
+      "lesson_path": "assignments/ascending_scale.json",
+      "instrument_profile_id": "guitar-standard-6",
+      "demonstrates": [
+        "ascending",
+        "enumeration_v1"
+      ],
+      "expected_behavior_digest": "sha256:9f86b56c92e9d8e32dbd55275a45b5c4b17e937bad8e4552cb262c73eefd32e9",
+      "expected_projection_digest": "sha256:aa1fbfb4906e0c197faa1c8f2fee271058cf974996af1bb3b3f46882a14362a6",
+      "known_limitations": [],
+      "midi_path": "midi/ascending_scale.mid"
+    },
+    {
+      "demo_id": "descending_scale",
+      "title": "Descending Scale",
+      "description": "Descending scale fragment",
+      "lesson_path": "assignments/descending_scale.json",
+      "instrument_profile_id": "guitar-standard-6",
+      "demonstrates": [
+        "descending"
+      ],
+      "expected_behavior_digest": "sha256:7253153c85db11175a2bc30b4757da5a9ef7224d3336c5bc53eeb4b60bc82705",
+      "expected_projection_digest": "sha256:5aef4bf850c8eaf260964f04a78023195a34f42739fdcb2b89d573186610fbb3",
+      "known_limitations": []
+    },
+    {
+      "demo_id": "open_strings",
+      "title": "Open Strings",
+      "description": "Open-string preference",
+      "lesson_path": "assignments/open_strings.json",
+      "instrument_profile_id": "guitar-standard-6",
+      "demonstrates": [
+        "open_strings"
+      ],
+      "expected_behavior_digest": "sha256:1f37528340c686032303db7e0aa6128a25001f68479608c29cc64dee1366bec2",
+      "expected_projection_digest": "sha256:8493036e28fd9a56a7c3fab05cff6658cfd4806d7c3ab6e50ea532b4aa8a7262",
+      "known_limitations": []
+    },
+    {
+      "demo_id": "first_position",
+      "title": "First Position Melody",
+      "description": "First-position guidance",
+      "lesson_path": "assignments/first_position.json",
+      "instrument_profile_id": "guitar-standard-6",
+      "demonstrates": [
+        "first_position",
+        "soft_region"
+      ],
+      "expected_behavior_digest": "sha256:d6b56f7e92deaceed7257eaab7a49be4df84671752153140b717752ad667117c",
+      "expected_projection_digest": "sha256:36e7e54284e38022bfcc9f32ef43dc457b9188cdf3889dd811d972f318baaa23",
+      "known_limitations": []
+    },
+    {
+      "demo_id": "position_shift",
+      "title": "Position Shift",
+      "description": "Register / position change",
+      "lesson_path": "assignments/position_shift.json",
+      "instrument_profile_id": "guitar-standard-6",
+      "demonstrates": [
+        "position_shift"
+      ],
+      "expected_behavior_digest": "sha256:5195075467f459dc5775e7ad3206bf583d9661a11182b2147ea55df7213002a2",
+      "expected_projection_digest": "sha256:b33fc2a818a2d8282166731bc69a08834dcf732c11bcd14f4633882bb8ba263b",
+      "known_limitations": []
+    },
+    {
+      "demo_id": "string_crossing",
+      "title": "String Crossing",
+      "description": "String crossing",
+      "lesson_path": "assignments/string_crossing.json",
+      "instrument_profile_id": "guitar-standard-6",
+      "demonstrates": [
+        "string_crossing"
+      ],
+      "expected_behavior_digest": "sha256:df1be2b92641a24e948027bb76d5759c7d76b3a3bd0a6b3ab3895e0712696a61",
+      "expected_projection_digest": "sha256:990973b27cff35b09e1e61daefc60ec9099129a1fd5ed674145be9523f2f3718",
+      "known_limitations": []
+    },
+    {
+      "demo_id": "simultaneous_notes",
+      "title": "Simultaneous Notes",
+      "description": "Simultaneous onsets",
+      "lesson_path": "assignments/simultaneous_notes.json",
+      "instrument_profile_id": "guitar-standard-6",
+      "demonstrates": [
+        "simultaneous"
+      ],
+      "expected_behavior_digest": "sha256:6e71e32b826198e6ce37982d83eb908c9418dfe5c7c9147153388d6233101d6f",
+      "expected_projection_digest": "sha256:41fabbdc81e3647c35d1daaee8c64520c67218863d4a85d87661a9822f749615",
+      "known_limitations": [
+        "chord_aware_selection"
+      ]
+    },
+    {
+      "demo_id": "multiple_candidates",
+      "title": "Multiple Candidates",
+      "description": "Multiple MSME candidates",
+      "lesson_path": "assignments/multiple_candidates.json",
+      "instrument_profile_id": "guitar-standard-6",
+      "demonstrates": [
+        "multiple_candidates"
+      ],
+      "expected_behavior_digest": "sha256:b4ab590b9601f9d444b041042f9152ba2f31e1532e3bf266de09a18e4affce54",
+      "expected_projection_digest": "sha256:9765b81b15c791d000844dfbb3e49526df04593b3f7fb006ae4745ef0d1049b1",
+      "known_limitations": []
+    },
+    {
+      "demo_id": "unplayable_note",
+      "title": "Unplayable Note",
+      "description": "Visible unplayable event",
+      "lesson_path": "assignments/unplayable_note.json",
+      "instrument_profile_id": "guitar-standard-6",
+      "demonstrates": [
+        "unplayable"
+      ],
+      "expected_behavior_digest": "sha256:51c97d74e95fb76582be72a34d18255d62bce4595d47c438feac450c9fd09a56",
+      "expected_projection_digest": "sha256:459276d8a501c2a5b0bdc0e009767c48cd4e1983fd4d919a081f27ba0dcecb2f",
+      "known_limitations": []
+    },
+    {
+      "demo_id": "teacher_override",
+      "title": "Teacher Override",
+      "description": "Teacher override origin",
+      "lesson_path": "assignments/teacher_override.json",
+      "instrument_profile_id": "guitar-standard-6",
+      "demonstrates": [
+        "teacher_override"
+      ],
+      "expected_behavior_digest": "sha256:93636ae8064316396e4dab54f0467334a4521060ab72f1af6fcd42a89a9555af",
+      "expected_projection_digest": "sha256:43cf7c491f966447ec80cd6aa18d0e2118d71e1a1f0dda069804a731fe7a93bf",
+      "known_limitations": []
+    }
+  ]
+}

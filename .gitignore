@@ -13,3 +13,7 @@ build/
 venv/
 .env
 .DS_Store
+
+# MVP-1 CLI runtime output. Checked-in demo exports live in web/mvp1/projections/
+# and are drift-tested; ad-hoc runs must never dirty them.
+web/mvp1/runtime/
