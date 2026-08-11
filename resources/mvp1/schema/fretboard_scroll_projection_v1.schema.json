@@ -101,7 +101,21 @@
             "type": ["string", "null"],
             "enum": ["automatic", "teacher_override", null]
           },
-          "unresolved_reason": {"type": ["string", "null"], "minLength": 1}
+          "unresolved_reason": {"type": ["string", "null"], "minLength": 1},
+          "zone_semantics": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["zone_id", "semantic_roles"],
+            "properties": {
+              "zone_id": {"type": "string", "minLength": 1},
+              "semantic_roles": {
+                "type": "array",
+                "items": {"type": "string", "minLength": 1}
+              },
+              "tritone_axis_id": {"type": ["string", "null"]},
+              "transition_from_previous": {"type": ["string", "null"]}
+            }
+          }
         },
         "allOf": [
           {

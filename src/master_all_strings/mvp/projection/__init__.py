@@ -11,6 +11,7 @@ from master_all_strings.mvp.projection.models import (
     FretboardScrollProjectionV1,
     ProjectedNoteStatus,
     SelectionOrigin,
+    ZoneSemanticProjectionV1,
 )
 from master_all_strings.mvp.projection.serialization import (
     compute_projection_digest,
@@ -27,6 +28,7 @@ __all__ = [
     "ProjectedNoteStatus",
     "SelectedNoteInput",
     "SelectionOrigin",
+    "ZoneSemanticProjectionV1",
     "build_fretboard_scroll_projection",
     "compute_projection_digest",
     "deserialize_fretboard_projection",

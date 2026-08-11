@@ -17,6 +17,10 @@ from master_all_strings.integrations.zone_harmony.models import (
     ZoneTransitionSemanticV1,
     ZoneTransitionType,
 )
+from master_all_strings.integrations.zone_harmony.projection import (
+    apply_zone_semantics_to_projection,
+    zone_projection_for_event,
+)
 
 __all__ = [
     "ZoneId",
@@ -30,4 +34,6 @@ __all__ = [
     "ZoneTransitionType",
     "load_zone_semantics_from_bundle",
     "correlate_zone_semantics",
+    "apply_zone_semantics_to_projection",
+    "zone_projection_for_event",
 ]

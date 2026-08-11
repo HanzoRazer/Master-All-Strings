@@ -21,6 +21,7 @@ from master_all_strings.mvp.projection.models import (
     ProjectedNoteStatus,
     SelectionOrigin,
     TempoChangeProjectionV1,
+    ZoneSemanticProjectionV1,
 )
 
 __all__ = [
@@ -37,7 +38,13 @@ def _encode(value: Any) -> Any:
     if isinstance(value, Enum):
         return value.value
     if is_dataclass(value) and not isinstance(value, type):
-        return {f.name: _encode(getattr(value, f.name)) for f in fields(value)}
+        encoded: dict[str, Any] = {}
+        for field in fields(value):
+            item = getattr(value, field.name)
+            if field.name == "zone_semantics" and item is None:
+                continue
+            encoded[field.name] = _encode(item)
+        return encoded
     if isinstance(value, tuple):
         return [_encode(item) for item in value]
     if isinstance(value, float):
@@ -66,6 +73,8 @@ def _behavior_dict(projection: FretboardScrollProjectionV1) -> dict[str, Any]:
     data.pop("description", None)
     data.pop("objective", None)
     data.pop("teacher_note", None)
+    for note in data["notes"]:
+        note.pop("zone_semantics", None)
     return data
 
 
@@ -180,6 +189,7 @@ def deserialize_fretboard_projection(
     notes = []
     for item in data["notes"]:
         origin = item.get("selection_origin")
+        zone = item.get("zone_semantics")
         notes.append(
             FretboardProjectedNoteV1(
                 event_id=item["event_id"],
@@ -198,6 +208,16 @@ def deserialize_fretboard_projection(
                 is_open_string=item.get("is_open_string"),
                 selection_origin=SelectionOrigin(origin) if origin is not None else None,
                 unresolved_reason=item.get("unresolved_reason"),
+                zone_semantics=(
+                    None
+                    if zone is None
+                    else ZoneSemanticProjectionV1(
+                        zone_id=zone["zone_id"],
+                        semantic_roles=tuple(zone["semantic_roles"]),
+                        tritone_axis_id=zone.get("tritone_axis_id"),
+                        transition_from_previous=zone.get("transition_from_previous"),
+                    )
+                ),
             )
         )
 
