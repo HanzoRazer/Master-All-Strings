@@ -14,6 +14,8 @@ from master_all_strings.mvp.local_server import find_available_local_port, serve
 from master_all_strings.mvp.web_export import (
     export_demo_catalog,
     export_manifest_copy,
+    export_playback_json,
+    export_practice_json,
     export_projection_json,
 )
 
@@ -25,6 +27,14 @@ def test_export_projection_and_catalog(app: MvpApplication, tmp_path: Path) -> N
     payload = out.read_text(encoding="utf-8")
     assert "fretboard_scroll" in payload
     assert response.projection.projection_digest in payload
+
+    playback = tmp_path / "playback.json"
+    export_playback_json(response, playback)
+    assert response.playback_plan.playback_digest in playback.read_text(encoding="utf-8")
+
+    practice = tmp_path / "practice.json"
+    export_practice_json(response, practice)
+    assert '"count_in_bars": 0' in practice.read_text(encoding="utf-8")
 
     catalog = tmp_path / "demos.json"
     export_demo_catalog(app.list_demos(), catalog)

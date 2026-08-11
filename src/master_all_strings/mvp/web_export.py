@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 import os
+from dataclasses import asdict
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from master_all_strings.mvp.demo_library import load_demo_manifest
 from master_all_strings.mvp.models import MvpLessonSummaryV1, MvpProjectionResponseV1
+from master_all_strings.mvp.playback.serialization import serialize_lesson_playback_plan
 from master_all_strings.mvp.projection.serialization import serialize_fretboard_projection
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -18,6 +20,8 @@ __all__ = [
     "atomic_write_text",
     "export_demo_catalog",
     "export_instrument_catalog",
+    "export_playback_json",
+    "export_practice_json",
     "export_projection_json",
     "export_web_fixtures",
 ]
@@ -48,6 +52,17 @@ def export_projection_json(
         "unsupported_features": list(response.unsupported_features),
         "projection": json.loads(serialize_fretboard_projection(response.projection)),
     }
+    atomic_write_text(output_path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
+    return output_path
+
+
+def export_playback_json(response: MvpProjectionResponseV1, output_path: Path) -> Path:
+    atomic_write_text(output_path, serialize_lesson_playback_plan(response.playback_plan))
+    return output_path
+
+
+def export_practice_json(response: MvpProjectionResponseV1, output_path: Path) -> Path:
+    payload = asdict(response.practice_policy)
     atomic_write_text(output_path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
     return output_path
 
@@ -105,7 +120,15 @@ def export_web_fixtures(app: MvpApplication, web_root: Path) -> int:
             web_root / "projections" / f"{summary.demo_id}.json",
             demo_id=summary.demo_id,
         )
-        written += 1
+        export_playback_json(
+            response,
+            web_root / "playback" / f"{summary.demo_id}.json",
+        )
+        export_practice_json(
+            response,
+            web_root / "practice" / f"{summary.demo_id}.json",
+        )
+        written += 3
     return written
 
 

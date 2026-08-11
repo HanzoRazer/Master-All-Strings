@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "assignment_id": "demo-open-strings",
+  "content_id": "open_strings",
+  "lesson_end_tick": 2880,
+  "loop": {
+    "enabled": false,
+    "start_tick": 0,
+    "end_tick": 2880,
+    "target_repetitions": null
+  },
+  "count_in_bars": 0
+}

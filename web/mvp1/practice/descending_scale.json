@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "assignment_id": "demo-descending-scale",
+  "content_id": "descending_scale",
+  "lesson_end_tick": 3840,
+  "loop": {
+    "enabled": false,
+    "start_tick": 0,
+    "end_tick": 3840,
+    "target_repetitions": null
+  },
+  "count_in_bars": 0
+}

@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "assignment_id": "demo-teacher-override",
+  "content_id": "teacher_override",
+  "lesson_end_tick": 960,
+  "loop": {
+    "enabled": false,
+    "start_tick": 0,
+    "end_tick": 960,
+    "target_repetitions": null
+  },
+  "count_in_bars": 0
+}

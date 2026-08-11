@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "assignment_id": "demo-string-crossing",
+  "content_id": "string_crossing",
+  "timeline": {
+    "ticks_per_quarter": 480,
+    "total_ticks": 2880,
+    "tempo_changes": [
+      {
+        "schema_version": "1.0.0",
+        "tick": 0,
+        "microseconds_per_quarter": 600000
+      }
+    ]
+  },
+  "events": [
+    {
+      "event_id": "ev-1",
+      "midi_note": 40,
+      "velocity": 80,
+      "onset_seconds": 0.0,
+      "release_seconds": 0.6,
+      "cents_offset": null
+    },
+    {
+      "event_id": "ev-2",
+      "midi_note": 55,
+      "velocity": 80,
+      "onset_seconds": 0.6,
+      "release_seconds": 1.2,
+      "cents_offset": null
+    },
+    {
+      "event_id": "ev-3",
+      "midi_note": 45,
+      "velocity": 80,
+      "onset_seconds": 1.2,
+      "release_seconds": 1.7999999999999998,
+      "cents_offset": null
+    },
+    {
+      "event_id": "ev-4",
+      "midi_note": 59,
+      "velocity": 80,
+      "onset_seconds": 1.7999999999999998,
+      "release_seconds": 2.4,
+      "cents_offset": null
+    },
+    {
+      "event_id": "ev-5",
+      "midi_note": 50,
+      "velocity": 80,
+      "onset_seconds": 2.4,
+      "release_seconds": 3.0,
+      "cents_offset": null
+    },
+    {
+      "event_id": "ev-6",
+      "midi_note": 64,
+      "velocity": 80,
+      "onset_seconds": 3.0,
+      "release_seconds": 3.5999999999999996,
+      "cents_offset": null
+    }
+  ],
+  "total_seconds": 3.5999999999999996,
+  "warnings": [],
+  "unsupported_features": [],
+  "playback_digest": "sha256:4d76ce486afe1e1e3fb1817af139c2d254cd53f27bbdd776c63ac6e37c3c6207",
+  "canonical_revision_id": null
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0.0",
+  "assignment_id": "demo-simultaneous",
+  "content_id": "simultaneous_notes",
+  "timeline": {
+    "ticks_per_quarter": 480,
+    "total_ticks": 1440,
+    "tempo_changes": [
+      {
+        "schema_version": "1.0.0",
+        "tick": 0,
+        "microseconds_per_quarter": 600000
+      }
+    ]
+  },
+  "events": [
+    {
+      "event_id": "ev-1",
+      "midi_note": 40,
+      "velocity": 80,
+      "onset_seconds": 0.0,
+      "release_seconds": 1.2,
+      "cents_offset": null
+    },
+    {
+      "event_id": "ev-2",
+      "midi_note": 47,
+      "velocity": 80,
+      "onset_seconds": 0.0,
+      "release_seconds": 1.2,
+      "cents_offset": null
+    },
+    {
+      "event_id": "ev-3",
+      "midi_note": 52,
+      "velocity": 80,
+      "onset_seconds": 0.0,
+      "release_seconds": 1.2,
+      "cents_offset": null
+    },
+    {
+      "event_id": "ev-4",
+      "midi_note": 55,
+      "velocity": 80,
+      "onset_seconds": 1.2,
+      "release_seconds": 1.7999999999999998,
+      "cents_offset": null
+    }
+  ],
+  "total_seconds": 1.7999999999999998,
+  "warnings": [],
+  "unsupported_features": [],
+  "playback_digest": "sha256:7c7d03da067ad46ee74715a70d87f436007568a805e9c614df7742b7904e896a",
+  "canonical_revision_id": null
+}

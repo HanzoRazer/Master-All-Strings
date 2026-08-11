@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,21 @@ def test_demo_runs_to_projection(app: MvpApplication) -> None:
     response = app.run_demo("ascending_scale")
     assert response.projection.notes
     assert response.projection.projection_digest.startswith("sha256:")
+    assert response.playback_plan.playback_digest.startswith("sha256:")
+    assert response.practice_policy.assignment_id == response.projection.assignment_id
+
+
+def test_practice_outputs_share_source_identity_and_canonical_events(
+    app: MvpApplication,
+) -> None:
+    response = app.run_demo("ascending_scale")
+
+    assert response.projection.assignment_id == response.playback_plan.assignment_id
+    assert response.projection.content_id == response.playback_plan.content_id
+    projected = {note.event_id: note for note in response.projection.notes}
+    for event in response.playback_plan.events:
+        assert projected[event.event_id].midi_note == event.midi_note
+        assert projected[event.event_id].onset_seconds == event.onset_seconds
 
 
 def test_mixed_playable_unplayable(app: MvpApplication) -> None:
@@ -30,6 +46,7 @@ def test_mixed_playable_unplayable(app: MvpApplication) -> None:
     assert unplayable.string_id is None
     assert unplayable.fret_number is None
     assert unplayable.unresolved_reason
+    assert response.playback_plan.events[1].midi_note == unplayable.midi_note
 
 
 def test_unknown_instrument_rejected(app: MvpApplication) -> None:
@@ -44,6 +61,25 @@ def test_teacher_override_origin(app: MvpApplication) -> None:
     assert override.projection.notes[0].selection_origin is SelectionOrigin.TEACHER_OVERRIDE
     assert override.projection.notes[0].string_id == "string-2"
     assert override.projection.notes[0].fret_number == 5
+
+
+def test_teacher_override_changes_spatial_output_not_playback() -> None:
+    from master_all_strings.mvp.application import load_default_instrument_catalog
+    from master_all_strings.mvp.demo_library import load_demo_assignment
+    from master_all_strings.mvp.orchestrator import MvpLessonOrchestrator
+
+    overridden = load_demo_assignment("teacher_override")
+    automatic = replace(overridden, teacher_overrides=())
+    orchestrator = MvpLessonOrchestrator(load_default_instrument_catalog())
+
+    automatic_result = orchestrator.load_assignment(automatic)
+    override_result = orchestrator.load_assignment(overridden)
+    assert automatic_result.projection.projection_digest != (
+        override_result.projection.projection_digest
+    )
+    assert automatic_result.playback_plan.playback_digest == (
+        override_result.playback_plan.playback_digest
+    )
 
 
 def test_routing_neutrality(app: MvpApplication, instrument_catalog) -> None:

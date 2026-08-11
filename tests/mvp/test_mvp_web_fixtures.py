@@ -27,9 +27,18 @@ from master_all_strings.mvp.web_export import export_web_fixtures
 WEB_ROOT = Path("web/mvp1")
 
 
+def _projection_paths() -> list[Path]:
+    return [
+        WEB_ROOT / "projections" / f"{entry.demo_id}.json"
+        for entry in load_demo_manifest()
+    ]
+
+
 def _fixture_paths() -> list[Path]:
     paths = [WEB_ROOT / "demos.json", WEB_ROOT / "instruments.json"]
-    paths += [WEB_ROOT / "projections" / f"{entry.demo_id}.json" for entry in load_demo_manifest()]
+    paths += _projection_paths()
+    paths += [WEB_ROOT / "playback" / f"{entry.demo_id}.json" for entry in load_demo_manifest()]
+    paths += [WEB_ROOT / "practice" / f"{entry.demo_id}.json" for entry in load_demo_manifest()]
     return paths
 
 
@@ -60,7 +69,7 @@ def test_runtime_output_path_is_not_committed() -> None:
     )
 
 
-@pytest.mark.parametrize("path", _fixture_paths()[2:], ids=lambda p: p.stem)
+@pytest.mark.parametrize("path", _projection_paths(), ids=lambda p: p.stem)
 def test_committed_projections_satisfy_the_delivery_contract(path: Path) -> None:
     import json
 
