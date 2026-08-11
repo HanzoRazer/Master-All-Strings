@@ -1,0 +1,265 @@
+{
+  "status": "ready",
+  "summary_title": "Unplayable Note",
+  "instrument_id": "guitar-standard-6",
+  "behavior_digest": "sha256:51c97d74e95fb76582be72a34d18255d62bce4595d47c438feac450c9fd09a56",
+  "warnings": [
+    "event ev-2 is unplayable on guitar-standard-6"
+  ],
+  "unsupported_features": [],
+  "projection": {
+    "schema_version": "1.0.0",
+    "projection_type": "fretboard_scroll",
+    "projection_version": "1.0.0",
+    "fidelity": "selected_spatial_v1",
+    "projection_digest": "sha256:459276d8a501c2a5b0bdc0e009767c48cd4e1983fd4d919a081f27ba0dcecb2f",
+    "assignment_id": "demo-unplayable",
+    "content_id": "unplayable_note",
+    "title": "Unplayable Note",
+    "timeline": {
+      "ticks_per_quarter": 480,
+      "total_ticks": 1440,
+      "total_seconds": 1.7999999999999998,
+      "seconds_per_screen": 4.0,
+      "play_line_fraction": 0.22
+    },
+    "tempo_changes": [
+      {
+        "tick": 0,
+        "tempo_bpm": 100.0,
+        "microseconds_per_quarter": 600000
+      }
+    ],
+    "instrument": {
+      "instrument_id": "guitar-standard-6",
+      "display_name": "Standard Guitar (6-string)",
+      "fingerboard_mode": "fretted",
+      "scale_length_mm": 648.0,
+      "lanes": [
+        {
+          "string_id": "string-6",
+          "display_label": "E2",
+          "display_order": 0,
+          "open_midi_note": 40,
+          "open_pitch_label": "E2"
+        },
+        {
+          "string_id": "string-5",
+          "display_label": "A2",
+          "display_order": 1,
+          "open_midi_note": 45,
+          "open_pitch_label": "A2"
+        },
+        {
+          "string_id": "string-4",
+          "display_label": "D3",
+          "display_order": 2,
+          "open_midi_note": 50,
+          "open_pitch_label": "D3"
+        },
+        {
+          "string_id": "string-3",
+          "display_label": "G3",
+          "display_order": 3,
+          "open_midi_note": 55,
+          "open_pitch_label": "G3"
+        },
+        {
+          "string_id": "string-2",
+          "display_label": "B3",
+          "display_order": 4,
+          "open_midi_note": 59,
+          "open_pitch_label": "B3"
+        },
+        {
+          "string_id": "string-1",
+          "display_label": "E4",
+          "display_order": 5,
+          "open_midi_note": 64,
+          "open_pitch_label": "E4"
+        }
+      ],
+      "frets": [
+        {
+          "fret_number": 0,
+          "normalized_position": 0.0,
+          "marker_label": null
+        },
+        {
+          "fret_number": 1,
+          "normalized_position": 0.05612568731830647,
+          "marker_label": null
+        },
+        {
+          "fret_number": 2,
+          "normalized_position": 0.10910128185966073,
+          "marker_label": null
+        },
+        {
+          "fret_number": 3,
+          "normalized_position": 0.1591035847462855,
+          "marker_label": "3rd fret"
+        },
+        {
+          "fret_number": 4,
+          "normalized_position": 0.2062994740159002,
+          "marker_label": null
+        },
+        {
+          "fret_number": 5,
+          "normalized_position": 0.25084646156165924,
+          "marker_label": "5th fret"
+        },
+        {
+          "fret_number": 6,
+          "normalized_position": 0.2928932188134524,
+          "marker_label": null
+        },
+        {
+          "fret_number": 7,
+          "normalized_position": 0.3325800729149828,
+          "marker_label": "7th fret"
+        },
+        {
+          "fret_number": 8,
+          "normalized_position": 0.3700394750525634,
+          "marker_label": null
+        },
+        {
+          "fret_number": 9,
+          "normalized_position": 0.4053964424986395,
+          "marker_label": null
+        },
+        {
+          "fret_number": 10,
+          "normalized_position": 0.4387689758453135,
+          "marker_label": null
+        },
+        {
+          "fret_number": 11,
+          "normalized_position": 0.47026845282035235,
+          "marker_label": null
+        },
+        {
+          "fret_number": 12,
+          "normalized_position": 0.5,
+          "marker_label": "12th fret"
+        },
+        {
+          "fret_number": 13,
+          "normalized_position": 0.5280628436591532,
+          "marker_label": null
+        },
+        {
+          "fret_number": 14,
+          "normalized_position": 0.5545506409298304,
+          "marker_label": null
+        },
+        {
+          "fret_number": 15,
+          "normalized_position": 0.5795517923731428,
+          "marker_label": null
+        },
+        {
+          "fret_number": 16,
+          "normalized_position": 0.6031497370079502,
+          "marker_label": null
+        },
+        {
+          "fret_number": 17,
+          "normalized_position": 0.6254232307808296,
+          "marker_label": null
+        },
+        {
+          "fret_number": 18,
+          "normalized_position": 0.6464466094067263,
+          "marker_label": null
+        },
+        {
+          "fret_number": 19,
+          "normalized_position": 0.6662900364574914,
+          "marker_label": null
+        },
+        {
+          "fret_number": 20,
+          "normalized_position": 0.6850197375262816,
+          "marker_label": null
+        },
+        {
+          "fret_number": 21,
+          "normalized_position": 0.7026982212493198,
+          "marker_label": null
+        },
+        {
+          "fret_number": 22,
+          "normalized_position": 0.7193844879226567,
+          "marker_label": null
+        }
+      ]
+    },
+    "selection_policy": "enumeration_v1",
+    "notes": [
+      {
+        "event_id": "ev-1",
+        "status": "selected",
+        "midi_note": 45,
+        "pitch_label": "A2",
+        "onset_tick": 0,
+        "duration_ticks": 480,
+        "onset_seconds": 0.0,
+        "release_seconds": 0.6,
+        "lane_display_order": 0,
+        "string_id": "string-6",
+        "fret_number": 5,
+        "relative_semitone_position": 5.0,
+        "normalized_position": 0.25084646156165924,
+        "is_open_string": false,
+        "selection_origin": "automatic",
+        "unresolved_reason": null
+      },
+      {
+        "event_id": "ev-2",
+        "status": "unplayable",
+        "midi_note": 30,
+        "pitch_label": "F#1",
+        "onset_tick": 480,
+        "duration_ticks": 480,
+        "onset_seconds": 0.6,
+        "release_seconds": 1.2,
+        "lane_display_order": null,
+        "string_id": null,
+        "fret_number": null,
+        "relative_semitone_position": null,
+        "normalized_position": null,
+        "is_open_string": null,
+        "selection_origin": null,
+        "unresolved_reason": "no_playable_position"
+      },
+      {
+        "event_id": "ev-3",
+        "status": "selected",
+        "midi_note": 47,
+        "pitch_label": "B2",
+        "onset_tick": 960,
+        "duration_ticks": 480,
+        "onset_seconds": 1.2,
+        "release_seconds": 1.7999999999999998,
+        "lane_display_order": 0,
+        "string_id": "string-6",
+        "fret_number": 7,
+        "relative_semitone_position": 7.0,
+        "normalized_position": 0.3325800729149828,
+        "is_open_string": false,
+        "selection_origin": "automatic",
+        "unresolved_reason": null
+      }
+    ],
+    "warnings": [
+      "event ev-2 is unplayable on guitar-standard-6"
+    ],
+    "unsupported_features": [],
+    "description": null,
+    "objective": "Keep impossible notes visible as unplayable",
+    "teacher_note": null
+  }
+}

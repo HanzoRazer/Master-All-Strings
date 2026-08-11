@@ -1,0 +1,351 @@
+{
+  "status": "ready",
+  "summary_title": "Ascending Scale",
+  "instrument_id": "guitar-standard-6",
+  "behavior_digest": "sha256:9f86b56c92e9d8e32dbd55275a45b5c4b17e937bad8e4552cb262c73eefd32e9",
+  "warnings": [],
+  "unsupported_features": [],
+  "projection": {
+    "schema_version": "1.0.0",
+    "projection_type": "fretboard_scroll",
+    "projection_version": "1.0.0",
+    "fidelity": "selected_spatial_v1",
+    "projection_digest": "sha256:aa1fbfb4906e0c197faa1c8f2fee271058cf974996af1bb3b3f46882a14362a6",
+    "assignment_id": "demo-ascending-scale",
+    "content_id": "ascending_scale",
+    "title": "Ascending Scale",
+    "timeline": {
+      "ticks_per_quarter": 480,
+      "total_ticks": 3840,
+      "total_seconds": 4.8,
+      "seconds_per_screen": 4.0,
+      "play_line_fraction": 0.22
+    },
+    "tempo_changes": [
+      {
+        "tick": 0,
+        "tempo_bpm": 100.0,
+        "microseconds_per_quarter": 600000
+      }
+    ],
+    "instrument": {
+      "instrument_id": "guitar-standard-6",
+      "display_name": "Standard Guitar (6-string)",
+      "fingerboard_mode": "fretted",
+      "scale_length_mm": 648.0,
+      "lanes": [
+        {
+          "string_id": "string-6",
+          "display_label": "E2",
+          "display_order": 0,
+          "open_midi_note": 40,
+          "open_pitch_label": "E2"
+        },
+        {
+          "string_id": "string-5",
+          "display_label": "A2",
+          "display_order": 1,
+          "open_midi_note": 45,
+          "open_pitch_label": "A2"
+        },
+        {
+          "string_id": "string-4",
+          "display_label": "D3",
+          "display_order": 2,
+          "open_midi_note": 50,
+          "open_pitch_label": "D3"
+        },
+        {
+          "string_id": "string-3",
+          "display_label": "G3",
+          "display_order": 3,
+          "open_midi_note": 55,
+          "open_pitch_label": "G3"
+        },
+        {
+          "string_id": "string-2",
+          "display_label": "B3",
+          "display_order": 4,
+          "open_midi_note": 59,
+          "open_pitch_label": "B3"
+        },
+        {
+          "string_id": "string-1",
+          "display_label": "E4",
+          "display_order": 5,
+          "open_midi_note": 64,
+          "open_pitch_label": "E4"
+        }
+      ],
+      "frets": [
+        {
+          "fret_number": 0,
+          "normalized_position": 0.0,
+          "marker_label": null
+        },
+        {
+          "fret_number": 1,
+          "normalized_position": 0.05612568731830647,
+          "marker_label": null
+        },
+        {
+          "fret_number": 2,
+          "normalized_position": 0.10910128185966073,
+          "marker_label": null
+        },
+        {
+          "fret_number": 3,
+          "normalized_position": 0.1591035847462855,
+          "marker_label": "3rd fret"
+        },
+        {
+          "fret_number": 4,
+          "normalized_position": 0.2062994740159002,
+          "marker_label": null
+        },
+        {
+          "fret_number": 5,
+          "normalized_position": 0.25084646156165924,
+          "marker_label": "5th fret"
+        },
+        {
+          "fret_number": 6,
+          "normalized_position": 0.2928932188134524,
+          "marker_label": null
+        },
+        {
+          "fret_number": 7,
+          "normalized_position": 0.3325800729149828,
+          "marker_label": "7th fret"
+        },
+        {
+          "fret_number": 8,
+          "normalized_position": 0.3700394750525634,
+          "marker_label": null
+        },
+        {
+          "fret_number": 9,
+          "normalized_position": 0.4053964424986395,
+          "marker_label": null
+        },
+        {
+          "fret_number": 10,
+          "normalized_position": 0.4387689758453135,
+          "marker_label": null
+        },
+        {
+          "fret_number": 11,
+          "normalized_position": 0.47026845282035235,
+          "marker_label": null
+        },
+        {
+          "fret_number": 12,
+          "normalized_position": 0.5,
+          "marker_label": "12th fret"
+        },
+        {
+          "fret_number": 13,
+          "normalized_position": 0.5280628436591532,
+          "marker_label": null
+        },
+        {
+          "fret_number": 14,
+          "normalized_position": 0.5545506409298304,
+          "marker_label": null
+        },
+        {
+          "fret_number": 15,
+          "normalized_position": 0.5795517923731428,
+          "marker_label": null
+        },
+        {
+          "fret_number": 16,
+          "normalized_position": 0.6031497370079502,
+          "marker_label": null
+        },
+        {
+          "fret_number": 17,
+          "normalized_position": 0.6254232307808296,
+          "marker_label": null
+        },
+        {
+          "fret_number": 18,
+          "normalized_position": 0.6464466094067263,
+          "marker_label": null
+        },
+        {
+          "fret_number": 19,
+          "normalized_position": 0.6662900364574914,
+          "marker_label": null
+        },
+        {
+          "fret_number": 20,
+          "normalized_position": 0.6850197375262816,
+          "marker_label": null
+        },
+        {
+          "fret_number": 21,
+          "normalized_position": 0.7026982212493198,
+          "marker_label": null
+        },
+        {
+          "fret_number": 22,
+          "normalized_position": 0.7193844879226567,
+          "marker_label": null
+        }
+      ]
+    },
+    "selection_policy": "enumeration_v1",
+    "notes": [
+      {
+        "event_id": "ev-1",
+        "status": "selected",
+        "midi_note": 64,
+        "pitch_label": "E4",
+        "onset_tick": 0,
+        "duration_ticks": 480,
+        "onset_seconds": 0.0,
+        "release_seconds": 0.6,
+        "lane_display_order": 1,
+        "string_id": "string-5",
+        "fret_number": 19,
+        "relative_semitone_position": 19.0,
+        "normalized_position": 0.6662900364574914,
+        "is_open_string": false,
+        "selection_origin": "automatic",
+        "unresolved_reason": null
+      },
+      {
+        "event_id": "ev-2",
+        "status": "selected",
+        "midi_note": 66,
+        "pitch_label": "F#4",
+        "onset_tick": 480,
+        "duration_ticks": 480,
+        "onset_seconds": 0.6,
+        "release_seconds": 1.2,
+        "lane_display_order": 1,
+        "string_id": "string-5",
+        "fret_number": 21,
+        "relative_semitone_position": 21.0,
+        "normalized_position": 0.7026982212493198,
+        "is_open_string": false,
+        "selection_origin": "automatic",
+        "unresolved_reason": null
+      },
+      {
+        "event_id": "ev-3",
+        "status": "selected",
+        "midi_note": 67,
+        "pitch_label": "G4",
+        "onset_tick": 960,
+        "duration_ticks": 480,
+        "onset_seconds": 1.2,
+        "release_seconds": 1.7999999999999998,
+        "lane_display_order": 1,
+        "string_id": "string-5",
+        "fret_number": 22,
+        "relative_semitone_position": 22.0,
+        "normalized_position": 0.7193844879226567,
+        "is_open_string": false,
+        "selection_origin": "automatic",
+        "unresolved_reason": null
+      },
+      {
+        "event_id": "ev-4",
+        "status": "selected",
+        "midi_note": 69,
+        "pitch_label": "A4",
+        "onset_tick": 1440,
+        "duration_ticks": 480,
+        "onset_seconds": 1.7999999999999998,
+        "release_seconds": 2.4,
+        "lane_display_order": 2,
+        "string_id": "string-4",
+        "fret_number": 19,
+        "relative_semitone_position": 19.0,
+        "normalized_position": 0.6662900364574914,
+        "is_open_string": false,
+        "selection_origin": "automatic",
+        "unresolved_reason": null
+      },
+      {
+        "event_id": "ev-5",
+        "status": "selected",
+        "midi_note": 71,
+        "pitch_label": "B4",
+        "onset_tick": 1920,
+        "duration_ticks": 480,
+        "onset_seconds": 2.4,
+        "release_seconds": 3.0,
+        "lane_display_order": 2,
+        "string_id": "string-4",
+        "fret_number": 21,
+        "relative_semitone_position": 21.0,
+        "normalized_position": 0.7026982212493198,
+        "is_open_string": false,
+        "selection_origin": "automatic",
+        "unresolved_reason": null
+      },
+      {
+        "event_id": "ev-6",
+        "status": "selected",
+        "midi_note": 73,
+        "pitch_label": "C#5",
+        "onset_tick": 2400,
+        "duration_ticks": 480,
+        "onset_seconds": 3.0,
+        "release_seconds": 3.5999999999999996,
+        "lane_display_order": 3,
+        "string_id": "string-3",
+        "fret_number": 18,
+        "relative_semitone_position": 18.0,
+        "normalized_position": 0.6464466094067263,
+        "is_open_string": false,
+        "selection_origin": "automatic",
+        "unresolved_reason": null
+      },
+      {
+        "event_id": "ev-7",
+        "status": "selected",
+        "midi_note": 75,
+        "pitch_label": "D#5",
+        "onset_tick": 2880,
+        "duration_ticks": 480,
+        "onset_seconds": 3.5999999999999996,
+        "release_seconds": 4.2,
+        "lane_display_order": 3,
+        "string_id": "string-3",
+        "fret_number": 20,
+        "relative_semitone_position": 20.0,
+        "normalized_position": 0.6850197375262816,
+        "is_open_string": false,
+        "selection_origin": "automatic",
+        "unresolved_reason": null
+      },
+      {
+        "event_id": "ev-8",
+        "status": "selected",
+        "midi_note": 76,
+        "pitch_label": "E5",
+        "onset_tick": 3360,
+        "duration_ticks": 480,
+        "onset_seconds": 4.2,
+        "release_seconds": 4.8,
+        "lane_display_order": 3,
+        "string_id": "string-3",
+        "fret_number": 21,
+        "relative_semitone_position": 21.0,
+        "normalized_position": 0.7026982212493198,
+        "is_open_string": false,
+        "selection_origin": "automatic",
+        "unresolved_reason": null
+      }
+    ],
+    "warnings": [],
+    "unsupported_features": [],
+    "description": "E major fragment ascending",
+    "objective": "Demonstrate ascending deterministic positions",
+    "teacher_note": null
+  }
+}
