@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from urllib.request import urlopen
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
+
+import pytest
 
 from master_all_strings.mvp.application import MvpApplication
 from master_all_strings.mvp.demo_library import (
@@ -83,5 +86,37 @@ def test_local_server_serves_index(tmp_path: Path) -> None:
         with urlopen(url, timeout=2) as response:  # noqa: S310 - localhost test
             body = response.read().decode("utf-8")
         assert "ok" in body
+    finally:
+        server.shutdown()
+
+
+def test_local_server_routes_performance_json_and_reports_errors(tmp_path: Path) -> None:
+    class Api:
+        def handle(self, action: str, payload: dict[str, object]) -> dict[str, object]:
+            if action == "fail":
+                raise ValueError("bad request")
+            return {"action": action, "payload": payload}
+
+    server, _thread, url = serve_mvp_directory(
+        tmp_path, open_browser=False, performance_api=Api()
+    )
+    root = url.rsplit("/", 1)[0]
+    try:
+        request = Request(
+            root + "/api/performance/arm",
+            data=b'{"device_id":"d"}',
+            headers={"content-type": "application/json"},
+            method="POST",
+        )
+        with urlopen(request, timeout=2) as response:  # noqa: S310
+            assert json.load(response)["action"] == "arm"
+        bad = Request(root + "/api/performance/fail", data=b"{}", method="POST")
+        with pytest.raises(HTTPError) as caught:
+            urlopen(bad, timeout=2)  # noqa: S310
+        assert caught.value.code == 400
+        missing = Request(root + "/other", data=b"{}", method="POST")
+        with pytest.raises(HTTPError) as caught:
+            urlopen(missing, timeout=2)  # noqa: S310
+        assert caught.value.code == 404
     finally:
         server.shutdown()

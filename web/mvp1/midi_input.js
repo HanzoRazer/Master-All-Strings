@@ -8,17 +8,31 @@ export const MidiInputState = Object.freeze({
 });
 
 export class WebMidiInput {
-  constructor({ navigatorObject = navigator } = {}) {
+  constructor({
+    navigatorObject = navigator,
+    fakeMode = globalThis.location?.search.includes("fakeMidi=1"),
+  } = {}) {
     this.navigator = navigatorObject;
     this.access = null;
     this.input = null;
-    this.state = this.navigator.requestMIDIAccess
-      ? MidiInputState.PERMISSION_REQUIRED
-      : MidiInputState.UNSUPPORTED;
+    this.fakeMode = fakeMode;
+    this.state =
+      this.navigator.requestMIDIAccess || fakeMode
+        ? MidiInputState.PERMISSION_REQUIRED
+        : MidiInputState.UNSUPPORTED;
     this.listener = null;
     this.disconnectListener = null;
   }
   async requestPermission() {
+    if (this.fakeMode) {
+      const fake = {
+        id: "deterministic-fake-midi",
+        name: "Deterministic Fake MIDI",
+      };
+      this.access = { inputs: new Map([[fake.id, fake]]) };
+      this.state = MidiInputState.READY;
+      return this.state;
+    }
     if (!this.navigator.requestMIDIAccess) return this.state;
     try {
       this.access = await this.navigator.requestMIDIAccess();
@@ -65,5 +79,20 @@ export class WebMidiInput {
   disconnect() {
     if (this.input) this.input.onmidimessage = null;
     this.input = null;
+  }
+  emitFakeScale() {
+    if (!this.fakeMode || !this.input?.onmidimessage)
+      throw new Error("Fake MIDI is not connected");
+    const origin = performance.now();
+    [60, 62, 64].forEach((note, index) => {
+      this.input.onmidimessage({
+        timeStamp: origin + index * 100,
+        data: new Uint8Array([0x90, note, 90]),
+      });
+      this.input.onmidimessage({
+        timeStamp: origin + index * 100 + 50,
+        data: new Uint8Array([0x80, note, 0]),
+      });
+    });
   }
 }

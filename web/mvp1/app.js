@@ -21,6 +21,7 @@ const state = {
 
 const transport = new Transport();
 const midiInput = new WebMidiInput();
+$("btnFakeMidi").hidden = !midiInput.fakeMode;
 const capture = new PerformanceCaptureController({
   midiInput,
   transport,
@@ -408,6 +409,7 @@ $("btnStopAttempt").addEventListener("click", async () => {
   $("observedCount").textContent = String(capture.count);
   renderer.setObservedEvidence(evidence?.observed_events || []);
 });
+$("btnFakeMidi").addEventListener("click", () => midiInput.emitFakeScale());
 $("zoneOverlay").addEventListener("change", (event) => {
   renderer.setZoneOverlay(event.target.checked);
   $("zoneStatus").textContent = event.target.checked

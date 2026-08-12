@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -28,11 +28,18 @@
           </label>
           <label class="field">
             <span>Exported instrument</span>
-            <select id="instrumentSelect" disabled aria-describedby="instrumentHint"></select>
+            <select
+              id="instrumentSelect"
+              disabled
+              aria-describedby="instrumentHint"
+            ></select>
           </label>
           <p class="hint subtle" id="instrumentHint">
             Read-only: the browser never re-orchestrates. Re-export with
-            <code>python scripts/run_mvp1.py --lesson &lt;demo&gt; --instrument &lt;id&gt;</code>
+            <code
+              >python scripts/run_mvp1.py --lesson &lt;demo&gt; --instrument
+              &lt;id&gt;</code
+            >
             to change instrument.
           </p>
           <p class="hint" id="lessonDescription"></p>
@@ -46,9 +53,18 @@
           </label>
           <label class="field">
             <span>Master volume</span>
-            <input id="masterVolume" type="range" min="0" max="1" step="0.05" value="0.6" />
+            <input
+              id="masterVolume"
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value="0.6"
+            />
           </label>
-          <p id="audioStatus" class="status" data-readiness="uninitialized">Sound off</p>
+          <p id="audioStatus" class="status" data-readiness="uninitialized">
+            Sound off
+          </p>
         </section>
         <section>
           <h2>Zone Harmony</h2>
@@ -90,20 +106,34 @@
             <input id="loopEnd" type="number" min="0" value="1" />
           </label>
           <p id="loopRange" class="hint subtle">Loop off</p>
-          <p class="repeat-display">Repetitions <strong id="repeatCount">0</strong></p>
-          <p class="hint subtle">Count-in policy preserved; audible count-in deferred.</p>
+          <p class="repeat-display">
+            Repetitions <strong id="repeatCount">0</strong>
+          </p>
+          <p class="hint subtle">
+            Count-in policy preserved; audible count-in deferred.
+          </p>
         </section>
         <section>
           <h2>MIDI performance</h2>
-          <label class="field"><span>MIDI input</span><select id="midiDevice"><option>Permission required</option></select></label>
+          <label class="field"
+            ><span>MIDI input</span
+            ><select id="midiDevice">
+              <option>Permission required</option>
+            </select></label
+          >
           <div class="capture-actions">
             <button type="button" id="btnMidiPermission">Enable MIDI</button>
             <button type="button" id="btnArm">Arm</button>
             <button type="button" id="btnStartAttempt">Start Attempt</button>
             <button type="button" id="btnStopAttempt">Stop Attempt</button>
+            <button type="button" id="btnFakeMidi" hidden>
+              Inject Fake Scale
+            </button>
           </div>
           <p id="captureStatus" class="status">permission_required</p>
-          <p class="hint">Observed messages <strong id="observedCount">0</strong></p>
+          <p class="hint">
+            Observed messages <strong id="observedCount">0</strong>
+          </p>
         </section>
         <section>
           <h2>Lesson info</h2>
@@ -134,7 +164,11 @@
               <div class="gutter-notes" id="gutterNotes"></div>
             </div>
           </div>
-          <div class="neck-map" id="neckMap" aria-label="Neck map overview"></div>
+          <div
+            class="neck-map"
+            id="neckMap"
+            aria-label="Neck map overview"
+          ></div>
         </div>
 
         <div class="transport">

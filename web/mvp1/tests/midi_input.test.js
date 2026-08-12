@@ -40,3 +40,16 @@ test("adapter forwards bytes and device timestamp without interpretation", async
     device_id: "d",
   });
 });
+
+test("explicit fake mode exposes deterministic browser smoke input", async () => {
+  const midi = new WebMidiInput({ navigatorObject: {}, fakeMode: true });
+  assert.equal(await midi.requestPermission(), MidiInputState.READY);
+  let count = 0;
+  midi.connect(
+    "deterministic-fake-midi",
+    () => count++,
+    () => {},
+  );
+  midi.emitFakeScale();
+  assert.equal(count, 6);
+});
