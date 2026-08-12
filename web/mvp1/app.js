@@ -172,6 +172,10 @@ function applySessionArtifacts(payload, playback, practice) {
     throw new Error("Unsupported practice artifact version");
   }
   assertSharedIdentity(payload, playback, practice);
+  capture.setLessonContext({
+    assignmentId: playback.assignment_id,
+    contentId: playback.content_id,
+  });
   clearError();
   transport.pause();
   scheduler.panic("lesson-change");

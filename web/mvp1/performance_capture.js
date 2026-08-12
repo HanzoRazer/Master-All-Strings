@@ -23,9 +23,15 @@ export class PerformanceCaptureController {
     await this.api.start({
       capture_time_ns: Math.round(performance.now() * 1_000_000),
       transport: snapshot,
+      assignment_id: this.assignmentId,
+      content_id: this.contentId,
     });
     this.active = true;
     this.transport.play();
+  }
+  setLessonContext({ assignmentId, contentId }) {
+    this.assignmentId = assignmentId;
+    this.contentId = contentId;
   }
   async record(message) {
     if (!this.active) return;
