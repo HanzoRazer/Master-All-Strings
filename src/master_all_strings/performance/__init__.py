@@ -57,6 +57,11 @@ from master_all_strings.performance.contracts.ingestion import (
     SourceMidiEventKind,
     SourceMidiEventV1,
 )
+from master_all_strings.performance.contracts.live_midi import (
+    ObservedMidiNoteStatus,
+    ObservedMidiNoteV1,
+    UnmatchedMidiNoteOffV1,
+)
 from master_all_strings.performance.contracts.results import (
     CaptureResultV1,
     PerformanceExportResultV1,
@@ -104,6 +109,8 @@ __all__ = [
     "MeterV1",
     "MetronomeConfigV1",
     "MidiEventType",
+    "ObservedMidiNoteStatus",
+    "ObservedMidiNoteV1",
     "PanicCommandV1",
     "PerformanceContractError",
     "PerformanceExportResultV1",
@@ -143,4 +150,5 @@ __all__ = [
     "TrackKind",
     "TransportMode",
     "TransportStateV1",
+    "UnmatchedMidiNoteOffV1",
 ]
