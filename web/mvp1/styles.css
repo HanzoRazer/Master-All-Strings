@@ -24,8 +24,16 @@ body {
   margin: 0;
   min-height: 100%;
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(215, 163, 92, 0.12), transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, rgba(110, 196, 255, 0.1), transparent 50%),
+    radial-gradient(
+      1200px 600px at 10% -10%,
+      rgba(215, 163, 92, 0.12),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 500px at 100% 0%,
+      rgba(110, 196, 255, 0.1),
+      transparent 50%
+    ),
     var(--bg);
   color: var(--ink);
   font-family: var(--font);
@@ -229,7 +237,11 @@ input[type="number"] {
 }
 
 .board-shell {
-  background: linear-gradient(180deg, rgba(34, 43, 55, 0.95), rgba(20, 26, 34, 0.98));
+  background: linear-gradient(
+    180deg,
+    rgba(34, 43, 55, 0.95),
+    rgba(20, 26, 34, 0.98)
+  );
   border: 1px solid var(--line);
   border-radius: 1rem;
   box-shadow: var(--shadow);
@@ -312,7 +324,11 @@ input[type="number"] {
   right: 0;
   top: 50%;
   height: 1px;
-  background: linear-gradient(90deg, rgba(232, 238, 247, 0.55), rgba(232, 238, 247, 0.12));
+  background: linear-gradient(
+    90deg,
+    rgba(232, 238, 247, 0.55),
+    rgba(232, 238, 247, 0.12)
+  );
 }
 
 .play-line {
@@ -390,10 +406,18 @@ input[type="number"] {
   padding-left: 0.35rem;
 }
 
-.legend-zone-1 { border-color: var(--zone-1) !important; }
-.legend-zone-2 { border-color: var(--zone-2) !important; }
-.legend-tritone { border-color: var(--tritone-anchor) !important; }
-.legend-half-step { border-color: var(--half-step-crossing) !important; }
+.legend-zone-1 {
+  border-color: var(--zone-1) !important;
+}
+.legend-zone-2 {
+  border-color: var(--zone-2) !important;
+}
+.legend-tritone {
+  border-color: var(--tritone-anchor) !important;
+}
+.legend-half-step {
+  border-color: var(--half-step-crossing) !important;
+}
 
 .zone-overlay-on .note.zone-1,
 .zone-overlay-on .neck-dot.zone-1 {
@@ -407,7 +431,9 @@ input[type="number"] {
 
 .zone-overlay-on .note.tritone-anchor,
 .zone-overlay-on .neck-dot.tritone-anchor {
-  box-shadow: 0 0 0 2px var(--tritone-anchor), 0 0 14px var(--tritone-anchor);
+  box-shadow:
+    0 0 0 2px var(--tritone-anchor),
+    0 0 14px var(--tritone-anchor);
 }
 
 .zone-overlay-on .note.half-step-crossing,
@@ -495,7 +521,22 @@ input[type="number"] {
   border-radius: 0.85rem;
   background: rgba(26, 33, 43, 0.9);
 }
-.capture-actions { display:grid; grid-template-columns:1fr 1fr; gap:.4rem; }
+.capture-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+.observed-note {
+  position: absolute;
+  top: 0.35rem;
+  border: 2px solid #63d6c5;
+  color: #b8fff4;
+  background: #123c3a;
+  padding: 0.15rem 0.3rem;
+  border-radius: 0.3rem;
+  z-index: 5;
+  font-size: 0.7rem;
+}
 
 .transport button {
   border: 1px solid var(--line);

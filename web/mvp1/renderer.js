@@ -21,7 +21,10 @@ const ZONE_PRESENTATION_CLASSES = Object.freeze({
 
 export function zonePresentationClasses(zoneSemantics) {
   if (!zoneSemantics) return [];
-  const semanticIds = [zoneSemantics.zone_id, ...(zoneSemantics.semantic_roles || [])];
+  const semanticIds = [
+    zoneSemantics.zone_id,
+    ...(zoneSemantics.semantic_roles || []),
+  ];
   return [...new Set(semanticIds)]
     .map((semanticId) => ZONE_PRESENTATION_CLASSES[semanticId])
     .filter(Boolean);
@@ -46,7 +49,8 @@ export function oneStringViewProjection(projection, teachingProjection) {
           normalized_position: null,
           is_open_string: null,
           selection_origin: null,
-          unresolved_reason: teaching?.unresolved_reason || "missing_one_string_projection",
+          unresolved_reason:
+            teaching?.unresolved_reason || "missing_one_string_projection",
         };
       }
       return {
@@ -63,6 +67,15 @@ export function oneStringViewProjection(projection, teachingProjection) {
       };
     }),
   };
+}
+
+export function observedEvidencePresentation(event) {
+  return Object.freeze({
+    observedEventId: event.observed_event_id,
+    presentationRole: "OBSERVED",
+    label: `Observed MIDI ${event.midi_note}`,
+    onsetSeconds: event.practice_onset_seconds,
+  });
 }
 
 export class FretboardRenderer {
@@ -97,8 +110,14 @@ export class FretboardRenderer {
 
   _buildStatic() {
     const projection = this.projection;
-    const { laneLabels, scrollCanvas, playLine, gutterNotes, neckMap, instrumentTitle } =
-      this.roots;
+    const {
+      laneLabels,
+      scrollCanvas,
+      playLine,
+      gutterNotes,
+      neckMap,
+      instrumentTitle,
+    } = this.roots;
     laneLabels.replaceChildren();
     scrollCanvas
       .querySelectorAll(".string-lane, .note, .loop-region")
@@ -117,7 +136,9 @@ export class FretboardRenderer {
 
     instrumentTitle.textContent = projection.instrument.display_name;
     const lanes = this._sortedLanes();
-    const laneIndexById = new Map(lanes.map((lane, index) => [lane.string_id, index]));
+    const laneIndexById = new Map(
+      lanes.map((lane, index) => [lane.string_id, index]),
+    );
     const laneCount = Math.max(lanes.length, 1);
     const viewport = this.roots.scrollViewport;
     const height = viewport.clientHeight || 280;
@@ -158,19 +179,24 @@ export class FretboardRenderer {
         const el = document.createElement("div");
         el.className = "note";
         if (note.is_open_string) el.classList.add("open");
-        if (note.selection_origin === "teacher_override") el.classList.add("override");
+        if (note.selection_origin === "teacher_override")
+          el.classList.add("override");
         el.dataset.eventId = note.event_id;
         const zoneClasses = zonePresentationClasses(note.zone_semantics);
         el.classList.add(...zoneClasses);
         if (note.zone_semantics) {
           el.dataset.zoneId = note.zone_semantics.zone_id;
-          el.dataset.semanticRoles = (note.zone_semantics.semantic_roles || []).join(" ");
+          el.dataset.semanticRoles = (
+            note.zone_semantics.semantic_roles || []
+          ).join(" ");
         }
 
         const pitch = document.createElement("span");
         pitch.textContent = note.pitch_label;
         const fret = document.createElement("strong");
-        fret.textContent = note.is_open_string ? "open" : String(note.fret_number);
+        fret.textContent = note.is_open_string
+          ? "open"
+          : String(note.fret_number);
         el.append(pitch, fret);
 
         el.style.top = `${(laneIndex + 0.5) * laneHeight}px`;
@@ -190,7 +216,9 @@ export class FretboardRenderer {
         });
       });
 
-    const unplayable = projection.notes.filter((note) => note.status === "unplayable");
+    const unplayable = projection.notes.filter(
+      (note) => note.status === "unplayable",
+    );
     unplayable.forEach((note) => {
       const item = document.createElement("div");
       item.className = "gutter-note";
@@ -198,7 +226,10 @@ export class FretboardRenderer {
       gutterNotes.appendChild(item);
     });
     // Do not show an empty danger-styled panel on a clean lesson.
-    this.roots.unplayableGutter?.classList.toggle("hidden", unplayable.length === 0);
+    this.roots.unplayableGutter?.classList.toggle(
+      "hidden",
+      unplayable.length === 0,
+    );
 
     this._buildNeckMap(projection, lanes);
   }
@@ -254,7 +285,8 @@ export class FretboardRenderer {
 
     for (const note of this.notes) {
       note.el.style.left = `${playX + (note.onset - positionSeconds) * pps}px`;
-      const active = positionSeconds >= note.onset && positionSeconds < note.release;
+      const active =
+        positionSeconds >= note.onset && positionSeconds < note.release;
       if (active !== note.active) {
         note.el.classList.toggle("active", active);
         note.active = active;
@@ -285,6 +317,23 @@ export class FretboardRenderer {
     this._buildStatic();
   }
 
+  setObservedEvidence(events = []) {
+    this.roots.scrollCanvas
+      .querySelectorAll(".observed-note")
+      .forEach((node) => node.remove());
+    for (const event of events) {
+      if (!Number.isFinite(event.practice_onset_seconds)) continue;
+      const presentation = observedEvidencePresentation(event);
+      const marker = document.createElement("div");
+      marker.className = "observed-note";
+      marker.dataset.observedEventId = presentation.observedEventId;
+      marker.dataset.presentationRole = presentation.presentationRole;
+      marker.style.left = `${presentation.onsetSeconds * this.pixelsPerSecond}px`;
+      marker.textContent = presentation.label;
+      this.roots.scrollCanvas.append(marker);
+    }
+  }
+
   setLoop(loop) {
     this.loop = loop?.enabled ? { ...loop } : null;
     if (this.projection) this._buildStatic();
@@ -292,14 +341,22 @@ export class FretboardRenderer {
 
   setZoneOverlay(enabled) {
     this.zoneOverlayEnabled = Boolean(enabled);
-    this.roots.scrollCanvas.classList.toggle("zone-overlay-on", this.zoneOverlayEnabled);
-    this.roots.neckMap.classList.toggle("zone-overlay-on", this.zoneOverlayEnabled);
+    this.roots.scrollCanvas.classList.toggle(
+      "zone-overlay-on",
+      this.zoneOverlayEnabled,
+    );
+    this.roots.neckMap.classList.toggle(
+      "zone-overlay-on",
+      this.zoneOverlayEnabled,
+    );
   }
 
   diagnostics() {
     return Object.freeze({
       positionSeconds: this.lastPositionSeconds,
-      activeEventIds: this.notes.filter((note) => note.active).map((note) => note.eventId),
+      activeEventIds: this.notes
+        .filter((note) => note.active)
+        .map((note) => note.eventId),
       zoneOverlayEnabled: this.zoneOverlayEnabled,
       zoneSemanticEventIds: this.notes
         .filter((note) => note.zoneClasses.length > 0)

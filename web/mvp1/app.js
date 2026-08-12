@@ -2,7 +2,10 @@ import { AudioScheduler } from "./audio_scheduler.js";
 import { AudioReadiness, ReferenceSynth } from "./audio.js";
 import { FretboardRenderer, oneStringViewProjection } from "./renderer.js";
 import { WebMidiInput } from "./midi_input.js";
-import { LocalPerformanceApi, PerformanceCaptureController } from "./performance_capture.js";
+import {
+  LocalPerformanceApi,
+  PerformanceCaptureController,
+} from "./performance_capture.js";
 import { Transport } from "./transport.js";
 
 const $ = (id) => document.getElementById(id);
@@ -18,7 +21,11 @@ const state = {
 
 const transport = new Transport();
 const midiInput = new WebMidiInput();
-const capture = new PerformanceCaptureController({midiInput, transport, api:new LocalPerformanceApi()});
+const capture = new PerformanceCaptureController({
+  midiInput,
+  transport,
+  api: new LocalPerformanceApi(),
+});
 const synth = new ReferenceSynth();
 const scheduler = new AudioScheduler({
   transport,
@@ -48,7 +55,8 @@ const renderer = new FretboardRenderer({
 
 transport.subscribe((event) => {
   if (event.type === "complete") $("statusLine").textContent = "Complete";
-  if (event.type === "loop-complete") $("statusLine").textContent = "Loop complete";
+  if (event.type === "loop-complete")
+    $("statusLine").textContent = "Loop complete";
 });
 
 function showError(message) {
@@ -112,7 +120,9 @@ function assertSharedIdentity(payload, playback, practice) {
     [practice.policy.assignment_id, practice.policy.content_id],
   ].map((pair) => pair.join("\u0000"));
   if (new Set(identities).size !== 1) {
-    throw new Error("Lesson visual, audio, and practice artifacts do not match");
+    throw new Error(
+      "Lesson visual, audio, and practice artifacts do not match",
+    );
   }
 }
 
@@ -132,7 +142,8 @@ function commitLoop() {
       targetRepetitions: state.practice?.policy.loop.target_repetitions ?? null,
     });
     renderer.setLoop(transport.loop);
-    $("loopRange").textContent = `${startSeconds.toFixed(2)}s–${endSeconds.toFixed(2)}s`;
+    $("loopRange").textContent =
+      `${startSeconds.toFixed(2)}s–${endSeconds.toFixed(2)}s`;
   } catch (error) {
     $("loopEnabled").checked = false;
     transport.clearLoop();
@@ -197,8 +208,10 @@ function applySessionArtifacts(payload, playback, practice) {
 
   const demo = demoForPayload(payload);
   if (demo) $("demoSelect").value = demo.demo_id;
-  $("instrumentSelect").value = payload.instrument_id || projection.instrument.instrument_id;
-  $("lessonDescription").textContent = demo?.description || projection.description || "";
+  $("instrumentSelect").value =
+    payload.instrument_id || projection.instrument.instrument_id;
+  $("lessonDescription").textContent =
+    demo?.description || projection.description || "";
   $("knownLimitations").textContent = (demo?.known_limitations || []).length
     ? `Known limitations: ${demo.known_limitations.join(", ")}`
     : "";
@@ -241,7 +254,9 @@ async function loadSession(paths) {
 }
 
 async function loadInitialSession() {
-  const requested = new URLSearchParams(window.location.search).get("projection");
+  const requested = new URLSearchParams(window.location.search).get(
+    "projection",
+  );
   if (requested) {
     if (!/^[\w-]+(\/[\w-]+)*\.json$/.test(requested)) {
       throw new Error(`Refusing to load projection path: ${requested}`);
@@ -309,7 +324,9 @@ function tick(now) {
   $("clockReadout").textContent =
     `${seconds.toFixed(2)}s · ${transport.playbackRate.toFixed(2)}×`;
   if (transport.durationSeconds > 0) {
-    $("seek").value = String(Math.round((seconds / transport.durationSeconds) * 1000));
+    $("seek").value = String(
+      Math.round((seconds / transport.durationSeconds) * 1000),
+    );
   }
   $("repeatCount").textContent = String(transport.repetitionCount);
   $("audioStatus").dataset.activeVoices = String(synth.registry.size);
@@ -334,11 +351,15 @@ $("btnRestart").addEventListener("click", () => {
   $("statusLine").textContent = "Restarted";
 });
 $("seek").addEventListener("input", (event) => {
-  transport.seek((Number(event.target.value) / 1000) * transport.durationSeconds);
+  transport.seek(
+    (Number(event.target.value) / 1000) * transport.durationSeconds,
+  );
 });
 document.querySelectorAll(".rates button").forEach((button) => {
   button.addEventListener("click", () => {
-    document.querySelectorAll(".rates button").forEach((node) => node.classList.remove("active"));
+    document
+      .querySelectorAll(".rates button")
+      .forEach((node) => node.classList.remove("active"));
     button.classList.add("active");
     transport.setRate(button.dataset.rate);
   });
@@ -357,13 +378,32 @@ $("masterVolume").addEventListener("input", (event) => {
 $("loopEnabled").addEventListener("change", commitLoop);
 $("loopStart").addEventListener("change", commitLoop);
 $("loopEnd").addEventListener("change", commitLoop);
-$("btnMidiPermission").addEventListener("click", async()=>{
-  $("captureStatus").textContent=await midiInput.requestPermission();
-  $("midiDevice").replaceChildren(...midiInput.devices().map(device=>{const option=document.createElement("option");option.value=device.id;option.textContent=device.name;return option;}));
+$("btnMidiPermission").addEventListener("click", async () => {
+  $("captureStatus").textContent = await midiInput.requestPermission();
+  $("midiDevice").replaceChildren(
+    ...midiInput.devices().map((device) => {
+      const option = document.createElement("option");
+      option.value = device.id;
+      option.textContent = device.name;
+      return option;
+    }),
+  );
 });
-$("btnArm").addEventListener("click", async()=>{$("captureStatus").textContent=(await capture.arm($("midiDevice").value))?"armed":"disconnected";});
-$("btnStartAttempt").addEventListener("click", async()=>{await capture.startAttempt();$("captureStatus").textContent="capturing";});
-$("btnStopAttempt").addEventListener("click", async()=>{await capture.stopAttempt();$("captureStatus").textContent="complete";$("observedCount").textContent=String(capture.count);});
+$("btnArm").addEventListener("click", async () => {
+  $("captureStatus").textContent = (await capture.arm($("midiDevice").value))
+    ? "armed"
+    : "disconnected";
+});
+$("btnStartAttempt").addEventListener("click", async () => {
+  await capture.startAttempt();
+  $("captureStatus").textContent = "capturing";
+});
+$("btnStopAttempt").addEventListener("click", async () => {
+  const evidence = await capture.stopAttempt();
+  $("captureStatus").textContent = evidence?.status || "complete";
+  $("observedCount").textContent = String(capture.count);
+  renderer.setObservedEvidence(evidence?.observed_events || []);
+});
 $("zoneOverlay").addEventListener("change", (event) => {
   renderer.setZoneOverlay(event.target.checked);
   $("zoneStatus").textContent = event.target.checked
@@ -400,9 +440,10 @@ $("demoSelect").addEventListener("change", async (event) => {
 });
 
 function captureDiagnostics() {
-  const latestSchedule = [...state.diagnostics]
-    .reverse()
-    .find((item) => item.type === "scheduled") || null;
+  const latestSchedule =
+    [...state.diagnostics]
+      .reverse()
+      .find((item) => item.type === "scheduled") || null;
   const audioContextTime = synth.context?.currentTime ?? null;
   return Object.freeze({
     capturedAtMs: performance.now(),
