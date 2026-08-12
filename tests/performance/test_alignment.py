@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import pytest
+
 from master_all_strings.core.musical_events import MusicalEvent
 from master_all_strings.core.score.tempo import TempoChangeV1
 from master_all_strings.performance.alignment import align_performance
 from master_all_strings.performance.contracts.alignment import (
     AlignmentStatus,
     PerformanceAlignmentPolicyV1,
+    PerformanceAlignmentResultV1,
 )
+from master_all_strings.performance.contracts.errors import PerformanceContractError
 from master_all_strings.performance.contracts.live_midi import (
     ObservedMidiNoteStatus,
     ObservedMidiNoteV1,
@@ -70,3 +74,14 @@ def test_loop_identity_keeps_repetitions_distinct():
         (note(1, 60, 0, 0), note(2, 62, 0.5, 0), note(3, 60, 0, 1), note(4, 62, 0.5, 1)), reps=2
     )
     assert len(r.aligned_events) == 4
+
+
+def test_policy_and_result_reject_invalid_contract_shapes():
+    with pytest.raises(PerformanceContractError):
+        PerformanceAlignmentPolicyV1(schema_version="2")
+    with pytest.raises(PerformanceContractError):
+        PerformanceAlignmentPolicyV1(early_window_ms=-1)
+    with pytest.raises(PerformanceContractError):
+        PerformanceAlignmentPolicyV1(allow_pitch_mismatch=1)  # type: ignore[arg-type]
+    with pytest.raises(PerformanceContractError):
+        PerformanceAlignmentResultV1("2", "a", "c", "s", PerformanceAlignmentPolicyV1(), (), (), ())
