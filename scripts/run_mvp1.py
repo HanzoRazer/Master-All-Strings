@@ -16,6 +16,7 @@ if str(_SRC) not in sys.path:
 from master_all_strings.mvp.application import MvpApplication  # noqa: E402
 from master_all_strings.mvp.errors import MvpError, format_mvp_error  # noqa: E402
 from master_all_strings.mvp.local_server import serve_mvp_directory  # noqa: E402
+from master_all_strings.mvp.performance_api import LocalPerformanceCaptureApi  # noqa: E402
 from master_all_strings.mvp.web_export import (  # noqa: E402
     export_playback_json,
     export_practice_json,
@@ -128,6 +129,7 @@ def main(argv: list[str] | None = None) -> int:
             port=args.port,
             open_browser=args.open_browser and not args.no_browser,
             path=path,
+            performance_api=LocalPerformanceCaptureApi(),
         )
         print(f"serving: {url}")
         try:

@@ -1,6 +1,8 @@
 import { AudioScheduler } from "./audio_scheduler.js";
 import { AudioReadiness, ReferenceSynth } from "./audio.js";
 import { FretboardRenderer, oneStringViewProjection } from "./renderer.js";
+import { WebMidiInput } from "./midi_input.js";
+import { LocalPerformanceApi, PerformanceCaptureController } from "./performance_capture.js";
 import { Transport } from "./transport.js";
 
 const $ = (id) => document.getElementById(id);
@@ -15,6 +17,8 @@ const state = {
 };
 
 const transport = new Transport();
+const midiInput = new WebMidiInput();
+const capture = new PerformanceCaptureController({midiInput, transport, api:new LocalPerformanceApi()});
 const synth = new ReferenceSynth();
 const scheduler = new AudioScheduler({
   transport,
@@ -353,6 +357,13 @@ $("masterVolume").addEventListener("input", (event) => {
 $("loopEnabled").addEventListener("change", commitLoop);
 $("loopStart").addEventListener("change", commitLoop);
 $("loopEnd").addEventListener("change", commitLoop);
+$("btnMidiPermission").addEventListener("click", async()=>{
+  $("captureStatus").textContent=await midiInput.requestPermission();
+  $("midiDevice").replaceChildren(...midiInput.devices().map(device=>{const option=document.createElement("option");option.value=device.id;option.textContent=device.name;return option;}));
+});
+$("btnArm").addEventListener("click", async()=>{$("captureStatus").textContent=(await capture.arm($("midiDevice").value))?"armed":"disconnected";});
+$("btnStartAttempt").addEventListener("click", async()=>{await capture.startAttempt();$("captureStatus").textContent="capturing";});
+$("btnStopAttempt").addEventListener("click", async()=>{await capture.stopAttempt();$("captureStatus").textContent="complete";$("observedCount").textContent=String(capture.count);});
 $("zoneOverlay").addEventListener("change", (event) => {
   renderer.setZoneOverlay(event.target.checked);
   $("zoneStatus").textContent = event.target.checked
