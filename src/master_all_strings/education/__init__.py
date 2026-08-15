@@ -18,6 +18,7 @@ from master_all_strings.education.contracts import (
     PracticeNextActionV1,
 )
 from master_all_strings.education.errors import EducationContractError
+from master_all_strings.education.evaluation import PracticeEvaluator, evaluate_alignment_findings
 from master_all_strings.education.messages import MESSAGE_CATALOG_V1
 from master_all_strings.education.serialization import (
     compute_evaluation_digest,
@@ -31,6 +32,7 @@ __all__ = [
     "PracticeAttemptSummaryV1",
     "PracticeEvaluationPolicyV1",
     "PracticeEvaluationResultV1",
+    "PracticeEvaluator",
     "PracticeFindingSeverity",
     "PracticeFindingType",
     "PracticeFindingV1",
@@ -38,6 +40,7 @@ __all__ = [
     "PracticeNextActionType",
     "PracticeNextActionV1",
     "compute_evaluation_digest",
+    "evaluate_alignment_findings",
     "serialize_evaluation_result",
     "to_dict",
 ]
