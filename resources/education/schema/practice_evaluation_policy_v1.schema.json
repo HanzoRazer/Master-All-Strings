@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/education/practice-evaluation-policy-v1.schema.json",
+  "title": "PracticeEvaluationPolicyV1",
+  "description": "Versioned Educational evaluation thresholds. Not Performance alignment windows.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_id",
+    "early_finding_threshold_ms",
+    "late_finding_threshold_ms",
+    "pitch_difference_threshold_semitones",
+    "passage_cluster_window_events",
+    "passage_cluster_min_findings",
+    "slow_down_finding_ratio",
+    "continue_actionable_finding_count",
+    "minimum_expected_events"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "policy_id": { "type": "string", "minLength": 1 },
+    "early_finding_threshold_ms": { "type": "integer", "minimum": 0 },
+    "late_finding_threshold_ms": { "type": "integer", "minimum": 0 },
+    "pitch_difference_threshold_semitones": { "type": "integer", "minimum": 0 },
+    "passage_cluster_window_events": { "type": "integer", "minimum": 1 },
+    "passage_cluster_min_findings": { "type": "integer", "minimum": 1 },
+    "slow_down_finding_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+    "continue_actionable_finding_count": { "type": "integer", "minimum": 0 },
+    "minimum_expected_events": { "type": "integer", "minimum": 1 }
+  }
+}

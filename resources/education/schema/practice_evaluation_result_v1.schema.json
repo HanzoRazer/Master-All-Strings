@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/education/practice-evaluation-result-v1.schema.json",
+  "title": "PracticeEvaluationResultV1",
+  "description": "Portable Educational evaluation of one PerformanceSessionEvidenceV1 attempt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "assignment_id",
+    "content_id",
+    "performance_session_id",
+    "evaluation_policy_id",
+    "evaluation_policy_version",
+    "findings",
+    "summary",
+    "primary_next_action",
+    "secondary_actions",
+    "provenance",
+    "evaluation_digest"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "assignment_id": { "type": "string", "minLength": 1 },
+    "content_id": { "type": "string", "minLength": 1 },
+    "performance_session_id": { "type": "string", "minLength": 1 },
+    "evaluation_policy_id": { "type": "string", "minLength": 1 },
+    "evaluation_policy_version": { "type": "string", "minLength": 1 },
+    "findings": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "summary": { "type": "object" },
+    "primary_next_action": { "type": "object" },
+    "secondary_actions": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "evaluation_digest": { "type": "string", "pattern": "^sha256:" }
+  }
+}
