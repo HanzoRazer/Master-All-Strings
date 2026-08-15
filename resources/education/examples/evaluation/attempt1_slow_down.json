@@ -1,0 +1,98 @@
+{
+  "assignment_id": "golden-do010",
+  "content_id": "ascending-scale-10",
+  "performance_session_id": "golden-session",
+  "current_rate": 1.0,
+  "aligned_events": [
+    {
+      "status": "matched_exact_pitch",
+      "expected_event_id": "ev-1",
+      "observed_event_id": "obs-1",
+      "repetition_index": 0,
+      "timing_delta_ms": 140,
+      "pitch_delta_semitones": 0,
+      "expected_start_tick": 0
+    },
+    {
+      "status": "matched_exact_pitch",
+      "expected_event_id": "ev-2",
+      "observed_event_id": "obs-2",
+      "repetition_index": 0,
+      "timing_delta_ms": 0,
+      "pitch_delta_semitones": 0,
+      "expected_start_tick": 480
+    },
+    {
+      "status": "matched_exact_pitch",
+      "expected_event_id": "ev-3",
+      "observed_event_id": "obs-3",
+      "repetition_index": 0,
+      "timing_delta_ms": 0,
+      "pitch_delta_semitones": 0,
+      "expected_start_tick": 960
+    },
+    {
+      "status": "matched_exact_pitch",
+      "expected_event_id": "ev-4",
+      "observed_event_id": "obs-4",
+      "repetition_index": 0,
+      "timing_delta_ms": 0,
+      "pitch_delta_semitones": 0,
+      "expected_start_tick": 1440
+    },
+    {
+      "status": "matched_exact_pitch",
+      "expected_event_id": "ev-5",
+      "observed_event_id": "obs-5",
+      "repetition_index": 0,
+      "timing_delta_ms": 140,
+      "pitch_delta_semitones": 0,
+      "expected_start_tick": 1920
+    },
+    {
+      "status": "matched_exact_pitch",
+      "expected_event_id": "ev-6",
+      "observed_event_id": "obs-6",
+      "repetition_index": 0,
+      "timing_delta_ms": 0,
+      "pitch_delta_semitones": 0,
+      "expected_start_tick": 2400
+    },
+    {
+      "status": "matched_exact_pitch",
+      "expected_event_id": "ev-7",
+      "observed_event_id": "obs-7",
+      "repetition_index": 0,
+      "timing_delta_ms": 0,
+      "pitch_delta_semitones": 0,
+      "expected_start_tick": 2880
+    },
+    {
+      "status": "matched_exact_pitch",
+      "expected_event_id": "ev-8",
+      "observed_event_id": "obs-8",
+      "repetition_index": 0,
+      "timing_delta_ms": 0,
+      "pitch_delta_semitones": 0,
+      "expected_start_tick": 3360
+    },
+    {
+      "status": "matched_exact_pitch",
+      "expected_event_id": "ev-9",
+      "observed_event_id": "obs-9",
+      "repetition_index": 0,
+      "timing_delta_ms": 140,
+      "pitch_delta_semitones": 0,
+      "expected_start_tick": 3840
+    },
+    {
+      "status": "matched_exact_pitch",
+      "expected_event_id": "ev-10",
+      "observed_event_id": "obs-10",
+      "repetition_index": 0,
+      "timing_delta_ms": 0,
+      "pitch_delta_semitones": 0,
+      "expected_start_tick": 4320
+    }
+  ]
+}

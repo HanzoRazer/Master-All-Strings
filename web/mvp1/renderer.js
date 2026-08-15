@@ -334,6 +334,21 @@ export class FretboardRenderer {
     }
   }
 
+  setFocusRange(range = null) {
+    this.roots.scrollCanvas
+      .querySelectorAll(".focus-range")
+      .forEach((node) => node.remove());
+    if (!range || range.startSeconds == null || range.endSeconds == null) return;
+    const start = Number(range.startSeconds);
+    const end = Number(range.endSeconds);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return;
+    const band = document.createElement("div");
+    band.className = "focus-range";
+    band.style.left = `${start * this.pixelsPerSecond}px`;
+    band.style.width = `${Math.max(8, (end - start) * this.pixelsPerSecond + 24)}px`;
+    this.roots.scrollCanvas.prepend(band);
+  }
+
   setLoop(loop) {
     this.loop = loop?.enabled ? { ...loop } : null;
     if (this.projection) this._buildStatic();

@@ -13,14 +13,25 @@
           <div class="brand-mark" aria-hidden="true"></div>
           <div>
             <h1>Master All Strings</h1>
-            <p class="subtitle">MVP-2A · Hear, see, slow, and loop</p>
+            <p class="subtitle">MVP · Lesson → Practice → Results</p>
           </div>
         </div>
         <div class="meta" id="sourceMeta">Loading projection…</div>
+        <nav class="workflow" aria-label="Learner workflow">
+          <button type="button" class="workflow-step active" data-stage="lesson">
+            Lesson
+          </button>
+          <button type="button" class="workflow-step" data-stage="practice">
+            Practice
+          </button>
+          <button type="button" class="workflow-step" data-stage="results">
+            Results
+          </button>
+        </nav>
       </header>
 
       <aside class="sidebar">
-        <section>
+        <section data-stage-panel="lesson">
           <h2>Lesson</h2>
           <label class="field">
             <span>Demo</span>
@@ -45,7 +56,7 @@
           <p class="hint" id="lessonDescription"></p>
           <p class="hint subtle" id="knownLimitations"></p>
         </section>
-        <section>
+        <section data-stage-panel="practice" hidden>
           <h2>Reference Synth</h2>
           <label class="toggle-field">
             <input id="soundEnabled" type="checkbox" />
@@ -66,7 +77,7 @@
             Sound off
           </p>
         </section>
-        <section>
+        <section data-stage-panel="practice" hidden>
           <h2>Zone Harmony</h2>
           <label class="toggle-field">
             <input id="zoneOverlay" type="checkbox" disabled />
@@ -91,7 +102,7 @@
             <select id="teachingString" disabled></select>
           </label>
         </section>
-        <section>
+        <section data-stage-panel="practice" hidden>
           <h2>Practice loop</h2>
           <label class="toggle-field">
             <input id="loopEnabled" type="checkbox" />
@@ -113,8 +124,8 @@
             Count-in policy preserved; audible count-in deferred.
           </p>
         </section>
-        <section>
-          <h2>MIDI performance</h2>
+        <section data-stage-panel="practice" hidden>
+          <h2>MIDI capture</h2>
           <label class="field"
             ><span>MIDI input</span
             ><select id="midiDevice">
@@ -135,7 +146,20 @@
             Observed messages <strong id="observedCount">0</strong>
           </p>
         </section>
-        <section>
+        <section data-stage-panel="results" hidden>
+          <h2>Results</h2>
+          <div id="resultsPanel" class="results-panel">
+            No practice evaluation yet.
+          </div>
+          <div class="capture-actions">
+            <button type="button" id="btnApplyPrimary">Apply next action</button>
+            <button type="button" id="btnGoldenDemo" hidden>
+              Run golden 3-attempt demo
+            </button>
+          </div>
+          <p id="resultsStatus" class="hint subtle"></p>
+        </section>
+        <section data-stage-panel="lesson">
           <h2>Lesson info</h2>
           <dl class="info" id="lessonInfo"></dl>
         </section>

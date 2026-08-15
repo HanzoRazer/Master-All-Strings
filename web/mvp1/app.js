@@ -6,6 +6,11 @@ import {
   LocalPerformanceApi,
   PerformanceCaptureController,
 } from "./performance_capture.js";
+import {
+  LocalEducationApi,
+  PracticeActionController,
+} from "./practice_actions.js";
+import { focusRangeFromEvaluation, renderResultsPanel } from "./results.js";
 import { Transport } from "./transport.js";
 
 const $ = (id) => document.getElementById(id);
@@ -17,6 +22,8 @@ const state = {
   demosById: new Map(),
   instruments: [],
   diagnostics: [],
+  stage: "lesson",
+  lastEvaluation: null,
 };
 
 const transport = new Transport();
@@ -27,6 +34,18 @@ const capture = new PerformanceCaptureController({
   transport,
   api: new LocalPerformanceApi(),
 });
+const educationApi = new LocalEducationApi();
+const practiceActions = new PracticeActionController({
+  transport,
+  onStatus: (message) => {
+    $("resultsStatus").textContent = message;
+    $("statusLine").textContent = message;
+  },
+});
+const params = new URLSearchParams(window.location.search);
+if (params.get("devGolden") === "1") {
+  $("btnGoldenDemo").hidden = false;
+}
 const synth = new ReferenceSynth();
 const scheduler = new AudioScheduler({
   transport,
@@ -69,6 +88,21 @@ function showError(message) {
 function clearError() {
   $("errorOverlay").classList.add("hidden");
 }
+
+function setStage(stage) {
+  state.stage = stage;
+  document.querySelectorAll(".workflow-step").forEach((button) => {
+    button.classList.toggle("active", button.dataset.stage === stage);
+  });
+  document.querySelectorAll("[data-stage-panel]").forEach((panel) => {
+    panel.hidden = panel.dataset.stagePanel !== stage;
+  });
+  // Status is always visible.
+}
+
+document.querySelectorAll(".workflow-step").forEach((button) => {
+  button.addEventListener("click", () => setStage(button.dataset.stage));
+});
 
 function setAudioStatus(message, readiness = synth.readiness) {
   $("audioStatus").textContent = message;
@@ -177,6 +211,17 @@ function applySessionArtifacts(payload, playback, practice) {
     assignmentId: playback.assignment_id,
     contentId: playback.content_id,
   });
+  educationApi
+    .beginLesson({
+      assignment_id: playback.assignment_id,
+      content_id: playback.content_id,
+    })
+    .catch((error) => {
+      $("statusLine").textContent = error.message || "Education session failed";
+    });
+  state.lastEvaluation = null;
+  renderResultsPanel($("resultsPanel"), null);
+  renderer.setFocusRange(null);
   clearError();
   transport.pause();
   scheduler.panic("lesson-change");
@@ -408,8 +453,74 @@ $("btnStopAttempt").addEventListener("click", async () => {
   $("captureStatus").textContent = evidence?.status || "complete";
   $("observedCount").textContent = String(capture.count);
   renderer.setObservedEvidence(evidence?.observed_events || []);
+  if (!evidence || !state.payload?.projection) return;
+  try {
+    const projection = state.payload.projection;
+    const evaluation = await educationApi.evaluate({
+      assignment_id: projection.assignment_id,
+      content_id: projection.content_id,
+      performance_session_id:
+        evidence.raw_capture?.session_id ||
+        evidence.performance_session_id ||
+        `session-${Date.now()}`,
+      current_rate: transport.playbackRate,
+      timeline: projection.timeline,
+      tempo_changes: projection.tempo_changes,
+      expected_notes: projection.notes.map((note) => ({
+        event_id: note.event_id,
+        midi_note: note.midi_note,
+        onset_tick: note.onset_tick,
+        duration_ticks: note.duration_ticks,
+        velocity: 80,
+      })),
+      observed_events: evidence.observed_events || [],
+      repetition_count: Math.max(1, transport.snapshot().repetitionCount || 1),
+    });
+    state.lastEvaluation = evaluation;
+    renderResultsPanel($("resultsPanel"), evaluation);
+    const focus = focusRangeFromEvaluation(evaluation.evaluation, projection);
+    renderer.setFocusRange(focus);
+    setStage("results");
+    $("statusLine").textContent = `Evaluated · ${evaluation.evaluation.primary_next_action.action_type}`;
+  } catch (error) {
+    $("statusLine").textContent = error.message || "Evaluation failed";
+  }
 });
 $("btnFakeMidi").addEventListener("click", () => midiInput.emitFakeScale());
+$("btnApplyPrimary").addEventListener("click", async () => {
+  const action = state.lastEvaluation?.evaluation?.primary_next_action;
+  if (!action) return;
+  await practiceActions.apply(action, educationApi);
+  if (action.action_type === "isolate_passage" && state.payload?.projection) {
+    renderer.setFocusRange(
+      focusRangeFromEvaluation(
+        {
+          summary: {
+            focus_ranges: [
+              {
+                start_tick: action.focus_start_tick,
+                end_tick: action.focus_end_tick,
+                finding_ids: action.reason_finding_ids || [],
+              },
+            ],
+          },
+        },
+        state.payload.projection,
+      ),
+    );
+  }
+  setStage("practice");
+});
+$("btnGoldenDemo").addEventListener("click", async () => {
+  try {
+    const result = await educationApi.goldenDemo();
+    $("resultsStatus").textContent = `Golden demo: ${result.sequence.join(" → ")}`;
+    $("statusLine").textContent = "Golden 3-attempt demo complete";
+    setStage("results");
+  } catch (error) {
+    $("resultsStatus").textContent = error.message || "Golden demo failed";
+  }
+});
 $("zoneOverlay").addEventListener("change", (event) => {
   renderer.setZoneOverlay(event.target.checked);
   $("zoneStatus").textContent = event.target.checked
@@ -473,6 +584,9 @@ window.__mvp2a = {
   renderer,
   loadSession,
   captureDiagnostics,
+  educationApi,
+  setStage,
 };
 bootstrap();
+setStage("lesson");
 requestAnimationFrame(tick);

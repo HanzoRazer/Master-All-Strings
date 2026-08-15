@@ -623,3 +623,58 @@ input[type="number"] {
     min-height: 72px;
   }
 }
+
+.workflow {
+  display: flex;
+  gap: 0.35rem;
+  margin-left: 1rem;
+}
+
+.workflow-step {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.45rem;
+  cursor: pointer;
+}
+
+.workflow-step.active {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: rgba(215, 163, 92, 0.12);
+}
+
+.results-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.results-findings {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+}
+
+.results-findings li[data-severity="significant"] {
+  color: var(--danger);
+}
+
+.results-findings li[data-severity="focus"] {
+  color: var(--accent);
+}
+
+.focus-range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(215, 163, 92, 0.14);
+  border-left: 2px solid rgba(215, 163, 92, 0.55);
+  border-right: 2px solid rgba(215, 163, 92, 0.55);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.results-action {
+  margin: 0;
+}

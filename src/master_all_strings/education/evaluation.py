@@ -159,7 +159,23 @@ class PracticeEvaluator:
                 raise EducationContractError("evidence/alignment content_id mismatch")
 
         findings = list(self.evaluate_findings(alignment, policy=active_policy))
-        focus_ranges = cluster_findings_by_passage(findings, active_policy)
+        expected_ticks = tuple(
+            row.expected_start_tick
+            for row in alignment.aligned_events
+            if row.expected_event_id is not None and row.expected_start_tick is not None
+        )
+        ordered_ticks: list[int] = []
+        seen_ticks: set[int] = set()
+        for tick in expected_ticks:
+            if tick in seen_ticks:
+                continue
+            seen_ticks.add(tick)
+            ordered_ticks.append(tick)
+        focus_ranges = cluster_findings_by_passage(
+            findings,
+            active_policy,
+            expected_ticks=ordered_ticks,
+        )
         concentrated = concentrated_finding(focus_ranges)
         if concentrated is not None:
             findings.append(concentrated)

@@ -25,6 +25,7 @@ Every capability has exactly one authoritative owning engine. Generated from the
 | `reference-material` | Reference material | Educational | — | neither | planned |
 | `learning-paths` | Learning paths | Educational | — | neither | planned |
 | `educational-interpretation` | Educational interpretation | Educational | Creative | interpretation | planned |
+| `practice-evaluation` | Practice evaluation | Educational | Creative | interpretation | implemented |
 | `difficulty` | Difficulty estimation | Educational | Creative | interpretation | planned |
 | `coaching` | Coaching | Educational | — | interpretation | planned |
 | `assessment` | Assessment | Educational | — | interpretation | planned |

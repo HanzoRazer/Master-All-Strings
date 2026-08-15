@@ -1,8 +1,8 @@
 """Passage focus clustering for concentrated Educational findings.
 
 Isolate fires when >= ``passage_cluster_min_findings`` actionable findings occur
-inside a sliding window of ``passage_cluster_window_events`` distinct expected
-event ticks — never by discarding valid Performance evidence.
+inside a sliding window of ``passage_cluster_window_events`` consecutive expected
+events from the lesson timeline.
 """
 
 from __future__ import annotations
@@ -32,8 +32,14 @@ _CLUSTER_TYPES = frozenset(
 def cluster_findings_by_passage(
     findings: Sequence[PracticeFindingV1],
     policy: PracticeEvaluationPolicyV1,
+    *,
+    expected_ticks: Sequence[int] | None = None,
 ) -> tuple[PracticeFocusRangeV1, ...]:
-    """Group actionable expected-event findings into focus ranges."""
+    """Group actionable expected-event findings into focus ranges.
+
+    ``expected_ticks`` is the ordered lesson expected-event start-tick sequence.
+    When omitted, unique finding ticks are used as a degraded fallback.
+    """
 
     candidates = [
         f
@@ -46,7 +52,13 @@ def cluster_findings_by_passage(
     if not candidates:
         return ()
 
-    ordered_ticks = sorted({f.focus_start_tick for f in candidates if f.focus_start_tick is not None})
+    if expected_ticks is not None and len(expected_ticks) > 0:
+        ordered_ticks = list(expected_ticks)
+    else:
+        ordered_ticks = sorted(
+            {f.focus_start_tick for f in candidates if f.focus_start_tick is not None}
+        )
+
     window = policy.passage_cluster_window_events
     minimum = policy.passage_cluster_min_findings
     ranges: list[PracticeFocusRangeV1] = []
@@ -54,7 +66,7 @@ def cluster_findings_by_passage(
 
     for start in range(len(ordered_ticks)):
         tick_window = ordered_ticks[start : start + window]
-        if len(tick_window) < 1:
+        if not tick_window:
             continue
         tick_set = set(tick_window)
         group = [
@@ -64,7 +76,7 @@ def cluster_findings_by_passage(
         ]
         if len(group) < minimum:
             continue
-        finding_ids = tuple(f.finding_id for f in group)
+        finding_ids = tuple(sorted(f.finding_id for f in group))
         used.update(finding_ids)
         ranges.append(
             PracticeFocusRangeV1(

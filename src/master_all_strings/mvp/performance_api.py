@@ -29,6 +29,7 @@ class LocalPerformanceCaptureApi:
     capture: RawPerformanceCaptureV1 | None = None
     device_id: str | None = None
     repetitions: dict[str, int] = field(default_factory=dict)
+    practice_onsets: dict[str, float] = field(default_factory=dict)
 
     def handle(self, action: str, payload: dict[str, Any]) -> dict[str, Any]:
         if action == "arm":
@@ -53,6 +54,7 @@ class LocalPerformanceCaptureApi:
                 meter_context=MeterV1("1.0.0", 4, 4),
                 provenance=(("clock_domain", "browser_performance_time"),),
             )
+            self.practice_onsets.clear()
             return {
                 "status": "capturing",
                 "capture_id": capture_id,
@@ -85,12 +87,17 @@ class LocalPerformanceCaptureApi:
             raw_payload=raw,
         )
         self.repetitions[event.event_id] = int(payload.get("repetition_index", 0))
+        onset = payload.get("practice_position_seconds")
+        if onset is not None:
+            self.practice_onsets[event.event_id] = float(onset)
         self.capture = append_events(self.capture, (event,))
         return {"status": "capturing", "event_count": len(self.capture.events)}
 
     def _close(self, *, interrupted: bool) -> dict[str, Any]:
         if self.capture is None or self.capture.is_closed:
             raise PerformanceContractError("no active capture")
+        from dataclasses import replace
+
         from master_all_strings.performance.contracts.capture import CaptureCompletionState
 
         self.capture = close_capture(
@@ -105,9 +112,16 @@ class LocalPerformanceCaptureApi:
             observed_id_factory=lambda _: str(uuid4()),
             repetition_resolver=lambda e: self.repetitions.get(e.event_id, 0),
         )
+        observed = []
+        for note in paired.observed_notes:
+            onset = self.practice_onsets.get(note.note_on_event_id)
+            if onset is None:
+                observed.append(note)
+            else:
+                observed.append(replace(note, practice_onset_seconds=onset))
         return {
             "status": self.capture.completion_state.value,
             "raw_capture": to_dict(self.capture),
-            "observed_events": [to_dict(n) for n in paired.observed_notes],
+            "observed_events": [to_dict(n) for n in observed],
             "unmatched_note_offs": [to_dict(n) for n in paired.unmatched_note_offs],
         }

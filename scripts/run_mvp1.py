@@ -14,6 +14,7 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from master_all_strings.mvp.application import MvpApplication  # noqa: E402
+from master_all_strings.mvp.education_api import LocalPracticeEvaluationApi  # noqa: E402
 from master_all_strings.mvp.errors import MvpError, format_mvp_error  # noqa: E402
 from master_all_strings.mvp.local_server import serve_mvp_directory  # noqa: E402
 from master_all_strings.mvp.performance_api import LocalPerformanceCaptureApi  # noqa: E402
@@ -130,6 +131,7 @@ def main(argv: list[str] | None = None) -> int:
             open_browser=args.open_browser and not args.no_browser,
             path=path,
             performance_api=LocalPerformanceCaptureApi(),
+            education_api=LocalPracticeEvaluationApi(),
         )
         print(f"serving: {url}")
         try:

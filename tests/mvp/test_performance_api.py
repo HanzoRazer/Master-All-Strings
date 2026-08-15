@@ -12,6 +12,7 @@ def test_local_api_preserves_raw_and_pairs_in_python():
             "raw_payload": [144, 60, 90],
             "device_id": "d",
             "repetition_index": 2,
+            "practice_position_seconds": 1.25,
         },
     )
     api.handle(
@@ -25,3 +26,4 @@ def test_local_api_preserves_raw_and_pairs_in_python():
     )
     result = api.handle("stop", {})
     assert result["status"] == "complete" and result["observed_events"][0]["repetition_index"] == 2
+    assert result["observed_events"][0]["practice_onset_seconds"] == 1.25

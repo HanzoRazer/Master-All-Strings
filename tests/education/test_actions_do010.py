@@ -100,28 +100,30 @@ def test_supported_slower_rate_mapping() -> None:
 
 def test_isolate_requires_three_in_four_expected_event_window() -> None:
     policy = PracticeEvaluationPolicyV1.mvp_defaults()
-    # Two findings inside four ticks — no isolate.
-    below = (
-        _finding("f1", tick=0),
-        _finding("f2", tick=100),
-    )
-    assert cluster_findings_by_passage(below, policy) == ()
+    expected_ticks = (0, 100, 200, 300, 400, 500, 600, 700, 800, 900)
 
-    # Three findings across four expected ticks — isolate.
-    at = (
+    # Three spread findings are not inside any 4-event window.
+    spread = (
+        _finding("f1", tick=0),
+        _finding("f2", tick=400),
+        _finding("f3", tick=800),
+    )
+    assert cluster_findings_by_passage(spread, policy, expected_ticks=expected_ticks) == ()
+
+    # Three findings inside events 0..300 — isolate.
+    clustered = (
         _finding("f1", tick=0),
         _finding("f2", tick=100),
         _finding("f3", tick=200),
-        _finding("f4", finding_type=PracticeFindingType.PITCH_DIFFERENCE, tick=900),
     )
-    # Only first three are within a contiguous 4-tick window of {0,100,200,900}?
-    # Ordered ticks: 0,100,200,900. Window [0,100,200,900] contains 4 findings.
-    ranges = cluster_findings_by_passage(at, policy)
+    ranges = cluster_findings_by_passage(
+        clustered, policy, expected_ticks=expected_ticks
+    )
     assert len(ranges) == 1
     assert len(ranges[0].finding_ids) >= 3
 
     action = choose_primary_next_action(
-        at,
+        clustered,
         ranges,
         policy,
         expected_event_count=10,
@@ -181,11 +183,31 @@ def test_isolate_precedes_slow_down() -> None:
         _finding("f2", tick=100),
         _finding("f3", tick=200),
     )
-    ranges = cluster_findings_by_passage(findings, policy)
+    ranges = cluster_findings_by_passage(
+        findings, policy, expected_ticks=(0, 100, 200, 300)
+    )
     primary, _secondary = build_next_actions(
-        findings, ranges, policy, expected_event_count=3
+        findings, ranges, policy, expected_event_count=10
     )
     assert primary.action_type is PracticeNextActionType.ISOLATE_PASSAGE
+
+
+def test_spread_timing_findings_prefer_slow_down() -> None:
+    policy = PracticeEvaluationPolicyV1.mvp_defaults()
+    expected_ticks = (0, 100, 200, 300, 400, 500, 600, 700, 800, 900)
+    findings = (
+        _finding("a", tick=0),
+        _finding("b", tick=400),
+        _finding("c", tick=800),
+    )
+    ranges = cluster_findings_by_passage(
+        findings, policy, expected_ticks=expected_ticks
+    )
+    assert ranges == ()
+    primary, _ = build_next_actions(
+        findings, ranges, policy, expected_event_count=10
+    )
+    assert primary.action_type is PracticeNextActionType.SLOW_DOWN
 
 
 def test_repetition_improved_and_regressed() -> None:
