@@ -280,3 +280,228 @@ def test_performance_must_not_import_education() -> None:
         if "master_all_strings.education" in text:
             offenders.append(str(path.relative_to(REPO)))
     assert offenders == []
+
+
+def test_contract_validation_edges_for_coverage() -> None:
+    with pytest.raises(EducationContractError):
+        PracticeFocusRangeV1(10, 5)
+    with pytest.raises(EducationContractError):
+        PracticeFindingV1(
+            schema_version="1.0.0",
+            finding_id="f1",
+            finding_type="late_entry",  # type: ignore[arg-type]
+            severity=PracticeFindingSeverity.FOCUS,
+            evidence_refs=("e1",),
+            message_key="finding.late_entry",
+        )
+    with pytest.raises(EducationContractError):
+        PracticeFindingV1(
+            schema_version="1.0.0",
+            finding_id="f1",
+            finding_type=PracticeFindingType.LATE_ENTRY,
+            severity="focus",  # type: ignore[arg-type]
+            evidence_refs=("e1",),
+            message_key="finding.late_entry",
+        )
+    with pytest.raises(EducationContractError):
+        PracticeFindingV1(
+            schema_version="1.0.0",
+            finding_id="f1",
+            finding_type=PracticeFindingType.LATE_ENTRY,
+            severity=PracticeFindingSeverity.FOCUS,
+            evidence_refs=("e1",),
+            message_key="finding.late_entry",
+            focus_start_tick=20,
+            focus_end_tick=10,
+        )
+    with pytest.raises(EducationContractError):
+        PracticeFindingV1(
+            schema_version="1.0.0",
+            finding_id="f1",
+            finding_type=PracticeFindingType.LATE_ENTRY,
+            severity=PracticeFindingSeverity.FOCUS,
+            evidence_refs=("e1",),
+            message_key="finding.late_entry",
+            metadata=((" ", "x"),),
+        )
+    with pytest.raises(EducationContractError):
+        PracticeNextActionV1(
+            schema_version="1.0.0",
+            action_type="continue",  # type: ignore[arg-type]
+            reason_finding_ids=(),
+            message_key="action.continue",
+        )
+    with pytest.raises(EducationContractError):
+        PracticeNextActionV1(
+            schema_version="1.0.0",
+            action_type=PracticeNextActionType.CONTINUE,
+            reason_finding_ids=(),
+            message_key="action.missing",
+        )
+    with pytest.raises(EducationContractError):
+        PracticeNextActionV1(
+            schema_version="1.0.0",
+            action_type=PracticeNextActionType.CONTINUE,
+            reason_finding_ids=(),
+            message_key="action.continue",
+            focus_start_tick=5,
+            focus_end_tick=1,
+        )
+    primary = _continue_action()
+    with pytest.raises(EducationContractError):
+        PracticeAttemptSummaryV1(
+            schema_version="1.0.0",
+            performance_session_id="p",
+            expected_event_count=1,
+            observed_event_count=1,
+            matched_count=1,
+            missing_count=0,
+            extra_count=0,
+            pitch_finding_count=0,
+            timing_finding_count=0,
+            actionable_finding_count=0,
+            repetition_count=1,
+            focus_ranges=("nope",),  # type: ignore[arg-type]
+            primary_action=primary,
+        )
+    with pytest.raises(EducationContractError):
+        PracticeAttemptSummaryV1(
+            schema_version="1.0.0",
+            performance_session_id="p",
+            expected_event_count=1,
+            observed_event_count=1,
+            matched_count=1,
+            missing_count=0,
+            extra_count=0,
+            pitch_finding_count=0,
+            timing_finding_count=0,
+            actionable_finding_count=0,
+            repetition_count=1,
+            focus_ranges=(),
+            primary_action="nope",  # type: ignore[arg-type]
+        )
+    with pytest.raises(EducationContractError):
+        PracticeAttemptSummaryV1(
+            schema_version="1.0.0",
+            performance_session_id="p",
+            expected_event_count=1,
+            observed_event_count=1,
+            matched_count=1,
+            missing_count=0,
+            extra_count=0,
+            pitch_finding_count=0,
+            timing_finding_count=0,
+            actionable_finding_count=0,
+            repetition_count=1,
+            focus_ranges=(),
+            primary_action=primary,
+            secondary_actions=("nope",),  # type: ignore[arg-type]
+        )
+    finding = _finding()
+    summary = PracticeAttemptSummaryV1(
+        schema_version="1.0.0",
+        performance_session_id="perf-1",
+        expected_event_count=1,
+        observed_event_count=1,
+        matched_count=1,
+        missing_count=0,
+        extra_count=0,
+        pitch_finding_count=0,
+        timing_finding_count=1,
+        actionable_finding_count=1,
+        repetition_count=1,
+        focus_ranges=(),
+        primary_action=primary,
+    )
+    digest = compute_evaluation_digest(
+        assignment_id="a",
+        content_id="c",
+        performance_session_id="perf-1",
+        evaluation_policy_id="p",
+        evaluation_policy_version="1.0.0",
+        findings=(finding,),
+        summary=summary,
+        primary_next_action=primary,
+        secondary_actions=(),
+        provenance=(),
+    )
+    with pytest.raises(EducationContractError):
+        PracticeEvaluationResultV1(
+            schema_version="1.0.0",
+            assignment_id="a",
+            content_id="c",
+            performance_session_id="perf-1",
+            evaluation_policy_id="p",
+            evaluation_policy_version="1.0.0",
+            findings=("nope",),  # type: ignore[arg-type]
+            summary=summary,
+            primary_next_action=primary,
+            secondary_actions=(),
+            provenance=(),
+            evaluation_digest=digest,
+        )
+    with pytest.raises(EducationContractError):
+        PracticeEvaluationResultV1(
+            schema_version="1.0.0",
+            assignment_id="a",
+            content_id="c",
+            performance_session_id="other",
+            evaluation_policy_id="p",
+            evaluation_policy_version="1.0.0",
+            findings=(finding,),
+            summary=summary,
+            primary_next_action=primary,
+            secondary_actions=(),
+            provenance=(),
+            evaluation_digest=digest,
+        )
+    with pytest.raises(EducationContractError):
+        PracticeEvaluationResultV1(
+            schema_version="1.0.0",
+            assignment_id="a",
+            content_id="c",
+            performance_session_id="perf-1",
+            evaluation_policy_id="p",
+            evaluation_policy_version="1.0.0",
+            findings=(finding,),
+            summary=summary,
+            primary_next_action=primary,
+            secondary_actions=(),
+            provenance=(),
+            evaluation_digest="not-a-digest",
+        )
+    with pytest.raises(EducationContractError):
+        to_dict("nope")
+    with pytest.raises(EducationContractError):
+        serialize_evaluation_result("nope")  # type: ignore[arg-type]
+
+
+def test_error_helpers() -> None:
+    from master_all_strings.education.errors import (
+        require_identifier,
+        require_nonnegative_int,
+        require_optional_identifier,
+        require_positive_int,
+        require_schema_version,
+        require_tuple,
+        require_unique,
+    )
+
+    with pytest.raises(EducationContractError):
+        require_schema_version("2.0.0", "1.0.0")
+    with pytest.raises(EducationContractError):
+        require_identifier(" ", "x")
+    with pytest.raises(EducationContractError):
+        require_identifier(" x", "x")
+    with pytest.raises(EducationContractError):
+        require_optional_identifier(" ", "x")
+    with pytest.raises(EducationContractError):
+        require_nonnegative_int(True, "x")  # type: ignore[arg-type]
+    with pytest.raises(EducationContractError):
+        require_nonnegative_int(-1, "x")
+    with pytest.raises(EducationContractError):
+        require_positive_int(0, "x")
+    with pytest.raises(EducationContractError):
+        require_tuple([], "x")
+    with pytest.raises(EducationContractError):
+        require_unique(("a", "a"), "x")
