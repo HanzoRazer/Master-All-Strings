@@ -1,0 +1,156 @@
+{
+  "evaluation": {
+    "assignment_id": "golden-do010",
+    "content_id": "ascending-scale-10",
+    "evaluation_digest": "sha256:1ffaa27fa50f3fd7cd8067c12c2a25bc2344b5a63aa5113e0d545aa91999d657",
+    "evaluation_policy_id": "mvp-do010-v1",
+    "evaluation_policy_version": "1.0.0",
+    "findings": [
+      {
+        "evidence_refs": [
+          "aligned:ev-6@0:obs-6"
+        ],
+        "expected_event_refs": [
+          "ev-6"
+        ],
+        "finding_id": "timing-late-0001",
+        "finding_type": "late_entry",
+        "focus_end_tick": 2400,
+        "focus_start_tick": 2400,
+        "message_key": "finding.late_entry",
+        "metadata": {},
+        "observed_value": 110.0,
+        "repetition_index": 0,
+        "schema_version": "1.0.0",
+        "severity": "focus",
+        "threshold_value": 100.0
+      },
+      {
+        "evidence_refs": [
+          "aligned:none@0:obs-extra"
+        ],
+        "expected_event_refs": [],
+        "finding_id": "extra-0001",
+        "finding_type": "unexpected_note",
+        "focus_end_tick": null,
+        "focus_start_tick": null,
+        "message_key": "finding.unexpected_note",
+        "metadata": {
+          "extra_note_count": "1"
+        },
+        "observed_value": 1.0,
+        "repetition_index": 0,
+        "schema_version": "1.0.0",
+        "severity": "info",
+        "threshold_value": 0.0
+      }
+    ],
+    "performance_session_id": "golden-session-3",
+    "primary_next_action": {
+      "action_type": "continue",
+      "focus_end_tick": null,
+      "focus_start_tick": null,
+      "message_key": "action.continue",
+      "reason_finding_ids": [
+        "timing-late-0001"
+      ],
+      "schema_version": "1.0.0",
+      "target_rate": null,
+      "teaching_aid": null
+    },
+    "provenance": {
+      "alignment_session": "golden-session-3",
+      "producer": "PracticeEvaluator/v1"
+    },
+    "schema_version": "1.0.0",
+    "secondary_actions": [
+      {
+        "action_type": "repeat",
+        "focus_end_tick": null,
+        "focus_start_tick": null,
+        "message_key": "action.repeat",
+        "reason_finding_ids": [
+          "timing-late-0001"
+        ],
+        "schema_version": "1.0.0",
+        "target_rate": null,
+        "teaching_aid": null
+      },
+      {
+        "action_type": "slow_down",
+        "focus_end_tick": null,
+        "focus_start_tick": null,
+        "message_key": "action.slow_down",
+        "reason_finding_ids": [
+          "timing-late-0001"
+        ],
+        "schema_version": "1.0.0",
+        "target_rate": 0.75,
+        "teaching_aid": null
+      }
+    ],
+    "summary": {
+      "actionable_finding_count": 1,
+      "expected_event_count": 10,
+      "extra_count": 1,
+      "focus_ranges": [],
+      "matched_count": 10,
+      "missing_count": 0,
+      "observed_event_count": 11,
+      "performance_session_id": "golden-session-3",
+      "pitch_finding_count": 0,
+      "primary_action": {
+        "action_type": "continue",
+        "focus_end_tick": null,
+        "focus_start_tick": null,
+        "message_key": "action.continue",
+        "reason_finding_ids": [
+          "timing-late-0001"
+        ],
+        "schema_version": "1.0.0",
+        "target_rate": null,
+        "teaching_aid": null
+      },
+      "repetition_count": 1,
+      "schema_version": "1.0.0",
+      "secondary_actions": [
+        {
+          "action_type": "repeat",
+          "focus_end_tick": null,
+          "focus_start_tick": null,
+          "message_key": "action.repeat",
+          "reason_finding_ids": [
+            "timing-late-0001"
+          ],
+          "schema_version": "1.0.0",
+          "target_rate": null,
+          "teaching_aid": null
+        },
+        {
+          "action_type": "slow_down",
+          "focus_end_tick": null,
+          "focus_start_tick": null,
+          "message_key": "action.slow_down",
+          "reason_finding_ids": [
+            "timing-late-0001"
+          ],
+          "schema_version": "1.0.0",
+          "target_rate": 0.75,
+          "teaching_aid": null
+        }
+      ],
+      "timing_finding_count": 1
+    }
+  },
+  "hardware_status": {
+    "audio_output": "UNVERIFIED_AUDIO_OUTPUT",
+    "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT"
+  },
+  "messages": {
+    "action.continue": "Continue \u2014 no immediate repetition required under this policy.",
+    "action.repeat": "Repeat the passage.",
+    "action.slow_down": "Practice slower at a supported rate.",
+    "finding.late_entry": "This note entered later than the lesson timing.",
+    "finding.unexpected_note": "An extra note was observed that was not expected."
+  }
+}

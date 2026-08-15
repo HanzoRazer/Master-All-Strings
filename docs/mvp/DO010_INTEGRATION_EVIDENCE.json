@@ -1,0 +1,54 @@
+{
+  "dev_order": "DO-010",
+  "mvp_software_status": "COMPLETE",
+  "publication_cleared": false,
+  "final_head_sha": "7a9b68455b84b065fcd6b184c0903b292d090ef7",
+  "product_base_do009_sha": "92f0f80b46c0c6e8e7acfd8f6f36fd007bfe58ec",
+  "base_do008_sha": "f9018213fb9097cb716a8c91670ae03f7ed1b514",
+  "ancestry_verified": true,
+  "authorized_scope_files": 40,
+  "ownership": [
+    "PerformanceSessionEvidenceV1",
+    "education/",
+    "PracticeEvaluationResultV1"
+  ],
+  "deferred_contract": "EducationalInterpretationV1",
+  "python_tests": {
+    "passed": 1588,
+    "skipped": 1,
+    "coverage_percent": 95.15
+  },
+  "ruff": "PASS",
+  "mypy_strict": "PASS",
+  "browser_tests_passed": 37,
+  "governance_boundaries": "PASS",
+  "performance_imports_education": false,
+  "education_imports_performance": true,
+  "education_schemas_validated": true,
+  "do009_return_artifact_digest": "sha256:c1249457f3d9c9a26b19fc3f8338c1844bec9c6af08809b059d31b89949175d4",
+  "do009_rebuild_digest_match": true,
+  "do010_evaluation_evidence_digest": "sha256:ffac67af45c23f71df588049a4b3ac63b1049be28504f6a5f4eb2f4c3ff27503",
+  "golden_demo_sequence": [
+    "slow_down",
+    "isolate_passage",
+    "continue"
+  ],
+  "golden_demo_api": "PASS",
+  "golden_demo_browser": "PASS",
+  "product_flow": {
+    "path": "Lesson \u2192 See/Hear \u2192 Practice \u2192 Perform \u2192 Results \u2192 evidence-backed feedback \u2192 apply next action \u2192 repeat \u2192 Continue",
+    "status": "PASS",
+    "manual_api_console_intervention": false
+  },
+  "regressions": {
+    "performance_suite": "PASS",
+    "mvp_zone_one_string_transport_audio_practice": "PASS",
+    "do008_artifacts_present": true
+  },
+  "continue_claims_mastery": false,
+  "performance_contracts_modified_for_grading": false,
+  "physical_midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+  "audio_output": "UNVERIFIED_AUDIO_OUTPUT",
+  "screenshot": "do010_artifacts/golden-demo-results.webp",
+  "recorded_at": "2026-08-15T06:34:31Z"
+}

@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "actionable_finding_count": 3,
+      "actual_primary_action": "slow_down",
+      "evaluation_digest": "sha256:0d71b47db5275e8d0c40782152fef252f0aaee2263cf242b0909d475ea40014c",
+      "expected_primary_action": "slow_down",
+      "finding_types": [
+        "late_entry"
+      ],
+      "fixture": "attempt1_slow_down.json"
+    },
+    {
+      "actionable_finding_count": 4,
+      "actual_primary_action": "isolate_passage",
+      "evaluation_digest": "sha256:adf76129ef11641051fb04c03e5eb07d6bad0f8db226860cc74c3f5a3056e717",
+      "expected_primary_action": "isolate_passage",
+      "finding_types": [
+        "expected_note_missing",
+        "findings_concentrated",
+        "late_entry",
+        "pitch_difference"
+      ],
+      "fixture": "attempt2_isolate_passage.json"
+    },
+    {
+      "actionable_finding_count": 1,
+      "actual_primary_action": "continue",
+      "evaluation_digest": "sha256:1ffaa27fa50f3fd7cd8067c12c2a25bc2344b5a63aa5113e0d545aa91999d657",
+      "expected_primary_action": "continue",
+      "finding_types": [
+        "late_entry",
+        "unexpected_note"
+      ],
+      "fixture": "attempt3_continue.json"
+    }
+  ],
+  "base_do008_sha": "f9018213fb9097cb716a8c91670ae03f7ed1b514",
+  "continue_claims_mastery": false,
+  "contracts": [
+    "PracticeEvaluationPolicyV1",
+    "PracticeFindingV1",
+    "PracticeAttemptSummaryV1",
+    "PracticeNextActionV1",
+    "PracticeEvaluationResultV1"
+  ],
+  "deferred_contract": "EducationalInterpretationV1",
+  "dev_order": "DO-010",
+  "evidence_digest": "sha256:ffac67af45c23f71df588049a4b3ac63b1049be28504f6a5f4eb2f4c3ff27503",
+  "golden_demo": {
+    "attempts": [
+      {
+        "digest": "sha256:0d71b47db5275e8d0c40782152fef252f0aaee2263cf242b0909d475ea40014c",
+        "fixture": "attempt1_slow_down.json",
+        "primary_action": "slow_down"
+      },
+      {
+        "digest": "sha256:adf76129ef11641051fb04c03e5eb07d6bad0f8db226860cc74c3f5a3056e717",
+        "fixture": "attempt2_isolate_passage.json",
+        "primary_action": "isolate_passage"
+      },
+      {
+        "digest": "sha256:1ffaa27fa50f3fd7cd8067c12c2a25bc2344b5a63aa5113e0d545aa91999d657",
+        "fixture": "attempt3_continue.json",
+        "primary_action": "continue"
+      }
+    ],
+    "hardware_status": {
+      "audio_output": "UNVERIFIED_AUDIO_OUTPUT",
+      "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT"
+    },
+    "sequence": [
+      "slow_down",
+      "isolate_passage",
+      "continue"
+    ],
+    "status": "golden_demo_complete"
+  },
+  "hardware_status": {
+    "audio_output": "UNVERIFIED_AUDIO_OUTPUT",
+    "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT"
+  },
+  "ownership": [
+    "PerformanceSessionEvidenceV1",
+    "education/",
+    "PracticeEvaluationResultV1"
+  ],
+  "performance_contracts_modified_for_grading": false,
+  "policy": {
+    "continue_actionable_finding_count": 1,
+    "early_finding_threshold_ms": 100,
+    "late_finding_threshold_ms": 100,
+    "minimum_expected_events": 1,
+    "passage_cluster_min_findings": 3,
+    "passage_cluster_window_events": 4,
+    "pitch_difference_threshold_semitones": 1,
+    "policy_id": "mvp-do010-v1",
+    "schema_version": "1.0.0",
+    "slow_down_finding_ratio": 0.3
+  },
+  "product_base_do009_sha": "92f0f80b46c0c6e8e7acfd8f6f36fd007bfe58ec"
+}

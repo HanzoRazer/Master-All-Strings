@@ -4,9 +4,13 @@ Product base: verified DO-009 snapshot `92f0f80` (`origin/evidence/do-009-local-
 DO-009A reconciliation is external verification history and is not required product
 content on this branch.
 
-Run the complete Python suite with coverage, Ruff over `src tests scripts`, strict
-mypy over `src`, and Node tests under `web/mvp1/tests`. Confirm education package
-coverage and the golden three-attempt demo:
+## Required evidence pass
+
+1. Confirm ancestry `f9018213` → `92f0f80` → DO-010 HEAD and authorized scope only
+2. Rerun full Python suite with coverage, Ruff, strict mypy, and Node tests from that HEAD
+3. Rebuild DO-009 return artifact and confirm digest match
+4. Rebuild DO-010 evaluation evidence via `scripts/build_do010_evidence.py`
+5. Exercise golden three-attempt demo (API + browser `?devGolden=1`):
 
 ```text
 Attempt 1 → SLOW_DOWN
@@ -14,14 +18,26 @@ Attempt 2 → ISOLATE_PASSAGE
 Attempt 3 → CONTINUE
 ```
 
-via `LocalPracticeEvaluationApi.golden_demo` / `?devGolden=1` in the browser shell.
+6. Confirm product flow:
 
-Hardware classifications remain:
+```text
+Lesson → See/Hear → Practice → Perform → Results
+  → evidence-backed feedback → apply next action → repeat → Continue
+```
+
+7. Regression-check DO-008/DO-009, Zone, one-string, transport, and audio scheduling
+8. Validate education schemas/governance and Performance↛Education import direction
+9. Record hardware exactly as:
 
 - `UNVERIFIED_PHYSICAL_MIDI_INPUT`
 - `UNVERIFIED_AUDIO_OUTPUT`
 
-Neither blocks deterministic software MVP completion. Neither may be promoted to PASS
-from simulation alone.
+## Gate status
 
-Publication (push/PR) is authorized only after this gate is satisfied.
+Recorded in `DO010_INTEGRATION_EVIDENCE.json` against product HEAD
+`7a9b68455b84b065fcd6b184c0903b292d090ef7`.
+
+Software MVP status after a matching evidence pack: **COMPLETE**.
+
+Publication (push/PR) remains a separate authorized operation and must not be mixed
+into implementation.
