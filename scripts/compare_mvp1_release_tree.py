@@ -37,6 +37,8 @@ def _run(args: list[str]) -> str:
 
 
 def classify(path: str) -> str:
+    if path.startswith(".github/workflows/") or path.startswith(".github/"):
+        return "CI_ONLY_DIFFERENCE"
     if path.startswith("docs/architecture/ENGINE_") or path.startswith("governance/"):
         return "GENERATED_ONLY_DIFFERENCE"
     if (
@@ -73,9 +75,10 @@ def main(argv: list[str] | None = None) -> int:
         print("IDENTICAL_PRODUCT_TREE")
         return 0
 
-    buckets = {
+    buckets: dict[str, list[str]] = {
         "DOCUMENTATION_ONLY_DIFFERENCE": [],
         "GENERATED_ONLY_DIFFERENCE": [],
+        "CI_ONLY_DIFFERENCE": [],
         "PRODUCT_DIFFERENCE": [],
     }
     for path in paths:
@@ -91,7 +94,11 @@ def main(argv: list[str] | None = None) -> int:
     if buckets["PRODUCT_DIFFERENCE"]:
         print("RESULT: PRODUCT_DIFFERENCE", file=sys.stderr)
         return 1
-    if buckets["DOCUMENTATION_ONLY_DIFFERENCE"] or buckets["GENERATED_ONLY_DIFFERENCE"]:
+    if (
+        buckets["DOCUMENTATION_ONLY_DIFFERENCE"]
+        or buckets["GENERATED_ONLY_DIFFERENCE"]
+        or buckets["CI_ONLY_DIFFERENCE"]
+    ):
         print("RESULT: DOCUMENTATION_ONLY_DIFFERENCE")
         return 0
     print("RESULT: IDENTICAL_PRODUCT_TREE")
