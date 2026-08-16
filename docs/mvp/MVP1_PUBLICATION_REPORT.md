@@ -5,7 +5,7 @@ Dev Order: **DO-010A** (controlled publication of the certified MVP 1 lineage)
 ## Status
 
 ```text
-PR_OPEN_REVIEW_BLOCKERS_ADDRESSED
+PR_OPEN_CI_GREEN_REVIEW_BLOCKERS_ADDRESSED
 ```
 
 Local release-candidate verification passed. Review blockers for MIDI note-off
@@ -76,7 +76,7 @@ Allowlisted product paths vs `7a9b684`:
 | Local release-candidate verification | PASS (targeted MVP API + publication utils; full gate re-run before merge) |
 | Push `release/mvp-1` | complete (`origin/release/mvp-1`) |
 | Open PR | [#18](https://github.com/HanzoRazer/Master-All-Strings/pull/18) |
-| GitHub CI | re-verify after blocker fixes |
+| GitHub CI | PASS |
 | Review | in progress |
 | Merge | pending (authorized after clean CI/review) |
 | Tag `mvp-1` | pending (after merged SHA verification) |
@@ -90,7 +90,7 @@ Allowlisted product paths vs `7a9b684`:
 | Merged SHA | *pending* |
 | Release SHA | *pending* |
 | Tree vs `7a9b684` | `ALLOWED_PUBLICATION_DIFFERENCE_WITH_CORRECTNESS_PATCHES` |
-| CI result | *pending re-verify* |
+| CI result | PASS |
 
 ## Explicit exclusions
 
