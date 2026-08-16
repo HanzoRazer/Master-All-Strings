@@ -10,7 +10,7 @@
   "publication_branch": "release/mvp-1",
   "implementation_branch": "feat/do-010-mvp-completion",
   "pull_request": null,
-  "candidate_sha": "85dbbd745a285c6ebb7dff434fa6add788a0ce8b",
+  "candidate_sha": "f147428f41c9c1579d60105a9dd31abaddb510ab",
   "merged_sha": null,
   "release_tag": "mvp-1",
   "release_sha": null,
@@ -26,7 +26,7 @@
     "product_behavior_changes_allowed": false
   },
   "local_software_gates": {
-    "python_tests_passed": 1588,
+    "python_tests_passed": 1590,
     "python_tests_skipped": 1,
     "coverage_percent": 95.15,
     "ruff": "PASS",
@@ -40,7 +40,8 @@
       "slow_down",
       "isolate_passage",
       "continue"
-    ]
+    ],
+    "tree_vs_product": "DOCUMENTATION_ONLY_DIFFERENCE"
   },
   "github_ci": "PENDING",
   "physical_midi_status": "UNVERIFIED_PHYSICAL_MIDI_INPUT",

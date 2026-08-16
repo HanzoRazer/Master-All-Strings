@@ -5,12 +5,12 @@ Dev Order: **DO-010A** (controlled publication; no product capability added)
 ## Status
 
 ```text
-PRE_PUBLICATION
+CANDIDATE_VERIFIED_LOCAL
 ```
 
-This report is completed after the publication PR merges and the immutable `mvp-1`
-tag is created. Pre-publication fields below are filled from the verified local
-baseline.
+Local release-candidate verification passed. Next steps are push of `release/mvp-1`,
+controlled PR to `main`, CI, review, fast-forward merge when permitted, and immutable
+tag `mvp-1`.
 
 ## Topology
 
@@ -49,15 +49,15 @@ publication/documentation commits (DOCUMENTATION / RELEASE_METADATA only)
 | Merge | pending (authorized after clean CI/review) |
 | Tag `mvp-1` | pending (after merged SHA verification) |
 
-## Final fields (fill after merge)
+## Final fields
 
 | Field | Value |
 | --- | --- |
 | PR number / URL | *pending* |
-| Candidate SHA |  |
+| Candidate SHA | *set to publication tip at push* |
 | Merged SHA | *pending* |
 | Release SHA | *pending* |
-| Tree equivalence vs `7a9b684` | *pending* |
+| Tree equivalence vs `7a9b684` | `DOCUMENTATION_ONLY_DIFFERENCE` |
 | CI result | *pending* |
 
 ## Explicit exclusions
