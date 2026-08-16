@@ -54,7 +54,7 @@ class LocalPerformanceCaptureApi:
                 meter_context=MeterV1("1.0.0", 4, 4),
                 provenance=(("clock_domain", "browser_performance_time"),),
             )
-            self.practice_onsets.clear()
+            self._reset_session_maps()
             return {
                 "status": "capturing",
                 "capture_id": capture_id,
@@ -66,6 +66,17 @@ class LocalPerformanceCaptureApi:
             return self._close(interrupted=action == "interrupt")
         raise PerformanceContractError(f"unknown performance action {action!r}")
 
+    def _reset_session_maps(self) -> None:
+        self.repetitions.clear()
+        self.practice_onsets.clear()
+
+    @staticmethod
+    def _midi_event_type(status_kind: int, velocity: int) -> MidiEventType:
+        # MIDI: note-on (0x90) with velocity 0 is a note-off by convention (Web MIDI).
+        if status_kind == 0x80 or (status_kind == 0x90 and velocity == 0):
+            return MidiEventType.NOTE_OFF
+        return MidiEventType.NOTE_ON
+
     def _message(self, payload: dict[str, Any]) -> dict[str, Any]:
         if self.capture is None or self.capture.is_closed:
             raise PerformanceContractError("no active capture")
@@ -74,16 +85,17 @@ class LocalPerformanceCaptureApi:
         kind = status & 0xF0
         if kind not in (0x80, 0x90) or len(raw) < 3:
             raise PerformanceContractError("DO-009 accepts MIDI note messages only")
+        velocity = raw[2]
         event = normalize_midi_event(
             event_id=str(uuid4()),
             sequence_number=len(self.capture.events),
-            event_type=MidiEventType.NOTE_ON if kind == 0x90 else MidiEventType.NOTE_OFF,
+            event_type=self._midi_event_type(kind, velocity),
             capture_time_ns=int(payload["capture_time_ns"]),
             channel=status & 0x0F,
             source_port="browser",
             source_device=str(payload["device_id"]),
             note=raw[1],
-            velocity=raw[2],
+            velocity=velocity,
             raw_payload=raw,
         )
         self.repetitions[event.event_id] = int(payload.get("repetition_index", 0))
@@ -119,9 +131,11 @@ class LocalPerformanceCaptureApi:
                 observed.append(note)
             else:
                 observed.append(replace(note, practice_onset_seconds=onset))
-        return {
+        result = {
             "status": self.capture.completion_state.value,
             "raw_capture": to_dict(self.capture),
             "observed_events": [to_dict(n) for n in observed],
             "unmatched_note_offs": [to_dict(n) for n in paired.unmatched_note_offs],
         }
+        self._reset_session_maps()
+        return result
