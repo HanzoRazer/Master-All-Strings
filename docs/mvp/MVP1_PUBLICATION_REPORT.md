@@ -5,7 +5,7 @@ Dev Order: **DO-010A** (controlled publication; no product capability added)
 ## Status
 
 ```text
-CANDIDATE_VERIFIED_LOCAL
+PR_OPEN_CI_GREEN
 ```
 
 Local release-candidate verification passed. Next steps are push of `release/mvp-1`,
@@ -44,7 +44,7 @@ publication/documentation commits (DOCUMENTATION / RELEASE_METADATA only)
 | Local release-candidate verification | PASS (1590 passed / 1 skipped; 95.15%; Ruff; mypy; 37 JS; lineage; docs-only tree) |
 | Push `release/mvp-1` | complete (`origin/release/mvp-1`) |
 | Open PR | [#18](https://github.com/HanzoRazer/Master-All-Strings/pull/18) |
-| GitHub CI | pending |
+| GitHub CI | PASS |
 | Review | pending |
 | Merge | pending (authorized after clean CI/review) |
 | Tag `mvp-1` | pending (after merged SHA verification) |
@@ -54,7 +54,7 @@ publication/documentation commits (DOCUMENTATION / RELEASE_METADATA only)
 | Field | Value |
 | --- | --- |
 | PR number / URL | [#18](https://github.com/HanzoRazer/Master-All-Strings/pull/18) |
-| Candidate SHA | `8bde906cd37e4c30b82f42426da9819a0bbe1596` |
+| Candidate SHA | `7dc16708beb219ef469e7a6223141c7531bbdb2d` |
 | Merged SHA | *pending* |
 | Release SHA | *pending* |
 | Tree equivalence vs `7a9b684` | `DOCUMENTATION_ONLY_DIFFERENCE` |

@@ -1,7 +1,7 @@
 {
   "milestone": "Master All Strings MVP 1",
   "dev_order": "DO-010A",
-  "publication_status": "PR_OPEN",
+  "publication_status": "PR_OPEN_CI_GREEN",
   "product_sha": "7a9b68455b84b065fcd6b184c0903b292d090ef7",
   "evidence_sha": "b727cce6da108667d7dc1823df17f85cdeb9d810",
   "do008_sha": "f9018213fb9097cb716a8c91670ae03f7ed1b514",
@@ -10,7 +10,7 @@
   "publication_branch": "release/mvp-1",
   "implementation_branch": "feat/do-010-mvp-completion",
   "pull_request": "https://github.com/HanzoRazer/Master-All-Strings/pull/18",
-  "candidate_sha": "8bde906cd37e4c30b82f42426da9819a0bbe1596",
+  "candidate_sha": "7dc16708beb219ef469e7a6223141c7531bbdb2d",
   "merged_sha": null,
   "release_tag": "mvp-1",
   "release_sha": null,
@@ -43,7 +43,7 @@
     ],
     "tree_vs_product": "DOCUMENTATION_ONLY_DIFFERENCE"
   },
-  "github_ci": "PENDING",
+  "github_ci": "PASS",
   "physical_midi_status": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
   "audio_output_status": "UNVERIFIED_AUDIO_OUTPUT",
   "non_authoritative_branches_excluded": [
