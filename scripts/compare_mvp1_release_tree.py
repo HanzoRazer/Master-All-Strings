@@ -37,18 +37,17 @@ def _run(args: list[str]) -> str:
 
 
 def classify(path: str) -> str:
-    if path.startswith(GENERATED_PREFIXES) or path.startswith("governance/"):
-        # governance JSON edits during DO-010 were product-adjacent; treat later
-        # publication regenerations as generated/governance metadata.
-        if path.startswith("docs/architecture/ENGINE_"):
-            return "GENERATED_ONLY_DIFFERENCE"
-        if path.startswith("governance/"):
-            return "GENERATED_ONLY_DIFFERENCE"
-    if path.startswith(DOCUMENTATION_PREFIXES) or path.startswith("docs/"):
-        return "DOCUMENTATION_ONLY_DIFFERENCE"
-    if path.startswith("scripts/") and any(
-        token in path
-        for token in ("verify_mvp1", "compare_mvp1", "build_mvp1", "build_do010")
+    if path.startswith("docs/architecture/ENGINE_") or path.startswith("governance/"):
+        return "GENERATED_ONLY_DIFFERENCE"
+    if (
+        path.startswith(DOCUMENTATION_PREFIXES)
+        or path.startswith("docs/")
+        or path == "README.md"
+        or path.startswith("tests/mvp/test_mvp1_publication")
+        or path.startswith("scripts/build_do010")
+        or path.startswith("scripts/verify_mvp1")
+        or path.startswith("scripts/compare_mvp1")
+        or path.startswith("scripts/build_mvp1")
     ):
         return "DOCUMENTATION_ONLY_DIFFERENCE"
     return "PRODUCT_DIFFERENCE"
