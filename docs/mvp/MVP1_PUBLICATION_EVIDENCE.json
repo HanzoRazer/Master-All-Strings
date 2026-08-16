@@ -10,7 +10,7 @@
   "publication_branch": "release/mvp-1",
   "implementation_branch": "feat/do-010-mvp-completion",
   "pull_request": "https://github.com/HanzoRazer/Master-All-Strings/pull/18",
-  "candidate_sha": "1a95d8e540a256ae94d9ab73e46d220f833e3273",
+  "candidate_sha": "08e9eccfcc183b2df88eee4cbb88f295e7175720",
   "merged_sha": null,
   "release_tag": "mvp-1",
   "release_sha": null,
