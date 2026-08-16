@@ -10,7 +10,7 @@
   "publication_branch": "release/mvp-1",
   "implementation_branch": "feat/do-010-mvp-completion",
   "pull_request": null,
-  "candidate_sha": "f147428f41c9c1579d60105a9dd31abaddb510ab",
+  "candidate_sha": "4eb98f20c0403a43441a9c775b33bf4331f4a377",
   "merged_sha": null,
   "release_tag": "mvp-1",
   "release_sha": null,
