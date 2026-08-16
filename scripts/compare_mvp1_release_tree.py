@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Compare a publication candidate tree against certified MVP 1 product HEAD."""
+"""Compare a publication candidate tree against certified MVP 1 product HEAD.
+
+Classification is intentionally honest: documentation, CI, release tooling,
+generated governance, and explicit post-certification correctness patches are
+reported separately. Only unexpected product paths fail the gate.
+"""
 
 from __future__ import annotations
 
@@ -11,17 +16,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCT = "7a9b68455b84b065fcd6b184c0903b292d090ef7"
 
-# Paths that may differ from product HEAD without counting as product drift.
-DOCUMENTATION_PREFIXES = (
-    "README.md",
-    "docs/",
-    "scripts/verify_mvp1_",
-    "scripts/compare_mvp1_",
-    "scripts/build_mvp1_",
-    "scripts/build_do010_evidence.py",
+# Review-required localhost API correctness fixes applied after product freeze.
+# These are NOT documentation; they must remain an explicit, narrow allowlist.
+PRODUCT_CORRECTNESS_PATCH_PATHS = frozenset(
+    {
+        "src/master_all_strings/mvp/performance_api.py",
+        "tests/mvp/test_performance_api.py",
+    }
 )
-GENERATED_PREFIXES = (
-    "docs/architecture/ENGINE_",
+
+BUCKET_ORDER = (
+    "DOCS_ONLY_DIFFERENCE",
+    "CI_ONLY_DIFFERENCE",
+    "RELEASE_TOOLING_ONLY_DIFFERENCE",
+    "GENERATED_GOVERNANCE_ONLY_DIFFERENCE",
+    "PRODUCT_CORRECTNESS_PATCH",
+    "PRODUCT_DIFFERENCE",
 )
 
 
@@ -37,21 +47,22 @@ def _run(args: list[str]) -> str:
 
 
 def classify(path: str) -> str:
-    if path.startswith(".github/workflows/") or path.startswith(".github/"):
+    if path in PRODUCT_CORRECTNESS_PATCH_PATHS:
+        return "PRODUCT_CORRECTNESS_PATCH"
+    if path.startswith(".github/"):
         return "CI_ONLY_DIFFERENCE"
     if path.startswith("docs/architecture/ENGINE_") or path.startswith("governance/"):
-        return "GENERATED_ONLY_DIFFERENCE"
+        return "GENERATED_GOVERNANCE_ONLY_DIFFERENCE"
     if (
-        path.startswith(DOCUMENTATION_PREFIXES)
-        or path.startswith("docs/")
-        or path == "README.md"
-        or path.startswith("tests/mvp/test_mvp1_publication")
-        or path.startswith("scripts/build_do010")
-        or path.startswith("scripts/verify_mvp1")
+        path.startswith("scripts/verify_mvp1")
         or path.startswith("scripts/compare_mvp1")
         or path.startswith("scripts/build_mvp1")
+        or path.startswith("scripts/build_do010")
+        or path.startswith("tests/mvp/test_mvp1_publication")
     ):
-        return "DOCUMENTATION_ONLY_DIFFERENCE"
+        return "RELEASE_TOOLING_ONLY_DIFFERENCE"
+    if path == "README.md" or path.startswith("docs/"):
+        return "DOCS_ONLY_DIFFERENCE"
     return "PRODUCT_DIFFERENCE"
 
 
@@ -73,18 +84,15 @@ def main(argv: list[str] | None = None) -> int:
     paths = [line for line in diff.splitlines() if line.strip()]
     if not paths:
         print("IDENTICAL_PRODUCT_TREE")
+        print("RESULT: IDENTICAL_PRODUCT_TREE")
         return 0
 
-    buckets: dict[str, list[str]] = {
-        "DOCUMENTATION_ONLY_DIFFERENCE": [],
-        "GENERATED_ONLY_DIFFERENCE": [],
-        "CI_ONLY_DIFFERENCE": [],
-        "PRODUCT_DIFFERENCE": [],
-    }
+    buckets: dict[str, list[str]] = {label: [] for label in BUCKET_ORDER}
     for path in paths:
         buckets[classify(path)].append(path)
 
-    for label, items in buckets.items():
+    for label in BUCKET_ORDER:
+        items = buckets[label]
         if not items:
             continue
         print(f"{label}:")
@@ -94,14 +102,20 @@ def main(argv: list[str] | None = None) -> int:
     if buckets["PRODUCT_DIFFERENCE"]:
         print("RESULT: PRODUCT_DIFFERENCE", file=sys.stderr)
         return 1
-    if (
-        buckets["DOCUMENTATION_ONLY_DIFFERENCE"]
-        or buckets["GENERATED_ONLY_DIFFERENCE"]
-        or buckets["CI_ONLY_DIFFERENCE"]
-    ):
-        print("RESULT: DOCUMENTATION_ONLY_DIFFERENCE")
+
+    present = [label for label in BUCKET_ORDER if buckets[label]]
+    if not present:
+        print("RESULT: IDENTICAL_PRODUCT_TREE")
         return 0
-    print("RESULT: IDENTICAL_PRODUCT_TREE")
+
+    # Honest aggregate: never collapse tooling/patches into "documentation only".
+    if present == ["DOCS_ONLY_DIFFERENCE"]:
+        print("RESULT: DOCS_ONLY_DIFFERENCE")
+    elif "PRODUCT_CORRECTNESS_PATCH" in present:
+        print("RESULT: ALLOWED_PUBLICATION_DIFFERENCE_WITH_CORRECTNESS_PATCHES")
+    else:
+        print("RESULT: ALLOWED_PUBLICATION_DIFFERENCE")
+    print("CLASSES: " + ",".join(present))
     return 0
 
 

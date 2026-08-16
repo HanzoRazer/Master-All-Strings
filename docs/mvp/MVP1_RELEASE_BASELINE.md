@@ -19,7 +19,15 @@ MVP 1 product
     ↓
 MVP 1 release evidence
 b727cce6da108667d7dc1823df17f85cdeb9d810
+    ↓
+publication docs / CI / release tooling
+    ↓
+PRODUCT_CORRECTNESS_PATCH (localhost capture API only)
 ```
+
+Capability freeze remains `product_sha` = `7a9b684…`. Post-freeze publication may include
+only allowlisted correctness patches (no new MVP capability). See
+`docs/mvp/MVP1_PUBLICATION_REPORT.md`.
 
 | Role | SHA |
 | --- | --- |
