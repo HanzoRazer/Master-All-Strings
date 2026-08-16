@@ -42,8 +42,8 @@ publication/documentation commits (DOCUMENTATION / RELEASE_METADATA only)
 | --- | --- |
 | Local documentation/metadata commits | complete |
 | Local release-candidate verification | PASS (1590 passed / 1 skipped; 95.15%; Ruff; mypy; 37 JS; lineage; docs-only tree) |
-| Push `release/mvp-1` | in progress |
-| Open PR | pending |
+| Push `release/mvp-1` | complete (`origin/release/mvp-1`) |
+| Open PR | [#18](https://github.com/HanzoRazer/Master-All-Strings/pull/18) |
 | GitHub CI | pending |
 | Review | pending |
 | Merge | pending (authorized after clean CI/review) |
@@ -53,8 +53,8 @@ publication/documentation commits (DOCUMENTATION / RELEASE_METADATA only)
 
 | Field | Value |
 | --- | --- |
-| PR number / URL | *pending* |
-| Candidate SHA | `a3d120f42181e251088056a0447872c83bec638e` |
+| PR number / URL | [#18](https://github.com/HanzoRazer/Master-All-Strings/pull/18) |
+| Candidate SHA | `8bde906cd37e4c30b82f42426da9819a0bbe1596` |
 | Merged SHA | *pending* |
 | Release SHA | *pending* |
 | Tree equivalence vs `7a9b684` | `DOCUMENTATION_ONLY_DIFFERENCE` |
