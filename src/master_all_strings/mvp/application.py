@@ -120,6 +120,9 @@ class MvpApplication:
             instrument_id=result.projection.instrument.instrument_id,
             behavior_digest=result.behavior_digest,
             projection=result.projection,
+            playback_plan=result.playback_plan,
+            practice_policy=result.practice_policy,
             warnings=result.projection.warnings,
             unsupported_features=result.projection.unsupported_features,
+            one_string_teaching=result.one_string_teaching,
         )

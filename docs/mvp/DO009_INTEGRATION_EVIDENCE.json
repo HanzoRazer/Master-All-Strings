@@ -1,0 +1,14 @@
+{
+  "dev_order": "DO-009",
+  "base_do008_sha": "f9018213fb9097cb716a8c91670ae03f7ed1b514",
+  "raw_capture_authority": ["CapturedMidiEventV1", "RawPerformanceCaptureV1"],
+  "python_authorities": ["FIFO note pairing", "Musical Core tick conversion", "structural alignment", "session evidence assembly"],
+  "alignment_statuses_proven": ["matched_exact_pitch", "matched_pitch_difference", "expected_not_observed", "observed_not_expected"],
+  "return_artifact_digest": "sha256:c1249457f3d9c9a26b19fc3f8338c1844bec9c6af08809b059d31b89949175d4",
+  "python_tests": {"passed": 1555, "skipped": 1, "coverage_percent": 95.15},
+  "browser_tests_passed": 37,
+  "interactive_fake_input": "PASS",
+  "physical_midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+  "assessment_added": false,
+  "latency_compensation_added": false
+}

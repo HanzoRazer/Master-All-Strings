@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from master_all_strings.core.musical_events import MusicalEvent
 from master_all_strings.core.score.tempo import TempoChangeV1
@@ -21,6 +21,7 @@ from master_all_strings.mvp.projection.models import (
     FretProjectionV1,
     ProjectedNoteStatus,
     SelectionOrigin,
+    ZoneSemanticProjectionV1,
 )
 from master_all_strings.mvp.projection.serialization import (
     compute_projection_digest,
@@ -122,6 +123,7 @@ def build_fretboard_scroll_projection(
     selected_notes: Sequence[SelectedNoteInput],
     warnings: Sequence[str] = (),
     unsupported_features: Sequence[str] = (),
+    zone_semantics_by_event: Mapping[str, ZoneSemanticProjectionV1] | None = None,
 ) -> FretboardScrollProjectionV1:
     """Compose display projection. Performs no candidate ranking or selection."""
 
@@ -129,6 +131,13 @@ def build_fretboard_scroll_projection(
         raise ProjectionBuildError("projection requires at least one musical event")
 
     events = tuple(item.event for item in selected_notes)
+    semantic_map = zone_semantics_by_event or {}
+    event_ids = {event.event_id for event in events}
+    unexpected_semantics = sorted(set(semantic_map) - event_ids)
+    if unexpected_semantics:
+        raise ProjectionBuildError(
+            f"Zone semantics reference unknown projected events: {unexpected_semantics}"
+        )
     timeline = build_projected_timeline(
         events,
         ticks_per_quarter=ticks_per_quarter,
@@ -156,6 +165,7 @@ def build_fretboard_scroll_projection(
                     onset_seconds=onset_seconds,
                     release_seconds=release_seconds,
                     unresolved_reason=item.unresolved_reason or "no_playable_position",
+                    zone_semantics=semantic_map.get(event.event_id),
                 )
             )
             continue
@@ -183,6 +193,7 @@ def build_fretboard_scroll_projection(
                 normalized_position=position.normalized_position,
                 is_open_string=position.is_open_string,
                 selection_origin=item.selection_origin or SelectionOrigin.AUTOMATIC,
+                zone_semantics=semantic_map.get(event.event_id),
             )
         )
 

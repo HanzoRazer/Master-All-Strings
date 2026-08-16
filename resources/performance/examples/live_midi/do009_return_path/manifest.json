@@ -1,0 +1,19 @@
+{
+  "alignment_ref": "alignment.json",
+  "assignment_id": "do009-assignment",
+  "capture_id": "do009-capture",
+  "capture_status": "complete",
+  "content_id": "do009-return-path",
+  "evidence_digest": "sha256:c1249457f3d9c9a26b19fc3f8338c1844bec9c6af08809b059d31b89949175d4",
+  "input_device_id": "fake",
+  "observed_events_ref": "observed_events.json",
+  "performance_session_id": "do009-session",
+  "provenance": {
+    "created_at": "2026-08-12T10:00:02Z",
+    "latency_compensation_ns": null,
+    "producer": "master-all-strings",
+    "producer_version": "0.1.0"
+  },
+  "raw_capture_ref": "raw_capture.json",
+  "schema_version": "1.0.0"
+}

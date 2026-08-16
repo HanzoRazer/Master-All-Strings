@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0.0",
+  "assignment_id": "demo-multiple-candidates",
+  "content_id": "multiple_candidates",
+  "timeline": {
+    "ticks_per_quarter": 480,
+    "total_ticks": 1440,
+    "tempo_changes": [
+      {
+        "schema_version": "1.0.0",
+        "tick": 0,
+        "microseconds_per_quarter": 600000
+      }
+    ]
+  },
+  "events": [
+    {
+      "event_id": "ev-1",
+      "midi_note": 64,
+      "velocity": 80,
+      "onset_seconds": 0.0,
+      "release_seconds": 0.6,
+      "cents_offset": null
+    },
+    {
+      "event_id": "ev-2",
+      "midi_note": 67,
+      "velocity": 80,
+      "onset_seconds": 0.6,
+      "release_seconds": 1.2,
+      "cents_offset": null
+    },
+    {
+      "event_id": "ev-3",
+      "midi_note": 69,
+      "velocity": 80,
+      "onset_seconds": 1.2,
+      "release_seconds": 1.7999999999999998,
+      "cents_offset": null
+    }
+  ],
+  "total_seconds": 1.7999999999999998,
+  "warnings": [],
+  "unsupported_features": [],
+  "playback_digest": "sha256:a3ff51a5a72b88803de14f8df6816859da8fc7bd0b6a208682a0cb027819a061",
+  "canonical_revision_id": null
+}

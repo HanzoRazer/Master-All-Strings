@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/education/practice-next-action-v1.schema.json",
+  "title": "PracticeNextActionV1",
+  "description": "Deterministic next practice action. CONTINUE never means mastery.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "action_type",
+    "reason_finding_ids",
+    "message_key",
+    "target_rate",
+    "focus_start_tick",
+    "focus_end_tick",
+    "teaching_aid"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "continue",
+        "repeat",
+        "slow_down",
+        "isolate_passage",
+        "view_one_string",
+        "enable_zone_view"
+      ]
+    },
+    "reason_finding_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "message_key": { "type": "string", "minLength": 1 },
+    "target_rate": {
+      "type": ["number", "null"],
+      "minimum": 0.5,
+      "maximum": 1.5
+    },
+    "focus_start_tick": { "type": ["integer", "null"], "minimum": 0 },
+    "focus_end_tick": { "type": ["integer", "null"], "minimum": 0 },
+    "teaching_aid": { "type": ["string", "null"], "minLength": 1 }
+  }
+}

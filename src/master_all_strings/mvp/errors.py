@@ -32,6 +32,21 @@ class ProjectionBuildError(MvpError):
         super().__init__(message, code="projection_build_error")
 
 
+class PlaybackPlanBuildError(MvpError):
+    def __init__(self, message: str = "Unable to build playback plan") -> None:
+        super().__init__(message, code="playback_plan_build_error")
+
+
+class UnsupportedPlaybackPlanVersionError(MvpError):
+    def __init__(self, message: str = "Unsupported playback plan version") -> None:
+        super().__init__(message, code="unsupported_playback_plan_version")
+
+
+class PracticePolicyBuildError(MvpError):
+    def __init__(self, message: str = "Unable to build practice policy") -> None:
+        super().__init__(message, code="practice_policy_build_error")
+
+
 class UnsupportedProjectionVersionError(MvpError):
     def __init__(self, message: str = "Unsupported projection version") -> None:
         super().__init__(message, code="unsupported_projection_version")

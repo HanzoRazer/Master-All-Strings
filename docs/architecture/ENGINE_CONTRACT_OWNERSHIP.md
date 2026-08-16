@@ -16,6 +16,11 @@ Every cross-engine contract has exactly one owning engine and one versioning aut
 | `ProjectionRequestV1` | Musical Core | Creative, Educational, Performance | Musical Core | immutable | neither | — | Musical Core |
 | `ProjectionResultV1` | Musical Core | Musical Core | Creative, Educational, Performance | immutable | neither | — | Musical Core |
 | `EducationalInterpretationV1` | Educational | Educational | Creative | immutable | interpretation | SpatialEvidenceV1 | Educational |
+| `PracticeEvaluationPolicyV1` | Educational | Educational | Creative | versioned | interpretation | — | Educational |
+| `PracticeFindingV1` | Educational | Educational | Creative | immutable | interpretation | PerformanceSessionEvidenceV1 | Educational |
+| `PracticeNextActionV1` | Educational | Educational | Creative | immutable | interpretation | — | Educational |
+| `PracticeAttemptSummaryV1` | Educational | Educational | Creative | immutable | interpretation | — | Educational |
+| `PracticeEvaluationResultV1` | Educational | Educational | Creative | immutable | interpretation | PerformanceSessionEvidenceV1 | Educational |
 | `LearningObject` | Educational | Educational | Creative | versioned | neither | — | Educational |
 | `LessonAssignmentV1` | Educational | Educational | Creative | versioned | neither | — | Educational |
 | `CurriculumRegistry` | Educational | Educational | — | versioned | neither | — | Educational |
@@ -24,6 +29,8 @@ Every cross-engine contract has exactly one owning engine and one versioning aut
 | `ScoreEditProposal` | Creative | Creative | — | immutable | neither | — | Creative |
 | `ScoreEditCommandSet` | Musical Core | Creative | Musical Core | immutable | neither | — | Musical Core |
 | `PerformanceObservationV1` | Performance | Performance | Educational | immutable | evidence | — | Performance |
+| `PerformanceSessionEvidenceV1` | Performance | Performance | Educational | immutable | evidence | — | Performance |
+| `PerformanceAlignmentResultV1` | Performance | Performance | Educational | immutable | evidence | — | Performance |
 | `PerformanceRuntimeConfigV1` | Performance | Performance | — | versioned | neither | — | Performance |
 | `PerformanceSessionConfigV1` | Performance | Performance | — | versioned | neither | — | Performance |
 | `CapturedMidiEventV1` | Performance | Performance | Educational | immutable | evidence | — | Performance |

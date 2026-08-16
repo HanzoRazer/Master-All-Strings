@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/mvp2/practice-session-policy-v1.schema.json",
+  "title": "PracticeSessionPolicyV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "assignment_id", "content_id", "lesson_end_tick", "loop",
+    "count_in_bars"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "assignment_id": {"type": "string", "minLength": 1},
+    "content_id": {"type": "string", "minLength": 1},
+    "lesson_end_tick": {"type": "integer", "minimum": 1},
+    "loop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "start_tick", "end_tick", "target_repetitions"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "start_tick": {"type": "integer", "minimum": 0},
+        "end_tick": {"type": "integer", "minimum": 1},
+        "target_repetitions": {"type": ["integer", "null"], "minimum": 1}
+      }
+    },
+    "count_in_bars": {"enum": [0, 1, 2]}
+  }
+}

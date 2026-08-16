@@ -27,6 +27,7 @@ __all__ = [
     "ProjectedNoteStatus",
     "SelectionOrigin",
     "TempoChangeProjectionV1",
+    "ZoneSemanticProjectionV1",
 ]
 
 FRETBOARD_SCROLL_PROJECTION_TYPE = "fretboard_scroll"
@@ -41,6 +42,25 @@ class ProjectedNoteStatus(StrEnum):
 class SelectionOrigin(StrEnum):
     AUTOMATIC = "automatic"
     TEACHER_OVERRIDE = "teacher_override"
+
+
+@dataclass(frozen=True)
+class ZoneSemanticProjectionV1:
+    """Renderer-ready semantic IDs copied from the external authority artifact."""
+
+    zone_id: str
+    semantic_roles: tuple[str, ...]
+    tritone_axis_id: str | None = None
+    transition_from_previous: str | None = None
+
+    def __post_init__(self) -> None:
+        require_non_empty(self.zone_id, "zone_id")
+        if any(not isinstance(role, str) or not role.strip() for role in self.semantic_roles):
+            raise ProjectionBuildError("semantic_roles must contain non-empty strings")
+        if self.tritone_axis_id is not None:
+            require_non_empty(self.tritone_axis_id, "tritone_axis_id")
+        if self.transition_from_previous is not None:
+            require_non_empty(self.transition_from_previous, "transition_from_previous")
 
 
 @dataclass(frozen=True)
@@ -155,6 +175,7 @@ class FretboardProjectedNoteV1:
     is_open_string: bool | None = None
     selection_origin: SelectionOrigin | None = None
     unresolved_reason: str | None = None
+    zone_semantics: ZoneSemanticProjectionV1 | None = None
 
     def __post_init__(self) -> None:
         require_non_empty(self.event_id, "event_id")

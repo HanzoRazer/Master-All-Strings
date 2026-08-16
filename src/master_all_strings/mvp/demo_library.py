@@ -30,6 +30,8 @@ class DemoManifestEntryV1:
     lesson_path: str
     instrument_profile_id: str
     demonstrates: tuple[str, ...]
+    audio_demo: bool = False
+    expected_playback_digest: str | None = None
     expected_behavior_digest: str | None = None
     expected_projection_digest: str | None = None
     midi_path: str | None = None
@@ -42,6 +44,7 @@ class DemoManifestEntryV1:
             description=self.description,
             instrument_profile_id=self.instrument_profile_id,
             demonstrates=self.demonstrates,
+            audio_demo=self.audio_demo,
             known_limitations=self.known_limitations,
         )
 
@@ -69,6 +72,8 @@ def load_demo_manifest(root: Path | None = None) -> tuple[DemoManifestEntryV1, .
                 lesson_path=item["lesson_path"],
                 instrument_profile_id=item["instrument_profile_id"],
                 demonstrates=tuple(item.get("demonstrates") or ()),
+                audio_demo=item.get("audio_demo", False),
+                expected_playback_digest=item.get("expected_playback_digest"),
                 expected_behavior_digest=item.get("expected_behavior_digest"),
                 expected_projection_digest=item.get("expected_projection_digest"),
                 midi_path=item.get("midi_path"),

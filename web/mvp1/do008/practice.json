@@ -1,0 +1,19 @@
+{
+  "policy": {
+    "schema_version": "1.0.0",
+    "assignment_id": "do008-stack-proof",
+    "content_id": "do008_zone_harmony",
+    "lesson_end_tick": 5760,
+    "loop": {
+      "enabled": true,
+      "start_tick": 0,
+      "end_tick": 5760,
+      "target_repetitions": 3
+    },
+    "count_in_bars": 1
+  },
+  "runtime": {
+    "loop_start_seconds": 0.0,
+    "loop_end_seconds": 7.5
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "bundle_manifest_sha256": "sha256:8a5927b93e87c66786c1ef214b63fbfeb3d2cd6535a8fafd8a76ffd1f395f59e",
+  "count_in_policy": "preserved; audible count-in deferred",
+  "dev_order": "DO-008",
+  "event_count": 48,
+  "msme_candidate_event_count": 48,
+  "normal_spatial_result_unchanged": true,
+  "one_string_projection_count": 6,
+  "one_string_unplayable_count": 138,
+  "repository_shas": {
+    "master_all_strings_base": "db25da2f0e9a18b47daaecf3cc8094425671578d",
+    "sg_agentd": "ae7a58fff0f0cc136ee22434282899ceb811a5d3",
+    "string_master": "5d7af1d0efcd026c8cdf861c8a0f8467d77ee03e"
+  },
+  "semantic_artifact_sha256": "sha256:c59e5c8323b096e8be4dff9c5b9f4cf221e962a3b2fa296e401d7400cd30f321",
+  "semantic_event_count": 48,
+  "semantic_roles": [
+    "HALF_STEP_CROSSING",
+    "TRITONE_ANCHOR",
+    "WHOLE_STEP_STABLE",
+    "ZONE_1",
+    "ZONE_2"
+  ],
+  "sg_agentd_expected_sha": "ae7a58fff0f0cc136ee22434282899ceb811a5d3",
+  "source_bundle_id": "clip_-stack-proof",
+  "string_master_expected_sha": "5d7af1d0efcd026c8cdf861c8a0f8467d77ee03e",
+  "zone_ids": [
+    "ZONE_1",
+    "ZONE_2"
+  ]
+}

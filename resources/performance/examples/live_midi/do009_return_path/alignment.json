@@ -1,0 +1,69 @@
+{
+  "aligned_events": [
+    {
+      "duration_delta_ms": null,
+      "expected_event_id": "expected-0",
+      "expected_start_tick": 0,
+      "observed_estimated_tick": 0,
+      "observed_event_id": "observed-0",
+      "pitch_delta_semitones": 0,
+      "repetition_index": 0,
+      "status": "matched_exact_pitch",
+      "timing_delta_ms": 0,
+      "velocity_delta": null
+    },
+    {
+      "duration_delta_ms": null,
+      "expected_event_id": "expected-1",
+      "expected_start_tick": 480,
+      "observed_estimated_tick": 480,
+      "observed_event_id": "observed-1",
+      "pitch_delta_semitones": 1,
+      "repetition_index": 0,
+      "status": "matched_pitch_difference",
+      "timing_delta_ms": 0,
+      "velocity_delta": null
+    },
+    {
+      "duration_delta_ms": null,
+      "expected_event_id": "expected-2",
+      "expected_start_tick": 960,
+      "observed_estimated_tick": null,
+      "observed_event_id": null,
+      "pitch_delta_semitones": null,
+      "repetition_index": 0,
+      "status": "expected_not_observed",
+      "timing_delta_ms": null,
+      "velocity_delta": null
+    },
+    {
+      "duration_delta_ms": null,
+      "expected_event_id": null,
+      "expected_start_tick": null,
+      "observed_estimated_tick": null,
+      "observed_event_id": "observed-2",
+      "pitch_delta_semitones": null,
+      "repetition_index": 0,
+      "status": "observed_not_expected",
+      "timing_delta_ms": null,
+      "velocity_delta": null
+    }
+  ],
+  "alignment_policy": {
+    "allow_pitch_mismatch": true,
+    "early_window_ms": 250,
+    "late_window_ms": 250,
+    "maximum_pitch_distance_semitones": 2,
+    "schema_version": "1.0.0"
+  },
+  "assignment_id": "do009-assignment",
+  "content_id": "do009-return-path",
+  "performance_session_id": "do009-session",
+  "schema_version": "1.0.0",
+  "unmatched_expected_ids": [
+    "expected-2@0"
+  ],
+  "unmatched_observed_ids": [
+    "observed-2"
+  ]
+}

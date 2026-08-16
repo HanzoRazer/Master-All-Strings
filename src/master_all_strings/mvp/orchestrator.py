@@ -31,6 +31,12 @@ from master_all_strings.mvp.errors import (
     UnsupportedMidiError,
     format_mvp_error,
 )
+from master_all_strings.mvp.models import MvpPracticeBundleV1
+from master_all_strings.mvp.playback import LessonPlaybackPlanV1, build_lesson_playback_plan
+from master_all_strings.mvp.practice import (
+    PracticeSessionPolicyV1,
+    build_practice_session_policy,
+)
 from master_all_strings.mvp.projection.builder import (
     SelectedNoteInput,
     build_fretboard_scroll_projection,
@@ -40,6 +46,10 @@ from master_all_strings.mvp.projection.models import (
     SelectionOrigin,
 )
 from master_all_strings.mvp.projection.timeline import build_core_tempo_map
+from master_all_strings.mvp.teaching_aids import (
+    OneStringTeachingProjectionV1,
+    build_one_string_teaching_projection,
+)
 
 __all__ = ["MvpLessonOrchestrator", "MvpOrchestrationResultV1"]
 
@@ -50,7 +60,11 @@ class MvpOrchestrationResultV1:
     resolved: ResolvedLessonV1
     behavior_digest: str
     projection: FretboardScrollProjectionV1
+    playback_plan: LessonPlaybackPlanV1
+    practice_policy: PracticeSessionPolicyV1
+    bundle: MvpPracticeBundleV1
     candidate_counts: tuple[tuple[str, int], ...]
+    one_string_teaching: tuple[OneStringTeachingProjectionV1, ...]
 
 
 class MvpLessonOrchestrator:
@@ -235,10 +249,47 @@ class MvpLessonOrchestrator:
             warnings=warnings,
             unsupported_features=tuple(unsupported),
         )
+        playback_plan = build_lesson_playback_plan(
+            assignment_id=assignment.assignment_id,
+            content_id=assignment.content_id,
+            events=resolved.events,
+            ticks_per_quarter=assignment.musical_content.ticks_per_quarter,
+            tempo_changes=tempo_map,
+        )
+        practice_policy = build_practice_session_policy(
+            assignment_id=assignment.assignment_id,
+            content_id=assignment.content_id,
+            lesson_end_tick=playback_plan.timeline.total_ticks,
+            loop_enabled=resolved.playback.loop_enabled,
+            loop_start_tick=resolved.playback.start_tick,
+            loop_end_tick=resolved.playback.end_tick,
+            count_in_bars=resolved.playback.count_in_bars,
+            target_repetitions=assignment.instruction.repetitions,
+        )
+        one_string_teaching = tuple(
+            build_one_string_teaching_projection(
+                resolved.events,
+                profile,
+                string_id=string.string_id,
+            )
+            for string in sorted(profile.strings, key=lambda item: item.display_order)
+        )
+        bundle = MvpPracticeBundleV1(
+            schema_version="1.0.0",
+            assignment_id=assignment.assignment_id,
+            content_id=assignment.content_id,
+            fretboard_projection=projection,
+            playback_plan=playback_plan,
+            practice_policy=practice_policy,
+        )
         return MvpOrchestrationResultV1(
             assignment=assignment,
             resolved=resolved,
             behavior_digest=compute_lesson_behavior_digest(assignment),
             projection=projection,
+            playback_plan=playback_plan,
+            practice_policy=practice_policy,
+            bundle=bundle,
             candidate_counts=tuple(candidate_counts),
+            one_string_teaching=one_string_teaching,
         )

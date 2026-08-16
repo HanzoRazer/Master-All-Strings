@@ -1,0 +1,19 @@
+{
+  "policy": {
+    "schema_version": "1.0.0",
+    "assignment_id": "demo-first-position",
+    "content_id": "first_position",
+    "lesson_end_tick": 3840,
+    "loop": {
+      "enabled": false,
+      "start_tick": 0,
+      "end_tick": 3840,
+      "target_repetitions": null
+    },
+    "count_in_bars": 0
+  },
+  "runtime": {
+    "loop_start_seconds": 0.0,
+    "loop_end_seconds": 4.8
+  }
+}

@@ -9,6 +9,7 @@
         "ascending",
         "enumeration_v1"
       ],
+      "audio_demo": true,
       "known_limitations": []
     },
     {
@@ -19,6 +20,7 @@
       "demonstrates": [
         "descending"
       ],
+      "audio_demo": true,
       "known_limitations": []
     },
     {
@@ -29,6 +31,7 @@
       "demonstrates": [
         "open_strings"
       ],
+      "audio_demo": true,
       "known_limitations": []
     },
     {
@@ -40,6 +43,7 @@
         "first_position",
         "soft_region"
       ],
+      "audio_demo": true,
       "known_limitations": []
     },
     {
@@ -50,6 +54,7 @@
       "demonstrates": [
         "position_shift"
       ],
+      "audio_demo": true,
       "known_limitations": []
     },
     {
@@ -60,6 +65,7 @@
       "demonstrates": [
         "string_crossing"
       ],
+      "audio_demo": true,
       "known_limitations": []
     },
     {
@@ -70,6 +76,7 @@
       "demonstrates": [
         "simultaneous"
       ],
+      "audio_demo": true,
       "known_limitations": [
         "chord_aware_selection"
       ]
@@ -82,6 +89,7 @@
       "demonstrates": [
         "multiple_candidates"
       ],
+      "audio_demo": true,
       "known_limitations": []
     },
     {
@@ -92,6 +100,7 @@
       "demonstrates": [
         "unplayable"
       ],
+      "audio_demo": true,
       "known_limitations": []
     },
     {
@@ -102,6 +111,7 @@
       "demonstrates": [
         "teacher_override"
       ],
+      "audio_demo": true,
       "known_limitations": []
     }
   ]

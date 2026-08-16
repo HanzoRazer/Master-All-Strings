@@ -1,0 +1,218 @@
+{
+  "evaluation": {
+    "assignment_id": "golden-do010",
+    "content_id": "ascending-scale-10",
+    "evaluation_digest": "sha256:adf76129ef11641051fb04c03e5eb07d6bad0f8db226860cc74c3f5a3056e717",
+    "evaluation_policy_id": "mvp-do010-v1",
+    "evaluation_policy_version": "1.0.0",
+    "findings": [
+      {
+        "evidence_refs": [
+          "aligned:ev-1@0:obs-1"
+        ],
+        "expected_event_refs": [
+          "ev-1"
+        ],
+        "finding_id": "timing-late-0001",
+        "finding_type": "late_entry",
+        "focus_end_tick": 0,
+        "focus_start_tick": 0,
+        "message_key": "finding.late_entry",
+        "metadata": {},
+        "observed_value": 150.0,
+        "repetition_index": 0,
+        "schema_version": "1.0.0",
+        "severity": "focus",
+        "threshold_value": 100.0
+      },
+      {
+        "evidence_refs": [
+          "aligned:ev-2@0:obs-2"
+        ],
+        "expected_event_refs": [
+          "ev-2"
+        ],
+        "finding_id": "pitch-0001",
+        "finding_type": "pitch_difference",
+        "focus_end_tick": 480,
+        "focus_start_tick": 480,
+        "message_key": "finding.pitch_difference",
+        "metadata": {},
+        "observed_value": 1.0,
+        "repetition_index": 0,
+        "schema_version": "1.0.0",
+        "severity": "focus",
+        "threshold_value": 1.0
+      },
+      {
+        "evidence_refs": [
+          "aligned:ev-3@0:none"
+        ],
+        "expected_event_refs": [
+          "ev-3"
+        ],
+        "finding_id": "missing-0001",
+        "finding_type": "expected_note_missing",
+        "focus_end_tick": 960,
+        "focus_start_tick": 960,
+        "message_key": "finding.expected_note_missing",
+        "metadata": {},
+        "observed_value": null,
+        "repetition_index": 0,
+        "schema_version": "1.0.0",
+        "severity": "focus",
+        "threshold_value": null
+      },
+      {
+        "evidence_refs": [
+          "missing-0001",
+          "pitch-0001",
+          "timing-late-0001"
+        ],
+        "expected_event_refs": [],
+        "finding_id": "focus-concentrated-0001",
+        "finding_type": "findings_concentrated",
+        "focus_end_tick": 1440,
+        "focus_start_tick": 0,
+        "message_key": "finding.findings_concentrated",
+        "metadata": {},
+        "observed_value": null,
+        "repetition_index": null,
+        "schema_version": "1.0.0",
+        "severity": "significant",
+        "threshold_value": null
+      }
+    ],
+    "performance_session_id": "golden-session-2",
+    "primary_next_action": {
+      "action_type": "isolate_passage",
+      "focus_end_tick": 1440,
+      "focus_start_tick": 0,
+      "message_key": "action.isolate_passage",
+      "reason_finding_ids": [
+        "missing-0001",
+        "pitch-0001",
+        "timing-late-0001"
+      ],
+      "schema_version": "1.0.0",
+      "target_rate": null,
+      "teaching_aid": null
+    },
+    "provenance": {
+      "alignment_session": "golden-session-2",
+      "producer": "PracticeEvaluator/v1"
+    },
+    "schema_version": "1.0.0",
+    "secondary_actions": [
+      {
+        "action_type": "repeat",
+        "focus_end_tick": null,
+        "focus_start_tick": null,
+        "message_key": "action.repeat",
+        "reason_finding_ids": [
+          "timing-late-0001",
+          "pitch-0001",
+          "missing-0001",
+          "focus-concentrated-0001"
+        ],
+        "schema_version": "1.0.0",
+        "target_rate": null,
+        "teaching_aid": null
+      },
+      {
+        "action_type": "slow_down",
+        "focus_end_tick": null,
+        "focus_start_tick": null,
+        "message_key": "action.slow_down",
+        "reason_finding_ids": [
+          "timing-late-0001",
+          "pitch-0001"
+        ],
+        "schema_version": "1.0.0",
+        "target_rate": 0.75,
+        "teaching_aid": null
+      }
+    ],
+    "summary": {
+      "actionable_finding_count": 4,
+      "expected_event_count": 10,
+      "extra_count": 0,
+      "focus_ranges": [
+        {
+          "end_tick": 1440,
+          "finding_ids": [
+            "missing-0001",
+            "pitch-0001",
+            "timing-late-0001"
+          ],
+          "start_tick": 0
+        }
+      ],
+      "matched_count": 9,
+      "missing_count": 1,
+      "observed_event_count": 9,
+      "performance_session_id": "golden-session-2",
+      "pitch_finding_count": 1,
+      "primary_action": {
+        "action_type": "isolate_passage",
+        "focus_end_tick": 1440,
+        "focus_start_tick": 0,
+        "message_key": "action.isolate_passage",
+        "reason_finding_ids": [
+          "missing-0001",
+          "pitch-0001",
+          "timing-late-0001"
+        ],
+        "schema_version": "1.0.0",
+        "target_rate": null,
+        "teaching_aid": null
+      },
+      "repetition_count": 1,
+      "schema_version": "1.0.0",
+      "secondary_actions": [
+        {
+          "action_type": "repeat",
+          "focus_end_tick": null,
+          "focus_start_tick": null,
+          "message_key": "action.repeat",
+          "reason_finding_ids": [
+            "timing-late-0001",
+            "pitch-0001",
+            "missing-0001",
+            "focus-concentrated-0001"
+          ],
+          "schema_version": "1.0.0",
+          "target_rate": null,
+          "teaching_aid": null
+        },
+        {
+          "action_type": "slow_down",
+          "focus_end_tick": null,
+          "focus_start_tick": null,
+          "message_key": "action.slow_down",
+          "reason_finding_ids": [
+            "timing-late-0001",
+            "pitch-0001"
+          ],
+          "schema_version": "1.0.0",
+          "target_rate": 0.75,
+          "teaching_aid": null
+        }
+      ],
+      "timing_finding_count": 1
+    }
+  },
+  "hardware_status": {
+    "audio_output": "UNVERIFIED_AUDIO_OUTPUT",
+    "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT"
+  },
+  "messages": {
+    "action.isolate_passage": "Isolate the passage that needs focus.",
+    "action.repeat": "Repeat the passage.",
+    "action.slow_down": "Practice slower at a supported rate.",
+    "finding.expected_note_missing": "An expected lesson note was not observed.",
+    "finding.findings_concentrated": "Findings are concentrated in one passage.",
+    "finding.late_entry": "This note entered later than the lesson timing.",
+    "finding.pitch_difference": "This pitch differed from the expected lesson note."
+  }
+}

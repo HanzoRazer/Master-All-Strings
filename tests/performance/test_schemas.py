@@ -47,6 +47,9 @@ INVALID_DIR = EXAMPLE_DIR / "invalid"
 
 SCHEMAS = {
     "captured_midi_event_v1",
+    "observed_midi_note_v1",
+    "performance_alignment_v1",
+    "performance_session_evidence_v1",
     "performance_runtime_config_v1",
     "performance_session_config_v1",
     "raw_performance_capture_v1",
@@ -465,6 +468,9 @@ class TestSessionAndRegistrySchemasMatchTheirContracts:
         # class exists to prevent, so the omission itself is asserted.
         covered = {
             "captured_midi_event_v1",
+            "observed_midi_note_v1",
+            "performance_alignment_v1",
+            "performance_session_evidence_v1",
             "raw_performance_capture_v1",
             "runtime_health_v1",
             "performance_runtime_config_v1",

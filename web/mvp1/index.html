@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Master All Strings — MVP-1</title>
+    <title>Master All Strings — Play &amp; Practice</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -13,14 +13,25 @@
           <div class="brand-mark" aria-hidden="true"></div>
           <div>
             <h1>Master All Strings</h1>
-            <p class="subtitle">MVP-1 · Deterministic spatial guidance</p>
+            <p class="subtitle">MVP · Lesson → Practice → Results</p>
           </div>
         </div>
         <div class="meta" id="sourceMeta">Loading projection…</div>
+        <nav class="workflow" aria-label="Learner workflow">
+          <button type="button" class="workflow-step active" data-stage="lesson">
+            Lesson
+          </button>
+          <button type="button" class="workflow-step" data-stage="practice">
+            Practice
+          </button>
+          <button type="button" class="workflow-step" data-stage="results">
+            Results
+          </button>
+        </nav>
       </header>
 
       <aside class="sidebar">
-        <section>
+        <section data-stage-panel="lesson">
           <h2>Lesson</h2>
           <label class="field">
             <span>Demo</span>
@@ -28,17 +39,127 @@
           </label>
           <label class="field">
             <span>Exported instrument</span>
-            <select id="instrumentSelect" disabled aria-describedby="instrumentHint"></select>
+            <select
+              id="instrumentSelect"
+              disabled
+              aria-describedby="instrumentHint"
+            ></select>
           </label>
           <p class="hint subtle" id="instrumentHint">
             Read-only: the browser never re-orchestrates. Re-export with
-            <code>python scripts/run_mvp1.py --lesson &lt;demo&gt; --instrument &lt;id&gt;</code>
+            <code
+              >python scripts/run_mvp1.py --lesson &lt;demo&gt; --instrument
+              &lt;id&gt;</code
+            >
             to change instrument.
           </p>
           <p class="hint" id="lessonDescription"></p>
           <p class="hint subtle" id="knownLimitations"></p>
         </section>
-        <section>
+        <section data-stage-panel="practice" hidden>
+          <h2>Reference Synth</h2>
+          <label class="toggle-field">
+            <input id="soundEnabled" type="checkbox" />
+            <span>Sound on</span>
+          </label>
+          <label class="field">
+            <span>Master volume</span>
+            <input
+              id="masterVolume"
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value="0.6"
+            />
+          </label>
+          <p id="audioStatus" class="status" data-readiness="uninitialized">
+            Sound off
+          </p>
+        </section>
+        <section data-stage-panel="practice" hidden>
+          <h2>Zone Harmony</h2>
+          <label class="toggle-field">
+            <input id="zoneOverlay" type="checkbox" disabled />
+            <span>Zone Colors</span>
+          </label>
+          <div class="zone-legend" aria-label="Zone Harmony color legend">
+            <span class="legend-zone-1">Zone 1</span>
+            <span class="legend-zone-2">Zone 2</span>
+            <span class="legend-tritone">Tritone anchor</span>
+            <span class="legend-half-step">Half-step crossing</span>
+          </div>
+          <p id="zoneStatus" class="hint subtle">No Zone semantic artifact</p>
+          <label class="field">
+            <span>View</span>
+            <select id="teachingView">
+              <option value="normal">Normal Fingering</option>
+              <option value="one-string">One String</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Teaching string</span>
+            <select id="teachingString" disabled></select>
+          </label>
+        </section>
+        <section data-stage-panel="practice" hidden>
+          <h2>Practice loop</h2>
+          <label class="toggle-field">
+            <input id="loopEnabled" type="checkbox" />
+            <span>Loop passage</span>
+          </label>
+          <label class="field">
+            <span>Loop start (seconds)</span>
+            <input id="loopStart" type="number" min="0" value="0" />
+          </label>
+          <label class="field">
+            <span>Loop end (seconds)</span>
+            <input id="loopEnd" type="number" min="0" value="1" />
+          </label>
+          <p id="loopRange" class="hint subtle">Loop off</p>
+          <p class="repeat-display">
+            Repetitions <strong id="repeatCount">0</strong>
+          </p>
+          <p class="hint subtle">
+            Count-in policy preserved; audible count-in deferred.
+          </p>
+        </section>
+        <section data-stage-panel="practice" hidden>
+          <h2>MIDI capture</h2>
+          <label class="field"
+            ><span>MIDI input</span
+            ><select id="midiDevice">
+              <option>Permission required</option>
+            </select></label
+          >
+          <div class="capture-actions">
+            <button type="button" id="btnMidiPermission">Enable MIDI</button>
+            <button type="button" id="btnArm">Arm</button>
+            <button type="button" id="btnStartAttempt">Start Attempt</button>
+            <button type="button" id="btnStopAttempt">Stop Attempt</button>
+            <button type="button" id="btnFakeMidi" hidden>
+              Inject Fake Scale
+            </button>
+          </div>
+          <p id="captureStatus" class="status">permission_required</p>
+          <p class="hint">
+            Observed messages <strong id="observedCount">0</strong>
+          </p>
+        </section>
+        <section data-stage-panel="results" hidden>
+          <h2>Results</h2>
+          <div id="resultsPanel" class="results-panel">
+            No practice evaluation yet.
+          </div>
+          <div class="capture-actions">
+            <button type="button" id="btnApplyPrimary">Apply next action</button>
+            <button type="button" id="btnGoldenDemo" hidden>
+              Run golden 3-attempt demo
+            </button>
+          </div>
+          <p id="resultsStatus" class="hint subtle"></p>
+        </section>
+        <section data-stage-panel="lesson">
           <h2>Lesson info</h2>
           <dl class="info" id="lessonInfo"></dl>
         </section>
@@ -67,7 +188,11 @@
               <div class="gutter-notes" id="gutterNotes"></div>
             </div>
           </div>
-          <div class="neck-map" id="neckMap" aria-label="Neck map overview"></div>
+          <div
+            class="neck-map"
+            id="neckMap"
+            aria-label="Neck map overview"
+          ></div>
         </div>
 
         <div class="transport">
