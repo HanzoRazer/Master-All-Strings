@@ -40,8 +40,8 @@ publication/documentation commits (DOCUMENTATION / RELEASE_METADATA only)
 
 | Stage | State |
 | --- | --- |
-| Local documentation/metadata commits | in progress |
-| Local release-candidate verification | pending |
+| Local documentation/metadata commits | complete |
+| Local release-candidate verification | PASS (1590 passed / 1 skipped; 95.15%; Ruff; mypy; 37 JS; lineage; docs-only tree) |
 | Push `release/mvp-1` | pending |
 | Open PR | pending |
 | GitHub CI | pending |
@@ -54,7 +54,7 @@ publication/documentation commits (DOCUMENTATION / RELEASE_METADATA only)
 | Field | Value |
 | --- | --- |
 | PR number / URL | *pending* |
-| Candidate SHA | *pending* |
+| Candidate SHA |  |
 | Merged SHA | *pending* |
 | Release SHA | *pending* |
 | Tree equivalence vs `7a9b684` | *pending* |
