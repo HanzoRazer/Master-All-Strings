@@ -1,0 +1,52 @@
+{
+  "milestone": "Master All Strings MVP 1",
+  "dev_order": "DO-010A",
+  "publication_status": "PRE_PUBLICATION",
+  "product_sha": "7a9b68455b84b065fcd6b184c0903b292d090ef7",
+  "evidence_sha": "b727cce6da108667d7dc1823df17f85cdeb9d810",
+  "do008_sha": "f9018213fb9097cb716a8c91670ae03f7ed1b514",
+  "do009_sha": "92f0f80b46c0c6e8e7acfd8f6f36fd007bfe58ec",
+  "main_base_sha": "9ab975632225ee8cb0c26eba501869ea73615c2c",
+  "publication_branch": "release/mvp-1",
+  "implementation_branch": "feat/do-010-mvp-completion",
+  "pull_request": null,
+  "candidate_sha": null,
+  "merged_sha": null,
+  "release_tag": "mvp-1",
+  "release_sha": null,
+  "tree_equivalence": {
+    "product_paths_vs_7a9b684": "PENDING",
+    "allowed_post_evidence_classes": [
+      "REPOSITORY_RECONCILIATION",
+      "CI_ONLY",
+      "DOCUMENTATION",
+      "GENERATED_GOVERNANCE",
+      "RELEASE_METADATA"
+    ],
+    "product_behavior_changes_allowed": false
+  },
+  "local_software_gates": {
+    "python_tests_passed": 1588,
+    "python_tests_skipped": 1,
+    "coverage_percent": 95.15,
+    "ruff": "PASS",
+    "mypy": "PASS",
+    "javascript_tests": 37,
+    "schemas": "PASS",
+    "governance": "PASS",
+    "do009_digest": "sha256:c1249457f3d9c9a26b19fc3f8338c1844bec9c6af08809b059d31b89949175d4",
+    "do009_digest_match": true,
+    "golden_demo_sequence": [
+      "slow_down",
+      "isolate_passage",
+      "continue"
+    ]
+  },
+  "github_ci": null,
+  "physical_midi_status": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+  "audio_output_status": "UNVERIFIED_AUDIO_OUTPUT",
+  "non_authoritative_branches_excluded": [
+    "feat/do-009-live-midi-alignment",
+    "03477a2"
+  ]
+}
