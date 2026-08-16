@@ -29,6 +29,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Full history is required for MVP 1 publication lineage / tree-compare
+          # utilities that assert frozen SHA ancestry (DO-010A).
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
