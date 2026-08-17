@@ -49,7 +49,7 @@ requires re-certification.
 | `original_release_evidence_sha` | `b727cce6da108667d7dc1823df17f85cdeb9d810` |
 | `corrected_product_sha` | `f028549b145bf3f567e936d5d7e29ab2f93f63d3` (Web MIDI velocity-0 note-off + session map reset) |
 | `recertification_evidence_sha` | `d1761d93f2dbbfde4f0551dd981a0d4c064d4749` |
-| `final_release_sha` / `mvp-1` | *pending after green gates* |
+| `final_release_sha` / `mvp-1` | `ac38819b23ed9d85b651755e7612f42d7d528ddc` |
 
 ## Correctness patch (retained, not grandfathered)
 
@@ -93,9 +93,9 @@ f028549   corrected product (capture correctness)
     ↓
 publication / classifier / docs tooling
     ↓
-<recertification evidence>
+d1761d93  recertification evidence
     ↓
-final release tip → tag mvp-1
+ac38819   final release / tag mvp-1
 ```
 
 ## Explicit exclusions
@@ -110,10 +110,18 @@ final release tip → tag mvp-1
 
 | Field | Value |
 | --- | --- |
-|  |  |
-|  |  |
-|  |  |
-| CI on repaired/re-certified  | PASS |
+| `final_main_sha` (at tag time) | `ac38819b23ed9d85b651755e7612f42d7d528ddc` |
+| `release_tag` | `mvp-1` |
+| `release_sha` | `ac38819b23ed9d85b651755e7612f42d7d528ddc` |
+| `corrected_product_sha` | `f028549b145bf3f567e936d5d7e29ab2f93f63d3` |
+| `recertification_evidence_sha` | `d1761d93f2dbbfde4f0551dd981a0d4c064d4749` |
+| CI on repaired/re-certified `main` | PASS |
 | Tag ancestry | DO-008 → DO-009 → original product → original evidence → corrected product → recert evidence → release |
 
+Post-tag documentation commits may advance `main` after `ac38819b23ed9d85b651755e7612f42d7d528ddc`; they must not move tag `mvp-1`.
 
+```text
+MASTER ALL STRINGS
+MVP 1
+STATUS: PUBLISHED, RE-CERTIFIED, AND FROZEN
+```

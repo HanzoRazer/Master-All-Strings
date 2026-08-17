@@ -74,6 +74,10 @@ Machine-readable pack: `docs/mvp/MVP1_RECERTIFICATION_EVIDENCE.json`.
 
 ## Tag
 
-Immutable tag  points to .
+Immutable tag `mvp-1` points to `ac38819b23ed9d85b651755e7612f42d7d528ddc`.
 
-
+```text
+MASTER ALL STRINGS
+MVP 1
+STATUS: PUBLISHED, RE-CERTIFIED, AND FROZEN
+```

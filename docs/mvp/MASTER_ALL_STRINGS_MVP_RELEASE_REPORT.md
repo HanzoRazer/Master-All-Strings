@@ -13,8 +13,7 @@ SOFTWARE STATUS: COMPLETE
 ```
 
 Publication status is tracked under DO-010A / DO-010A-R and becomes
-**PUBLISHED, RE-CERTIFIED, AND FROZEN** only after topology repair, re-certification
-of `corrected_product_sha`, merge/FF of the intact lineage, and immutable tag `mvp-1`.
+**PUBLISHED, RE-CERTIFIED, AND FROZEN** at tag `mvp-1` → `ac38819b23ed9d85b651755e7612f42d7d528ddc`.
 
 ## Certified SHAs
 
@@ -72,3 +71,20 @@ and finalized in `MVP1_PUBLICATION_*` after green gates.
 Historical labels such as MVP-1F and MVP-2A describe engineering slices that are
 now part of commercial **MVP 1**. They do not imply a separate commercial MVP 2
 release.
+
+
+## Final freeze record (DO-010A-R)
+
+| Field | Value |
+| --- | --- |
+| Tag | `mvp-1` |
+| Tag target / release SHA | `ac38819b23ed9d85b651755e7612f42d7d528ddc` |
+| Current `main` tip (includes post-tag docs) | `e9f10c0433cfd7f2a76fca1db1a6d8f6c66836a6` |
+| Corrected product | `f028549b145bf3f567e936d5d7e29ab2f93f63d3` |
+| Recertification evidence | `d1761d93f2dbbfde4f0551dd981a0d4c064d4749` |
+
+```text
+MASTER ALL STRINGS
+MVP 1
+STATUS: PUBLISHED, RE-CERTIFIED, AND FROZEN
+```

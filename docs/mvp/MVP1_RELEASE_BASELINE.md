@@ -41,8 +41,10 @@ ac38819b23ed9d85b651755e7612f42d7d528ddc
 | `original_release_evidence_sha` | `b727cce6da108667d7dc1823df17f85cdeb9d810` |
 | `corrected_product_sha` | `f028549b145bf3f567e936d5d7e29ab2f93f63d3` |
 | `recertification_evidence_sha` | `d1761d93f2dbbfde4f0551dd981a0d4c064d4749` |
-| `final_release_sha` | *pending* |
-| `release_tag` | `mvp-1` (*pending*) |
+| `final_release_sha` | `ac38819b23ed9d85b651755e7612f42d7d528ddc` |
+| `release_tag` | `mvp-1` |
+| `release_sha` | `ac38819b23ed9d85b651755e7612f42d7d528ddc` |
+| `final_main_sha` | `e9f10c0433cfd7f2a76fca1db1a6d8f6c66836a6` |
 | `squash_merge_sha` | `a198c7b30370d077e7213b4ebeab170c769aaaff` |
 | `recovery_ref` | `recovery/mvp1-squash-merge` |
 | `main_repair_method` | `force-update-to-release-tip` (completed before DO-010A-R resumed) |
