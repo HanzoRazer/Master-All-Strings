@@ -1,0 +1,49 @@
+{
+  "dev_order": "DO-011",
+  "milestone": "MVP 2A",
+  "tranche": "Lesson Media & Guided Practice Foundation",
+  "mvp1_release_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
+  "do011_base_sha": "042b5d5b38ca83c72429f7bd865cf87249079200",
+  "do011_product_sha": "ebe280db5043a56615fb2b450831663c1da60049",
+  "branch": "cursor/mvp2a-lesson-media-90b8",
+  "recorded_at_utc": "2026-08-17T05:45:40Z",
+  "design": {
+    "lesson_assignment_v1_mutated": false,
+    "media_seam": "sidecar_catalog",
+    "cue_ordering": "canonicalize_by_time_seconds_then_cue_id",
+    "required_media_catalog": "hard_fail",
+    "required_media_runtime": "soft_fail",
+    "ui": "modest_teaching_media_panel",
+    "governance_engine_row_added": false
+  },
+  "verification": {
+    "python_tests_passed": 1616,
+    "python_tests_skipped": 2,
+    "coverage_percent": 95.14,
+    "ruff": "PASS",
+    "mypy_strict": "PASS",
+    "javascript_tests_passed": 38,
+    "media_catalog_validation": "PASS",
+    "do008_vectors": "48/48",
+    "do009_digest_match": true,
+    "musical_non_interference": "PASS",
+    "browser_smoke": "PASS",
+    "browser_smoke_url": "http://127.0.0.1:8766/index.html",
+    "media_demo": "half_steps_one_string"
+  },
+  "hardware": {
+    "physical_midi_status": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+    "audio_output_status": "UNVERIFIED_AUDIO_OUTPUT"
+  },
+  "limitations": [
+    "No recovered Master Producer corpus migration",
+    "No avatar / generative video",
+    "No frame-accurate media/MIDI sync",
+    "No MVP 2 release tag in this tranche"
+  ],
+  "deferred": [
+    "FOUR Step curriculum migration",
+    "Creator-avatar media replacement",
+    "Cloud streaming / DRM / teacher uploads"
+  ]
+}
