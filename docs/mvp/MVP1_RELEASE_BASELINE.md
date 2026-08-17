@@ -3,9 +3,10 @@
 Commercial milestone: **Master All Strings MVP 1**
 
 This document freezes the SHA lineage and verification state that justify publishing
-MVP 1. It does not redefine product behavior.
+MVP 1. It does not redefine product behavior beyond the authorized capture
+correctness patch.
 
-## Frozen lineage
+## Frozen lineage (DO-010A-R)
 
 ```text
 DO-008 frozen
@@ -14,35 +15,46 @@ f9018213fb9097cb716a8c91670ae03f7ed1b514
 DO-009 verified baseline
 92f0f80b46c0c6e8e7acfd8f6f36fd007bfe58ec
     ↓
-MVP 1 product
+original MVP 1 product
 7a9b68455b84b065fcd6b184c0903b292d090ef7
     ↓
-MVP 1 release evidence
+original MVP 1 release evidence
 b727cce6da108667d7dc1823df17f85cdeb9d810
     ↓
-publication docs / CI / release tooling
+corrected product (capture correctness patch)
+f028549b145bf3f567e936d5d7e29ab2f93f63d3
     ↓
-PRODUCT_CORRECTNESS_PATCH (localhost capture API only)
+publication / classifier / docs tooling
+    ↓
+recertification evidence  (*pending*)
+    ↓
+final release tip → tag mvp-1  (*pending*)
 ```
-
-Capability freeze remains `product_sha` = `7a9b684…`. Post-freeze publication may include
-only allowlisted correctness patches (no new MVP capability). See
-`docs/mvp/MVP1_PUBLICATION_REPORT.md`.
 
 | Role | SHA |
 | --- | --- |
 | `do008_sha` | `f9018213fb9097cb716a8c91670ae03f7ed1b514` |
 | `do009_sha` | `92f0f80b46c0c6e8e7acfd8f6f36fd007bfe58ec` |
-| `product_sha` | `7a9b68455b84b065fcd6b184c0903b292d090ef7` |
-| `evidence_sha` | `b727cce6da108667d7dc1823df17f85cdeb9d810` |
-| `merged_sha` | *pending publication* |
+| `original_product_sha` | `7a9b68455b84b065fcd6b184c0903b292d090ef7` |
+| `original_release_evidence_sha` | `b727cce6da108667d7dc1823df17f85cdeb9d810` |
+| `corrected_product_sha` | `f028549b145bf3f567e936d5d7e29ab2f93f63d3` |
+| `recertification_evidence_sha` | *pending DO-010A-R* |
+| `final_release_sha` | *pending* |
 | `release_tag` | `mvp-1` (*pending*) |
-| `release_sha` | *pending publication* |
+| `squash_merge_sha` | `a198c7b30370d077e7213b4ebeab170c769aaaff` |
+| `recovery_ref` | `recovery/mvp1-squash-merge` |
+| `main_repair_method` | `force-update-to-release-tip` (completed before DO-010A-R resumed) |
 
-Historical engineering names such as MVP-1F, MVP-2A, DO-008, DO-009, and DO-010 remain
-valid history identifiers. They do **not** imply that commercial MVP 2 already exists.
+`original_product_sha` remains historically valid. Final release product identity for
+tagging is **`corrected_product_sha`**, because Performance capture semantics changed.
 
-## Software verification (recorded at evidence SHA)
+## Topology repair note
+
+PR #18 was squash-merged (`a198c7b`). That tip is **not** release authority. It is
+preserved under `recovery/mvp1-squash-merge`. `main` was repaired to the intact
+`release/mvp-1` history before DO-010A-R resumed. See `MVP1_PUBLICATION_REPORT.md`.
+
+## Software verification (original evidence SHA)
 
 | Gate | Result |
 | --- | --- |
@@ -56,7 +68,9 @@ valid history identifiers. They do **not** imply that commercial MVP 2 already e
 | Educational golden demo | `SLOW_DOWN` → `ISOLATE_PASSAGE` → `CONTINUE` |
 | Product flow Lesson→…→Continue | PASS |
 
-Authoritative local evidence: `docs/mvp/DO010_INTEGRATION_EVIDENCE.json`.
+Authoritative original evidence: `docs/mvp/DO010_INTEGRATION_EVIDENCE.json`.
+Re-certification results for `f028549` are recorded in
+`docs/mvp/MVP1_RECERTIFICATION_*` after the full gate.
 
 ## Hardware verification
 
@@ -77,3 +91,4 @@ Publication does not close those limitations.
 
 Do not merge, cherry-pick, or otherwise absorb parallel substitute implementations
 (for example `feat/do-009-live-midi-alignment` / `03477a2`) into this baseline.
+Do not tag or treat `a198c7b` as the MVP 1 release.

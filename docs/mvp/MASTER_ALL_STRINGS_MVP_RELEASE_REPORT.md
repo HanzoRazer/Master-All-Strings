@@ -12,19 +12,21 @@ MASTER ALL STRINGS MVP 1
 SOFTWARE STATUS: COMPLETE
 ```
 
-Publication status is tracked separately under DO-010A and becomes **PUBLISHED AND
-FROZEN** only after merge + immutable tag `mvp-1`.
+Publication status is tracked under DO-010A / DO-010A-R and becomes
+**PUBLISHED, RE-CERTIFIED, AND FROZEN** only after topology repair, re-certification
+of `corrected_product_sha`, merge/FF of the intact lineage, and immutable tag `mvp-1`.
 
 ## Certified SHAs
 
 | Role | SHA |
 | --- | --- |
-| Product | `7a9b68455b84b065fcd6b184c0903b292d090ef7` |
-| Release evidence | `b727cce6da108667d7dc1823df17f85cdeb9d810` |
+| Original product | `7a9b68455b84b065fcd6b184c0903b292d090ef7` |
+| Original release evidence | `b727cce6da108667d7dc1823df17f85cdeb9d810` |
+| Corrected product | `f028549b145bf3f567e936d5d7e29ab2f93f63d3` (capture velocity-0 note-off + session map reset) |
 | DO-009 baseline | `92f0f80b46c0c6e8e7acfd8f6f36fd007bfe58ec` |
 | DO-008 frozen | `f9018213fb9097cb716a8c91670ae03f7ed1b514` |
 
-## Software gates (local evidence)
+## Software gates (original local evidence)
 
 | Gate | Result |
 | --- | --- |
@@ -41,6 +43,23 @@ FROZEN** only after merge + immutable tag `mvp-1`.
 Source evidence pack: `docs/mvp/DO010_INTEGRATION_EVIDENCE.json` and
 `docs/mvp/do010_artifacts/`.
 
+## Release correction (DO-010A-R)
+
+Post-review capture correctness fixes landed after the original product/evidence
+baseline. They remain in MVP 1 and require full re-certification:
+
+1. Web MIDI `0x90` velocity `0` classified as `NOTE_OFF`
+2. Capture repetition/onset maps reset on start and after close
+
+Corrected product identity: **`f028549b145bf3f567e936d5d7e29ab2f93f63d3`** (not a silent redefinition of `7a9b684`).
+
+PR #18 was squash-merged (`a198c7b`); that tip is preserved under
+`recovery/mvp1-squash-merge` and is **not** the release. `main` was repaired to the
+intact `release/mvp-1` history before re-certification resumed.
+
+Re-certification evidence and the final release SHA are recorded in
+`docs/mvp/MVP1_RECERTIFICATION_REPORT.md` / `MVP1_RECERTIFICATION_EVIDENCE.json`
+and finalized in `MVP1_PUBLICATION_*` after green gates.
 ## Hardware (non-blocking)
 
 | Channel | Status |

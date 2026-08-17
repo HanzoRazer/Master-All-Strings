@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Compare a publication candidate tree against certified MVP 1 product HEAD.
+"""Compare a publication candidate tree against original MVP 1 product HEAD.
 
-Classification is intentionally honest: documentation, CI, release tooling,
-generated governance, and explicit post-certification correctness patches are
-reported separately. Only unexpected product paths fail the gate.
+Classification is intentionally honest. Documentation, CI, release tooling,
+generated governance views, and the explicit post-freeze correctness patch are
+reported separately. Canonical governance source and unknown product/runtime
+paths fail the gate.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ PRODUCT = "7a9b68455b84b065fcd6b184c0903b292d090ef7"
 
 # Review-required localhost API correctness fixes applied after product freeze.
 # These are NOT documentation; they must remain an explicit, narrow allowlist.
+# Do not expand without a new release authorization.
 PRODUCT_CORRECTNESS_PATCH_PATHS = frozenset(
     {
         "src/master_all_strings/mvp/performance_api.py",
@@ -31,8 +33,11 @@ BUCKET_ORDER = (
     "RELEASE_TOOLING_ONLY_DIFFERENCE",
     "GENERATED_GOVERNANCE_ONLY_DIFFERENCE",
     "PRODUCT_CORRECTNESS_PATCH",
+    "ARCHITECTURE_DIFFERENCE",
     "PRODUCT_DIFFERENCE",
 )
+
+FAILING_BUCKETS = frozenset({"PRODUCT_DIFFERENCE", "ARCHITECTURE_DIFFERENCE"})
 
 
 def _run(args: list[str]) -> str:
@@ -51,10 +56,15 @@ def classify(path: str) -> str:
         return "PRODUCT_CORRECTNESS_PATCH"
     if path.startswith(".github/"):
         return "CI_ONLY_DIFFERENCE"
-    if path.startswith("docs/architecture/ENGINE_") or path.startswith("governance/"):
+    # Generated architecture views only — never the canonical registry.
+    if path.startswith("docs/architecture/ENGINE_"):
         return "GENERATED_GOVERNANCE_ONLY_DIFFERENCE"
+    # Canonical governance / architecture source authority.
+    if path == "governance/engine_architecture_v1.json" or path.startswith("governance/"):
+        return "ARCHITECTURE_DIFFERENCE"
     if (
         path.startswith("scripts/verify_mvp1")
+        or path.startswith("scripts/verify_no_squash_release_topology")
         or path.startswith("scripts/compare_mvp1")
         or path.startswith("scripts/build_mvp1")
         or path.startswith("scripts/build_do010")
@@ -76,7 +86,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--product",
         default=PRODUCT,
-        help="Certified product SHA (default: 7a9b684…)",
+        help="Original certified product SHA (default: 7a9b684…)",
     )
     args = parser.parse_args(argv)
 
@@ -99,8 +109,9 @@ def main(argv: list[str] | None = None) -> int:
         for path in items:
             print(f"  {path}")
 
-    if buckets["PRODUCT_DIFFERENCE"]:
-        print("RESULT: PRODUCT_DIFFERENCE", file=sys.stderr)
+    failing = [label for label in BUCKET_ORDER if label in FAILING_BUCKETS and buckets[label]]
+    if failing:
+        print(f"RESULT: {failing[0]}", file=sys.stderr)
         return 1
 
     present = [label for label in BUCKET_ORDER if buckets[label]]

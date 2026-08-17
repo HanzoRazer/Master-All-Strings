@@ -1,30 +1,73 @@
 # Master All Strings MVP 1 — Publication Report
 
-Dev Order: **DO-010A** (controlled publication of the certified MVP 1 lineage)
+Dev Order: **DO-010A** then **DO-010A-R** (topology repair + re-certification)
 
 ## Status
 
 ```text
-PR_OPEN_CI_GREEN_REVIEW_BLOCKERS_ADDRESSED
+DO010A_R_IN_PROGRESS
 ```
 
-Local release-candidate verification passed. Review blockers for MIDI note-off
-classification, capture session map reset, and honest tree-compare labeling are
-addressed on this branch. Next steps remain CI, review, fast-forward merge when
-permitted, and immutable tag `mvp-1`.
+## PR #18 squash-merge incident
 
-## What this PR is (accurate framing)
+PR [#18](https://github.com/HanzoRazer/Master-All-Strings/pull/18) was **squash-merged** into
+`main` as:
 
-This PR **fast-forwards the already-certified MVP 1 lineage onto `main`**.
+```text
+a198c7b30370d077e7213b4ebeab170c769aaaff
+```
 
-| Comparison | Expected contents |
+That commit preserved the intended **tree** but destroyed the certified **ancestry**:
+DO-008 → DO-009 → original product → evidence became unreachable from `main`.
+
+Tag creation for `mvp-1` was **halted** because a squash tip is not release authority.
+
+### Topology repair (completed before DO-010A-R resumed)
+
+Stages 1–3 of DO-010A-R were completed prior to this tranche resume and are **not**
+replayed:
+
+| Item | Value |
 | --- | --- |
-| `main` → `release/mvp-1` | Full certified product history (DO-008 → DO-009 → MVP 1 product → evidence) **plus** publication docs/CI/release tooling, and a narrow post-freeze correctness allowlist |
-| Product `7a9b684` → tip | **Not** “docs-only vs `main`”. Allowed classes only: docs, CI, release tooling, generated governance, and explicit `PRODUCT_CORRECTNESS_PATCH` paths |
+| Recovery ref | `recovery/mvp1-squash-merge` → `a198c7b…` |
+| Repair method | force-update `main` → intact `release/mvp-1` tip |
+| Tree check | `git diff a198c7b origin/release/mvp-1` empty |
+| Repaired tip at resume | `2f8c0f05ae1fff4c9fd665111a097cc758d426a7` |
+| Squash as release head | **no** (preserved only via recovery ref) |
 
-The large file count vs `main` is expected: `main` did not yet contain the frozen MVP 1
-implementation. That is publication of certified history, not a claim that this PR is a
-docs-only delta against `main`.
+Certified SHAs are again reachable from `main` / `release/mvp-1`.
+
+## What this publication is
+
+Fast-forward publication of the certified MVP 1 lineage onto `main`, plus
+publication metadata and an explicit post-freeze capture correctness patch that
+requires re-certification.
+
+| Field | SHA / value |
+| --- | --- |
+| `original_product_sha` | `7a9b68455b84b065fcd6b184c0903b292d090ef7` |
+| `original_release_evidence_sha` | `b727cce6da108667d7dc1823df17f85cdeb9d810` |
+| `corrected_product_sha` | `f028549b145bf3f567e936d5d7e29ab2f93f63d3` (Web MIDI velocity-0 note-off + session map reset) |
+| `recertification_evidence_sha` | *pending DO-010A-R evidence commit* |
+| `final_release_sha` / `mvp-1` | *pending after green gates* |
+
+## Correctness patch (retained, not grandfathered)
+
+`f028549b145bf3f567e936d5d7e29ab2f93f63d3` (`f028549`) remains in MVP 1 and is treated as `PRODUCT_CORRECTNESS_PATCH`:
+
+1. MIDI `0x90` + velocity `0` → `NOTE_OFF`
+2. Capture `repetitions` / `practice_onsets` cleared on start and after close
+
+These change Performance capture semantics relative to `7a9b684`, so the final
+release product identity is **`corrected_product_sha = f028549`**, not the original
+product SHA.
+
+## Classifier hardening (DO-010A-R)
+
+- `governance/engine_architecture_v1.json` (and other `governance/` sources) →
+  `ARCHITECTURE_DIFFERENCE` (fails publication compare unless authorized)
+- `docs/architecture/ENGINE_*` → `GENERATED_GOVERNANCE_ONLY_DIFFERENCE`
+- Correctness allowlist remains narrow to the reviewed capture API paths only
 
 ## Topology
 
@@ -32,70 +75,32 @@ docs-only delta against `main`.
 | --- | --- |
 | Implementation branch | `feat/do-010-mvp-completion` |
 | Publication branch | `release/mvp-1` |
-| PR base | `main` @ `9ab975632225ee8cb0c26eba501869ea73615c2c` |
-| Preferred merge | true fast-forward (no squash / no rebase) |
-| Release tag | `mvp-1` |
+| Preferred merge | true fast-forward into `main` (no squash; no rebase) |
+| Release tag | `mvp-1` (immutable; create only after DO-010A-R gates) |
 
-## Verified lineage (must remain reachable)
+## Verified lineage (required)
 
 ```text
 f9018213  DO-008
     ↓
 92f0f80   DO-009
     ↓
-7a9b684   MVP 1 product (capability freeze)
+7a9b684   original MVP 1 product
     ↓
-b727cce   MVP 1 release evidence
+b727cce   original MVP 1 evidence
     ↓
-publication docs / CI / release tooling
+f028549   corrected product (capture correctness)
     ↓
-PRODUCT_CORRECTNESS_PATCH (localhost MIDI API only; no new capability)
+publication / classifier / docs tooling
+    ↓
+<recertification evidence>
+    ↓
+final release tip → tag mvp-1
 ```
-
-## Post-freeze correctness patches (review blockers)
-
-These are **not** new product capability. They are narrow localhost capture-API fixes
-required before publication approval:
-
-1. Web MIDI note-on velocity 0 classified as `NOTE_OFF`
-2. Capture session maps (`repetitions`, `practice_onsets`) cleared on start and after close
-3. Tree-compare script reports honest classes (docs / CI / release tooling / patches)
-   instead of collapsing executables into `DOCUMENTATION_ONLY_DIFFERENCE`
-
-Allowlisted product paths vs `7a9b684`:
-
-- `src/master_all_strings/mvp/performance_api.py`
-- `tests/mvp/test_performance_api.py`
-
-## Publication progress
-
-| Stage | State |
-| --- | --- |
-| Local documentation/metadata commits | complete |
-| Review-blocker correctness patches | complete |
-| Local release-candidate verification | PASS (targeted MVP API + publication utils; full gate re-run before merge) |
-| Push `release/mvp-1` | complete (`origin/release/mvp-1`) |
-| Open PR | [#18](https://github.com/HanzoRazer/Master-All-Strings/pull/18) |
-| GitHub CI | PASS |
-| Review | in progress |
-| Merge | pending (authorized after clean CI/review) |
-| Tag `mvp-1` | pending (after merged SHA verification) |
-
-## Final fields
-
-| Field | Value |
-| --- | --- |
-| PR number / URL | [#18](https://github.com/HanzoRazer/Master-All-Strings/pull/18) |
-| Candidate SHA | *see tip of `release/mvp-1`* |
-| Merged SHA | *pending* |
-| Release SHA | *pending* |
-| Tree vs `7a9b684` | `ALLOWED_PUBLICATION_DIFFERENCE_WITH_CORRECTNESS_PATCHES` |
-| CI result | PASS |
 
 ## Explicit exclusions
 
-Do not absorb:
-
-- `feat/do-009-live-midi-alignment`
-- `03477a2`
-- any other parallel/substitute DO-009 history
+- `feat/do-009-live-midi-alignment` / `03477a2`
+- treating `a198c7b` as release SHA or tag target
+- Windows deterministic-newline work (deferred to DO-010B)
+- any new MVP product capability
