@@ -1,0 +1,57 @@
+{
+  "milestone": "Master All Strings MVP 1",
+  "dev_order": "DO-010A-R",
+  "schema_version": "1.0.0",
+  "recertification_status": "GATES_GREEN_PENDING_TAG",
+  "recorded_at_utc": "2026-08-17T00:23:15Z",
+  "original_product_sha": "7a9b68455b84b065fcd6b184c0903b292d090ef7",
+  "original_release_evidence_sha": "b727cce6da108667d7dc1823df17f85cdeb9d810",
+  "corrected_product_sha": "f028549b145bf3f567e936d5d7e29ab2f93f63d3",
+  "do008_sha": "f9018213fb9097cb716a8c91670ae03f7ed1b514",
+  "do009_sha": "92f0f80b46c0c6e8e7acfd8f6f36fd007bfe58ec",
+  "squash_merge_sha": "a198c7b30370d077e7213b4ebeab170c769aaaff",
+  "recovery_ref": "recovery/mvp1-squash-merge",
+  "main_repair_method": "force-update-to-release-tip",
+  "topology_repair_completed_before_resume": true,
+  "candidate_tip_before_evidence_commit": "06d971818b19830c6d5b9ccc502e55a3e03f780a",
+  "verification": {
+    "python_tests_passed": 1596,
+    "python_tests_skipped": 1,
+    "coverage_percent": 95.16,
+    "ruff": "PASS",
+    "mypy_strict": "PASS",
+    "javascript_tests_passed": 37,
+    "education_schemas": "PASS",
+    "governance": "PASS",
+    "do008_semantic_vectors": "48/48",
+    "do009_digest": "sha256:c1249457f3d9c9a26b19fc3f8338c1844bec9c6af08809b059d31b89949175d4",
+    "do009_digest_match": true,
+    "golden_demo_sequence": [
+      "slow_down",
+      "isolate_passage",
+      "continue"
+    ],
+    "do010_evaluation_evidence_digest": "sha256:ffac67af45c23f71df588049a4b3ac63b1049be28504f6a5f4eb2f4c3ff27503",
+    "tree_vs_original_product": "ALLOWED_PUBLICATION_DIFFERENCE_WITH_CORRECTNESS_PATCHES",
+    "lineage": "PASS",
+    "no_squash_topology": "PASS",
+    "browser_smoke": "PASS",
+    "browser_smoke_url": "http://127.0.0.1:8765/index.html",
+    "browser_smoke_dev_url": "http://127.0.0.1:8765/index.html?fakeMidi=1&devGolden=1",
+    "zone_harmony": "PASS",
+    "one_string_teaching": "PASS",
+    "fake_midi_capture": "PASS",
+    "transport_play_pause_seek_rate_loop": "PASS"
+  },
+  "hardware": {
+    "physical_midi_status": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+    "audio_output_status": "UNVERIFIED_AUDIO_OUTPUT"
+  },
+  "correctness_patch": {
+    "commit": "f028549b145bf3f567e936d5d7e29ab2f93f63d3",
+    "changes": [
+      "Web MIDI 0x90 velocity 0 classified as NOTE_OFF",
+      "Capture repetitions and practice_onsets reset on start and after close"
+    ]
+  }
+}

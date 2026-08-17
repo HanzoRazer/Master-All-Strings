@@ -5,7 +5,7 @@ Dev Order: **DO-010A** then **DO-010A-R** (topology repair + re-certification)
 ## Status
 
 ```text
-DO010A_R_IN_PROGRESS
+RECERTIFICATION_GATES_GREEN_PENDING_TAG
 ```
 
 ## PR #18 squash-merge incident
@@ -48,7 +48,7 @@ requires re-certification.
 | `original_product_sha` | `7a9b68455b84b065fcd6b184c0903b292d090ef7` |
 | `original_release_evidence_sha` | `b727cce6da108667d7dc1823df17f85cdeb9d810` |
 | `corrected_product_sha` | `f028549b145bf3f567e936d5d7e29ab2f93f63d3` (Web MIDI velocity-0 note-off + session map reset) |
-| `recertification_evidence_sha` | *pending DO-010A-R evidence commit* |
+| `recertification_evidence_sha` | *this commit / see MVP1_RECERTIFICATION_* |
 | `final_release_sha` / `mvp-1` | *pending after green gates* |
 
 ## Correctness patch (retained, not grandfathered)
