@@ -79,7 +79,7 @@ release.
 | --- | --- |
 | Tag | `mvp-1` |
 | Tag target / release SHA | `ac38819b23ed9d85b651755e7612f42d7d528ddc` |
-| Current `main` tip (includes post-tag docs) | `e9f10c0433cfd7f2a76fca1db1a6d8f6c66836a6` |
+| Current `main` tip (includes post-tag docs) | `1a3a63aca75d5bb374506a76fbc7db08ab30a3ec` |
 | Corrected product | `f028549b145bf3f567e936d5d7e29ab2f93f63d3` |
 | Recertification evidence | `d1761d93f2dbbfde4f0551dd981a0d4c064d4749` |
 
