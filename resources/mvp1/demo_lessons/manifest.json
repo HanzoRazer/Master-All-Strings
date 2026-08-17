@@ -155,6 +155,25 @@
       "expected_behavior_digest": "sha256:93636ae8064316396e4dab54f0467334a4521060ab72f1af6fcd42a89a9555af",
       "expected_projection_digest": "sha256:43cf7c491f966447ec80cd6aa18d0e2118d71e1a1f0dda069804a731fe7a93bf",
       "known_limitations": []
+    },
+    {
+      "demo_id": "half_steps_one_string",
+      "title": "Half Steps on One String",
+      "description": "Half-step teaching aid with Zone + one-string practice",
+      "lesson_path": "assignments/half_steps_one_string.json",
+      "instrument_profile_id": "guitar-standard-6",
+      "audio_demo": true,
+      "expected_playback_digest": "sha256:f9b578ae35e3d436d027f71f1240e763f844163f561fc6b57f83c86bb05266fd",
+      "demonstrates": [
+        "half_steps",
+        "one_string",
+        "lesson_media"
+      ],
+      "expected_behavior_digest": "sha256:075268cae2e858e93774a59ae3e2d7df8b5b73aaaa4c209069afbe006b1d4878",
+      "expected_projection_digest": "sha256:398f53a7a9ef4f623742d9e76d582ca196919e60821ed2b7e9a928ac15a5d1df",
+      "known_limitations": [
+        "teaching_media_presentation_only"
+      ]
     }
   ]
 }

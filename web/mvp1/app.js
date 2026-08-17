@@ -12,6 +12,7 @@ import {
 } from "./practice_actions.js";
 import { focusRangeFromEvaluation, renderResultsPanel } from "./results.js";
 import { Transport } from "./transport.js";
+import { MediaPlayerController } from "./media-player.js";
 
 const $ = (id) => document.getElementById(id);
 const state = {
@@ -71,6 +72,13 @@ const renderer = new FretboardRenderer({
   unplayableGutter: $("unplayableGutter"),
   neckMap: $("neckMap"),
   instrumentTitle: $("instrumentTitle"),
+});
+
+const mediaPlayer = new MediaPlayerController({
+  root: $("teachingMedia"),
+  onStatus: (message) => {
+    $("statusLine").textContent = message;
+  },
 });
 
 transport.subscribe((event) => {
@@ -265,6 +273,9 @@ function applySessionArtifacts(payload, playback, practice) {
   $("knownLimitations").textContent = (demo?.known_limitations || []).length
     ? `Known limitations: ${demo.known_limitations.join(", ")}`
     : "";
+  const lessonKey =
+    demo?.demo_id || projection.content_id || payload.content_id || "";
+  void mediaPlayer.loadForLesson(lessonKey);
 }
 
 function renderTeachingView() {
@@ -548,6 +559,7 @@ document.addEventListener("visibilitychange", () => {
 $("demoSelect").addEventListener("change", async (event) => {
   transport.pause();
   scheduler.panic("lesson-change");
+  mediaPlayer.clear();
   try {
     await loadSession(sessionPathsForDemo(event.target.value));
     $("statusLine").textContent = `Loaded ${event.target.value}`;
