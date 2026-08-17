@@ -9,6 +9,7 @@
   "branch": "cursor/mvp2a-lesson-media-90b8",
   "recorded_at_utc": "2026-08-17T05:45:40Z",
   "review_recorded_at_utc": "2026-08-17T13:45:00Z",
+  "publication_recorded_at_utc": "2026-08-17T13:50:00Z",
   "design": {
     "lesson_assignment_v1_mutated": false,
     "media_seam": "sidecar_catalog",
@@ -48,7 +49,7 @@
     "Creator-avatar media replacement",
     "Cloud streaming / DRM / teacher uploads"
   ],
-  "evidence_tip_sha": "7abc3a849e1db134eba34d200eb1ee5625253315",
+  "evidence_tip_sha": "dc28da734edf5842681c50808981961c2cbb44c8",
   "pull_request": "https://github.com/HanzoRazer/Master-All-Strings/pull/19",
   "github_ci": "PASS",
   "review_status": "COMPLETE_NO_BLOCKERS",
@@ -60,10 +61,19 @@
     "test_gap_release_blocking": 0,
     "doc_only_resolved": true
   },
-  "final_pr_head_sha": "7abc3a849e1db134eba34d200eb1ee5625253315",
-  "merge_sha": null,
-  "main_sha_after_merge": null,
+  "final_pr_head_sha": "dc28da734edf5842681c50808981961c2cbb44c8",
+  "merge_sha": "dfeb4dcfc8b7a5cc6362f7ae7baaf8d185c4df5c",
+  "main_sha_after_merge": "dfeb4dcfc8b7a5cc6362f7ae7baaf8d185c4df5c",
   "merge_method": "merge_commit",
-  "post_merge_smoke": null,
-  "publication_status": "REVIEW_COMPLETE_AWAITING_MERGE"
+  "merge_parents": [
+    "042b5d5b38ca83c72429f7bd865cf87249079200",
+    "dc28da734edf5842681c50808981961c2cbb44c8"
+  ],
+  "post_merge_smoke": "PASS",
+  "post_merge_browser_smoke": "PASS",
+  "post_merge_browser_smoke_url": "http://127.0.0.1:8766/index.html",
+  "mvp1_immutability_after_merge": true,
+  "mvp2_tag_created": false,
+  "publication_status": "PUBLISHED_TO_MAIN",
+  "mvp2a_published_baseline_sha": "dfeb4dcfc8b7a5cc6362f7ae7baaf8d185c4df5c"
 }

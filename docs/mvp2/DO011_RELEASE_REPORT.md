@@ -4,8 +4,8 @@
 
 ```text
 DO-011 / MVP 2A
-REVIEW COMPLETE — AWAITING MERGE COMMIT TO MAIN
-(no MVP 2 tag/release)
+STATUS: PUBLISHED TO MAIN
+(no MVP 2 tag/release — MVP 2 remains under construction)
 ```
 
 ## Baseline
@@ -65,13 +65,17 @@ Machine-readable pack: `docs/mvp2/DO011_INTEGRATION_EVIDENCE.json`.
 | Review result | COMPLETE — 0 blockers / 0 security / 0 boundary / 0 correctness |
 | Product tree changes in review | none (DOC_ONLY metadata + publication report) |
 | Reviewed implementation tip | `282eeeac0b85e8f3fb70e64f9b8d6e126dcd9829` |
-| GitHub CI on that tip | SUCCESS (`verify`) |
+| Final PR head | `dc28da734edf5842681c50808981961c2cbb44c8` |
+| GitHub CI on final PR head | SUCCESS (`verify`) |
 | `LessonAssignmentV1` | untouched (`1.0.0`, no media authority) |
 | Sidecar media authority | intact |
-| Merge method (authorized) | merge commit (no squash / no rebase-and-merge) |
-| `merge_sha` | *pending merge* |
-| `main_sha_after_merge` | *pending merge* |
-| Post-merge smoke | *pending merge* |
-| Publication status | `REVIEW_COMPLETE_AWAITING_MERGE` |
+| Merge method | merge commit (no squash / no rebase-and-merge) |
+| `merge_sha` | `dfeb4dcfc8b7a5cc6362f7ae7baaf8d185c4df5c` |
+| `main_sha_after_merge` | `dfeb4dcfc8b7a5cc6362f7ae7baaf8d185c4df5c` |
+| Post-merge browser smoke | PASS (`http://127.0.0.1:8766/index.html`) |
+| `mvp-1` after merge | `ac38819b23ed9d85b651755e7612f42d7d528ddc` (unchanged) |
+| MVP 2 tag | not created |
+| Publication status | `PUBLISHED_TO_MAIN` |
+| MVP 2A published baseline | `dfeb4dcfc8b7a5cc6362f7ae7baaf8d185c4df5c` |
 
 Publication history: `docs/mvp2/DO011_PUBLICATION_REPORT.md`.

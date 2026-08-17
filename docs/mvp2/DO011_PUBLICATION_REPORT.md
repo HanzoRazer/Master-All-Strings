@@ -1,11 +1,11 @@
 # DO-011A Publication Report — MVP 2A Mainline Integration
 
-## Status (pre-merge)
+## Status
 
 ```text
 DO-011 / MVP 2A
-REVIEW COMPLETE — READY FOR MERGE COMMIT TO MAIN
-(no MVP 2 tag/release)
+STATUS: PUBLISHED TO MAIN
+(no MVP 2 tag/release — MVP 2 remains under construction)
 ```
 
 ## PR
@@ -15,16 +15,15 @@ REVIEW COMPLETE — READY FOR MERGE COMMIT TO MAIN
 | PR | [#19](https://github.com/HanzoRazer/Master-All-Strings/pull/19) |
 | Branch | `cursor/mvp2a-lesson-media-90b8` |
 | Base | `main` |
-| Final PR head (pre-merge tip after DOC_ONLY evidence) | `7abc3a849e1db134eba34d200eb1ee5625253315` |
+| Final PR head | `dc28da734edf5842681c50808981961c2cbb44c8` |
 | Reviewed product tip (implementation freeze) | `282eeeac0b85e8f3fb70e64f9b8d6e126dcd9829` |
 | `do011_base_sha` | `042b5d5b38ca83c72429f7bd865cf87249079200` |
 | `mvp1_release_sha` / `mvp-1` | `ac38819b23ed9d85b651755e7612f42d7d528ddc` |
 
 ## Review findings
 
-Line-by-line agent review of PR #19 (40 files, media contracts, catalog,
-resolver, validation, localhost endpoints, Teaching Media panel, demo assets,
-docs, tests).
+Line-by-line agent review of PR #19 (media contracts, catalog, resolver,
+validation, localhost endpoints, Teaching Media panel, demo assets, docs, tests).
 
 | Class | Count | Notes |
 | --- | --- | --- |
@@ -46,7 +45,7 @@ docs, tests).
 
 ## Fixes
 
-DOC_ONLY only (this publication tranche):
+DOC_ONLY only (publication tranche):
 
 * PR #19 checklist: mark CI verify complete (live CI was already SUCCESS)
 * Append review result to `DO011_RELEASE_REPORT.md`
@@ -55,13 +54,11 @@ DOC_ONLY only (this publication tranche):
 
 No product-semantic code changes in DO-011A review.
 
-## Final gates (pre-merge)
-
-Retained from DO-011 evidence tip unless re-run records supersede:
+## Final gates
 
 | Gate | Result |
 | --- | --- |
-| pytest | 1616 passed / 2 skipped |
+| pytest (DO-011 evidence) | 1616 passed / 2 skipped |
 | coverage | 95.14% |
 | Ruff | PASS |
 | Strict mypy | PASS |
@@ -71,32 +68,77 @@ Retained from DO-011 evidence tip unless re-run records supersede:
 | DO-009 digest | exact match |
 | Musical non-interference | PASS |
 | Browser smoke (PR head) | PASS |
-| GitHub CI `verify` on `282eeea…` | SUCCESS |
+| GitHub CI `verify` on final PR head | SUCCESS |
+| Post-merge targeted media/API/non-interference | PASS |
+| Post-merge Node | 38 passed |
+| Post-merge browser smoke | PASS |
 
 ## Merge method
 
-**Planned:** GitHub-style **merge commit** (two-parent, ancestry-preserving).
-Do **not** squash. Do **not** rebase-and-merge.
-
-## Merge-dependent fields (post-merge fill)
+**GitHub merge commit** (two-parent, ancestry-preserving).
+Not squash. Not rebase-and-merge.
 
 | Field | Value |
 | --- | --- |
-| `merge_sha` | *null until merge* |
-| `main_sha_after_merge` | *null until merge* |
-| `post_merge_smoke` | *null until merge* |
-| `publication_status` | `REVIEW_COMPLETE_AWAITING_MERGE` |
+| `merge_sha` | `dfeb4dcfc8b7a5cc6362f7ae7baaf8d185c4df5c` |
+| Merge parents | `042b5d5b…` (main) + `dc28da73…` (PR tip) |
+| `main_sha_after_merge` | `dfeb4dcfc8b7a5cc6362f7ae7baaf8d185c4df5c` |
+| Merged at (UTC) | 2026-08-17T13:44:26Z |
 
-## MVP 1 immutability check (pre-merge)
+## Post-merge verification
+
+Fresh automated browser smoke on `main` @ merge SHA via
+`http://127.0.0.1:8766/index.html`:
+
+* open golden lesson **Half Steps on One String**
+* teaching media text / image / video
+* play / pause / seek / playback rate / segment loop / cues
+* Zone overlay + one-string view
+* musical practice transport still usable
+* lesson switch clears media state
+* media seek does not drive musical transport
+
+Result: **PASS**
+
+Also confirmed:
+
+* media catalog validation PASS
+* path escape on `/media/assets/../…` → 404
+* `mvp-1` still `ac38819b23ed9d85b651755e7612f42d7d528ddc`
+* no `mvp-2` / `mvp-2a` / `v2.0.0` tag created
+
+## MVP 1 immutability check
 
 ```text
-mvp-1 → ac38819b23ed9d85b651755e7612f42d7d528ddc
-reachable from PR tip: yes
+before merge: mvp-1 → ac38819b23ed9d85b651755e7612f42d7d528ddc
+after merge:  mvp-1 → ac38819b23ed9d85b651755e7612f42d7d528ddc
+reachable from main: yes
 ```
 
-## Next baseline (after merge)
+## Next baseline
 
-The merge commit (or subsequent documentation tip on `main`) becomes the
-authorized base candidate for the next MVP 2 Dev Order.
+```text
+MVP 2A published baseline SHA
+dfeb4dcfc8b7a5cc6362f7ae7baaf8d185c4df5c
+```
+
+(The documentation tip that records this publication may sit one commit
+ahead of the merge node; the merge commit remains the product publication
+node for DO-011 / MVP 2A.)
+
+Authorized base candidate for the next MVP 2 Dev Order.
 
 Do **not** create tags: `mvp-2`, `mvp-2a`, `v2.0.0`.
+
+## Final reviewer question
+
+> Has DO-011 been safely integrated into `main` as a replaceable teaching-media
+> presentation layer, with no authority leakage or MVP 1 regression, while
+> leaving MVP 2 intentionally unfinished for the next tranche?
+
+**Yes.**
+
+```text
+DO-011 / MVP 2A
+STATUS: PUBLISHED TO MAIN
+```
