@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/media/media-provenance-v1.schema.json",
+  "title": "MediaProvenanceV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source_type", "source_identifier", "content_digest"],
+  "properties": {
+    "source_type": { "type": "string", "minLength": 1 },
+    "source_identifier": { "type": "string", "minLength": 1 },
+    "content_digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "creator": { "type": ["string", "null"], "minLength": 1 },
+    "license_status": { "type": ["string", "null"], "minLength": 1 },
+    "notes": { "type": ["string", "null"], "minLength": 1 }
+  }
+}

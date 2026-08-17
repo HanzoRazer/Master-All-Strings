@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/media/lesson-media-reference-v1.schema.json",
+  "title": "LessonMediaReferenceV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "reference_id",
+    "lesson_key",
+    "media_id",
+    "role",
+    "optional",
+    "sort_order"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "reference_id": { "type": "string", "minLength": 1 },
+    "lesson_key": { "type": "string", "minLength": 1 },
+    "media_id": { "type": "string", "minLength": 1 },
+    "role": {
+      "type": "string",
+      "enum": ["introduction", "explanation", "demonstration", "practice_hint", "review"]
+    },
+    "optional": { "type": "boolean" },
+    "sort_order": { "type": "integer" }
+  }
+}

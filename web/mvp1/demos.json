@@ -113,6 +113,21 @@
       ],
       "audio_demo": true,
       "known_limitations": []
+    },
+    {
+      "demo_id": "half_steps_one_string",
+      "title": "Half Steps on One String",
+      "description": "Half-step teaching aid with Zone + one-string practice",
+      "instrument_profile_id": "guitar-standard-6",
+      "demonstrates": [
+        "half_steps",
+        "one_string",
+        "lesson_media"
+      ],
+      "audio_demo": true,
+      "known_limitations": [
+        "teaching_media_presentation_only"
+      ]
     }
   ]
 }

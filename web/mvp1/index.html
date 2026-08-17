@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Master All Strings — Play &amp; Practice</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./media-player.css" />
   </head>
   <body>
     <div class="app">
@@ -55,6 +56,31 @@
           </p>
           <p class="hint" id="lessonDescription"></p>
           <p class="hint subtle" id="knownLimitations"></p>
+          <section id="teachingMedia" class="teaching-media" hidden>
+            <h2>Teaching Media</h2>
+            <p class="status" data-media-status>No teaching media</p>
+            <div data-media-body></div>
+            <video data-media-video controls playsinline hidden></video>
+            <div class="media-controls" data-media-video-controls hidden>
+              <button type="button" data-media-play>Play</button>
+              <button type="button" data-media-pause>Pause</button>
+              <label
+                >Rate
+                <select data-media-rate aria-label="Media playback rate"></select>
+              </label>
+              <label
+                >Loop start
+                <input data-media-loop-start type="number" min="0" step="0.1" value="0" />
+              </label>
+              <label
+                >Loop end
+                <input data-media-loop-end type="number" min="0" step="0.1" value="0" />
+              </label>
+              <button type="button" data-media-loop-apply>Loop segment</button>
+              <button type="button" data-media-loop-clear>Clear loop</button>
+            </div>
+            <div class="media-cues" data-media-cues aria-label="Media cues"></div>
+          </section>
         </section>
         <section data-stage-panel="practice" hidden>
           <h2>Reference Synth</h2>

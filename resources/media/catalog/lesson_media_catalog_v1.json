@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.0.0",
+  "media": [
+    {
+      "schema_version": "1.0.0",
+      "media_id": "half-steps-intro-text",
+      "media_type": "text",
+      "title": "Half Steps — Introduction",
+      "source": {
+        "kind": "inline",
+        "relative_path": "half_steps_intro.txt",
+        "mime_type": "text/plain",
+        "text_body": "Half steps move one fret at a time.\nWhen a scale feels hard, reduce it to half-step relationships and visualize or play the melody on one string.\n"
+      },
+      "duration_seconds": null,
+      "cues": [],
+      "provenance": {
+        "source_type": "bundled_example",
+        "source_identifier": "resources/media/examples/half_steps_intro.txt",
+        "content_digest": "sha256:fb4e666c67a533a9d880a5c57f483102342c68e0d1ce0a82d6fa9ddca0fc1a1c",
+        "creator": null,
+        "license_status": "original_demo",
+        "notes": "Purpose-built DO-011 placeholder; not recovered corpus."
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "media_id": "half-steps-diagram-image",
+      "media_type": "image",
+      "title": "Half Steps — Diagram",
+      "source": {
+        "kind": "file",
+        "relative_path": "half_steps_diagram.png",
+        "mime_type": "image/png",
+        "text_body": null
+      },
+      "duration_seconds": null,
+      "cues": [],
+      "provenance": {
+        "source_type": "bundled_example",
+        "source_identifier": "resources/media/examples/half_steps_diagram.png",
+        "content_digest": "sha256:95c4da09524b11cc578ef832fd0fbd6d9daa06144a23b2d2e8acdff2c56458b4",
+        "creator": null,
+        "license_status": "original_demo",
+        "notes": "Purpose-built DO-011 placeholder; not recovered corpus."
+      }
+    },
+    {
+      "schema_version": "1.0.0",
+      "media_id": "half-steps-demo-video",
+      "media_type": "video",
+      "title": "Half Steps — Demo Clip",
+      "source": {
+        "kind": "file",
+        "relative_path": "half_steps_demo.mp4",
+        "mime_type": "video/mp4",
+        "text_body": null
+      },
+      "duration_seconds": 3.0,
+      "cues": [
+        {"cue_id": "cue-zone1", "time_seconds": 1.0, "label": "Zone 1", "concept_ref": "zone_1"},
+        {"cue_id": "cue-half", "time_seconds": 0.2, "label": "Half steps", "concept_ref": "half_step"},
+        {"cue_id": "cue-one-string", "time_seconds": 1.8, "label": "Play on one string", "concept_ref": "one_string"},
+        {"cue_id": "cue-zone2", "time_seconds": 2.4, "label": "Zone 2", "concept_ref": "zone_2"}
+      ],
+      "provenance": {
+        "source_type": "bundled_example",
+        "source_identifier": "resources/media/examples/half_steps_demo.mp4",
+        "content_digest": "sha256:8f08bc3dad38038ce4b7295e9b9c199d3098aca82bc65d96ee8c34f9ee4e66bc",
+        "creator": null,
+        "license_status": "original_demo",
+        "notes": "Silent purpose-built DO-011 placeholder video."
+      }
+    }
+  ],
+  "references": [
+    {
+      "schema_version": "1.0.0",
+      "reference_id": "ref-half-intro",
+      "lesson_key": "half_steps_one_string",
+      "media_id": "half-steps-intro-text",
+      "role": "introduction",
+      "optional": false,
+      "sort_order": 0
+    },
+    {
+      "schema_version": "1.0.0",
+      "reference_id": "ref-half-diagram",
+      "lesson_key": "half_steps_one_string",
+      "media_id": "half-steps-diagram-image",
+      "role": "explanation",
+      "optional": true,
+      "sort_order": 1
+    },
+    {
+      "schema_version": "1.0.0",
+      "reference_id": "ref-half-video",
+      "lesson_key": "half_steps_one_string",
+      "media_id": "half-steps-demo-video",
+      "role": "demonstration",
+      "optional": true,
+      "sort_order": 2
+    }
+  ]
+}

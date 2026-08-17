@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/media/media-cue-v1.schema.json",
+  "title": "MediaCueV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cue_id", "time_seconds", "label"],
+  "properties": {
+    "cue_id": { "type": "string", "minLength": 1 },
+    "time_seconds": { "type": "number", "minimum": 0 },
+    "label": { "type": "string", "minLength": 1 },
+    "concept_ref": { "type": ["string", "null"], "minLength": 1 }
+  }
+}

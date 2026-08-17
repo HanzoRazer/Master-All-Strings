@@ -122,5 +122,5 @@ def test_model_validation_edges() -> None:
     assert fret.fret_number == 0
 
 
-def test_manifest_has_ten_demos() -> None:
-    assert len(load_demo_manifest()) == 10
+def test_manifest_has_expected_demo_count() -> None:
+    assert len(load_demo_manifest()) == 11

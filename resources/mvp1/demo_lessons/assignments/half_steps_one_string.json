@@ -1,0 +1,67 @@
+{
+  "schema_id": "master_all_strings.lesson_assignment",
+  "schema_version": "1.0.0",
+  "identity": {
+    "assignment_id": "demo-half-steps-one-string",
+    "content_id": "half_steps_one_string",
+    "title": "Half Steps on One String",
+    "description": "Half-step melody visualized and practiced on one string"
+  },
+  "musical_content": {
+    "format": "canonical_events",
+    "ticks_per_quarter": 480,
+    "events": [
+      {"event_id": "ev-1", "midi_note": 64, "start_tick": 0, "duration_ticks": 480, "velocity": 80, "cents_offset": 0.0, "voice_id": null},
+      {"event_id": "ev-2", "midi_note": 65, "start_tick": 480, "duration_ticks": 480, "velocity": 80, "cents_offset": 0.0, "voice_id": null},
+      {"event_id": "ev-3", "midi_note": 66, "start_tick": 960, "duration_ticks": 480, "velocity": 80, "cents_offset": 0.0, "voice_id": null},
+      {"event_id": "ev-4", "midi_note": 67, "start_tick": 1440, "duration_ticks": 480, "velocity": 80, "cents_offset": 0.0, "voice_id": null},
+      {"event_id": "ev-5", "midi_note": 68, "start_tick": 1920, "duration_ticks": 480, "velocity": 80, "cents_offset": 0.0, "voice_id": null},
+      {"event_id": "ev-6", "midi_note": 69, "start_tick": 2400, "duration_ticks": 480, "velocity": 80, "cents_offset": 0.0, "voice_id": null}
+    ],
+    "tempo_changes": [{"tick": 0, "tempo_bpm": 80.0}],
+    "meter_changes": []
+  },
+  "playback": {
+    "tempo_override": null,
+    "start_tick": null,
+    "end_tick": null,
+    "loop_enabled": false,
+    "count_in_bars": null
+  },
+  "spatial_guidance": {
+    "instrument_profile_id": "guitar-standard-6",
+    "fingering_policy_id": "enumeration_v1",
+    "preferred_fret_min": 0,
+    "preferred_fret_max": 5,
+    "open_string_preference": "allow"
+  },
+  "teacher_overrides": [
+    {"event_id": "ev-1", "string_id": "string-1", "physical_fret_number": 0, "reason": "one_string_half_steps", "teacher_note": "Open E4"},
+    {"event_id": "ev-2", "string_id": "string-1", "physical_fret_number": 1, "reason": "one_string_half_steps", "teacher_note": "F4"},
+    {"event_id": "ev-3", "string_id": "string-1", "physical_fret_number": 2, "reason": "one_string_half_steps", "teacher_note": "F#4"},
+    {"event_id": "ev-4", "string_id": "string-1", "physical_fret_number": 3, "reason": "one_string_half_steps", "teacher_note": "G4"},
+    {"event_id": "ev-5", "string_id": "string-1", "physical_fret_number": 4, "reason": "one_string_half_steps", "teacher_note": "G#4"},
+    {"event_id": "ev-6", "string_id": "string-1", "physical_fret_number": 5, "reason": "one_string_half_steps", "teacher_note": "A4"}
+  ],
+  "instruction": {
+    "objective": "Reduce difficulty by practicing half-step motion on one string",
+    "repetitions": 2,
+    "difficulty": "introductory",
+    "curriculum_ref": null,
+    "teacher_note": "Teaching aid media is presentation-only; musical authority remains this assignment."
+  },
+  "assessment": {
+    "enabled": false,
+    "mode": "disabled",
+    "note_accuracy_required": null,
+    "timing_tolerance_ms": null,
+    "required_successful_repetitions": null
+  },
+  "provenance": {
+    "created_by": "do011_demo",
+    "created_at_utc": "2026-08-17T00:00:00Z",
+    "source_type": "bundled",
+    "source_name": "half_steps_one_string.json"
+  },
+  "routing": null
+}
