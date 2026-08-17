@@ -48,7 +48,7 @@
     "Creator-avatar media replacement",
     "Cloud streaming / DRM / teacher uploads"
   ],
-  "evidence_tip_sha": "282eeeac0b85e8f3fb70e64f9b8d6e126dcd9829",
+  "evidence_tip_sha": "39cffff266fc822b95735df14f87d3a9dea16b5d",
   "pull_request": "https://github.com/HanzoRazer/Master-All-Strings/pull/19",
   "github_ci": "PASS",
   "review_status": "COMPLETE_NO_BLOCKERS",
@@ -60,7 +60,7 @@
     "test_gap_release_blocking": 0,
     "doc_only_resolved": true
   },
-  "final_pr_head_sha": null,
+  "final_pr_head_sha": "39cffff266fc822b95735df14f87d3a9dea16b5d",
   "merge_sha": null,
   "main_sha_after_merge": null,
   "merge_method": "merge_commit",

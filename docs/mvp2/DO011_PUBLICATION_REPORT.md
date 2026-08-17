@@ -15,7 +15,7 @@ REVIEW COMPLETE — READY FOR MERGE COMMIT TO MAIN
 | PR | [#19](https://github.com/HanzoRazer/Master-All-Strings/pull/19) |
 | Branch | `cursor/mvp2a-lesson-media-90b8` |
 | Base | `main` |
-| Final PR head (pre-merge tip after DOC_ONLY evidence) | *recorded at commit time* |
+| Final PR head (pre-merge tip after DOC_ONLY evidence) |  |
 | Reviewed product tip (implementation freeze) | `282eeeac0b85e8f3fb70e64f9b8d6e126dcd9829` |
 | `do011_base_sha` | `042b5d5b38ca83c72429f7bd865cf87249079200` |
 | `mvp1_release_sha` / `mvp-1` | `ac38819b23ed9d85b651755e7612f42d7d528ddc` |
