@@ -2,7 +2,7 @@
   "milestone": "Master All Strings MVP 1",
   "dev_order": "DO-010A-R",
   "schema_version": "1.0.0",
-  "recertification_status": "GATES_GREEN_PENDING_TAG",
+  "recertification_status": "PUBLISHED_RECERTIFIED_AND_FROZEN",
   "recorded_at_utc": "2026-08-17T00:23:15Z",
   "original_product_sha": "7a9b68455b84b065fcd6b184c0903b292d090ef7",
   "original_release_evidence_sha": "b727cce6da108667d7dc1823df17f85cdeb9d810",
@@ -54,5 +54,10 @@
       "Capture repetitions and practice_onsets reset on start and after close"
     ]
   },
-  "recertification_evidence_sha": "d1761d93f2dbbfde4f0551dd981a0d4c064d4749"
+  "recertification_evidence_sha": "d1761d93f2dbbfde4f0551dd981a0d4c064d4749",
+  "final_release_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
+  "release_tag": "mvp-1",
+  "release_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
+  "final_main_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
+  "tagged_at_utc": "2026-08-17T00:28:26Z"
 }

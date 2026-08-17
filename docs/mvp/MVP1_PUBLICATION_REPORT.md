@@ -5,7 +5,7 @@ Dev Order: **DO-010A** then **DO-010A-R** (topology repair + re-certification)
 ## Status
 
 ```text
-RECERTIFICATION_GATES_GREEN_PENDING_TAG
+PUBLISHED_RECERTIFIED_AND_FROZEN
 ```
 
 ## PR #18 squash-merge incident
@@ -104,3 +104,16 @@ final release tip → tag mvp-1
 - treating `a198c7b` as release SHA or tag target
 - Windows deterministic-newline work (deferred to DO-010B)
 - any new MVP product capability
+
+
+## Final freeze
+
+| Field | Value |
+| --- | --- |
+|  |  |
+|  |  |
+|  |  |
+| CI on repaired/re-certified  | PASS |
+| Tag ancestry | DO-008 → DO-009 → original product → original evidence → corrected product → recert evidence → release |
+
+

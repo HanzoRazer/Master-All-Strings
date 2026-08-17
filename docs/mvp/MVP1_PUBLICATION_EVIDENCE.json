@@ -1,7 +1,7 @@
 {
   "milestone": "Master All Strings MVP 1",
   "dev_order": "DO-010A-R",
-  "publication_status": "RECERTIFICATION_GATES_GREEN_PENDING_TAG",
+  "publication_status": "PUBLISHED_RECERTIFIED_AND_FROZEN",
   "schema_version": "1.1.0",
   "do008_sha": "f9018213fb9097cb716a8c91670ae03f7ed1b514",
   "do009_sha": "92f0f80b46c0c6e8e7acfd8f6f36fd007bfe58ec",
@@ -17,10 +17,10 @@
   "pr_number": 18,
   "publication_branch": "release/mvp-1",
   "implementation_branch": "feat/do-010-mvp-completion",
-  "publication_candidate_sha": "d1761d93f2dbbfde4f0551dd981a0d4c064d4749",
-  "final_main_sha": null,
-  "release_tag": null,
-  "release_sha": null,
+  "publication_candidate_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
+  "final_main_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
+  "release_tag": "mvp-1",
+  "release_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
   "tree_equivalence": {
     "vs_original_product_7a9b684": "ALLOWED_PUBLICATION_DIFFERENCE_WITH_CORRECTNESS_PATCHES",
     "allowed_classes": [
@@ -49,7 +49,9 @@
     "javascript_tests": 37,
     "do008_vectors": "48/48",
     "do009_digest_match": true,
-    "browser_smoke": "PASS"
+    "browser_smoke": "PASS",
+    "ci_on_main": "PASS",
+    "tag_target_verified": true
   },
   "hardware": {
     "physical_midi_status": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
@@ -58,5 +60,6 @@
   "non_authoritative_branches_excluded": [
     "feat/do-009-live-midi-alignment",
     "03477a2"
-  ]
+  ],
+  "github_ci": "PASS"
 }

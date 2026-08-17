@@ -3,7 +3,7 @@
 ## Status
 
 ```text
-GATES_GREEN_PENDING_TAG
+PUBLISHED_RECERTIFIED_AND_FROZEN
 ```
 
 ## Why re-certification
@@ -70,3 +70,10 @@ Fresh automated browser session against localhost MVP UI:
 - Golden demo primary actions observed: SLOW_DOWN → ISOLATE → CONTINUE
 
 Machine-readable pack: `docs/mvp/MVP1_RECERTIFICATION_EVIDENCE.json`.
+
+
+## Tag
+
+Immutable tag  points to .
+
+

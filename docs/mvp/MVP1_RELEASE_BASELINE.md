@@ -29,7 +29,8 @@ publication / classifier / docs tooling
 recertification evidence
 d1761d93f2dbbfde4f0551dd981a0d4c064d4749
     ↓
-final release tip → tag mvp-1  (*pending*)
+final release tip / tag mvp-1
+ac38819b23ed9d85b651755e7612f42d7d528ddc
 ```
 
 | Role | SHA |
