@@ -50,7 +50,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--recertification-evidence-sha",
         default=None,
-        help="Optional recertification evidence commit that must sit between corrected product and release",
+        help=(
+            "Optional recertification evidence commit that must sit between "
+            "corrected product and release"
+        ),
     )
     parser.add_argument(
         "--require-not-squash-head",
