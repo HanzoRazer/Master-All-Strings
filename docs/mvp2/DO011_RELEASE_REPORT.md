@@ -14,7 +14,8 @@ EVIDENCE FROZEN — PR ONLY (no MVP 2 tag/release)
 | `mvp1_release_sha` | `ac38819b23ed9d85b651755e7612f42d7d528ddc` |
 | `do011_base_sha` | `042b5d5b38ca83c72429f7bd865cf87249079200` |
 | Branch | `cursor/mvp2a-lesson-media-90b8` |
-| `do011_product_sha` | `421d49b6f7a88e8882d42cbf913511e88ad3fae5` |
+| `do011_product_sha` | `ecb37a0db365b33d0bf7ae5c94af8fa6336e96e3` |
+| PR | [#19](https://github.com/HanzoRazer/Master-All-Strings/pull/19) |
 
 `mvp-1` remains immutable and reachable.
 
