@@ -4,7 +4,7 @@
   "tranche": "Lesson Media & Guided Practice Foundation",
   "mvp1_release_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
   "do011_base_sha": "042b5d5b38ca83c72429f7bd865cf87249079200",
-  "do011_product_sha": "e242a930a61a9c9170e6fe010a65e968889daccf",
+  "do011_product_sha": "421d49b6f7a88e8882d42cbf913511e88ad3fae5",
   "branch": "cursor/mvp2a-lesson-media-90b8",
   "recorded_at_utc": "2026-08-17T05:45:40Z",
   "design": {
@@ -45,5 +45,6 @@
     "FOUR Step curriculum migration",
     "Creator-avatar media replacement",
     "Cloud streaming / DRM / teacher uploads"
-  ]
+  ],
+  "evidence_tip_sha": "421d49b6f7a88e8882d42cbf913511e88ad3fae5"
 }
