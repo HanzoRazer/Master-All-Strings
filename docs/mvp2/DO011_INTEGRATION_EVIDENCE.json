@@ -4,7 +4,7 @@
   "tranche": "Lesson Media & Guided Practice Foundation",
   "mvp1_release_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
   "do011_base_sha": "042b5d5b38ca83c72429f7bd865cf87249079200",
-  "do011_product_sha": "ecb37a0db365b33d0bf7ae5c94af8fa6336e96e3",
+  "do011_product_sha": "37ecdc295d0dc331be5ac39e874d900105811d52",
   "branch": "cursor/mvp2a-lesson-media-90b8",
   "recorded_at_utc": "2026-08-17T05:45:40Z",
   "design": {
@@ -46,6 +46,7 @@
     "Creator-avatar media replacement",
     "Cloud streaming / DRM / teacher uploads"
   ],
-  "evidence_tip_sha": "ecb37a0db365b33d0bf7ae5c94af8fa6336e96e3",
-  "pull_request": "https://github.com/HanzoRazer/Master-All-Strings/pull/19"
+  "evidence_tip_sha": "37ecdc295d0dc331be5ac39e874d900105811d52",
+  "pull_request": "https://github.com/HanzoRazer/Master-All-Strings/pull/19",
+  "github_ci": "PASS"
 }
