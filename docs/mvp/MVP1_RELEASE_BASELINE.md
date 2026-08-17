@@ -26,7 +26,8 @@ f028549b145bf3f567e936d5d7e29ab2f93f63d3
     ↓
 publication / classifier / docs tooling
     ↓
-recertification evidence  (*pending*)
+recertification evidence
+d1761d93f2dbbfde4f0551dd981a0d4c064d4749
     ↓
 final release tip → tag mvp-1  (*pending*)
 ```
@@ -38,7 +39,7 @@ final release tip → tag mvp-1  (*pending*)
 | `original_product_sha` | `7a9b68455b84b065fcd6b184c0903b292d090ef7` |
 | `original_release_evidence_sha` | `b727cce6da108667d7dc1823df17f85cdeb9d810` |
 | `corrected_product_sha` | `f028549b145bf3f567e936d5d7e29ab2f93f63d3` |
-| `recertification_evidence_sha` | *pending DO-010A-R* |
+| `recertification_evidence_sha` | `d1761d93f2dbbfde4f0551dd981a0d4c064d4749` |
 | `final_release_sha` | *pending* |
 | `release_tag` | `mvp-1` (*pending*) |
 | `squash_merge_sha` | `a198c7b30370d077e7213b4ebeab170c769aaaff` |

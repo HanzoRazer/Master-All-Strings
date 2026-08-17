@@ -53,5 +53,6 @@
       "Web MIDI 0x90 velocity 0 classified as NOTE_OFF",
       "Capture repetitions and practice_onsets reset on start and after close"
     ]
-  }
+  },
+  "recertification_evidence_sha": "d1761d93f2dbbfde4f0551dd981a0d4c064d4749"
 }
