@@ -30,6 +30,25 @@ export function zonePresentationClasses(zoneSemantics) {
     .filter(Boolean);
 }
 
+/**
+ * Render the active-Zone readout line (D10/D13).
+ *
+ * Pure so the rule is testable: the tritone axis appears only where the Zone
+ * artifact declares one, axes are deduplicated across simultaneous notes, and
+ * Zone order is the projection's rather than anything this function decides.
+ * Nothing here computes an interval -- every value is copied from the artifact.
+ */
+export function zoneReadoutText(zones) {
+  if (!Array.isArray(zones) || zones.length === 0) return "Zone: none";
+  const zoneIds = zones.map((zone) => zone.zoneId);
+  const axes = [...new Set(zones.map((zone) => zone.tritoneAxisId).filter(Boolean))];
+  // No axis in the artifact means no Anchor segment at all, rather than an
+  // "Anchor:" label with nothing after it.
+  return axes.length
+    ? `Zone: ${zoneIds.join(", ")} · Anchor: ${axes.join(", ")}`
+    : `Zone: ${zoneIds.join(", ")}`;
+}
+
 export function oneStringViewProjection(projection, teachingProjection) {
   const teachingByEvent = new Map(
     (teachingProjection?.events || []).map((event) => [event.event_id, event]),

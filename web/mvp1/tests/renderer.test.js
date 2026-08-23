@@ -5,6 +5,7 @@ import {
   observedEvidencePresentation,
   oneStringViewProjection,
   zonePresentationClasses,
+  zoneReadoutText,
 } from "../renderer.js";
 
 test("Zone renderer consumes semantic IDs without pitch calculations", () => {
@@ -90,4 +91,70 @@ test("observed overlay consumes evidence without assessment labels", () => {
   });
   assert.equal(marker.presentationRole, "OBSERVED");
   assert.doesNotMatch(marker.label, /right|wrong|pass|fail/i);
+});
+
+
+// --- Zone readout (DO-012A gap 4) --------------------------------------------
+//
+// D10: the axis is copied from the Zone artifact. The case that needed a guard
+// is a Zone that is present but declares no tritone axis -- the readout must
+// then omit the Anchor segment entirely rather than emit a dangling label.
+
+test("a Zone with no declared tritone axis produces no Anchor segment", () => {
+  assert.equal(zoneReadoutText([{ zoneId: "ZONE_1", tritoneAxisId: null }]), "Zone: ZONE_1");
+});
+
+test("an undefined axis is treated the same as an absent one", () => {
+  assert.equal(zoneReadoutText([{ zoneId: "ZONE_1" }]), "Zone: ZONE_1");
+});
+
+test("a declared axis is named", () => {
+  assert.equal(
+    zoneReadoutText([{ zoneId: "ZONE_2", tritoneAxisId: "5-11" }]),
+    "Zone: ZONE_2 · Anchor: 5-11",
+  );
+});
+
+test("simultaneous Zones are listed in projection order, not sorted", () => {
+  assert.equal(
+    zoneReadoutText([
+      { zoneId: "ZONE_2", tritoneAxisId: "5-11" },
+      { zoneId: "ZONE_1", tritoneAxisId: "0-6" },
+    ]),
+    "Zone: ZONE_2, ZONE_1 · Anchor: 5-11, 0-6",
+  );
+});
+
+test("an axis shared by simultaneous notes is named once", () => {
+  assert.equal(
+    zoneReadoutText([
+      { zoneId: "ZONE_1", tritoneAxisId: "0-6" },
+      { zoneId: "ZONE_2", tritoneAxisId: "0-6" },
+    ]),
+    "Zone: ZONE_1, ZONE_2 · Anchor: 0-6",
+  );
+});
+
+test("a partially annotated set names only the declared axes", () => {
+  assert.equal(
+    zoneReadoutText([
+      { zoneId: "ZONE_1", tritoneAxisId: null },
+      { zoneId: "ZONE_2", tritoneAxisId: "0-6" },
+    ]),
+    "Zone: ZONE_1, ZONE_2 · Anchor: 0-6",
+  );
+});
+
+test("no active Zones reads as none", () => {
+  assert.equal(zoneReadoutText([]), "Zone: none");
+  assert.equal(zoneReadoutText(null), "Zone: none");
+});
+
+test("the readout copies artifact values and computes no intervals", () => {
+  // A nonsense axis string must survive verbatim: this layer displays the
+  // artifact, it does not evaluate or correct it.
+  assert.equal(
+    zoneReadoutText([{ zoneId: "ZONE_9", tritoneAxisId: "not-an-interval" }]),
+    "Zone: ZONE_9 · Anchor: not-an-interval",
+  );
 });
