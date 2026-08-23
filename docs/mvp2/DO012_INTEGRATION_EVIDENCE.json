@@ -403,7 +403,7 @@
   "alignment_merge_sha": "8402058ceeefec2ddd60faa682b2bd8ce5531731",
   "post_merge_main_sha": "8402058ceeefec2ddd60faa682b2bd8ce5531731",
   "publication_status": "published_to_main_hardened",
-  "mvp2b_baseline_sha": null,
+  "mvp2b_baseline_sha": "8bb4e5938d64802a02117b5de49c294909c09d7e",
   "merge_method": {
     "pr_21": "merge commit (two parents)",
     "parents": [

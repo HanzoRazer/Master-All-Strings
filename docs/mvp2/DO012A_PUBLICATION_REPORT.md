@@ -250,7 +250,7 @@ is evaluated.
 ### Baseline supersession
 
 ```text
-mvp2b_baseline_sha = e7cf66768970275432f6b12b19ac883ada016166
+mvp2b_baseline_sha = 8bb4e5938d64802a02117b5de49c294909c09d7e
 ```
 
 The pre-hardening baseline `2c72307` is **superseded** and recorded as such, so
