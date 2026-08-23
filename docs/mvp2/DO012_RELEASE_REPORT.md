@@ -97,7 +97,7 @@ its `onset_tick`.
 | DO-009 return-artifact digest | PASS (inputs untouched by this tranche) |
 | MVP 1 lineage / no-squash topology (Linux) | PASS |
 | Browser smoke | PASS — 0 console errors, 0 failed requests |
-| **GitHub Actions (ubuntu-latest)** | **PASS** — run [32610886932](https://github.com/HanzoRazer/Master-All-Strings/actions/runs/32610886932), 36s |
+| **GitHub Actions (ubuntu-latest)** | **PASS** — run [32625836882](https://github.com/HanzoRazer/Master-All-Strings/actions/runs/32625836882) |
 
 ### The Windows exceptions, characterised and verified on Linux
 
