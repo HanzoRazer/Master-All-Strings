@@ -59,11 +59,16 @@ def _validator(schema_name: str) -> Draft202012Validator:
     return Draft202012Validator(schema)
 
 
+# Not single contract records: anchor tables are arrays, and the interpolation
+# vectors are a cross-language test asset with their own suite.
+_NON_RECORD_STEMS = ("timeline_anchors_", "interpolation_vectors")
+
+
 def _valid_record_fixtures() -> list[Path]:
     return sorted(
         path
         for path in EXAMPLES.glob("*.json")
-        if not path.stem.startswith("timeline_anchors_")
+        if not path.stem.startswith(_NON_RECORD_STEMS)
     )
 
 
