@@ -2,7 +2,7 @@
 
 **Status:** IMPLEMENTED — EVIDENCE FROZEN
 **Branch:** `cursor/mvp2b-teaching-timeline-90b8`
-**PR target:** `main` · **Merge:** not authorized · **Tag:** not authorized
+**PR:** [#20](https://github.com/HanzoRazer/Master-All-Strings/pull/20) → `main` · **Merge:** not authorized · **Tag:** not authorized
 
 ```text
 mvp1_release_sha   = ac38819b23ed9d85b651755e7612f42d7d528ddc
@@ -95,6 +95,7 @@ its `onset_tick`.
 | DO-008 digest gate (Linux) | PASS |
 | MVP 1 lineage / no-squash topology (Linux) | PASS |
 | Browser smoke | PASS — 0 console errors, 0 failed requests |
+| **GitHub Actions (ubuntu-latest)** | **PASS** — run [32610886932](https://github.com/HanzoRazer/Master-All-Strings/actions/runs/32610886932), 36s |
 
 ### The two Windows exceptions, characterised and verified on Linux
 
@@ -122,7 +123,9 @@ ships without `pip` and without `ensurepip` (Debian moves them into
 system packages or starting Docker would have modified the developer host, which
 was not authorised, so it was not done. The full Linux suite is delegated to
 GitHub Actions, which the Dev Order names as authoritative for these gates; its
-run ID is recorded in the evidence pack once the pull request is open.
+run is recorded below.
+
+**GitHub Actions run [32610886932](https://github.com/HanzoRazer/Master-All-Strings/actions/runs/32610886932) is green** on `ubuntu-latest` at `8dfc167`: Ruff, strict mypy, and the full `pytest --cov` suite all pass. That independently confirms both Windows failures are environment artifacts rather than repository defects — the same two tests pass there.
 
 ### Known CI coverage gap (recorded, not closed)
 

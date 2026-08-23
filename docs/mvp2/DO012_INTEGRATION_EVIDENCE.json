@@ -7,16 +7,18 @@
   "pr_target": "main",
   "merge_authorized": false,
   "tag_authorized": false,
-
   "lineage": {
     "mvp1_release_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
     "mvp2a_baseline_sha": "2695993a601f6cc7b526294bdaac50ec5650cc23",
     "do012_base_sha": "2695993a601f6cc7b526294bdaac50ec5650cc23",
     "do012_product_sha": "bc43db8e608a2217befeb5075c39b1966c1e4fa3",
     "base_reverified_before_branch": true,
-    "commit_count": 11
+    "commit_count": 11,
+    "evidence_frozen_sha": "8dfc16708ae6fedf782925f2bb1537f436d7a499",
+    "ci_certified_sha": "8dfc16708ae6fedf782925f2bb1537f436d7a499",
+    "pull_request": "https://github.com/HanzoRazer/Master-All-Strings/pull/20",
+    "pull_request_number": 20
   },
-
   "contracts_added": [
     "TeachingTimelineStateV1",
     "TeachingPlayheadStateV1",
@@ -24,7 +26,6 @@
     "SynchronizationHealthV1",
     "TimelineAnchorV1"
   ],
-
   "schemas_added": [
     "resources/presentation/schema/teaching_timeline_state_v1.schema.json",
     "resources/presentation/schema/teaching_playhead_state_v1.schema.json",
@@ -32,15 +33,12 @@
     "resources/presentation/schema/synchronization_health_v1.schema.json",
     "resources/presentation/schema/timeline_anchor_v1.schema.json"
   ],
-
   "schemas_extended": [
     "resources/media/schema/media_cue_v1.schema.json",
     "resources/media/schema/lesson_media_reference_v1.schema.json"
   ],
-
   "canonical_revision_wiring_introduced": false,
   "canonical_revision_note": "Deliberately absent. DO-013 owns revision provenance; a test asserts no presentation contract declares canonical_revision_id.",
-
   "test_results": {
     "windows_local": {
       "platform": "Windows 11 / msys2 Python 3.12",
@@ -54,7 +52,11 @@
       },
       "ruff": "PASS",
       "mypy_strict": "PASS (147 source files)",
-      "node": { "passed": 136, "failed": 0, "status": "PASS" },
+      "node": {
+        "passed": 136,
+        "failed": 0,
+        "status": "PASS"
+      },
       "documented_exceptions": [
         {
           "test": "tests/integrations/test_do008_end_to_end.py::test_checked_in_bundle_correlates_all_authoritative_semantic_events",
@@ -62,18 +64,19 @@
           "worktree_sha256": "sha256:743977fe9402da351f5823333b90450a4765d92c4e465490cef4f21d49b37cb7",
           "declared_sha256": "sha256:c59e5c8323b096e8be4dff9c5b9f4cf221e962a3b2fa296e401d7400cd30f321",
           "linux_verified": true,
-          "in_scope_for_do012": false
+          "in_scope_for_do012": false,
+          "linux_ci_result": "PASS"
         },
         {
           "test": "tests/mvp/test_mvp1_publication_utils.py::test_mvp1_lineage_script_passes",
           "cause": "msys2 Python cp1252 stdout cannot encode U+2192 in scripts/verify_mvp1_release_lineage.py",
           "passes_under": "PYTHONIOENCODING=utf-8",
           "linux_verified": true,
-          "in_scope_for_do012": false
+          "in_scope_for_do012": false,
+          "linux_ci_result": "PASS"
         }
       ]
     },
-
     "linux_wsl": {
       "platform": "WSL Ubuntu 24.04, Python 3.12.3, clean clone at ~/mas-do012",
       "checkout_clean_lf": true,
@@ -82,28 +85,32 @@
       "zone_semantics_sha256": "sha256:c59e5c8323b096e8be4dff9c5b9f4cf221e962a3b2fa296e401d7400cd30f321",
       "mvp1_lineage_script": "PASS",
       "no_squash_topology_script": "PASS",
-      "full_pytest_run": "NOT_RUN",
+      "full_pytest_run": "DELEGATED_TO_GITHUB_ACTIONS",
       "full_pytest_not_run_reason": "The distribution's python3 ships without pip and without ensurepip (Debian moves them into python3-venv/python3-pip). Installing them, or starting Docker Desktop, would have modified the developer host, which was not authorized. The dependency-free checks above cover exactly the two Windows exceptions; the full Linux suite is delegated to GitHub Actions, which the Dev Order names as authoritative.",
       "status": "PASS_FOR_CONTENT_ADDRESSED_GATES"
     },
-
     "github_actions": {
       "workflow": ".github/workflows/verify.yml",
       "runner": "ubuntu-latest",
-      "gates": ["ruff check src tests", "mypy", "pytest --cov"],
-      "run_id": null,
-      "conclusion": null,
-      "note": "Recorded after the pull request is opened. This is the authoritative Linux certification for the content-addressed gates."
+      "gates": [
+        "ruff check src tests",
+        "mypy",
+        "pytest --cov"
+      ],
+      "run_id": 32610886932,
+      "conclusion": "success",
+      "note": "Authoritative Linux certification. All three gates green on ubuntu-latest, including the full pytest suite. This independently confirms that both Windows failures are checkout/console environment artifacts rather than repository defects: the same tests pass here.",
+      "url": "https://github.com/HanzoRazer/Master-All-Strings/actions/runs/32610886932",
+      "head_sha": "8dfc16708ae6fedf782925f2bb1537f436d7a499",
+      "duration_seconds": 36
     }
   },
-
   "ci_coverage_gap": {
     "node_tests_in_ci": false,
     "browser_smoke_in_ci": false,
     "verify_yml_modified": false,
     "note": "Expanding CI is release-infrastructure scope. Recorded here and in the release report for a later Dev Order rather than closed inside this tranche."
   },
-
   "browser_smoke": {
     "status": "PASS",
     "driver": "headless Chromium via the agent's browser automation tooling",
@@ -127,19 +134,34 @@
       "playhead_event_ids_track": true,
       "out_of_binding_range_at_lesson_3_6s": true,
       "music_continued_while_media_out_of_range": true,
-      "manual_loop_ticks": [640, 1280],
+      "manual_loop_ticks": [
+        640,
+        1280
+      ],
       "manual_loop_repetitions": 2,
       "one_string_view": true,
       "practice_capture_status": "armed",
       "observed_note_count": 6,
       "educational_primary_action": "isolate_passage",
-      "isolate_applied_loop_ticks": [0, 1440],
-      "isolate_applied_loop_seconds": [0.0, 2.25],
+      "isolate_applied_loop_ticks": [
+        0,
+        1440
+      ],
+      "isolate_applied_loop_seconds": [
+        0.0,
+        2.25
+      ],
       "isolate_loop_repetitions": 2,
       "isolate_loop_media_status": "synced",
       "isolate_loop_media_drift_ms": -8.127,
       "hard_seek_count_whole_run": 1,
-      "detached_restores_media_only_rates": [0.5, 0.75, 1.0, 1.25, 1.5]
+      "detached_restores_media_only_rates": [
+        0.5,
+        0.75,
+        1.0,
+        1.25,
+        1.5
+      ]
     },
     "zone_timeline": {
       "lesson": "do008/projection.json",
@@ -147,14 +169,34 @@
       "active_zone_tracks_playhead": true,
       "simultaneous_zones_reported_as_a_set": true,
       "samples": [
-        { "position_tick": 0, "active_zones": "ZONE_1 ZONE_2" },
-        { "position_tick": 705, "active_zones": "" },
-        { "position_tick": 1409, "active_zones": "ZONE_1 ZONE_2" },
-        { "position_tick": 2126, "active_zones": "ZONE_2 ZONE_1" },
-        { "position_tick": 2830, "active_zones": "ZONE_2 ZONE_1" }
+        {
+          "position_tick": 0,
+          "active_zones": "ZONE_1 ZONE_2"
+        },
+        {
+          "position_tick": 705,
+          "active_zones": ""
+        },
+        {
+          "position_tick": 1409,
+          "active_zones": "ZONE_1 ZONE_2"
+        },
+        {
+          "position_tick": 2126,
+          "active_zones": "ZONE_2 ZONE_1"
+        },
+        {
+          "position_tick": 2830,
+          "active_zones": "ZONE_2 ZONE_1"
+        }
       ],
       "playhead_event_ids_are_canonical": true,
-      "example_event_ids": ["comp:000012", "comp:000013", "comp:000014", "comp:000015"]
+      "example_event_ids": [
+        "comp:000012",
+        "comp:000013",
+        "comp:000014",
+        "comp:000015"
+      ]
     },
     "defects_found_and_fixed_by_this_run": [
       {
@@ -171,7 +213,6 @@
       }
     ]
   },
-
   "non_interference": {
     "musical_core_unchanged": true,
     "msme_unchanged": true,
@@ -203,7 +244,6 @@
       "media_dependency_note": "Intentional and one-directional: the sidecar carries MediaTimelineBindingV1. presentation never imports media, so there is no cycle."
     }
   },
-
   "handoff_corrections": [
     {
       "assumption": "Educational ISOLATE_PASSAGE already drove the practice loop",
@@ -221,16 +261,13 @@
       "resolution": "Bindings ride the existing media payload; anchors ride the static projection export. Two sources, joined in presentation."
     }
   ],
-
   "windows_artifacts_left_untouched": {
     "gitattributes": false,
     "content_addressed_resource_normalization": false,
     "verify_mvp1_release_lineage_encoding": false
   },
-
   "acceptance_criteria_met": 52,
   "acceptance_criteria_total": 52,
-  "acceptance_criteria_pending": [
-    "51 (feature PR opened) and the github_actions run_id are recorded at push time"
-  ]
+  "acceptance_criteria_pending": [],
+  "acceptance_criteria_note": "All 52 criteria met. Criterion 51 (feature PR opened) satisfied by PR #20; merge and tag remain unauthorized per criterion 52."
 }
