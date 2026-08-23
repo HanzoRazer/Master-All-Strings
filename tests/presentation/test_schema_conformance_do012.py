@@ -36,7 +36,7 @@ _ROUTES: tuple[tuple[str, str, type], ...] = (
     ("timeline_state_", "teaching_timeline_state_v1", TeachingTimelineStateV1),
     ("bounded_loop", "teaching_timeline_state_v1", TeachingTimelineStateV1),
     ("playhead_", "teaching_playhead_state_v1", TeachingPlayheadStateV1),
-    ("health_", "synchronization_health_v1", SynchronizationHealthV1),
+    ("sync_health_", "synchronization_health_v1", SynchronizationHealthV1),
     ("binding_", "media_timeline_binding_v1", MediaTimelineBindingV1),
     ("zero_offset_binding", "media_timeline_binding_v1", MediaTimelineBindingV1),
     ("offset_binding", "media_timeline_binding_v1", MediaTimelineBindingV1),

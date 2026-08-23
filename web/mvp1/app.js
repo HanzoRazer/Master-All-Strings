@@ -123,7 +123,7 @@ teachingTimeline.addFollower({
   id: "zone",
   onPlayhead: () => renderActiveZones(),
   onClear: () => {
-    $("zoneActive").textContent = "Active Zone: none";
+    $("zoneActive").textContent = "Zone: none";
   },
 });
 
@@ -160,10 +160,11 @@ teachingTimeline.addFollower({
     data.masSyncDriftMs = health && health.drift_ms !== null ? health.drift_ms.toFixed(3) : "";
     data.masHardSeekCount = String(mediaFollower.hardSeekCount);
     data.masBindingId = mediaPlayer.activeBinding()?.binding_id ?? "";
-    data.masActiveZones = renderer
-      .activeZones()
-      .map((zone) => zone.zoneId)
-      .join(" ");
+    const activeZones = renderer.activeZones();
+    data.masActiveZones = activeZones.map((zone) => zone.zoneId).join(" ");
+    data.masTritoneAxes = [
+      ...new Set(activeZones.map((zone) => zone.tritoneAxisId).filter(Boolean)),
+    ].join(" ");
   },
   onClear: () => {
     for (const key of Object.keys(document.body.dataset)) {
@@ -176,14 +177,22 @@ function renderActiveZones() {
   const zones = renderer.activeZones();
   const node = $("zoneActive");
   if (!zones.length) {
-    node.textContent = "Active Zone: none";
+    node.textContent = "Zone: none";
     node.dataset.zoneIds = "";
+    node.dataset.tritoneAxes = "";
     return;
   }
   // Simultaneous notes may occupy different Zones. Show the set; naming one
   // "dominant" Zone would invent a semantic the artifact does not assert.
-  node.textContent = `Active Zone: ${zones.map((zone) => zone.zoneId).join(", ")}`;
-  node.dataset.zoneIds = zones.map((zone) => zone.zoneId).join(" ");
+  const zoneIds = zones.map((zone) => zone.zoneId);
+  // Tritone axes are reported only where the artifact declares them, and
+  // deduplicated so two notes sharing an axis do not name it twice.
+  const axes = [...new Set(zones.map((zone) => zone.tritoneAxisId).filter(Boolean))];
+  node.textContent = axes.length
+    ? `Zone: ${zoneIds.join(", ")} · Anchor: ${axes.join(", ")}`
+    : `Zone: ${zoneIds.join(", ")}`;
+  node.dataset.zoneIds = zoneIds.join(" ");
+  node.dataset.tritoneAxes = axes.join(" ");
 }
 
 transport.subscribe((event) => {
@@ -539,8 +548,9 @@ function tick(now) {
   // is published from here rather than from a transport event.
   if (teachingTimeline.ready) {
     teachingTimeline.setActiveEventIds(renderer.activeEventIds());
-    teachingTimeline.publish("frame", now);
-    const playhead = teachingTimeline.playheadState(now);
+    // Use the state that was actually emitted rather than deriving it again, so
+    // what the DOM reports is the same snapshot the followers received.
+    const { playhead } = teachingTimeline.publish("frame", now) || {};
     if (playhead) {
       document.body.dataset.playheadTick = String(playhead.position_tick);
       document.body.dataset.playheadEventIds = playhead.active_event_ids.join(" ");

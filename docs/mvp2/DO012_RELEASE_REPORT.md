@@ -88,18 +88,24 @@ its `onset_tick`.
 |---|---|
 | Ruff | PASS |
 | mypy --strict | PASS (147 source files) |
-| pytest (Windows) | 1930 passed, 2 skipped, 2 documented environment exceptions |
-| Coverage | 95.43% (floor 95%) |
-| Node | 136 passed, 0 failed |
+| pytest (Windows) | 1947 passed, 2 skipped, 2 documented environment exceptions |
+| Coverage | 95.44% (floor 95%) |
+| Node | 146 passed, 0 failed |
 | Governance | PASS (no new engine authority; presentation is not an engine) |
+| **pytest (WSL Linux, clean clone)** | **1950 passed, 0 failed**, coverage 95.44% |
 | DO-008 digest gate (Linux) | PASS |
+| DO-009 return-artifact digest | PASS (inputs untouched by this tranche) |
 | MVP 1 lineage / no-squash topology (Linux) | PASS |
 | Browser smoke | PASS — 0 console errors, 0 failed requests |
 | **GitHub Actions (ubuntu-latest)** | **PASS** — run [32610886932](https://github.com/HanzoRazer/Master-All-Strings/actions/runs/32610886932), 36s |
 
-### The two Windows exceptions, characterised and verified on Linux
+### The Windows exceptions, characterised and verified on Linux
 
-Neither is a repository defect, and per D18 neither was touched.
+Neither is a repository defect, and per D21 neither was touched.
+
+The worktree was deliberately renormalised to current checkout rules before
+measuring, so both exceptions reproduce as they would in a fresh clone rather
+than being masked by leftover LF bytes from earlier experimentation.
 
 1. `test_do008_end_to_end.py::test_checked_in_bundle_correlates_all_authoritative_semantic_events`
    — `core.autocrlf=true` with no `.gitattributes` rewrites the trailing byte of
@@ -113,17 +119,21 @@ Neither is a repository defect, and per D18 neither was touched.
    `verify_mvp1_release_lineage.py` and `verify_no_squash_release_topology.py`
    run clean and report PASS.**
 
-### Linux certification: what was and was not run
+### Linux certification
 
-The DO asked for a clean WSL/Linux full Python gate. The content-addressed
-checks — the ones the Windows exceptions are actually about — were run there and
-pass. The **full pytest suite was not run in WSL**: that distribution's `python3`
-ships without `pip` and without `ensurepip` (Debian moves them into
-`python3-venv`/`python3-pip`), and Docker Desktop was not running. Installing
-system packages or starting Docker would have modified the developer host, which
-was not authorised, so it was not done. The full Linux suite is delegated to
-GitHub Actions, which the Dev Order names as authoritative for these gates; its
-run is recorded below.
+The full gate now runs on a clean WSL Ubuntu clone: **1950 passed, 0 failed**,
+Ruff and strict mypy clean, coverage 95.44%, zero CRLF JSON files under
+`resources/`, and the DO-008 digest gate green. Both lineage scripts also run
+clean there.
+
+The distribution ships `python3` without `pip` *and* without `ensurepip`, so pip
+was bootstrapped **user-scope** into `~/.local` with `get-pip.py --user`. No
+`sudo`, no system packages, no change to the developer host outside the user's
+own directory.
+
+Node is not installed in that distribution and adding it needs `apt`, so the
+browser suite was run on Windows with the platform recorded. Per D22 that is
+separately executed tranche evidence rather than a CI gate.
 
 **GitHub Actions run [32610886932](https://github.com/HanzoRazer/Master-All-Strings/actions/runs/32610886932) is green** on `ubuntu-latest` at `8dfc167`: Ruff, strict mypy, and the full `pytest --cov` suite all pass. That independently confirms both Windows failures are environment artifacts rather than repository defects — the same two tests pass there.
 
@@ -152,7 +162,7 @@ with 19 screenshots beside it.
 | Play | playhead advances, event IDs track, media follows |
 | 0.75× | rate applied, followers stay aligned |
 | Seek past 3.0 s | media `out_of_binding_range`, **music continues** |
-| Manual loop | ticks 640–1280, 2 repetitions |
+| Manual loop | ticks 640–1280, 2 repetitions (the lesson's own policy target) |
 | Practice attempt | armed, 6 observed notes, action `isolate_passage` |
 | Apply action | loop ticks **0–1440** (0.00 s–2.25 s) — the loop the engine implied |
 | Loop repeats | 2 repetitions, media `synced` at **−8 ms** |
@@ -164,6 +174,20 @@ Zone tracks the playhead (`ZONE_1 ZONE_2` → `ZONE_2 ZONE_1` as it advances),
 reports the **set** when simultaneous notes occupy different Zones rather than
 inventing a dominant one, and honestly reports none during silence. The playhead
 carries canonical DO-008 event IDs (`comp:000012`…), not browser-local ones.
+
+## Repetitions: why the ≥3 proof uses a second lesson
+
+`half_steps_one_string` declares `target_repetitions = 2` in its **own practice
+policy**, so its loop stops after two passes by design — the transport is
+behaving correctly, not falling short. Demonstrating the ≥3 continuous
+repetitions the test plan asks for needs a lesson whose policy declares no
+target, and `ascending_scale` does.
+
+That capture shows the repetition index advancing 1 → 2 → 3 → 4 during playback
+and reaching 7 at pause, with the loop bounds fixed at ticks 800–1600 throughout:
+repetitions repeat presentation state without duplicating anything. Changing the
+golden lesson's policy to force a third pass would have been lesson-content
+authority, not presentation, so it was left alone.
 
 ## Two defects the browser run found
 
@@ -242,3 +266,31 @@ STATUS: IN DEVELOPMENT
 DO-013 can now branch from a real MVP 2B baseline and add canonical revision
 wiring plus synchronized TAB and notation as further followers of
 `TeachingPlayheadStateV1`, without inventing temporary infrastructure.
+
+## Deliberately deferred, not forgotten
+
+Three changes were prepared during this tranche and then **removed from it**,
+because D21, D22, and the non-goals forbid each one. They are recorded in the
+evidence pack so a later hygiene Dev Order can pick them up rather than
+rediscover them:
+
+| Change | Would fix | Forbidden by |
+|---|---|---|
+| `.gitattributes` pinning LF for digest-pinned artifacts | the Windows CRLF content-digest exception | D21, non-goals |
+| `verify.yml` gains a Node step running the browser suite | the browser half of the cross-language vector contract going unenforced in CI | D22, non-goals |
+| `verify_mvp1_release_lineage.py` printing ASCII arrows | the cp1252 console-encoding exception | D21, non-goals |
+
+Each is defensible engineering. None of it belongs in a tranche whose risk
+section explicitly warns against unrelated hygiene changes riding along with
+timing work.
+
+## A defect the vector generator caught
+
+Promoting the interpolation-vector generator into
+`scripts/build_interpolation_vectors.py` exposed a flaw in the original vectors:
+the `half_steps_one_string` case was a relabelled copy of `constant_120bpm`
+(960 PPQ, 8640 ticks) while the lesson it named exports **480 PPQ and 2880
+ticks**. Every probe passed, because the case was internally consistent — it
+simply exercised a tick domain the browser never sees. The generator now derives
+that case from the demo library, so it cannot drift from the lesson again, and a
+test asserts the case matches the projection it names.

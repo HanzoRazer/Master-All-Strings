@@ -14,6 +14,7 @@ from master_all_strings.mvp.models import MvpLessonSummaryV1, MvpProjectionRespo
 from master_all_strings.mvp.playback.serialization import serialize_lesson_playback_plan
 from master_all_strings.mvp.practice import loop_ticks_to_seconds
 from master_all_strings.mvp.projection.serialization import serialize_fretboard_projection
+from master_all_strings.presentation.contracts import PRESENTATION_SCHEMA_VERSION
 from master_all_strings.presentation.timeline import (
     anchors_to_payload,
     build_timeline_anchors,
@@ -37,6 +38,11 @@ __all__ = [
 def atomic_write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
+    # Platform-default newline translation is deliberate here. Git stores these
+    # files with LF and a Windows checkout smudges them to CRLF, so an exporter
+    # that always wrote LF would disagree with its own checked-in fixtures on
+    # Windows and break the drift guard. Making the bytes platform-independent
+    # is a .gitattributes concern, which D21 puts outside this tranche.
     tmp.write_text(text, encoding="utf-8")
     os.replace(tmp, path)
 
@@ -90,6 +96,12 @@ def export_projection_json(
         "projection": json.loads(serialize_fretboard_projection(response.projection)),
         # DO-012: Musical Core authors the tick-to-second mapping; the browser
         # only interpolates within it, so no tick converter lives in JavaScript.
+        #
+        # The version sits beside the table rather than on every entry: repeating
+        # it per anchor would be noise, but omitting it entirely left the leanest
+        # contract in the tranche as the only one a reader could not identify.
+        # If the meaning of an anchor ever changes, this is what says so.
+        "timeline_anchors_schema_version": PRESENTATION_SCHEMA_VERSION,
         "timeline_anchors": projection_timeline_anchors(response.projection),
     }
     atomic_write_text(output_path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")

@@ -8,6 +8,7 @@ reproduces them. Neither side can drift without one of them failing.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 from typing import Any
@@ -19,8 +20,8 @@ from master_all_strings.core.score.tempo import TempoChangeV1
 from master_all_strings.presentation.serialization import from_dict
 from master_all_strings.presentation.timeline import (
     TimelineAnchorV1,
-    seconds_at_tick,
-    tick_at_seconds,
+    seconds_to_tick_from_anchors,
+    tick_to_seconds_from_anchors,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -46,19 +47,19 @@ def test_vector_file_is_present_and_populated() -> None:
 
 
 @pytest.mark.parametrize("case", _cases(), ids=lambda c: c["case_id"])
-def test_seconds_at_tick_matches_the_recorded_vector(case: dict[str, Any]) -> None:
+def test_tick_to_seconds_from_anchors_matches_the_recorded_vector(case: dict[str, Any]) -> None:
     anchors = _anchors(case)
-    for probe in case["seconds_at_tick"]:
-        assert seconds_at_tick(anchors, probe["tick"]) == pytest.approx(
+    for probe in case["tick_to_seconds_from_anchors"]:
+        assert tick_to_seconds_from_anchors(anchors, probe["tick"]) == pytest.approx(
             probe["seconds"], abs=1e-9
         )
 
 
 @pytest.mark.parametrize("case", _cases(), ids=lambda c: c["case_id"])
-def test_tick_at_seconds_matches_the_recorded_vector(case: dict[str, Any]) -> None:
+def test_seconds_to_tick_from_anchors_matches_the_recorded_vector(case: dict[str, Any]) -> None:
     anchors = _anchors(case)
-    for probe in case["tick_at_seconds"]:
-        assert tick_at_seconds(anchors, probe["seconds"]) == probe["tick"]
+    for probe in case["seconds_to_tick_from_anchors"]:
+        assert seconds_to_tick_from_anchors(anchors, probe["seconds"]) == probe["tick"]
 
 
 def test_recorded_anchors_still_agree_with_musical_core() -> None:
@@ -78,5 +79,63 @@ def test_recorded_anchors_still_agree_with_musical_core() -> None:
 
 def test_every_case_probes_both_directions() -> None:
     for case in _cases():
-        assert case["seconds_at_tick"], f"{case['case_id']} has no tick probes"
-        assert case["tick_at_seconds"], f"{case['case_id']} has no seconds probes"
+        assert case["tick_to_seconds_from_anchors"], f"{case['case_id']} has no tick probes"
+        assert case["seconds_to_tick_from_anchors"], f"{case['case_id']} has no seconds probes"
+
+
+def test_the_golden_case_matches_the_lesson_it_names() -> None:
+    """The golden vector must describe the golden lesson's real tick domain.
+
+    Regression guard. The case was once a relabeled copy of ``constant_120bpm``
+    (960 PPQ, 8640 ticks) while the lesson it claimed to describe exports 480
+    PPQ and 2880 ticks. Every probe still passed, because the case was internally
+    consistent -- it simply exercised a tick domain the browser never sees. A
+    named case has to be checkable against the thing it names.
+    """
+
+    projection_payload = json.loads(
+        (REPO_ROOT / "web" / "mvp1" / "projections" / "half_steps_one_string.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    case = next(c for c in _cases() if c["case_id"] == "half_steps_one_string")
+
+    exported = [
+        {"tick": entry["tick"], "seconds": entry["seconds"]}
+        for entry in projection_payload["timeline_anchors"]
+    ]
+    recorded = [
+        {"tick": entry["tick"], "seconds": entry["seconds"]} for entry in case["anchors"]
+    ]
+    assert recorded == exported, (
+        "the golden vector's anchors must be the anchors the browser is actually shipped"
+    )
+
+
+def test_every_case_declares_the_tick_domain_it_probes() -> None:
+    """Two cases that differ only in PPQ are indistinguishable without this."""
+
+    for case in _cases():
+        assert isinstance(case["ticks_per_quarter"], int)
+        assert case["ticks_per_quarter"] > 0
+        assert case["total_ticks"] == case["anchors"][-1]["tick"]
+
+
+def test_the_vector_file_is_regenerable_and_current() -> None:
+    """The file claims to be generated; prove the generator still produces it.
+
+    Loaded by path rather than imported as ``scripts.build_interpolation_vectors``:
+    ``scripts/`` is not a package and is only importable when the repository root
+    happens to be on ``sys.path``, which is true under ``python -m pytest`` and
+    false under the bare ``pytest`` that CI runs.
+    """
+
+    spec = importlib.util.spec_from_file_location(
+        "build_interpolation_vectors",
+        REPO_ROOT / "scripts" / "build_interpolation_vectors.py",
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    assert module.build() == _load()

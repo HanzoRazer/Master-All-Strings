@@ -138,7 +138,7 @@ content-addressed gates.
 | Platform | Role |
 |---|---|
 | Windows (local) | development; two known environment artifacts, documented below |
-| WSL Ubuntu (clean clone) | pre-push Linux certification including the DO-008 digest gate |
+| WSL Ubuntu (clean clone) | pre-push Linux certification: full pytest, Ruff, mypy, DO-008 digest |
 | GitHub Actions (`verify.yml`, ubuntu-latest) | authoritative Linux certification, recorded by run ID |
 
 ### Known Windows environment artifacts (not defects, not fixed here)
@@ -163,7 +163,16 @@ hygiene work for a later Dev Order.
 `.github/workflows/verify.yml` runs Ruff, strict mypy, and `pytest --cov` only.
 Node tests and browser smoke are not in CI and are certified locally with the
 platform recorded. Expanding CI is release-infrastructure scope; DO-012 does not
-modify `verify.yml`.
+modify `verify.yml` (D22).
+
+### Out-of-scope work deliberately kept out
+
+Three hygiene changes were prepared during this tranche and removed from it,
+because D21, D22, and the non-goals forbid each: a `.gitattributes` pinning LF
+for digest-pinned artifacts, a Node step in `verify.yml`, and an ASCII-arrow fix
+in `verify_mvp1_release_lineage.py`. All three are recorded in
+`DO012_INTEGRATION_EVIDENCE.json` under `deferred_out_of_scope_work` so a later
+hygiene Dev Order can pick them up.
 
 ## Non-goals
 

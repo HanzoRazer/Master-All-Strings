@@ -29,6 +29,23 @@ function requireAnchorTable(anchors) {
   if (!Array.isArray(anchors) || anchors.length === 0) {
     throw new RangeError("anchor table must not be empty");
   }
+  // The wire shape is plain JSON, so unlike Python -- which can require
+  // TimelineAnchorV1 instances and inherit their field validation -- this has to
+  // check the fields itself. Without it a null entry or a string "0" reaches the
+  // interpolator and comes back out as NaN seconds, which propagates silently
+  // into a seek instead of failing where the bad table entered.
+  for (let index = 0; index < anchors.length; index += 1) {
+    const anchor = anchors[index];
+    if (!anchor || typeof anchor !== "object") {
+      throw new RangeError("anchor table entries must be objects");
+    }
+    if (!Number.isInteger(anchor.tick) || anchor.tick < 0) {
+      throw new RangeError("anchor tick must be a nonnegative integer");
+    }
+    if (!Number.isFinite(anchor.seconds) || anchor.seconds < 0) {
+      throw new RangeError("anchor seconds must be a nonnegative finite number");
+    }
+  }
   if (anchors[0].tick !== 0) {
     throw new RangeError("anchor table must begin at tick 0");
   }
@@ -133,6 +150,14 @@ export class TeachingTimeline {
     this.transport = transport;
     this.lessonId = null;
     this.anchors = null;
+    /**
+     * Count of snapshots this coordinator has *emitted*, not of transport state
+     * changes. publish() is driven by transport events and by the render loop
+     * alike, so consecutive sequences routinely describe identical transport
+     * state. It exists to order and gap-check emissions; it is not a revision
+     * number for the transport and must not be read as one. Resets to 0 with the
+     * lesson, since ordering across two different lessons is meaningless.
+     */
     this.sequence = 0;
     this._followers = new Map();
     this._activeEventIds = [];
@@ -145,11 +170,19 @@ export class TeachingTimeline {
    * state from the previous lesson would silently mis-time the new one.
    */
   setLesson({ lessonId, anchors }) {
-    this.clearLesson();
+    // Validate before clearing. Clearing first would tear down a perfectly good
+    // lesson on the way to rejecting a bad one, leaving the coordinator unready
+    // and every follower blank because a caller passed a malformed table.
     if (!lessonId) throw new TypeError("lessonId is required");
     requireAnchorTable(anchors);
+    this.clearLesson();
     this.lessonId = lessonId;
-    this.anchors = anchors;
+    // Copy and freeze: a caller that mutates the array it handed over would be
+    // silently re-timing the lesson underneath the followers.
+    this.anchors = Object.freeze(
+      anchors.map((anchor) => Object.freeze({ tick: anchor.tick, seconds: anchor.seconds })),
+    );
+    anchors = this.anchors;
     this._followers.forEach((follower) => {
       if (typeof follower.onLesson === "function") {
         follower.onLesson({ lessonId, anchors });
@@ -161,6 +194,14 @@ export class TeachingTimeline {
   clearLesson() {
     this.lessonId = null;
     this.anchors = null;
+    /**
+     * Count of snapshots this coordinator has *emitted*, not of transport state
+     * changes. publish() is driven by transport events and by the render loop
+     * alike, so consecutive sequences routinely describe identical transport
+     * state. It exists to order and gap-check emissions; it is not a revision
+     * number for the transport and must not be read as one. Resets to 0 with the
+     * lesson, since ordering across two different lessons is meaningless.
+     */
     this.sequence = 0;
     this._activeEventIds = [];
     this._followers.forEach((follower) => {
@@ -181,6 +222,11 @@ export class TeachingTimeline {
       throw new TypeError("a follower requires a string id");
     }
     this._followers.set(follower.id, follower);
+    // A follower added after setLesson would otherwise never receive the
+    // binding, and would sit inert until the next lesson change.
+    if (this.ready && typeof follower.onLesson === "function") {
+      follower.onLesson({ lessonId: this.lessonId, anchors: this.anchors });
+    }
     return () => this._followers.delete(follower.id);
   }
 
@@ -220,7 +266,19 @@ export class TeachingTimeline {
 
   /** A TeachingPlayheadStateV1-shaped projection of the current position. */
   playheadState(nowMs) {
-    const state = this.timelineState(nowMs);
+    return this._playheadFrom(this.timelineState(nowMs));
+  }
+
+  /**
+   * Project a playhead out of an already-taken timeline snapshot.
+   *
+   * Deriving it from a given state rather than re-reading the transport is what
+   * makes one emission internally consistent: `Transport.snapshot()` defaults to
+   * reading the wall clock, so computing the timeline and the playhead
+   * independently sampled the clock twice and could report two different
+   * positions under one sequence number.
+   */
+  _playheadFrom(state) {
     if (!state) return null;
     // Deduplicate without reordering: identity is the projection's, and the
     // contract requires uniqueness.
@@ -254,7 +312,7 @@ export class TeachingTimeline {
     if (!this.ready) return null;
     this.sequence += 1;
     const timeline = this.timelineState(nowMs);
-    const playhead = this.playheadState(nowMs);
+    const playhead = this._playheadFrom(timeline);
     this._followers.forEach((follower) => {
       try {
         if (typeof follower.onTimeline === "function") {
@@ -282,14 +340,15 @@ export class TeachingTimeline {
 
   /** Structured diagnostics for tests and browser smoke capture. */
   diagnostics(nowMs) {
+    const timeline = this.timelineState(nowMs);
     return {
       ready: this.ready,
       lessonId: this.lessonId,
       anchorCount: this.anchors ? this.anchors.length : 0,
       sequence: this.sequence,
       followers: [...this._followers.keys()].sort(),
-      timeline: this.timelineState(nowMs),
-      playhead: this.playheadState(nowMs),
+      timeline,
+      playhead: this._playheadFrom(timeline),
     };
   }
 
@@ -297,5 +356,12 @@ export class TeachingTimeline {
     if (this._unsubscribe) this._unsubscribe();
     this._unsubscribe = null;
     this._followers.clear();
+    // Leave it unready. A disposed coordinator that still reports `ready` would
+    // happily answer publish() with a position read from a transport it no
+    // longer follows.
+    this.lessonId = null;
+    this.anchors = null;
+    this.sequence = 0;
+    this._activeEventIds = [];
   }
 }
