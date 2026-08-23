@@ -1,0 +1,124 @@
+{
+  "samples": [
+    {
+      "step": "z01_do008_loaded",
+      "lessonId": "do008_zone_harmony",
+      "positionTick": "0",
+      "positionSeconds": "0.000000",
+      "activeZones": "",
+      "zoneActiveText": "Active Zone: none",
+      "zoneStatus": "Authoritative Zone semantics available",
+      "zoneOverlayChecked": false,
+      "zoneOverlayDisabled": false,
+      "neckDotZones": []
+    },
+    {
+      "step": "z02_zone_overlay_on",
+      "lessonId": "do008_zone_harmony",
+      "positionTick": "0",
+      "positionSeconds": "0.000000",
+      "activeZones": "ZONE_1 ZONE_2",
+      "playheadEventIds": "comp:000000 comp:000001 comp:000002 comp:000003",
+      "zoneActiveText": "Active Zone: ZONE_1, ZONE_2",
+      "zoneStatus": "Zone Colors on",
+      "zoneOverlayChecked": true,
+      "zoneOverlayDisabled": false,
+      "neckDotZones": [
+        "neck-dot zone-1",
+        "neck-dot zone-1",
+        "neck-dot zone-2",
+        "neck-dot zone-2"
+      ]
+    },
+    {
+      "step": "z03_playing_1",
+      "lessonId": "do008_zone_harmony",
+      "positionTick": "717",
+      "positionSeconds": "0.933800",
+      "activeZones": "",
+      "playheadEventIds": "",
+      "zoneActiveText": "Active Zone: none",
+      "zoneStatus": "Zone Colors on",
+      "zoneOverlayChecked": true,
+      "zoneOverlayDisabled": false,
+      "neckDotZones": [
+        "neck-dot zone-1",
+        "neck-dot zone-1",
+        "neck-dot zone-2",
+        "neck-dot zone-2"
+      ]
+    },
+    {
+      "step": "z03_playing_2",
+      "lessonId": "do008_zone_harmony",
+      "positionTick": "1447",
+      "positionSeconds": "1.883500",
+      "activeZones": "",
+      "playheadEventIds": "",
+      "zoneActiveText": "Active Zone: none",
+      "zoneStatus": "Zone Colors on",
+      "zoneOverlayChecked": true,
+      "zoneOverlayDisabled": false,
+      "neckDotZones": [
+        "neck-dot zone-1 half-step-crossing",
+        "neck-dot zone-1",
+        "neck-dot zone-2",
+        "neck-dot zone-2"
+      ]
+    },
+    {
+      "step": "z03_playing_3",
+      "lessonId": "do008_zone_harmony",
+      "positionTick": "2150",
+      "positionSeconds": "2.800000",
+      "activeZones": "ZONE_2 ZONE_1",
+      "playheadEventIds": "comp:000012 comp:000013 comp:000014 comp:000015",
+      "zoneActiveText": "Active Zone: ZONE_2, ZONE_1",
+      "zoneStatus": "Zone Colors on",
+      "zoneOverlayChecked": true,
+      "zoneOverlayDisabled": false,
+      "neckDotZones": [
+        "neck-dot zone-2 tritone-anchor",
+        "neck-dot zone-2",
+        "neck-dot zone-1",
+        "neck-dot zone-1"
+      ]
+    },
+    {
+      "step": "z03_playing_4",
+      "lessonId": "do008_zone_harmony",
+      "positionTick": "2867",
+      "positionSeconds": "3.733100",
+      "activeZones": "ZONE_2 ZONE_1",
+      "playheadEventIds": "comp:000016 comp:000017 comp:000018 comp:000019",
+      "zoneActiveText": "Active Zone: ZONE_2, ZONE_1",
+      "zoneStatus": "Zone Colors on",
+      "zoneOverlayChecked": true,
+      "zoneOverlayDisabled": false,
+      "neckDotZones": [
+        "neck-dot zone-2 half-step-crossing",
+        "neck-dot zone-2",
+        "neck-dot zone-1",
+        "neck-dot zone-1"
+      ]
+    },
+    {
+      "step": "z04_paused",
+      "lessonId": "do008_zone_harmony",
+      "positionTick": "3101",
+      "positionSeconds": "4.037400",
+      "activeZones": "",
+      "playheadEventIds": "",
+      "zoneActiveText": "Active Zone: none",
+      "zoneStatus": "Zone Colors on",
+      "zoneOverlayChecked": true,
+      "zoneOverlayDisabled": false,
+      "neckDotZones": [
+        "neck-dot zone-2 half-step-crossing",
+        "neck-dot zone-2",
+        "neck-dot zone-1",
+        "neck-dot zone-1"
+      ]
+    }
+  ]
+}
