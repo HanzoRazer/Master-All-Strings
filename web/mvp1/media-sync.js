@@ -83,7 +83,21 @@ export function lessonTimeToMediaTime(binding, lessonSeconds) {
   ) {
     return null;
   }
-  return binding.media_anchor_seconds + (lessonSeconds - binding.lesson_anchor_seconds);
+  const mediaSeconds =
+    binding.media_anchor_seconds + (lessonSeconds - binding.lesson_anchor_seconds);
+  // The two ends are independently optional in MediaTimelineBindingV1, so a
+  // binding may declare where the media stops without declaring where the lesson
+  // stops. Checking only the lesson end would then walk the element straight
+  // past the media end -- the 3.0s clip answering for a 4.5s lesson that the
+  // out-of-range answer exists to prevent.
+  if (
+    binding.media_end_seconds !== null &&
+    binding.media_end_seconds !== undefined &&
+    mediaSeconds > binding.media_end_seconds
+  ) {
+    return null;
+  }
+  return mediaSeconds;
 }
 
 export class MediaSyncFollower {
@@ -205,10 +219,24 @@ export class MediaSyncFollower {
     this._followPlayState(element, state);
 
     const nowMs = this._now();
-    const settling = this._settleUntilMs !== null && nowMs < this._settleUntilMs;
-    if (settling) {
-      // Report honestly while the element catches up, but issue no new command.
-      return this._health(SyncStatus.CORRECTING, expected, actual, SyncCorrection.HARD_SEEK);
+    if (this._settleUntilMs !== null && nowMs < this._settleUntilMs) {
+      // A seek is still landing. Suppress new commands -- re-seeking an element
+      // that is already on its way is the thrashing D12 forbids -- but report
+      // what is actually measured rather than an unconditional CORRECTING.
+      //
+      // The status must stay measurement-derived. Reporting CORRECTING for the
+      // whole window described the command we issued, not the element: once the
+      // seek has landed the drift is zero and the record said otherwise, and
+      // `last_correction: HARD_SEEK` was repeated every frame although only one
+      // seek was ever issued.
+      const settlingDriftMs = calculateDriftMs(expected, actual);
+      const settlingStatus = classifySyncHealth(settlingDriftMs);
+      if (settlingStatus === SyncStatus.SYNCED) {
+        // Converged ahead of the deadline: end the window rather than staying
+        // deaf to real drift for the rest of it.
+        this._settleUntilMs = null;
+      }
+      return this._health(settlingStatus, expected, actual, SyncCorrection.NONE);
     }
     this._settleUntilMs = null;
 

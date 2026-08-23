@@ -527,6 +527,7 @@
     "objective": "MSME yields multiple candidates; enumeration_v1 picks one",
     "teacher_note": null
   },
+  "timeline_anchors_schema_version": "1.0.0",
   "timeline_anchors": [
     {
       "tick": 0,

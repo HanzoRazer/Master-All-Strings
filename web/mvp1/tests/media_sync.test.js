@@ -455,3 +455,75 @@ test("an element that reports no seekable property at all is assumed seekable", 
   f.onTimeline(timelineState({ position_seconds: 1.0 }));
   assert.equal(f.hardSeekCount, 1);
 });
+
+// --- settle window reports measurement, not the command that opened it -------
+
+test("a settled element is reported as synced before the window expires", () => {
+  const media = fakeMedia({ paused: false });
+  const { follower: f, advance } = follower(media);
+
+  media.currentTime = 2.0;
+  f.onTimeline(timelineState({ position_seconds: 1.0 }));
+  assert.equal(f.hardSeekCount, 1);
+
+  // The seek landed early, as seeks usually do. The window must not keep
+  // asserting CORRECTING over an element that is demonstrably in sync: the
+  // status is a measurement, and this one measures zero drift.
+  advance(HARD_SEEK_SETTLE_MS / 2);
+  media.currentTime = 1.05;
+  const health = f.onTimeline(timelineState({ position_seconds: 1.05 }));
+  assert.equal(health.status, SyncStatus.SYNCED);
+  assert.ok(Math.abs(health.drift_ms) <= 40);
+  // No command was issued this cycle, so none may be reported.
+  assert.equal(health.last_correction, SyncCorrection.NONE);
+  assert.equal(f.hardSeekCount, 1);
+
+  // Converging ends the window early, so real drift is acted on immediately
+  // rather than being ignored for the remainder of it.
+  media.currentTime = 3.0;
+  const next = f.onTimeline(timelineState({ position_seconds: 1.05 }));
+  assert.equal(next.status, SyncStatus.CORRECTING);
+  assert.equal(f.hardSeekCount, 2);
+});
+
+test("no correction is claimed for a cycle that issued no command", () => {
+  const media = fakeMedia({ paused: false });
+  const { follower: f, advance } = follower(media);
+
+  media.currentTime = 2.0;
+  f.onTimeline(timelineState({ position_seconds: 1.0 }));
+
+  // Still far out of position, still inside the window: one seek is in flight,
+  // and reporting HARD_SEEK again would count a command that never happened.
+  advance(HARD_SEEK_SETTLE_MS / 2);
+  media.currentTime = 2.0;
+  const during = f.onTimeline(timelineState({ position_seconds: 1.05 }));
+  assert.equal(during.status, SyncStatus.CORRECTING);
+  assert.equal(during.last_correction, SyncCorrection.NONE);
+  assert.equal(f.hardSeekCount, 1);
+});
+
+// --- both ends of a binding are real bounds ----------------------------------
+
+test("a binding bounded only on the media side still stops at the media end", () => {
+  // MediaTimelineBindingV1 makes the two ends independently optional, so this
+  // shape is legal: a 3.0s clip declared against a lesson with no declared end.
+  const mediaOnly = {
+    ...PARTIAL_BINDING,
+    binding_id: "binding-media-bounded",
+    lesson_end_seconds: null,
+    media_end_seconds: 3.0,
+  };
+  assert.equal(lessonTimeToMediaTime(mediaOnly, 2.9), 2.9);
+  assert.equal(lessonTimeToMediaTime(mediaOnly, 3.0), 3.0);
+  // Past the clip. Answering 4.5 here is precisely the extrapolation the
+  // out-of-range answer exists to refuse.
+  assert.equal(lessonTimeToMediaTime(mediaOnly, 4.5), null);
+
+  const media = fakeMedia({ paused: false });
+  const { follower: f } = follower(media, { binding: mediaOnly });
+  const health = f.onTimeline(timelineState({ position_seconds: 4.5 }));
+  assert.equal(health.status, SyncStatus.OUT_OF_BINDING_RANGE);
+  assert.equal(health.drift_ms, null);
+  assert.equal(media.pauseCalls, 1);
+});

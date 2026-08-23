@@ -24,11 +24,14 @@ const VECTORS = JSON.parse(
   ),
 );
 
-// 4.5s lesson at 120 BPM / 960 PPQ, matching the golden demo.
-const ANCHORS = [
-  { schema_version: "1.0.0", tick: 0, seconds: 0.0 },
-  { schema_version: "1.0.0", tick: 8640, seconds: 4.5 },
-];
+// The golden lesson's own anchor table, read from the shared vector file rather
+// than retyped. A hand-written copy here once claimed 960 PPQ / 8640 ticks while
+// the lesson exports 480 PPQ / 2880 ticks, so every tick assertion below was
+// exercising a domain the browser is never shipped.
+const GOLDEN = VECTORS.cases.find((c) => c.case_id === "half_steps_one_string");
+const ANCHORS = GOLDEN.anchors;
+// 2880 ticks over 4.5s: 640 ticks per second.
+const TICKS_PER_SECOND = GOLDEN.total_ticks / ANCHORS[ANCHORS.length - 1].seconds;
 
 function harness() {
   let now = 0;
@@ -51,14 +54,14 @@ function harness() {
 
 test("browser interpolation reproduces the Python reference vectors", () => {
   for (const testCase of VECTORS.cases) {
-    for (const probe of testCase.seconds_at_tick) {
+    for (const probe of testCase.tick_to_seconds_from_anchors) {
       const actual = secondsAtTick(testCase.anchors, probe.tick);
       assert.ok(
         Math.abs(actual - probe.seconds) < 1e-9,
         `${testCase.case_id}: secondsAtTick(${probe.tick}) = ${actual}, expected ${probe.seconds}`,
       );
     }
-    for (const probe of testCase.tick_at_seconds) {
+    for (const probe of testCase.seconds_to_tick_from_anchors) {
       assert.equal(
         tickAtSeconds(testCase.anchors, probe.seconds),
         probe.tick,
@@ -93,8 +96,8 @@ test("interpolation is monotonic across a tempo change", () => {
 });
 
 test("positions past the last anchor continue at the final rate", () => {
-  assert.ok(Math.abs(secondsAtTick(ANCHORS, 17280) - 9.0) < 1e-9);
-  assert.equal(tickAtSeconds(ANCHORS, 9.0), 17280);
+  assert.ok(Math.abs(secondsAtTick(ANCHORS, 5760) - 9.0) < 1e-9);
+  assert.equal(tickAtSeconds(ANCHORS, 9.0), 5760);
 });
 
 // --- anchor table validation -------------------------------------------------
@@ -142,7 +145,7 @@ test("the coordinator reports transport state without owning it", () => {
   const state = timeline.timelineState(advance(1000));
   assert.equal(state.playing, true);
   assert.ok(Math.abs(state.position_seconds - 1.0) < 1e-6);
-  assert.equal(state.position_tick, 1920);
+  assert.equal(state.position_tick, TICKS_PER_SECOND * 1.0);
   assert.equal(state.lesson_id, "half_steps_one_string");
   assert.equal(state.schema_version, "1.0.0");
 });
@@ -163,7 +166,7 @@ test("playback rate changes progression speed, not musical position", () => {
   transport.setRate(0.5, advance(1000));
   const state = timeline.timelineState();
   // One wall second at 1.0x already elapsed; the tick for that second is fixed.
-  assert.equal(state.position_tick, 1920);
+  assert.equal(state.position_tick, TICKS_PER_SECOND * 1.0);
   assert.equal(state.playback_rate, 0.5);
 });
 
@@ -177,8 +180,8 @@ test("loop bounds appear only while the loop is enabled", () => {
   transport.setLoop({ startSeconds: 1.0, endSeconds: 2.5 });
   state = timeline.timelineState();
   assert.equal(state.loop_enabled, true);
-  assert.equal(state.loop_start_tick, 1920);
-  assert.equal(state.loop_end_tick, 4800);
+  assert.equal(state.loop_start_tick, TICKS_PER_SECOND * 1.0);
+  assert.equal(state.loop_end_tick, TICKS_PER_SECOND * 2.5);
 
   transport.clearLoop();
   state = timeline.timelineState();
@@ -334,16 +337,130 @@ test("disposing releases the transport subscription", () => {
 // --- focus range -------------------------------------------------------------
 
 test("focus ticks convert to transport loop seconds", () => {
-  const range = resolveFocusRangeSeconds(ANCHORS, 1920, 3840);
+  const range = resolveFocusRangeSeconds(ANCHORS, 640, 1280);
   assert.ok(Math.abs(range.startSeconds - 1.0) < 1e-9);
   assert.ok(Math.abs(range.endSeconds - 2.0) < 1e-9);
 });
 
 test("an inverted or empty focus range is refused", () => {
-  assert.throws(() => resolveFocusRangeSeconds(ANCHORS, 3840, 1920), /must exceed/);
-  assert.throws(() => resolveFocusRangeSeconds(ANCHORS, 960, 960), /must exceed/);
+  assert.throws(() => resolveFocusRangeSeconds(ANCHORS, 1280, 640), /must exceed/);
+  assert.throws(() => resolveFocusRangeSeconds(ANCHORS, 640, 640), /must exceed/);
 });
 
 test("non-integer focus ticks are refused", () => {
-  assert.throws(() => resolveFocusRangeSeconds(ANCHORS, 1.5, 3840), /integers/);
+  assert.throws(() => resolveFocusRangeSeconds(ANCHORS, 1.5, 1280), /integers/);
+});
+
+// --- emission semantics ------------------------------------------------------
+
+test("sequence counts emissions, from transport events and frames alike", () => {
+  const { transport, timeline, advance } = harness();
+  const emissions = [];
+  timeline.addFollower({
+    id: "probe",
+    onTimeline: (state, reason) => emissions.push({ seq: state.sequence, reason }),
+  });
+
+  // One transport-driven emission, then two render-loop emissions at a frozen
+  // clock: the transport state is identical across all three.
+  transport.play(advance(0));
+  timeline.publish("frame", 0);
+  timeline.publish("frame", 0);
+
+  const reasons = emissions.map((e) => e.reason);
+  assert.deepEqual(reasons, ["play", "frame", "frame"]);
+  const sequences = emissions.map((e) => e.seq);
+  assert.deepEqual(sequences, [...sequences].sort((a, b) => a - b));
+  assert.equal(new Set(sequences).size, sequences.length);
+  // The contract that matters: sequence is a count of what was emitted, not of
+  // how many times the transport actually changed. Two frames at one clock
+  // value describe the same transport state under two different sequences.
+  assert.equal(sequences[2] - sequences[1], 1);
+});
+
+test("one emission reports one position, not two clock reads", () => {
+  // A transport whose clock advances on every single read. If the coordinator
+  // sampled it once for the timeline and again for the playhead, the two halves
+  // of a single emission would disagree while sharing a sequence number.
+  let reads = 0;
+  const transport = new Transport({ now: () => (reads += 1000) });
+  const timeline = new TeachingTimeline({ transport });
+  transport.setDuration(4.5);
+  timeline.setLesson({ lessonId: "half_steps_one_string", anchors: ANCHORS });
+  transport.play();
+
+  const pairs = [];
+  timeline.addFollower({
+    id: "probe",
+    onTimeline: (state) => pairs.push({ timeline: state }),
+    onPlayhead: (state) => {
+      pairs[pairs.length - 1].playhead = state;
+    },
+  });
+
+  timeline.publish("frame");
+  const [{ timeline: t, playhead: h }] = pairs;
+  assert.equal(t.sequence, h.sequence);
+  assert.equal(t.position_seconds, h.position_seconds);
+  assert.equal(t.position_tick, h.position_tick);
+
+  // Same discipline for diagnostics.
+  const diagnostics = timeline.diagnostics();
+  assert.equal(diagnostics.timeline.position_seconds, diagnostics.playhead.position_seconds);
+});
+
+// --- anchor table validation, matching the Python reference ------------------
+
+test("a malformed anchor entry is refused where it enters", () => {
+  const cases = [
+    [[null], /objects/],
+    [[{ tick: 0, seconds: 0 }, { tick: 640, seconds: "1.0" }], /seconds must be/],
+    [[{ tick: 0, seconds: 0 }, { tick: 1.5, seconds: 1.0 }], /tick must be/],
+    [[{ tick: 0, seconds: 0 }, { tick: 640, seconds: NaN }], /seconds must be/],
+    [[{ tick: 0, seconds: -1 }], /seconds must be/],
+  ];
+  for (const [table, pattern] of cases) {
+    assert.throws(() => secondsAtTick(table, 0), pattern, JSON.stringify(table));
+  }
+});
+
+test("a rejected lesson does not destroy the lesson already loaded", () => {
+  const { timeline } = harness();
+  const cleared = [];
+  timeline.addFollower({ id: "probe", onClear: () => cleared.push("cleared") });
+
+  assert.throws(
+    () => timeline.setLesson({ lessonId: "broken", anchors: [{ tick: 5, seconds: 0 }] }),
+    /begin at tick 0/,
+  );
+  assert.equal(timeline.ready, true);
+  assert.equal(timeline.lessonId, "half_steps_one_string");
+  assert.deepEqual(cleared, [], "followers must not be torn down by a refused lesson");
+});
+
+test("mutating the caller's anchor array cannot re-time a loaded lesson", () => {
+  const { timeline } = harness();
+  const mutable = [
+    { tick: 0, seconds: 0.0 },
+    { tick: 2880, seconds: 4.5 },
+  ];
+  timeline.setLesson({ lessonId: "half_steps_one_string", anchors: mutable });
+  const before = timeline.timelineState().position_tick;
+  mutable[1].seconds = 900.0;
+  assert.equal(timeline.timelineState().position_tick, before);
+});
+
+test("a follower registered after the lesson still learns about it", () => {
+  const { timeline } = harness();
+  const seen = [];
+  timeline.addFollower({ id: "late", onLesson: (binding) => seen.push(binding.lessonId) });
+  assert.deepEqual(seen, ["half_steps_one_string"]);
+});
+
+test("a disposed coordinator stops reporting a position", () => {
+  const { timeline } = harness();
+  timeline.dispose();
+  assert.equal(timeline.ready, false);
+  assert.equal(timeline.publish("frame"), null);
+  assert.equal(timeline.timelineState(), null);
 });

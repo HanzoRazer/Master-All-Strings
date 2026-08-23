@@ -37,9 +37,10 @@ from master_all_strings.presentation.timeline import (
     lesson_time_to_media_time,
     media_time_to_lesson_time,
     resolve_focus_range_seconds,
-    seconds_at_tick,
-    tick_at_seconds,
+    seconds_to_tick_from_anchors,
+    tick_to_seconds_from_anchors,
     validate_media_timeline_binding,
+    validate_timeline_anchors,
 )
 
 __all__ = [
@@ -68,7 +69,8 @@ __all__ = [
     "lesson_time_to_media_time",
     "media_time_to_lesson_time",
     "resolve_focus_range_seconds",
-    "seconds_at_tick",
-    "tick_at_seconds",
+    "seconds_to_tick_from_anchors",
+    "tick_to_seconds_from_anchors",
     "validate_media_timeline_binding",
+    "validate_timeline_anchors",
 ]

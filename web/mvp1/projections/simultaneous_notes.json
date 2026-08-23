@@ -621,6 +621,7 @@
     "objective": "Show simultaneous onsets without claiming chord optimization",
     "teacher_note": null
   },
+  "timeline_anchors_schema_version": "1.0.0",
   "timeline_anchors": [
     {
       "tick": 0,

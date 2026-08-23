@@ -437,6 +437,7 @@
     "objective": "Valid teacher override controls selection origin",
     "teacher_note": "Use the B string for the first note"
   },
+  "timeline_anchors_schema_version": "1.0.0",
   "timeline_anchors": [
     {
       "tick": 0,

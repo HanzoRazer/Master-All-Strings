@@ -48,9 +48,10 @@ __all__ = [
     "lesson_time_to_media_time",
     "media_time_to_lesson_time",
     "resolve_focus_range_seconds",
-    "seconds_at_tick",
-    "tick_at_seconds",
+    "seconds_to_tick_from_anchors",
+    "tick_to_seconds_from_anchors",
     "validate_media_timeline_binding",
+    "validate_timeline_anchors",
 ]
 
 
@@ -106,7 +107,16 @@ def anchors_to_payload(
     return [{"tick": anchor.tick, "seconds": anchor.seconds} for anchor in anchors]
 
 
-def _require_anchor_table(anchors: Sequence[TimelineAnchorV1]) -> tuple[TimelineAnchorV1, ...]:
+def validate_timeline_anchors(
+    anchors: Sequence[TimelineAnchorV1],
+) -> tuple[TimelineAnchorV1, ...]:
+    """Validate an anchor table and return it as a tuple.
+
+    A table must begin at tick 0, increase strictly in ticks, and never move
+    backwards in seconds. Anything else makes interpolation ambiguous, and an
+    ambiguous musical mapping is worse than a refused one.
+    """
+
     if not anchors:
         raise PresentationContractError("anchor table must not be empty")
     table = tuple(anchors)
@@ -127,7 +137,7 @@ def _require_anchor_table(anchors: Sequence[TimelineAnchorV1]) -> tuple[Timeline
     return table
 
 
-def seconds_at_tick(anchors: Sequence[TimelineAnchorV1], tick: int) -> float:
+def tick_to_seconds_from_anchors(anchors: Sequence[TimelineAnchorV1], tick: int) -> float:
     """Interpolate seconds for ``tick`` within the anchor table.
 
     This is the Python reference for the browser's interpolation. Positions past
@@ -135,7 +145,7 @@ def seconds_at_tick(anchors: Sequence[TimelineAnchorV1], tick: int) -> float:
     Core continues at the last declared tempo.
     """
 
-    table = _require_anchor_table(anchors)
+    table = validate_timeline_anchors(anchors)
     require_nonnegative_int(tick, "tick")
 
     if tick <= table[0].tick:
@@ -149,15 +159,15 @@ def seconds_at_tick(anchors: Sequence[TimelineAnchorV1], tick: int) -> float:
     return _extrapolate_seconds(table, tick)
 
 
-def tick_at_seconds(anchors: Sequence[TimelineAnchorV1], seconds: float) -> int:
+def seconds_to_tick_from_anchors(anchors: Sequence[TimelineAnchorV1], seconds: float) -> int:
     """Interpolate the tick at ``seconds``, rounding half away from zero.
 
-    The inverse of :func:`seconds_at_tick` over the same table. A segment with
-    zero elapsed seconds (possible only for a degenerate table) resolves to its
-    lower tick rather than dividing by zero.
+    The inverse of :func:`tick_to_seconds_from_anchors` over the same table. A
+    segment with zero elapsed seconds (possible only for a degenerate table)
+    resolves to its lower tick rather than dividing by zero.
     """
 
-    table = _require_anchor_table(anchors)
+    table = validate_timeline_anchors(anchors)
     require_nonnegative_number(seconds, "seconds")
 
     if seconds <= table[0].seconds:
@@ -246,7 +256,10 @@ def resolve_focus_range_seconds(
     require_nonnegative_int(end_tick, "end_tick")
     if end_tick <= start_tick:
         raise PresentationContractError("end_tick must exceed start_tick")
-    return seconds_at_tick(anchors, start_tick), seconds_at_tick(anchors, end_tick)
+    return (
+        tick_to_seconds_from_anchors(anchors, start_tick),
+        tick_to_seconds_from_anchors(anchors, end_tick),
+    )
 
 
 def validate_media_timeline_binding(
@@ -315,7 +328,14 @@ def lesson_time_to_media_time(
     if not binding_contains_lesson_time(binding, lesson_seconds):
         return None
     offset = float(lesson_seconds) - float(binding.lesson_anchor_seconds)
-    return float(binding.media_anchor_seconds) + offset
+    media_seconds = float(binding.media_anchor_seconds) + offset
+    # The two ends are independently optional, so a binding may declare where the
+    # media stops without declaring where the lesson stops. Checking only the
+    # lesson end would then hand back a position past the media end -- exactly the
+    # 3.0 s clip answering for a 4.5 s lesson this function exists to refuse.
+    if not binding_contains_media_time(binding, media_seconds):
+        return None
+    return media_seconds
 
 
 def media_time_to_lesson_time(
@@ -328,7 +348,11 @@ def media_time_to_lesson_time(
     if not binding_contains_media_time(binding, media_seconds):
         return None
     offset = float(media_seconds) - float(binding.media_anchor_seconds)
-    return float(binding.lesson_anchor_seconds) + offset
+    lesson_seconds = float(binding.lesson_anchor_seconds) + offset
+    # Symmetrical to the forward direction: honor whichever end is declared.
+    if not binding_contains_lesson_time(binding, lesson_seconds):
+        return None
+    return lesson_seconds
 
 
 def build_teaching_timeline_state(
@@ -360,17 +384,21 @@ def build_teaching_timeline_state(
         schema_version=PRESENTATION_SCHEMA_VERSION,
         lesson_id=lesson_id,
         sequence=sequence,
-        position_tick=tick_at_seconds(anchors, position_seconds),
+        position_tick=seconds_to_tick_from_anchors(anchors, position_seconds),
         position_seconds=float(position_seconds),
         playing=playing,
         playback_rate=float(playback_rate),
         loop_enabled=loop_enabled,
         repetition_index=repetition_index,
         loop_start_tick=(
-            tick_at_seconds(anchors, loop_start_seconds) if loop_start_seconds is not None else None
+            seconds_to_tick_from_anchors(anchors, loop_start_seconds)
+            if loop_start_seconds is not None
+            else None
         ),
         loop_end_tick=(
-            tick_at_seconds(anchors, loop_end_seconds) if loop_end_seconds is not None else None
+            seconds_to_tick_from_anchors(anchors, loop_end_seconds)
+            if loop_end_seconds is not None
+            else None
         ),
         loop_start_seconds=float(loop_start_seconds) if loop_start_seconds is not None else None,
         loop_end_seconds=float(loop_end_seconds) if loop_end_seconds is not None else None,

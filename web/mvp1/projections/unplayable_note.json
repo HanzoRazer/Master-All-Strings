@@ -531,6 +531,7 @@
     "objective": "Keep impossible notes visible as unplayable",
     "teacher_note": null
   },
+  "timeline_anchors_schema_version": "1.0.0",
   "timeline_anchors": [
     {
       "tick": 0,
