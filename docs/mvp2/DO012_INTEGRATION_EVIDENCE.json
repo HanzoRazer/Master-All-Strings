@@ -28,7 +28,7 @@
     "ruff": "PASS",
     "mypy_strict": "PASS (147 source files)",
     "pytest": {
-      "passed": 1947,
+      "passed": 1976,
       "failed": 2,
       "skipped": 2,
       "coverage_percent": 95.44
@@ -99,7 +99,7 @@
       ],
       "isolate_loop_repetitions": 2,
       "isolate_loop_media_status": "synced",
-      "isolate_loop_media_drift_ms": 38.959,
+      "isolate_loop_media_drift_ms": 38.382,
       "hard_seek_count_whole_run": 1,
       "detached_restores_media_only_rates": [
         0.5,
@@ -116,7 +116,7 @@
         800,
         1600
       ],
-      "repetitions_observed": 7,
+      "repetitions_observed": 4,
       "meets_three_repetition_criterion": true,
       "loop_bounds_stable_across_repetitions": true
     },
@@ -203,14 +203,14 @@
       "step": "04_playing",
       "follower_id": "media",
       "status": "drifting",
-      "drift_ms": -49.801,
+      "drift_ms": -70.54,
       "hard_seek_count": 0
     },
     {
       "step": "05_rate_075",
       "follower_id": "media",
       "status": "synced",
-      "drift_ms": -35.282,
+      "drift_ms": -38.706,
       "hard_seek_count": 0
     },
     {
@@ -259,14 +259,14 @@
       "step": "12_apply_primary_action",
       "follower_id": "media",
       "status": "drifting",
-      "drift_ms": 92.169,
+      "drift_ms": 88.08,
       "hard_seek_count": 1
     },
     {
       "step": "13_action_loop_repeats",
       "follower_id": "media",
       "status": "synced",
-      "drift_ms": 38.959,
+      "drift_ms": 38.382,
       "hard_seek_count": 1
     },
     {
@@ -359,5 +359,28 @@
     "merged_sha_on_main": "a4206873210031ba9947cacf9f9f6e1be9f1eb26",
     "merge_style": "squash",
     "note": "PR #20 was merged by the repository owner. DO-012 authorised the PR but not the merge; the merge was the owner's decision. The order-alignment work in this branch was completed afterwards and is delivered separately."
+  },
+  "review": {
+    "scope": "line-by-line, all 53 changed files",
+    "blockers": 0,
+    "security_findings_unresolved": 0,
+    "authority_violations_unresolved": 0,
+    "findings": [
+      {
+        "classification": "DOC_ONLY",
+        "resolution": "fixed",
+        "detail": "timeline.py documented seconds_to_tick_from_anchors as the inverse of seconds_at_tick, a name this PR removed"
+      },
+      {
+        "classification": "DOC_ONLY",
+        "resolution": "fixed",
+        "detail": "teaching-timeline.js duplicated the seven-line sequence explanation verbatim in the constructor and clearLesson"
+      },
+      {
+        "classification": "EFFICIENCY",
+        "resolution": "recorded and deferred",
+        "detail": "renderer.activeZones() evaluated twice per publish; a per-frame path, but it iterates at most a few dozen notes and both callers read the same authoritative source"
+      }
+    ]
   }
 }

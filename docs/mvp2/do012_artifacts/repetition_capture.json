@@ -11,7 +11,7 @@
       "playing": "false",
       "repeatCount": "0",
       "loopRange": "Loop off",
-      "statusLine": "Ready"
+      "statusLine": "Loaded ascending_scale"
     },
     {
       "step": "r02_loop_armed",
@@ -30,7 +30,7 @@
     {
       "step": "r03_rep_1",
       "lessonId": "ascending_scale",
-      "positionTick": "882",
+      "positionTick": "881",
       "loopEnabled": "true",
       "loopStartTick": "800",
       "loopEndTick": "1600",
@@ -44,7 +44,7 @@
     {
       "step": "r04_rep_2",
       "lessonId": "ascending_scale",
-      "positionTick": "975",
+      "positionTick": "974",
       "loopEnabled": "true",
       "loopStartTick": "800",
       "loopEndTick": "1600",
@@ -86,18 +86,18 @@
     {
       "step": "r07_paused",
       "lessonId": "ascending_scale",
-      "positionTick": "1078",
+      "positionTick": "1374",
       "loopEnabled": "true",
       "loopStartTick": "800",
       "loopEndTick": "1600",
-      "repetitionIndex": "7",
+      "repetitionIndex": "4",
       "playing": "false",
       "activeEventIds": "ev-3",
-      "repeatCount": "7",
+      "repeatCount": "4",
       "loopRange": "1.00s–2.00s",
       "statusLine": "Paused"
     }
   ],
-  "repetitionsObserved": 7,
+  "repetitionsObserved": 4,
   "meetsThreeRepetitionCriterion": true
 }
