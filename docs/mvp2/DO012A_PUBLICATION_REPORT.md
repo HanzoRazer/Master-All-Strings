@@ -9,8 +9,9 @@ do012_base_sha       = 2695993a601f6cc7b526294bdaac50ec5650cc23
 do012_merge_sha      = a4206873210031ba9947cacf9f9f6e1be9f1eb26   (PR #20, squash)
 alignment_head_sha   = 8f9ecbaf8324c5ba5cd5b9fc4e2331024025f204   (PR #21 final head)
 alignment_merge_sha  = 8402058ceeefec2ddd60faa682b2bd8ce5531731   (PR #21, merge commit)
+post_merge_main_sha  = 8402058ceeefec2ddd60faa682b2bd8ce5531731   (main after PR #21)
 hardening_merge_sha  = 7e03f20d97283495459d6912d303559b000f079f   (PR #22, merge commit)
-post_merge_main_sha  = 7e03f20d97283495459d6912d303559b000f079f
+post_hardening_main_sha = 7e03f20d97283495459d6912d303559b000f079f
 ```
 
 ## How MVP 2B arrived

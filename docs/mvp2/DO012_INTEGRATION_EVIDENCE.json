@@ -401,9 +401,9 @@
   "alignment_pr": 21,
   "alignment_head_sha": "8f9ecbaf8324c5ba5cd5b9fc4e2331024025f204",
   "alignment_merge_sha": "8402058ceeefec2ddd60faa682b2bd8ce5531731",
-  "post_merge_main_sha": "7e03f20d97283495459d6912d303559b000f079f",
+  "post_merge_main_sha": "8402058ceeefec2ddd60faa682b2bd8ce5531731",
   "publication_status": "published_to_main_hardened",
-  "mvp2b_baseline_sha": "e7cf66768970275432f6b12b19ac883ada016166",
+  "mvp2b_baseline_sha": null,
   "merge_method": {
     "pr_21": "merge commit (two parents)",
     "parents": [
@@ -480,5 +480,7 @@
       "change": "Zone readout formatting extracted to a pure zoneReadoutText()",
       "reason": "app.js is not importable without a DOM, so the D10 rule had no reachable seam. Behaviour is identical; browser smoke produces the same readout before and after."
     }
-  }
+  },
+  "post_hardening_main_sha": "7e03f20d97283495459d6912d303559b000f079f",
+  "merge_sequence_note": "Two publication merges. post_merge_main_sha names main after the alignment merge (PR #21); post_hardening_main_sha names main after the conformance hardening merge (PR #22). Overloading the first field to mean 'whichever merge was most recent' would have made it stop meaning what its name says."
 }
