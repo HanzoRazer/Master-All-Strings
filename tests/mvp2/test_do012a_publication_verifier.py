@@ -86,21 +86,44 @@ def test_a_similarly_named_path_is_not_caught(verifier: ModuleType) -> None:
     assert verifier.deferred_hygiene_in(delta) == ()
 
 
-def test_the_published_baseline_carries_no_alignment_delta(
+def test_the_published_alignment_range_carries_no_deferred_hygiene(
     verifier: ModuleType,
 ) -> None:
-    """On the published baseline there is nothing left to differ.
+    """The closure invariant, asserted over published history.
 
-    The previous form of this compared origin/main to HEAD and asserted the
-    result was hygiene-free. Once published those are the same commit, so it
-    passed on an empty comparison -- true, but true for the wrong reason. This
-    asserts the emptiness itself, which is a real property of a published
-    baseline; the synthetic tests above prove the detector catches a delta that
-    is *not* clean.
+    Two earlier forms of this were wrong in opposite directions. Comparing
+    origin/main to HEAD passed on an empty comparison once published -- true for
+    the wrong reason. Asserting that emptiness instead then failed on every
+    feature branch, where a delta is exactly what is supposed to exist.
+
+    The durable property is about the published range, not the current checkout:
+    everything between the DO-012 merge and the recorded baseline must be free of
+    deferred hygiene, and that stays true from whatever branch it is evaluated.
+    The synthetic tests above prove the detector catches a delta that is not
+    clean.
     """
 
-    delta = verifier.changed_paths("origin/main", "HEAD")
-    assert delta == (), f"published baseline still differs from origin/main: {delta}"
+    evidence = json.loads(
+        (REPO_ROOT / "docs" / "mvp2" / "DO012_INTEGRATION_EVIDENCE.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    baseline = evidence["mvp2b_baseline_sha"]
+    assert baseline, "no published baseline recorded"
+    delta = verifier.changed_paths(verifier.DO012_BASE_SHA, baseline)
+    assert delta, "the published range should not be empty"
+    assert verifier.deferred_hygiene_in(delta) == ()
+
+
+def test_the_recorded_baseline_is_published_history(verifier: ModuleType) -> None:
+    """A baseline nobody can branch from is not a baseline."""
+
+    evidence = json.loads(
+        (REPO_ROOT / "docs" / "mvp2" / "DO012_INTEGRATION_EVIDENCE.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert verifier.is_ancestor(evidence["mvp2b_baseline_sha"], "origin/main")
 
 
 # --- evidence completeness ---------------------------------------------------
