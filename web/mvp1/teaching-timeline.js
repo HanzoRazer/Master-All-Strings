@@ -194,14 +194,7 @@ export class TeachingTimeline {
   clearLesson() {
     this.lessonId = null;
     this.anchors = null;
-    /**
-     * Count of snapshots this coordinator has *emitted*, not of transport state
-     * changes. publish() is driven by transport events and by the render loop
-     * alike, so consecutive sequences routinely describe identical transport
-     * state. It exists to order and gap-check emissions; it is not a revision
-     * number for the transport and must not be read as one. Resets to 0 with the
-     * lesson, since ordering across two different lessons is meaningless.
-     */
+    // Resets with the lesson: see the note on the declaration.
     this.sequence = 0;
     this._activeEventIds = [];
     this._followers.forEach((follower) => {

@@ -139,3 +139,89 @@ def test_the_vector_file_is_regenerable_and_current() -> None:
     spec.loader.exec_module(module)
 
     assert module.build() == _load()
+
+
+# --- negative regression: semantic mislabeling -------------------------------
+
+
+def _generator():
+    """Load the vector generator as a module."""
+
+    spec = importlib.util.spec_from_file_location(
+        "build_interpolation_vectors",
+        REPO_ROOT / "scripts" / "build_interpolation_vectors.py",
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_the_generator_reports_the_current_vectors_as_current() -> None:
+    """The detector must accept the good file, or its rejections mean nothing."""
+
+    assert _generator().main(["--check"]) == 0
+
+
+def test_a_mislabeled_golden_case_is_detected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A case labelled half_steps_one_string carrying a foreign tick domain fails.
+
+    This reproduces the defect the generator was written to end: the golden case
+    was a relabelled copy of ``constant_120bpm`` at 960 PPQ / 8640 ticks while the
+    lesson it named exports 480 PPQ / 2880 ticks. Every probe passed, because the
+    case was internally consistent -- it simply described a tick domain the
+    browser never sees.
+
+    Internal consistency is exactly why this needs a negative test. Asserting only
+    that today's good file matches would pass just as happily against the broken
+    one.
+    """
+
+    generator = _generator()
+    payload = json.loads(json.dumps(generator.build()))
+
+    golden = next(c for c in payload["cases"] if c["case_id"] == "half_steps_one_string")
+    foreign = next(c for c in payload["cases"] if c["case_id"] == "constant_120bpm")
+    assert golden["ticks_per_quarter"] != foreign["ticks_per_quarter"], (
+        "the two cases must differ, or this test proves nothing"
+    )
+
+    # Keep the golden label; take the foreign timing domain wholesale. The result
+    # is self-consistent and wrong -- the original defect exactly.
+    for key in ("ticks_per_quarter", "total_ticks", "anchors"):
+        golden[key] = foreign[key]
+    golden["tick_to_seconds_from_anchors"] = foreign["tick_to_seconds_from_anchors"]
+    golden["seconds_to_tick_from_anchors"] = foreign["seconds_to_tick_from_anchors"]
+
+    tampered = tmp_path / "interpolation_vectors.json"
+    tampered.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    monkeypatch.setattr(generator, "VECTORS", tampered)
+
+    assert generator.main(["--check"]) == 1
+    assert "stale" in capsys.readouterr().err
+
+
+def test_the_tampered_case_would_still_satisfy_its_own_probes(tmp_path: Path) -> None:
+    """Shows why label-checking is needed: the bad case is internally valid.
+
+    Every probe in the foreign domain interpolates correctly against the foreign
+    anchors. Nothing inside the case is wrong; only its name is.
+    """
+
+    generator = _generator()
+    payload = generator.build()
+    foreign = next(c for c in payload["cases"] if c["case_id"] == "constant_120bpm")
+    anchors = tuple(
+        TimelineAnchorV1(
+            schema_version=entry["schema_version"],
+            tick=entry["tick"],
+            seconds=entry["seconds"],
+        )
+        for entry in foreign["anchors"]
+    )
+    for probe in foreign["tick_to_seconds_from_anchors"]:
+        assert tick_to_seconds_from_anchors(anchors, probe["tick"]) == pytest.approx(
+            probe["seconds"], abs=1e-9
+        )

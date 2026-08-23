@@ -162,9 +162,9 @@ def tick_to_seconds_from_anchors(anchors: Sequence[TimelineAnchorV1], tick: int)
 def seconds_to_tick_from_anchors(anchors: Sequence[TimelineAnchorV1], seconds: float) -> int:
     """Interpolate the tick at ``seconds``, rounding half away from zero.
 
-    The inverse of :func:`seconds_at_tick` over the same table. A segment with
-    zero elapsed seconds (possible only for a degenerate table) resolves to its
-    lower tick rather than dividing by zero.
+    The inverse of :func:`tick_to_seconds_from_anchors` over the same table. A
+    segment with zero elapsed seconds (possible only for a degenerate table)
+    resolves to its lower tick rather than dividing by zero.
     """
 
     table = validate_timeline_anchors(anchors)
