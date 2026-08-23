@@ -8,17 +8,23 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from master_all_strings.core.score.tempo import TempoChangeV1
 from master_all_strings.mvp.demo_library import load_demo_manifest
 from master_all_strings.mvp.models import MvpLessonSummaryV1, MvpProjectionResponseV1
 from master_all_strings.mvp.playback.serialization import serialize_lesson_playback_plan
 from master_all_strings.mvp.practice import loop_ticks_to_seconds
 from master_all_strings.mvp.projection.serialization import serialize_fretboard_projection
+from master_all_strings.presentation.timeline import (
+    anchors_to_payload,
+    build_timeline_anchors,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from master_all_strings.mvp.application import MvpApplication
 
 __all__ = [
     "atomic_write_text",
+    "projection_timeline_anchors",
     "export_demo_catalog",
     "export_instrument_catalog",
     "export_playback_json",
@@ -33,6 +39,33 @@ def atomic_write_text(path: Path, text: str) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(text, encoding="utf-8")
     os.replace(tmp, path)
+
+
+def projection_timeline_anchors(projection: object) -> list[dict[str, float | int]]:
+    """Derive the browser's tick-to-second anchor table for one projection.
+
+    Emitted beside the projection rather than inside it. ``FretboardScrollProjectionV1``
+    and its digest are deliberately untouched: adding a field there would move
+    ``behavior_digest`` and break the frozen DO-008 and DO-009 evidence for a
+    presentation concern that carries no musical content.
+    """
+
+    timeline = projection.timeline  # type: ignore[attr-defined]
+    tempo_changes = tuple(
+        TempoChangeV1(
+            schema_version=TempoChangeV1.SCHEMA_VERSION,
+            tick=change.tick,
+            microseconds_per_quarter=change.microseconds_per_quarter,
+        )
+        for change in projection.tempo_changes  # type: ignore[attr-defined]
+    )
+    return anchors_to_payload(
+        build_timeline_anchors(
+            ticks_per_quarter=timeline.ticks_per_quarter,
+            tempo_changes=tempo_changes,
+            total_ticks=timeline.total_ticks,
+        )
+    )
 
 
 def export_projection_json(
@@ -55,6 +88,9 @@ def export_projection_json(
             "one_string": [asdict(item) for item in response.one_string_teaching],
         },
         "projection": json.loads(serialize_fretboard_projection(response.projection)),
+        # DO-012: Musical Core authors the tick-to-second mapping; the browser
+        # only interpolates within it, so no tick converter lives in JavaScript.
+        "timeline_anchors": projection_timeline_anchors(response.projection),
     }
     atomic_write_text(output_path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
     return output_path

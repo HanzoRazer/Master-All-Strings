@@ -796,5 +796,15 @@
     "description": "Half-step melody visualized and practiced on one string",
     "objective": "Reduce difficulty by practicing half-step motion on one string",
     "teacher_note": "Teaching aid media is presentation-only; musical authority remains this assignment."
-  }
+  },
+  "timeline_anchors": [
+    {
+      "tick": 0,
+      "seconds": 0.0
+    },
+    {
+      "tick": 2880,
+      "seconds": 4.5
+    }
+  ]
 }

@@ -976,5 +976,15 @@
     "description": null,
     "objective": "Show a physical-position change across the phrase",
     "teacher_note": null
-  }
+  },
+  "timeline_anchors": [
+    {
+      "tick": 0,
+      "seconds": 0.0
+    },
+    {
+      "tick": 3840,
+      "seconds": 4.8
+    }
+  ]
 }
