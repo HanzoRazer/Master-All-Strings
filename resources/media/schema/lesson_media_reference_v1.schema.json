@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://master-all-strings.dev/schema/media/lesson-media-reference-v1.schema.json",
   "title": "LessonMediaReferenceV1",
+  "description": "Associates instructional intent with media without owning the lesson. timeline_binding (DO-012) is optional and opt-in: absent means detached, which is the MVP 2A behavior. Synchronization is never implied by media merely existing.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -23,6 +24,12 @@
       "enum": ["introduction", "explanation", "demonstration", "practice_hint", "review"]
     },
     "optional": { "type": "boolean" },
-    "sort_order": { "type": "integer" }
+    "sort_order": { "type": "integer" },
+    "timeline_binding": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "https://master-all-strings.dev/schema/presentation/media-timeline-binding-v1.schema.json" }
+      ]
+    }
   }
 }

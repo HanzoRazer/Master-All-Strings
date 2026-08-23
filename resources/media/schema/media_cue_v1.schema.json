@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://master-all-strings.dev/schema/media/media-cue-v1.schema.json",
   "title": "MediaCueV1",
+  "description": "Teaching-navigation metadata, never a musical event. time_seconds is a position inside the media asset; lesson_time_seconds (DO-012) is an explicit shared-transport binding. The two are distinct and must not be overloaded: a bound cue seeks the lesson, an unbound cue seeks only the media.",
   "type": "object",
   "additionalProperties": false,
   "required": ["cue_id", "time_seconds", "label"],
@@ -9,6 +10,7 @@
     "cue_id": { "type": "string", "minLength": 1 },
     "time_seconds": { "type": "number", "minimum": 0 },
     "label": { "type": "string", "minLength": 1 },
-    "concept_ref": { "type": ["string", "null"], "minLength": 1 }
+    "concept_ref": { "type": ["string", "null"], "minLength": 1 },
+    "lesson_time_seconds": { "type": ["number", "null"], "minimum": 0 }
   }
 }

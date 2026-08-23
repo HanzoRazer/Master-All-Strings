@@ -14,6 +14,7 @@ from master_all_strings.media.contracts import (
     MediaContractError,
     MediaSourceV1,
 )
+from master_all_strings.presentation.contracts import MediaTimelineBindingV1
 
 __all__ = ["MediaResolver", "ResolvedMediaV1", "compute_file_digest"]
 
@@ -33,6 +34,9 @@ class ResolvedMediaV1:
     role: str | None = None
     optional: bool = True
     diagnostic: str | None = None
+    # DO-012: carried through from the reference so the browser can synchronize
+    # without a second lookup. Absent means detached.
+    timeline_binding: MediaTimelineBindingV1 | None = None
 
 
 def _unavailable_text(media_id: str) -> LessonMediaV1:
@@ -75,6 +79,7 @@ class MediaResolver:
         reference_id: str | None = None,
         role: str | None = None,
         optional: bool = True,
+        timeline_binding: MediaTimelineBindingV1 | None = None,
     ) -> ResolvedMediaV1:
         if media.media_type is LessonMediaType.TEXT and media.source.text_body is not None:
             return ResolvedMediaV1(
@@ -85,6 +90,7 @@ class MediaResolver:
                 reference_id=reference_id,
                 role=role,
                 optional=optional,
+                timeline_binding=timeline_binding,
             )
         try:
             path = self.resolve_path(media.source.relative_path)
@@ -97,6 +103,7 @@ class MediaResolver:
                 reference_id=reference_id,
                 role=role,
                 optional=optional,
+                timeline_binding=timeline_binding,
                 diagnostic=str(exc),
             )
         if not path.is_file():
@@ -108,6 +115,7 @@ class MediaResolver:
                 reference_id=reference_id,
                 role=role,
                 optional=optional,
+                timeline_binding=timeline_binding,
                 diagnostic="Teaching media unavailable",
             )
         return ResolvedMediaV1(
@@ -118,6 +126,7 @@ class MediaResolver:
             reference_id=reference_id,
             role=role,
             optional=optional,
+            timeline_binding=timeline_binding,
         )
 
     def resolve_for_lesson(
@@ -135,6 +144,7 @@ class MediaResolver:
                         reference_id=ref.reference_id,
                         role=ref.role.value,
                         optional=ref.optional,
+                        timeline_binding=ref.timeline_binding,
                         diagnostic=(
                             f"Teaching media unavailable: unknown media_id {ref.media_id}"
                         ),
@@ -147,6 +157,7 @@ class MediaResolver:
                     reference_id=ref.reference_id,
                     role=ref.role.value,
                     optional=ref.optional,
+                    timeline_binding=ref.timeline_binding,
                 )
             )
         return tuple(resolved)
