@@ -9,7 +9,8 @@ do012_base_sha       = 2695993a601f6cc7b526294bdaac50ec5650cc23
 do012_merge_sha      = a4206873210031ba9947cacf9f9f6e1be9f1eb26   (PR #20, squash)
 alignment_head_sha   = 8f9ecbaf8324c5ba5cd5b9fc4e2331024025f204   (PR #21 final head)
 alignment_merge_sha  = 8402058ceeefec2ddd60faa682b2bd8ce5531731   (PR #21, merge commit)
-post_merge_main_sha  = 8402058ceeefec2ddd60faa682b2bd8ce5531731
+hardening_merge_sha  = 7e03f20d97283495459d6912d303559b000f079f   (PR #22, merge commit)
+post_merge_main_sha  = 7e03f20d97283495459d6912d303559b000f079f
 ```
 
 ## How MVP 2B arrived
@@ -196,3 +197,58 @@ contain its own hash. The two differ only by that field, so branching from
 either inherits the same implementation and the same evidence.
 
 No `mvp-2`, `mvp-2b`, or `v2.0.0` tag was created.
+
+---
+
+## Conformance hardening (PR #22)
+
+Auditing the published DO-012A against the full Dev Order text found four gaps.
+They were closed in a corrective verification PR — verifier and tests only —
+merged as a two-parent merge commit `7e03f20`.
+
+| Gap | Closed by |
+|---|---|
+| Verifier check 7, `sync_health` fixture naming, was never implemented | `verify_fixture_naming()` |
+| The `mvp-1` tag check had no negative test | moved-SHA and missing-tag cases |
+| `half_steps_one_string.target_repetitions == 2` rested in prose | `test_lesson_policy_invariant_do012a.py` |
+| Zone present with no declared tritone axis was untested | `zoneReadoutText()` regression suite |
+| The live-delta test passed on an empty comparison | closure invariant over the published range |
+
+The lesson-policy gap is the one that mattered most. Raising the golden lesson's
+repetition cap so it could demonstrate three passes would have been **invisible
+in the evidence** — the proof would have passed, on the golden lesson, with a
+screenshot to match. What it would actually have proved is that presentation may
+edit lesson content when the content is inconvenient. That invariant is now
+mechanical.
+
+One product file changed, with no behaviour change: `renderActiveZones()` lived
+in `app.js`, which is not importable without a DOM, so the D10 rule had no
+reachable seam. The formatting moved to `renderer.js` as a pure
+`zoneReadoutText()`. Browser smoke produces the same readout before and after —
+`Zone: ZONE_2, ZONE_1 · Anchor: 5-11, 0-6`.
+
+The closure test was wrong twice before it was right, which is worth recording.
+Comparing `origin/main` to `HEAD` passed on an empty comparison once published —
+true for the wrong reason. Asserting that emptiness instead failed on every
+feature branch, where a delta is exactly what should exist. The durable property
+is about the published *range*: everything between the DO-012 base and the
+recorded baseline must be free of deferred hygiene, which holds from wherever it
+is evaluated.
+
+### Hardened certification
+
+| Gate | Result |
+|---|---|
+| Linux (clean WSL clone, on `main`) | **2007 passed, 0 failed**, coverage 95.44% |
+| Windows | 2005 passed, 2 documented environment exceptions |
+| Node | 154 passed (was 146) |
+| Browser smoke | 0 console errors, 0 failed requests |
+| GitHub CI | [32671181416](https://github.com/HanzoRazer/Master-All-Strings/actions/runs/32671181416) green |
+| Publication verifier | PASS — now 8 of 8 checks |
+
+### Baseline supersession
+
+The pre-hardening baseline `2c72307` is **superseded**. Exactly one baseline is
+authoritative going forward, recorded as `mvp2b_baseline_sha`, and DO-013
+branches from the published `main` tip — not from `main~1`, and not from either
+feature head.

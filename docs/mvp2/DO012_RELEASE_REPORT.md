@@ -322,5 +322,6 @@ figures are in the publication report:
 | Windows | 1947 passed, 2 exceptions | 1978 passed, 2 exceptions |
 | Node | 146 passed | 146 passed |
 
-Full closeout, review findings, and the frozen baseline:
-[`DO012A_PUBLICATION_REPORT.md`](DO012A_PUBLICATION_REPORT.md).
+A subsequent conformance-hardening PR (#22) closed four verification gaps and
+re-froze the baseline. Full closeout, review findings, and the authoritative
+baseline: [`DO012A_PUBLICATION_REPORT.md`](DO012A_PUBLICATION_REPORT.md).
