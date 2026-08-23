@@ -248,7 +248,15 @@ is evaluated.
 
 ### Baseline supersession
 
-The pre-hardening baseline `2c72307` is **superseded**. Exactly one baseline is
-authoritative going forward, recorded as `mvp2b_baseline_sha`, and DO-013
-branches from the published `main` tip — not from `main~1`, and not from either
-feature head.
+```text
+mvp2b_baseline_sha = e7cf66768970275432f6b12b19ac883ada016166
+```
+
+The pre-hardening baseline `2c72307` is **superseded** and recorded as such, so
+exactly one baseline is authoritative rather than two competing identities.
+
+The field names the closeout commit carrying the complete report and evidence,
+because a commit cannot contain its own hash — the binding lives in the commit
+immediately after it. Externally, *branch DO-013 from the published MVP 2B
+baseline* means branch from the published `main` tip, not from `main~1` and not
+from either feature head.

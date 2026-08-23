@@ -403,7 +403,7 @@
   "alignment_merge_sha": "8402058ceeefec2ddd60faa682b2bd8ce5531731",
   "post_merge_main_sha": "7e03f20d97283495459d6912d303559b000f079f",
   "publication_status": "published_to_main_hardened",
-  "mvp2b_baseline_sha": null,
+  "mvp2b_baseline_sha": "e7cf66768970275432f6b12b19ac883ada016166",
   "merge_method": {
     "pr_21": "merge commit (two parents)",
     "parents": [
@@ -439,7 +439,7 @@
       "artifacts_note": "Screenshots were not committed: the post-merge closeout is restricted to the three authorized documentation paths, and widening it for images would have widened the exception."
     }
   },
-  "mvp2b_baseline_note": "Names the closeout commit that carries the complete report and evidence. This binding lives in a following commit because a commit cannot contain its own hash; the two differ only by this field, so branching from either inherits the same implementation and the same evidence.",
+  "mvp2b_baseline_note": "Sole authoritative published baseline; supersedes 2c72307. The field names the closeout commit carrying the complete report and evidence, because a commit cannot contain its own hash. Externally, branching from the published MVP 2B baseline means branching from the published main tip.",
   "superseded_baseline_sha": "2c72307e86d5ab03dfe8888b6be267d2e27540b1",
   "superseded_baseline_note": "The pre-hardening baseline. Superseded by the DO-012A conformance hardening merge; it is recorded only so the supersession is explicit. Exactly one baseline is authoritative and it is mvp2b_baseline_sha.",
   "hardening_pr": 22,
