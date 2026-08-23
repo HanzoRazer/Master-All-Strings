@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "follower_id": "media:half-steps-intro-text",
+  "sequence": 1,
+  "status": "detached",
+  "expected_time_seconds": null,
+  "actual_time_seconds": null,
+  "drift_ms": null,
+  "last_correction": null
+}

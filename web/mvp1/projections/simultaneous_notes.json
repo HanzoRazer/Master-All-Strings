@@ -620,5 +620,15 @@
     "description": "Independent simultaneous selections; chord-aware selection is deferred",
     "objective": "Show simultaneous onsets without claiming chord optimization",
     "teacher_note": null
-  }
+  },
+  "timeline_anchors": [
+    {
+      "tick": 0,
+      "seconds": 0.0
+    },
+    {
+      "tick": 1440,
+      "seconds": 1.7999999999999998
+    }
+  ]
 }

@@ -17,6 +17,11 @@ from master_all_strings.media.contracts import (
     MediaProvenanceV1,
     MediaSourceV1,
 )
+from master_all_strings.presentation.contracts import (
+    PRESENTATION_SCHEMA_VERSION,
+    MediaSyncMode,
+    MediaTimelineBindingV1,
+)
 
 __all__ = ["LessonMediaCatalogV1", "default_media_root", "load_media_catalog"]
 
@@ -67,6 +72,30 @@ def _cue_from_dict(raw: dict[str, object]) -> MediaCueV1:
         time_seconds=float(str(raw["time_seconds"])),
         label=str(raw["label"]),
         concept_ref=str(raw["concept_ref"]) if raw.get("concept_ref") is not None else None,
+        lesson_time_seconds=(
+            float(str(raw["lesson_time_seconds"]))
+            if raw.get("lesson_time_seconds") is not None
+            else None
+        ),
+    )
+
+
+def _optional_seconds(raw: dict[str, object], key: str) -> float | None:
+    value = raw.get(key)
+    return float(str(value)) if value is not None else None
+
+
+def _binding_from_dict(raw: dict[str, object]) -> MediaTimelineBindingV1:
+    return MediaTimelineBindingV1(
+        schema_version=str(raw.get("schema_version", PRESENTATION_SCHEMA_VERSION)),
+        binding_id=str(raw["binding_id"]),
+        lesson_id=str(raw["lesson_id"]),
+        media_id=str(raw["media_id"]),
+        sync_mode=MediaSyncMode(str(raw["sync_mode"])),
+        lesson_anchor_seconds=float(str(raw["lesson_anchor_seconds"])),
+        media_anchor_seconds=float(str(raw["media_anchor_seconds"])),
+        lesson_end_seconds=_optional_seconds(raw, "lesson_end_seconds"),
+        media_end_seconds=_optional_seconds(raw, "media_end_seconds"),
     )
 
 
@@ -119,6 +148,11 @@ def _reference_from_dict(raw: dict[str, object]) -> LessonMediaReferenceV1:
         role=LessonMediaRole(str(raw["role"])),
         optional=bool(raw.get("optional", True)),
         sort_order=int(str(raw.get("sort_order", 0))),
+        timeline_binding=(
+            _binding_from_dict(binding)
+            if isinstance(binding := raw.get("timeline_binding"), dict)
+            else None
+        ),
     )
 
 

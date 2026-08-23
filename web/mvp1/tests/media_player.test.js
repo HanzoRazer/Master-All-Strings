@@ -1,39 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { MediaPlayerController } from "../media-player.js";
+import { stubRoot } from "./dom_stub.js";
 
+// The local stub was replaced by the shared one in ./dom_stub.js, which models
+// dataset/disabled/classList the way a real element does.
 function fakeRoot() {
-  const store = new Map();
-  const root = {
-    hidden: true,
-    querySelector(sel) {
-      if (!store.has(sel)) {
-        const el = {
-          textContent: "",
-          hidden: false,
-          value: "1",
-          replaceChildren(...nodes) {
-            this.children = nodes;
-          },
-          addEventListener() {},
-          pause() {
-            this.paused = true;
-          },
-          play() {
-            this.paused = false;
-            return Promise.resolve();
-          },
-          load() {},
-          removeAttribute() {},
-          setAttribute() {},
-          children: [],
-        };
-        store.set(sel, el);
-      }
-      return store.get(sel);
-    },
-  };
-  return { root, store };
+  return stubRoot();
 }
 
 test("clear resets media state", () => {

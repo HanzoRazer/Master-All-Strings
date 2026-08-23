@@ -796,5 +796,15 @@
     "description": "Open-string exercise",
     "objective": "Prefer open-string positions",
     "teacher_note": null
-  }
+  },
+  "timeline_anchors": [
+    {
+      "tick": 0,
+      "seconds": 0.0
+    },
+    {
+      "tick": 2880,
+      "seconds": 3.5999999999999996
+    }
+  ]
 }

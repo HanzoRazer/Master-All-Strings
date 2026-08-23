@@ -59,8 +59,8 @@
       "duration_seconds": 3.0,
       "cues": [
         {"cue_id": "cue-zone1", "time_seconds": 1.0, "label": "Zone 1", "concept_ref": "zone_1"},
-        {"cue_id": "cue-half", "time_seconds": 0.2, "label": "Half steps", "concept_ref": "half_step"},
-        {"cue_id": "cue-one-string", "time_seconds": 1.8, "label": "Play on one string", "concept_ref": "one_string"},
+        {"cue_id": "cue-half", "time_seconds": 0.2, "label": "Half steps", "concept_ref": "half_step", "lesson_time_seconds": 0.5},
+        {"cue_id": "cue-one-string", "time_seconds": 1.8, "label": "Play on one string", "concept_ref": "one_string", "lesson_time_seconds": 3.5},
         {"cue_id": "cue-zone2", "time_seconds": 2.4, "label": "Zone 2", "concept_ref": "zone_2"}
       ],
       "provenance": {
@@ -99,7 +99,18 @@
       "media_id": "half-steps-demo-video",
       "role": "demonstration",
       "optional": true,
-      "sort_order": 2
+      "sort_order": 2,
+      "timeline_binding": {
+        "schema_version": "1.0.0",
+        "binding_id": "binding-half-steps-demo",
+        "lesson_id": "half_steps_one_string",
+        "media_id": "half-steps-demo-video",
+        "sync_mode": "synchronized",
+        "lesson_anchor_seconds": 0.0,
+        "media_anchor_seconds": 0.0,
+        "lesson_end_seconds": 3.0,
+        "media_end_seconds": 3.0
+      }
     }
   ]
 }

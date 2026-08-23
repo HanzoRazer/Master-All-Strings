@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/presentation/synchronization-health-v1.schema.json",
+  "title": "SynchronizationHealthV1",
+  "description": "Measured synchronization health for one follower. drift_ms is null when the follower could not be measured -- 'no measurement' and 'perfectly in sync' are different claims, so an unmeasurable status must not report zero drift.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "follower_id",
+    "sequence",
+    "status",
+    "expected_time_seconds",
+    "actual_time_seconds",
+    "drift_ms",
+    "last_correction"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "follower_id": { "type": "string", "minLength": 1 },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "status": {
+      "type": "string",
+      "enum": [
+        "synced",
+        "drifting",
+        "correcting",
+        "degraded",
+        "detached",
+        "unavailable",
+        "out_of_binding_range"
+      ]
+    },
+    "expected_time_seconds": { "type": ["number", "null"] },
+    "actual_time_seconds": { "type": ["number", "null"] },
+    "drift_ms": { "type": ["number", "null"] },
+    "last_correction": {
+      "type": ["string", "null"],
+      "enum": ["none", "resample", "hard_seek", null]
+    }
+  },
+  "allOf": [
+    {
+      "description": "A measured status must carry the measurement it claims.",
+      "if": {
+        "properties": {
+          "status": { "enum": ["synced", "drifting", "correcting"] }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "expected_time_seconds": { "type": "number" },
+          "actual_time_seconds": { "type": "number" },
+          "drift_ms": { "type": "number" }
+        }
+      }
+    },
+    {
+      "description": "An unmeasurable status must not report drift.",
+      "if": {
+        "properties": {
+          "status": {
+            "enum": ["degraded", "detached", "unavailable", "out_of_binding_range"]
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "drift_ms": { "type": "null" }
+        }
+      }
+    }
+  ]
+}

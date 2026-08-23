@@ -436,5 +436,15 @@
     "description": null,
     "objective": "Valid teacher override controls selection origin",
     "teacher_note": "Use the B string for the first note"
-  }
+  },
+  "timeline_anchors": [
+    {
+      "tick": 0,
+      "seconds": 0.0
+    },
+    {
+      "tick": 960,
+      "seconds": 1.2
+    }
+  ]
 }

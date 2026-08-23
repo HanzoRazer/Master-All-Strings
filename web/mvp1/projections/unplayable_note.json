@@ -530,5 +530,15 @@
     "description": null,
     "objective": "Keep impossible notes visible as unplayable",
     "teacher_note": null
-  }
+  },
+  "timeline_anchors": [
+    {
+      "tick": 0,
+      "seconds": 0.0
+    },
+    {
+      "tick": 1440,
+      "seconds": 1.7999999999999998
+    }
+  ]
 }

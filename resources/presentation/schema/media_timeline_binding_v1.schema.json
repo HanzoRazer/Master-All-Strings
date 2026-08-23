@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/presentation/media-timeline-binding-v1.schema.json",
+  "title": "MediaTimelineBindingV1",
+  "description": "Explicit lesson-to-media time relationship. Synchronization is opt-in and declared; there is no inference from titles, durations, or filenames. V1 is affine and 1:1 -- media_time = media_anchor_seconds + (lesson_time - lesson_anchor_seconds). Outside a declared end the follower reports out_of_binding_range rather than extrapolating.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "binding_id",
+    "lesson_id",
+    "media_id",
+    "sync_mode",
+    "lesson_anchor_seconds",
+    "media_anchor_seconds",
+    "lesson_end_seconds",
+    "media_end_seconds"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "binding_id": { "type": "string", "minLength": 1 },
+    "lesson_id": { "type": "string", "minLength": 1 },
+    "media_id": { "type": "string", "minLength": 1 },
+    "sync_mode": {
+      "type": "string",
+      "enum": ["detached", "synchronized"]
+    },
+    "lesson_anchor_seconds": { "type": "number", "minimum": 0 },
+    "media_anchor_seconds": { "type": "number", "minimum": 0 },
+    "lesson_end_seconds": { "type": ["number", "null"], "minimum": 0 },
+    "media_end_seconds": { "type": ["number", "null"], "minimum": 0 }
+  }
+}

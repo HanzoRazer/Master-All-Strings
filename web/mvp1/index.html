@@ -6,6 +6,7 @@
     <title>Master All Strings — Play &amp; Practice</title>
     <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="./media-player.css" />
+    <link rel="stylesheet" href="./teaching-timeline.css" />
   </head>
   <body>
     <div class="app">
@@ -58,6 +59,13 @@
           <p class="hint subtle" id="knownLimitations"></p>
           <section id="teachingMedia" class="teaching-media" hidden>
             <h2>Teaching Media</h2>
+            <div class="sync-controls" data-sync-controls hidden>
+              <label class="toggle-field">
+                <input id="syncEnabled" type="checkbox" />
+                <span>Sync to lesson</span>
+              </label>
+              <p id="syncHealth" class="hint subtle" data-sync-health>Detached</p>
+            </div>
             <p class="status" data-media-status>No teaching media</p>
             <div data-media-body></div>
             <video data-media-video controls playsinline hidden></video>
@@ -116,6 +124,7 @@
             <span class="legend-half-step">Half-step crossing</span>
           </div>
           <p id="zoneStatus" class="hint subtle">No Zone semantic artifact</p>
+          <p id="zoneActive" class="hint subtle zone-active">Active Zone: none</p>
           <label class="field">
             <span>View</span>
             <select id="teachingView">

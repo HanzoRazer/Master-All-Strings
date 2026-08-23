@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0.0",
+  "lesson_id": "half_steps_one_string",
+  "sequence": 42,
+  "position_tick": 2880,
+  "position_seconds": 1.5,
+  "playing": true,
+  "playback_rate": 0.75,
+  "loop_enabled": true,
+  "repetition_index": 2,
+  "loop_start_tick": 1920,
+  "loop_end_tick": 4800,
+  "loop_start_seconds": 1.0,
+  "loop_end_seconds": 2.5
+}

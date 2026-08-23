@@ -12,7 +12,9 @@ import {
 } from "./practice_actions.js";
 import { focusRangeFromEvaluation, renderResultsPanel } from "./results.js";
 import { Transport } from "./transport.js";
-import { MediaPlayerController } from "./media-player.js";
+import { MediaPlayerController, MediaSyncMode } from "./media-player.js";
+import { MediaSyncFollower } from "./media-sync.js";
+import { TeachingTimeline, resolveFocusRangeSeconds } from "./teaching-timeline.js";
 
 const $ = (id) => document.getElementById(id);
 const state = {
@@ -28,6 +30,9 @@ const state = {
 };
 
 const transport = new Transport();
+// One coordinator over the one transport. It owns no clock; see
+// docs/architecture/SYNCHRONIZED_TEACHING_TIMELINE.md.
+const teachingTimeline = new TeachingTimeline({ transport });
 const midiInput = new WebMidiInput();
 $("btnFakeMidi").hidden = !midiInput.fakeMode;
 const capture = new PerformanceCaptureController({
@@ -42,6 +47,18 @@ const practiceActions = new PracticeActionController({
     $("resultsStatus").textContent = message;
     $("statusLine").textContent = message;
   },
+  // DO-012: ISOLATE_PASSAGE now becomes a real loop. The Educational Engine
+  // still chooses the passage; this only converts its authoritative focus
+  // ticks into the seconds the shared transport speaks.
+  resolveFocusRange: (startTick, endTick) => {
+    if (!teachingTimeline.ready) return null;
+    try {
+      return resolveFocusRangeSeconds(teachingTimeline.anchors, startTick, endTick);
+    } catch (_) {
+      return null;
+    }
+  },
+  targetRepetitions: () => state.practice?.policy.loop.target_repetitions ?? null,
 });
 const params = new URLSearchParams(window.location.search);
 if (params.get("devGolden") === "1") {
@@ -79,7 +96,95 @@ const mediaPlayer = new MediaPlayerController({
   onStatus: (message) => {
     $("statusLine").textContent = message;
   },
+  // Synchronized media routes its controls through the shared transport rather
+  // than becoming a second thing that owns play state, position, or rate.
+  onSeekLesson: (seconds) => transport.seek(seconds),
+  onTransportPlay: () => transport.play(),
+  onTransportPause: () => transport.pause(),
+  onTransportRate: (rate) => transport.setRate(rate),
+  onBindingChange: (binding) => {
+    mediaFollower.setBinding(binding);
+    mediaFollower.setMode(
+      mediaPlayer.synchronized ? "synchronized" : "detached",
+    );
+  },
 });
+
+const mediaFollower = new MediaSyncFollower({
+  id: "media",
+  getElement: () => mediaPlayer.element,
+  onHealth: (health) => mediaPlayer.renderHealth(health),
+});
+teachingTimeline.addFollower(mediaFollower);
+
+// The fretboard and Zone display are followers too: they read the timeline
+// rather than deriving musical position for themselves.
+teachingTimeline.addFollower({
+  id: "zone",
+  onPlayhead: () => renderActiveZones(),
+  onClear: () => {
+    $("zoneActive").textContent = "Active Zone: none";
+  },
+});
+
+/**
+ * Mirror synchronization state onto document.body as data- attributes.
+ *
+ * The window-level diagnostics object is only reachable from the page's own
+ * JavaScript context; a headless driver evaluating in an isolated world sees
+ * the DOM but not page globals. Mirroring here makes the same evidence
+ * capturable without a bridge, at the cost of a few string writes per publish.
+ *
+ * Non-public: these attributes are a debug seam, not an API.
+ */
+teachingTimeline.addFollower({
+  id: "diagnostics",
+  onTimeline: (state) => {
+    const data = document.body.dataset;
+    data.masLessonId = state.lesson_id;
+    data.masSequence = String(state.sequence);
+    data.masPositionTick = String(state.position_tick);
+    data.masPositionSeconds = state.position_seconds.toFixed(6);
+    data.masPlaying = String(state.playing);
+    data.masPlaybackRate = String(state.playback_rate);
+    data.masLoopEnabled = String(state.loop_enabled);
+    data.masLoopStartTick = state.loop_start_tick === null ? "" : String(state.loop_start_tick);
+    data.masLoopEndTick = state.loop_end_tick === null ? "" : String(state.loop_end_tick);
+    data.masRepetitionIndex = String(state.repetition_index);
+  },
+  onPlayhead: () => {
+    const data = document.body.dataset;
+    const health = mediaFollower.health();
+    data.masSyncMode = mediaPlayer.syncMode;
+    data.masSyncStatus = health ? health.status : "";
+    data.masSyncDriftMs = health && health.drift_ms !== null ? health.drift_ms.toFixed(3) : "";
+    data.masHardSeekCount = String(mediaFollower.hardSeekCount);
+    data.masBindingId = mediaPlayer.activeBinding()?.binding_id ?? "";
+    data.masActiveZones = renderer
+      .activeZones()
+      .map((zone) => zone.zoneId)
+      .join(" ");
+  },
+  onClear: () => {
+    for (const key of Object.keys(document.body.dataset)) {
+      if (key.startsWith("mas")) delete document.body.dataset[key];
+    }
+  },
+});
+
+function renderActiveZones() {
+  const zones = renderer.activeZones();
+  const node = $("zoneActive");
+  if (!zones.length) {
+    node.textContent = "Active Zone: none";
+    node.dataset.zoneIds = "";
+    return;
+  }
+  // Simultaneous notes may occupy different Zones. Show the set; naming one
+  // "dominant" Zone would invent a semantic the artifact does not assert.
+  node.textContent = `Active Zone: ${zones.map((zone) => zone.zoneId).join(", ")}`;
+  node.dataset.zoneIds = zones.map((zone) => zone.zoneId).join(" ");
+}
 
 transport.subscribe((event) => {
   if (event.type === "complete") $("statusLine").textContent = "Complete";
@@ -195,6 +300,29 @@ function commitLoop() {
   }
 }
 
+/**
+ * Mirror the transport's loop into the loop controls.
+ *
+ * The transport stays authoritative: this reads from it after something else
+ * (an Educational action) has set a loop, so the inputs never disagree with
+ * what is actually looping.
+ */
+function syncLoopControlsFromTransport() {
+  const loop = transport.loop;
+  if (!loop || !loop.enabled) {
+    $("loopEnabled").checked = false;
+    renderer.setLoop(null);
+    $("loopRange").textContent = "Loop off";
+    return;
+  }
+  $("loopEnabled").checked = true;
+  $("loopStart").value = String(loop.startSeconds);
+  $("loopEnd").value = String(loop.endSeconds);
+  renderer.setLoop(loop);
+  $("loopRange").textContent =
+    `${loop.startSeconds.toFixed(2)}s–${loop.endSeconds.toFixed(2)}s`;
+}
+
 function configureLoopControls(practice, duration) {
   for (const input of [$("loopStart"), $("loopEnd")]) {
     input.max = String(duration);
@@ -240,6 +368,20 @@ function applySessionArtifacts(payload, playback, practice) {
   state.playback = playback;
   state.practice = practice;
   renderer.load(projection);
+  // Bind the coordinator to this lesson's Core-authored anchor table. Clearing
+  // first is deliberate: stale anchors would mis-time the new lesson.
+  const lessonIdentity = projection.content_id || playback.content_id;
+  if (Array.isArray(payload.timeline_anchors) && payload.timeline_anchors.length) {
+    teachingTimeline.setLesson({
+      lessonId: lessonIdentity,
+      anchors: payload.timeline_anchors,
+    });
+  } else {
+    // No anchors means no derived ticks. The lesson still plays; only the
+    // timeline followers stand down.
+    teachingTimeline.clearLesson();
+    $("statusLine").textContent = "Lesson has no timeline anchors; sync unavailable";
+  }
   const oneString = payload.teaching_aids?.one_string || [];
   $("teachingString").replaceChildren(
     ...oneString.map((item) => {
@@ -393,6 +535,17 @@ function tick(now) {
   $("audioStatus").dataset.activeVoices = String(synth.registry.size);
   document.body.dataset.transportPositionSeconds = seconds.toFixed(6);
   renderer.renderFrame(seconds);
+  // Active events are known only after the frame is rendered, so the playhead
+  // is published from here rather than from a transport event.
+  if (teachingTimeline.ready) {
+    teachingTimeline.setActiveEventIds(renderer.activeEventIds());
+    teachingTimeline.publish("frame", now);
+    const playhead = teachingTimeline.playheadState(now);
+    if (playhead) {
+      document.body.dataset.playheadTick = String(playhead.position_tick);
+      document.body.dataset.playheadEventIds = playhead.active_event_ids.join(" ");
+    }
+  }
   requestAnimationFrame(tick);
 }
 
@@ -502,6 +655,7 @@ $("btnApplyPrimary").addEventListener("click", async () => {
   const action = state.lastEvaluation?.evaluation?.primary_next_action;
   if (!action) return;
   await practiceActions.apply(action, educationApi);
+  syncLoopControlsFromTransport();
   if (action.action_type === "isolate_passage" && state.payload?.projection) {
     renderer.setFocusRange(
       focusRangeFromEvaluation(
@@ -531,6 +685,21 @@ $("btnGoldenDemo").addEventListener("click", async () => {
   } catch (error) {
     $("resultsStatus").textContent = error.message || "Golden demo failed";
   }
+});
+$("syncEnabled").addEventListener("change", (event) => {
+  const requested = event.target.checked
+    ? MediaSyncMode.SYNCHRONIZED
+    : MediaSyncMode.DETACHED;
+  const actual = mediaPlayer.setSyncMode(requested);
+  // setSyncMode refuses to synchronize unbound media, so reflect what happened
+  // rather than what was asked for.
+  event.target.checked = actual === MediaSyncMode.SYNCHRONIZED;
+  mediaFollower.setMode(actual);
+  $("statusLine").textContent =
+    actual === MediaSyncMode.SYNCHRONIZED
+      ? "Media synchronized to the lesson"
+      : "Media detached";
+  teachingTimeline.publish("sync-mode");
 });
 $("zoneOverlay").addEventListener("change", (event) => {
   renderer.setZoneOverlay(event.target.checked);
@@ -598,6 +767,31 @@ window.__mvp2a = {
   captureDiagnostics,
   educationApi,
   setStage,
+  teachingTimeline,
+  mediaPlayer,
+  mediaFollower,
+  practiceActions,
+  syncLoopControlsFromTransport,
+};
+
+/**
+ * Non-public diagnostics seam for browser smoke capture (DO-012).
+ *
+ * Named separately from __mvp2a so synchronization evidence has a stable home
+ * as more teaching surfaces arrive. Not an API: shape may change with the
+ * tranche that reads it.
+ */
+window.__masDiagnostics = {
+  teachingTimeline: () => ({
+    coordinator: teachingTimeline.diagnostics(),
+    media: {
+      syncMode: mediaPlayer.syncMode,
+      binding: mediaPlayer.activeBinding(),
+      health: mediaFollower.health(),
+      hardSeekCount: mediaFollower.hardSeekCount,
+    },
+    zones: renderer.activeZones(),
+  }),
 };
 bootstrap();
 setStage("lesson");

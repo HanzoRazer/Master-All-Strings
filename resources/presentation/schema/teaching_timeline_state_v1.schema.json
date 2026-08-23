@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/presentation/teaching-timeline-state-v1.schema.json",
+  "title": "TeachingTimelineStateV1",
+  "description": "A derived snapshot of the shared musical transport. Describes transport state; never owns it. Loop bounds are present if and only if loop_enabled is true.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "lesson_id",
+    "sequence",
+    "position_tick",
+    "position_seconds",
+    "playing",
+    "playback_rate",
+    "loop_enabled",
+    "repetition_index",
+    "loop_start_tick",
+    "loop_end_tick",
+    "loop_start_seconds",
+    "loop_end_seconds"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "lesson_id": { "type": "string", "minLength": 1 },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "position_tick": { "type": "integer", "minimum": 0 },
+    "position_seconds": { "type": "number", "minimum": 0 },
+    "playing": { "type": "boolean" },
+    "playback_rate": { "type": "number", "exclusiveMinimum": 0 },
+    "loop_enabled": { "type": "boolean" },
+    "repetition_index": { "type": "integer", "minimum": 0 },
+    "loop_start_tick": { "type": ["integer", "null"], "minimum": 0 },
+    "loop_end_tick": { "type": ["integer", "null"], "minimum": 0 },
+    "loop_start_seconds": { "type": ["number", "null"], "minimum": 0 },
+    "loop_end_seconds": { "type": ["number", "null"], "minimum": 0 }
+  },
+  "allOf": [
+    {
+      "description": "An enabled loop must carry all four bounds: a follower must never infer its own repeat range.",
+      "if": { "properties": { "loop_enabled": { "const": true } } },
+      "then": {
+        "properties": {
+          "loop_start_tick": { "type": "integer" },
+          "loop_end_tick": { "type": "integer" },
+          "loop_start_seconds": { "type": "number" },
+          "loop_end_seconds": { "type": "number" }
+        }
+      }
+    },
+    {
+      "description": "A disabled loop must carry no bounds, so stale bounds cannot be mistaken for an active loop.",
+      "if": { "properties": { "loop_enabled": { "const": false } } },
+      "then": {
+        "properties": {
+          "loop_start_tick": { "type": "null" },
+          "loop_end_tick": { "type": "null" },
+          "loop_start_seconds": { "type": "null" },
+          "loop_end_seconds": { "type": "null" }
+        }
+      }
+    }
+  ]
+}

@@ -12,8 +12,11 @@ from master_all_strings.media.contracts import (
     MediaSourceV1,
 )
 from master_all_strings.media.resolver import ResolvedMediaV1
+from master_all_strings.presentation.contracts import MediaTimelineBindingV1
+from master_all_strings.presentation.serialization import to_dict as presentation_to_dict
 
 __all__ = [
+    "binding_to_dict",
     "cue_to_dict",
     "media_to_dict",
     "provenance_to_dict",
@@ -29,7 +32,14 @@ def cue_to_dict(cue: MediaCueV1) -> dict[str, Any]:
         "time_seconds": cue.time_seconds,
         "label": cue.label,
         "concept_ref": cue.concept_ref,
+        "lesson_time_seconds": cue.lesson_time_seconds,
     }
+
+
+def binding_to_dict(binding: MediaTimelineBindingV1 | None) -> dict[str, Any] | None:
+    """Reuse the presentation encoder so one contract has one wire shape."""
+
+    return presentation_to_dict(binding) if binding is not None else None
 
 
 def source_to_dict(source: MediaSourceV1) -> dict[str, Any]:
@@ -74,6 +84,7 @@ def reference_to_dict(ref: LessonMediaReferenceV1) -> dict[str, Any]:
         "role": ref.role.value,
         "optional": ref.optional,
         "sort_order": ref.sort_order,
+        "timeline_binding": binding_to_dict(ref.timeline_binding),
     }
 
 
@@ -86,4 +97,5 @@ def resolved_to_dict(item: ResolvedMediaV1) -> dict[str, Any]:
         "role": item.role,
         "optional": item.optional,
         "media": media_to_dict(item.media),
+        "timeline_binding": binding_to_dict(item.timeline_binding),
     }

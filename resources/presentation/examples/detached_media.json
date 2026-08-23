@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "binding_id": "binding-detached",
+  "lesson_id": "half_steps_one_string",
+  "media_id": "half-steps-intro-text",
+  "sync_mode": "detached",
+  "lesson_anchor_seconds": 0.0,
+  "media_anchor_seconds": 0.0,
+  "lesson_end_seconds": null,
+  "media_end_seconds": null
+}

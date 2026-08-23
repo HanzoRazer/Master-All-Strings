@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from master_all_strings.core.foundation import require_finite, require_non_empty
+from master_all_strings.presentation.contracts import MediaTimelineBindingV1
 
 __all__ = [
     "MEDIA_SCHEMA_VERSION",
@@ -17,6 +18,7 @@ __all__ = [
     "MediaCueV1",
     "MediaProvenanceV1",
     "MediaSourceV1",
+    "MediaTimelineBindingV1",
 ]
 
 MEDIA_SCHEMA_VERSION = "1.0.0"
@@ -64,6 +66,10 @@ class MediaCueV1:
     time_seconds: float
     label: str
     concept_ref: str | None = None
+    # DO-012: an explicit shared-transport binding for this cue. Distinct from
+    # ``time_seconds``, which remains a position *inside the media asset*. A
+    # bound cue seeks the lesson; an unbound cue seeks only the media.
+    lesson_time_seconds: float | None = None
 
     def __post_init__(self) -> None:
         _require_identifier(self.cue_id, "cue_id")
@@ -73,6 +79,16 @@ class MediaCueV1:
         require_non_empty(self.label, "label")
         if self.concept_ref is not None:
             _require_identifier(self.concept_ref, "concept_ref")
+        if self.lesson_time_seconds is not None:
+            require_finite(self.lesson_time_seconds, "lesson_time_seconds")
+            if self.lesson_time_seconds < 0:
+                raise MediaContractError("lesson_time_seconds must be nonnegative")
+
+    @property
+    def is_transport_bound(self) -> bool:
+        """Whether activating this cue should seek the shared transport."""
+
+        return self.lesson_time_seconds is not None
 
 
 @dataclass(frozen=True)
@@ -178,6 +194,9 @@ class LessonMediaReferenceV1:
     role: LessonMediaRole
     optional: bool = True
     sort_order: int = 0
+    # DO-012: opt-in synchronization. Absent means detached, which is the
+    # MVP 2A behavior; synchronization is never implied by media merely existing.
+    timeline_binding: MediaTimelineBindingV1 | None = None
 
     def __post_init__(self) -> None:
         if self.schema_version != MEDIA_SCHEMA_VERSION:
@@ -192,3 +211,18 @@ class LessonMediaReferenceV1:
             raise MediaContractError("optional must be a boolean")
         if isinstance(self.sort_order, bool) or not isinstance(self.sort_order, int):
             raise MediaContractError("sort_order must be an integer")
+        if self.timeline_binding is not None:
+            if not isinstance(self.timeline_binding, MediaTimelineBindingV1):
+                raise MediaContractError(
+                    "timeline_binding must be MediaTimelineBindingV1 when provided"
+                )
+            # A binding that names a different lesson or asset would synchronize
+            # something other than the media this reference is about.
+            if self.timeline_binding.lesson_id != self.lesson_key:
+                raise MediaContractError(
+                    "timeline_binding lesson_id must match the reference lesson_key"
+                )
+            if self.timeline_binding.media_id != self.media_id:
+                raise MediaContractError(
+                    "timeline_binding media_id must match the reference media_id"
+                )
