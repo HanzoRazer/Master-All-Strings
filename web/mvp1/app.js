@@ -1,6 +1,10 @@
 import { AudioScheduler } from "./audio_scheduler.js";
 import { AudioReadiness, ReferenceSynth } from "./audio.js";
-import { FretboardRenderer, oneStringViewProjection } from "./renderer.js";
+import {
+  FretboardRenderer,
+  oneStringViewProjection,
+  zoneReadoutText,
+} from "./renderer.js";
 import { WebMidiInput } from "./midi_input.js";
 import {
   LocalPerformanceApi,
@@ -184,13 +188,10 @@ function renderActiveZones() {
   }
   // Simultaneous notes may occupy different Zones. Show the set; naming one
   // "dominant" Zone would invent a semantic the artifact does not assert.
+  // Formatting lives in renderer.js so the rule is unit-testable.
   const zoneIds = zones.map((zone) => zone.zoneId);
-  // Tritone axes are reported only where the artifact declares them, and
-  // deduplicated so two notes sharing an axis do not name it twice.
   const axes = [...new Set(zones.map((zone) => zone.tritoneAxisId).filter(Boolean))];
-  node.textContent = axes.length
-    ? `Zone: ${zoneIds.join(", ")} · Anchor: ${axes.join(", ")}`
-    : `Zone: ${zoneIds.join(", ")}`;
+  node.textContent = zoneReadoutText(zones);
   node.dataset.zoneIds = zoneIds.join(" ");
   node.dataset.tritoneAxes = axes.join(" ");
 }

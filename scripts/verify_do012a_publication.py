@@ -91,6 +91,14 @@ NAMED_SYNCHRONIZATION_UTILITIES: tuple[str, ...] = (
 
 EVIDENCE_PATH = Path("docs/mvp2/DO012_INTEGRATION_EVIDENCE.json")
 
+PRESENTATION_EXAMPLES = Path("resources/presentation/examples")
+
+#: Health fixtures carry one authoritative prefix. The pre-alignment name was
+#: ``health_*``; leaving both alive would mean two naming conventions competing
+#: inside the same evidence set, and a reader could not tell which was current.
+SYNC_HEALTH_PREFIX = "sync_health_"
+LEGACY_HEALTH_PREFIX = "health_"
+
 
 # --- pure predicates ---------------------------------------------------------
 #
@@ -149,6 +157,34 @@ def inconsistent_baseline_fields(payload: dict[str, Any]) -> tuple[str, ...]:
     if baseline is not None and merge is None:
         problems.append("mvp2b_baseline_sha recorded without alignment_merge_sha")
     return tuple(problems)
+
+
+def verify_fixture_naming(fixture_names: Iterable[str]) -> tuple[str, ...]:
+    """Health fixtures using the superseded ``health_*`` name, sorted.
+
+    Takes the names rather than reading the directory, so the rule can be tested
+    against synthetic sets. Only health fixtures are policed: every other
+    fixture in the directory has its own naming and is none of this check's
+    business.
+    """
+
+    offenders: list[str] = []
+    for name in fixture_names:
+        stem = name.rsplit("/", 1)[-1]
+        if stem.startswith(SYNC_HEALTH_PREFIX):
+            continue
+        if stem.startswith(LEGACY_HEALTH_PREFIX):
+            offenders.append(stem)
+    return tuple(sorted(offenders))
+
+
+def presentation_fixture_names(root: Path | None = None) -> tuple[str, ...]:
+    """Every presentation example fixture, including the invalid subdirectory."""
+
+    base = root or (REPO_ROOT / PRESENTATION_EXAMPLES)
+    if not base.is_dir():
+        return ()
+    return tuple(sorted(path.name for path in base.rglob("*.json")))
 
 
 def contracts_declaring_revision_id(module: Any) -> tuple[str, ...]:
@@ -263,6 +299,14 @@ def run(base: str, head: str, *, require_publication: bool = False) -> int:
         results,
         not absent,
         "named utilities are importable" + (f" (missing {', '.join(absent)})" if absent else ""),
+    )
+
+    stale = verify_fixture_naming(presentation_fixture_names())
+    _check(
+        results,
+        not stale,
+        "health fixtures use the sync_health_ prefix"
+        + (f" (found {', '.join(stale)})" if stale else ""),
     )
 
     evidence = load_evidence()

@@ -86,11 +86,44 @@ def test_a_similarly_named_path_is_not_caught(verifier: ModuleType) -> None:
     assert verifier.deferred_hygiene_in(delta) == ()
 
 
-def test_the_live_alignment_delta_is_clean(verifier: ModuleType) -> None:
-    """The guard, applied to the change set actually under review."""
+def test_the_published_alignment_range_carries_no_deferred_hygiene(
+    verifier: ModuleType,
+) -> None:
+    """The closure invariant, asserted over published history.
 
-    delta = verifier.changed_paths("origin/main", "HEAD")
+    Two earlier forms of this were wrong in opposite directions. Comparing
+    origin/main to HEAD passed on an empty comparison once published -- true for
+    the wrong reason. Asserting that emptiness instead then failed on every
+    feature branch, where a delta is exactly what is supposed to exist.
+
+    The durable property is about the published range, not the current checkout:
+    everything between the DO-012 merge and the recorded baseline must be free of
+    deferred hygiene, and that stays true from whatever branch it is evaluated.
+    The synthetic tests above prove the detector catches a delta that is not
+    clean.
+    """
+
+    evidence = json.loads(
+        (REPO_ROOT / "docs" / "mvp2" / "DO012_INTEGRATION_EVIDENCE.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    baseline = evidence["mvp2b_baseline_sha"]
+    assert baseline, "no published baseline recorded"
+    delta = verifier.changed_paths(verifier.DO012_BASE_SHA, baseline)
+    assert delta, "the published range should not be empty"
     assert verifier.deferred_hygiene_in(delta) == ()
+
+
+def test_the_recorded_baseline_is_published_history(verifier: ModuleType) -> None:
+    """A baseline nobody can branch from is not a baseline."""
+
+    evidence = json.loads(
+        (REPO_ROOT / "docs" / "mvp2" / "DO012_INTEGRATION_EVIDENCE.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert verifier.is_ancestor(evidence["mvp2b_baseline_sha"], "origin/main")
 
 
 # --- evidence completeness ---------------------------------------------------
@@ -239,16 +272,23 @@ def test_the_verifier_passes_against_the_current_head(verifier: ModuleType) -> N
     assert verifier.main(["--base", "origin/main", "--head", "HEAD"]) == 0
 
 
-def test_requiring_publication_fields_fails_before_publication(
+def test_the_published_baseline_satisfies_the_publication_gate(
     verifier: ModuleType,
 ) -> None:
-    """Before the merge those fields are legitimately unset, and must not pass."""
+    """MVP 2B is published, so the stricter gate must now pass.
+
+    This assertion inverted at publication: before the merge those fields were
+    legitimately unset and the gate had to fail. Asserting the old direction now
+    would be asserting that publication never happened. The "unset must fail"
+    direction is still covered, synthetically, by
+    test_publication_fields_are_only_required_when_asked.
+    """
 
     assert (
         verifier.main(
             ["--base", "origin/main", "--head", "HEAD", "--require-publication"]
         )
-        == 1
+        == 0
     )
 
 
@@ -280,3 +320,80 @@ def test_an_unknown_ref_reports_no_parents_rather_than_raising(
     """The verifier reports; it is not the place a bad ref explodes."""
 
     assert verifier.merge_parent_count("0000000000000000000000000000000000000000") == 0
+
+
+# --- publication identity (DO-012A gap 2) ------------------------------------
+
+
+def test_the_immutable_predecessor_is_the_expected_commit(verifier: ModuleType) -> None:
+    assert verifier.mvp1_unchanged()
+    assert verifier.MVP1_RELEASE_SHA == "ac38819b23ed9d85b651755e7612f42d7d528ddc"
+
+
+def test_a_moved_mvp1_tag_is_caught(
+    verifier: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A tag that no longer resolves to the frozen release must fail the check.
+
+    Without this the tag check could silently degrade to "some tag exists": the
+    one thing mvp-1 is for is being the commit it has always been.
+    """
+
+    monkeypatch.setattr(verifier, "MVP1_RELEASE_SHA", "0" * 40)
+    assert verifier.mvp1_unchanged() is False
+
+
+def test_a_missing_tag_reports_unchanged_false_rather_than_raising(
+    verifier: ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(verifier, "_git", lambda *args: "")
+    assert verifier.mvp1_unchanged() is False
+
+
+# --- fixture naming (DO-012A gap 1) ------------------------------------------
+
+
+def test_canonical_health_fixture_names_pass(verifier: ModuleType) -> None:
+    names = ["sync_health_synced.json", "sync_health_degraded.json", "bounded_loop.json"]
+    assert verifier.verify_fixture_naming(names) == ()
+
+
+def test_a_legacy_health_fixture_name_is_caught(verifier: ModuleType) -> None:
+    """Two competing conventions in one evidence set is the failure mode."""
+
+    names = ["sync_health_synced.json", "health_synced.json"]
+    assert verifier.verify_fixture_naming(names) == ("health_synced.json",)
+
+
+def test_several_legacy_names_are_reported_sorted(verifier: ModuleType) -> None:
+    names = ["health_synced.json", "health_degraded.json", "sync_health_detached.json"]
+    assert verifier.verify_fixture_naming(names) == (
+        "health_degraded.json",
+        "health_synced.json",
+    )
+
+
+def test_nested_paths_are_judged_on_their_basename(verifier: ModuleType) -> None:
+    names = ["invalid/health_unmeasurable_with_drift.json"]
+    assert verifier.verify_fixture_naming(names) == (
+        "health_unmeasurable_with_drift.json",
+    )
+
+
+def test_unrelated_fixtures_are_not_policed(verifier: ModuleType) -> None:
+    """Only health fixtures carry this rule; the rest have their own names."""
+
+    names = ["timeline_state_idle.json", "offset_binding.json", "playhead_state.json"]
+    assert verifier.verify_fixture_naming(names) == ()
+
+
+def test_the_checked_in_fixtures_use_the_canonical_prefix(verifier: ModuleType) -> None:
+    names = verifier.presentation_fixture_names()
+    assert names, "presentation example fixtures are missing"
+    assert verifier.verify_fixture_naming(names) == ()
+
+
+def test_fixture_scan_of_an_absent_directory_is_empty(
+    verifier: ModuleType, tmp_path: Path
+) -> None:
+    assert verifier.presentation_fixture_names(tmp_path / "nope") == ()
