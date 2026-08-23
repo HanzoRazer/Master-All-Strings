@@ -19,6 +19,14 @@ from master_all_strings.presentation.contracts import (
     TimelineAnchorV1,
 )
 from master_all_strings.presentation.errors import PresentationContractError
+from master_all_strings.presentation.synchronization import (
+    DRIFT_HARD_SEEK_THRESHOLD_MS,
+    DRIFT_SYNCED_THRESHOLD_MS,
+    build_synchronization_health,
+    calculate_drift_ms,
+    choose_sync_correction,
+    classify_sync_health,
+)
 from master_all_strings.presentation.timeline import (
     anchors_to_payload,
     binding_contains_lesson_time,
@@ -35,6 +43,8 @@ from master_all_strings.presentation.timeline import (
 )
 
 __all__ = [
+    "DRIFT_HARD_SEEK_THRESHOLD_MS",
+    "DRIFT_SYNCED_THRESHOLD_MS",
     "PRESENTATION_SCHEMA_VERSION",
     "MediaSyncMode",
     "MediaTimelineBindingV1",
@@ -48,9 +58,13 @@ __all__ = [
     "anchors_to_payload",
     "binding_contains_lesson_time",
     "binding_contains_media_time",
+    "build_synchronization_health",
     "build_teaching_playhead_state",
     "build_teaching_timeline_state",
     "build_timeline_anchors",
+    "calculate_drift_ms",
+    "choose_sync_correction",
+    "classify_sync_health",
     "lesson_time_to_media_time",
     "media_time_to_lesson_time",
     "resolve_focus_range_seconds",
