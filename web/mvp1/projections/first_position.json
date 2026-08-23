@@ -977,6 +977,7 @@
     "objective": "Stay near first position",
     "teacher_note": null
   },
+  "timeline_anchors_schema_version": "1.0.0",
   "timeline_anchors": [
     {
       "tick": 0,

@@ -30,8 +30,8 @@ from master_all_strings.presentation.timeline import (
     lesson_time_to_media_time,
     media_time_to_lesson_time,
     resolve_focus_range_seconds,
-    seconds_at_tick,
-    tick_at_seconds,
+    seconds_to_tick_from_anchors,
+    tick_to_seconds_from_anchors,
     validate_media_timeline_binding,
 )
 
@@ -138,53 +138,58 @@ def test_interpolation_reproduces_core_timing_across_a_tempo_change(
     expected = ticks_to_seconds(
         tick, ticks_per_quarter=PPQ, tempo_changes=(TEMPO_120, TEMPO_90)
     )
-    assert seconds_at_tick(tempo_change_anchors, tick) == pytest.approx(expected, abs=1e-6)
+    actual = tick_to_seconds_from_anchors(tempo_change_anchors, tick)
+    assert actual == pytest.approx(expected, abs=1e-6)
 
 
 @pytest.mark.parametrize("tick", [0, 960, 2880, 8640])
 def test_round_trip_tick_to_seconds_to_tick_is_stable(constant_anchors, tick: int) -> None:
-    seconds = seconds_at_tick(constant_anchors, tick)
-    assert tick_at_seconds(constant_anchors, seconds) == tick
+    seconds = tick_to_seconds_from_anchors(constant_anchors, tick)
+    assert seconds_to_tick_from_anchors(constant_anchors, seconds) == tick
 
 
 def test_interpolation_is_monotonic(tempo_change_anchors) -> None:
-    values = [seconds_at_tick(tempo_change_anchors, tick) for tick in range(0, 8641, 137)]
+    values = [
+        tick_to_seconds_from_anchors(tempo_change_anchors, tick)
+        for tick in range(0, 8641, 137)
+    ]
     assert values == sorted(values)
 
 
 def test_positions_past_the_last_anchor_continue_at_the_final_rate(constant_anchors) -> None:
     """Seeking past the declared end must not fall off the table."""
 
-    assert seconds_at_tick(constant_anchors, 17280) == pytest.approx(9.0, abs=1e-6)
-    assert tick_at_seconds(constant_anchors, 9.0) == 17280
+    assert tick_to_seconds_from_anchors(constant_anchors, 17280) == pytest.approx(9.0, abs=1e-6)
+    assert seconds_to_tick_from_anchors(constant_anchors, 9.0) == 17280
 
 
 def test_single_anchor_table_degenerates_without_dividing_by_zero() -> None:
     anchors = build_timeline_anchors(
         ticks_per_quarter=PPQ, tempo_changes=(TEMPO_120,), total_ticks=0
     )
-    assert seconds_at_tick(anchors, 500) == 0.0
-    assert tick_at_seconds(anchors, 5.0) == 0
+    assert tick_to_seconds_from_anchors(anchors, 500) == 0.0
+    assert seconds_to_tick_from_anchors(anchors, 5.0) == 0
 
 
 def test_negative_tick_is_refused(constant_anchors) -> None:
     with pytest.raises(PresentationContractError, match="tick"):
-        seconds_at_tick(constant_anchors, -1)
+        tick_to_seconds_from_anchors(constant_anchors, -1)
 
 
 def test_negative_seconds_is_refused(constant_anchors) -> None:
     with pytest.raises(PresentationContractError, match="seconds"):
-        tick_at_seconds(constant_anchors, -0.5)
+        seconds_to_tick_from_anchors(constant_anchors, -0.5)
 
 
 def test_empty_anchor_table_is_refused() -> None:
     with pytest.raises(PresentationContractError, match="must not be empty"):
-        seconds_at_tick((), 0)
+        tick_to_seconds_from_anchors((), 0)
 
 
 def test_anchor_table_not_starting_at_zero_is_refused() -> None:
     with pytest.raises(PresentationContractError, match="begin at tick 0"):
-        seconds_at_tick((TimelineAnchorV1(schema_version=V, tick=960, seconds=0.5),), 960)
+        table = (TimelineAnchorV1(schema_version=V, tick=960, seconds=0.5),)
+        tick_to_seconds_from_anchors(table, 960)
 
 
 def test_non_increasing_anchor_ticks_are_refused() -> None:
@@ -193,7 +198,7 @@ def test_non_increasing_anchor_ticks_are_refused() -> None:
         TimelineAnchorV1(schema_version=V, tick=0, seconds=1.0),
     )
     with pytest.raises(PresentationContractError, match="strictly increasing"):
-        seconds_at_tick(table, 0)
+        tick_to_seconds_from_anchors(table, 0)
 
 
 def test_backwards_anchor_seconds_are_refused() -> None:
@@ -202,12 +207,12 @@ def test_backwards_anchor_seconds_are_refused() -> None:
         TimelineAnchorV1(schema_version=V, tick=960, seconds=0.5),
     )
     with pytest.raises(PresentationContractError, match="non-decreasing"):
-        seconds_at_tick(table, 0)
+        tick_to_seconds_from_anchors(table, 0)
 
 
 def test_foreign_values_in_the_anchor_table_are_refused() -> None:
     with pytest.raises(PresentationContractError, match="TimelineAnchorV1"):
-        seconds_at_tick(({"tick": 0, "seconds": 0.0},), 0)  # type: ignore[arg-type]
+        tick_to_seconds_from_anchors(({"tick": 0, "seconds": 0.0},), 0)  # type: ignore[arg-type]
 
 
 # --- focus range -------------------------------------------------------------
@@ -418,8 +423,8 @@ def test_a_zero_duration_segment_resolves_to_its_lower_tick() -> None:
         TimelineAnchorV1(schema_version=V, tick=960, seconds=0.0),
         TimelineAnchorV1(schema_version=V, tick=1920, seconds=1.0),
     )
-    assert tick_at_seconds(table, 0.0) == 0
-    assert tick_at_seconds(table, 0.5) == 1440
+    assert seconds_to_tick_from_anchors(table, 0.0) == 0
+    assert seconds_to_tick_from_anchors(table, 0.5) == 1440
 
 
 def test_extrapolating_past_a_flat_final_segment_returns_its_endpoint() -> None:
@@ -427,8 +432,8 @@ def test_extrapolating_past_a_flat_final_segment_returns_its_endpoint() -> None:
         TimelineAnchorV1(schema_version=V, tick=0, seconds=0.0),
         TimelineAnchorV1(schema_version=V, tick=960, seconds=0.0),
     )
-    assert seconds_at_tick(table, 5000) == 0.0
-    assert tick_at_seconds(table, 5.0) == 960
+    assert tick_to_seconds_from_anchors(table, 5000) == 0.0
+    assert seconds_to_tick_from_anchors(table, 5.0) == 960
 
 
 def test_detached_binding_reverse_mapping_returns_nothing() -> None:
@@ -440,3 +445,35 @@ def test_reverse_mapping_outside_the_media_range_returns_nothing() -> None:
     binding = _binding(lesson_end_seconds=3.0, media_end_seconds=3.0)
     assert media_time_to_lesson_time(binding, 3.5) is None
     assert media_time_to_lesson_time(binding, 2.5) == pytest.approx(2.5)
+
+
+def test_a_binding_bounded_only_on_the_media_side_stops_at_the_media_end() -> None:
+    """Both ends are real bounds, whichever one the author chose to declare.
+
+    ``lesson_end_seconds`` and ``media_end_seconds`` are independently optional,
+    so a 3.0 s clip may be declared against a lesson with no declared end.
+    Checking only the lesson end let the mapping run straight past the clip --
+    the exact extrapolation the ``None`` answer exists to refuse.
+    """
+
+    binding = _binding(media_end_seconds=3.0)
+    assert lesson_time_to_media_time(binding, 2.9) == pytest.approx(2.9)
+    assert lesson_time_to_media_time(binding, 3.0) == pytest.approx(3.0)
+    assert lesson_time_to_media_time(binding, 4.5) is None
+
+
+def test_a_binding_bounded_only_on_the_lesson_side_stops_at_the_lesson_end() -> None:
+    binding = _binding(lesson_end_seconds=3.0)
+    assert lesson_time_to_media_time(binding, 3.0) == pytest.approx(3.0)
+    assert lesson_time_to_media_time(binding, 4.5) is None
+    # The inverse honors the same bound from the other direction.
+    assert media_time_to_lesson_time(binding, 3.0) == pytest.approx(3.0)
+    assert media_time_to_lesson_time(binding, 4.5) is None
+
+
+def test_an_unbounded_binding_still_maps_indefinitely() -> None:
+    """Declaring no end is a real choice and must keep working."""
+
+    binding = _binding()
+    assert lesson_time_to_media_time(binding, 900.0) == pytest.approx(900.0)
+    assert media_time_to_lesson_time(binding, 900.0) == pytest.approx(900.0)

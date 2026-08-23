@@ -14,6 +14,7 @@ from master_all_strings.mvp.models import MvpLessonSummaryV1, MvpProjectionRespo
 from master_all_strings.mvp.playback.serialization import serialize_lesson_playback_plan
 from master_all_strings.mvp.practice import loop_ticks_to_seconds
 from master_all_strings.mvp.projection.serialization import serialize_fretboard_projection
+from master_all_strings.presentation.contracts import PRESENTATION_SCHEMA_VERSION
 from master_all_strings.presentation.timeline import (
     anchors_to_payload,
     build_timeline_anchors,
@@ -37,7 +38,13 @@ __all__ = [
 def atomic_write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
+    # newline="" suppresses the platform line-ending translation that would
+    # otherwise write CRLF on Windows. These files are digest-verified and
+    # checked in, so an exporter that emits different bytes per platform makes
+    # the export non-reproducible for a reason that has nothing to do with the
+    # lesson being exported.
+    with tmp.open("w", encoding="utf-8", newline="") as handle:
+        handle.write(text)
     os.replace(tmp, path)
 
 
@@ -90,6 +97,12 @@ def export_projection_json(
         "projection": json.loads(serialize_fretboard_projection(response.projection)),
         # DO-012: Musical Core authors the tick-to-second mapping; the browser
         # only interpolates within it, so no tick converter lives in JavaScript.
+        #
+        # The version sits beside the table rather than on every entry: repeating
+        # it per anchor would be noise, but omitting it entirely left the leanest
+        # contract in the tranche as the only one a reader could not identify.
+        # If the meaning of an anchor ever changes, this is what says so.
+        "timeline_anchors_schema_version": PRESENTATION_SCHEMA_VERSION,
         "timeline_anchors": projection_timeline_anchors(response.projection),
     }
     atomic_write_text(output_path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")

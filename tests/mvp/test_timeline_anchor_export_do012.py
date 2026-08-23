@@ -25,8 +25,8 @@ from master_all_strings.mvp.web_export import projection_timeline_anchors
 from master_all_strings.presentation.contracts import PRESENTATION_SCHEMA_VERSION
 from master_all_strings.presentation.timeline import (
     TimelineAnchorV1,
-    seconds_at_tick,
-    tick_at_seconds,
+    seconds_to_tick_from_anchors,
+    tick_to_seconds_from_anchors,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -94,7 +94,8 @@ def test_anchors_reproduce_musical_core_timing(demo_id: str) -> None:
     # Probe every note onset: those are the positions the playhead must resolve.
     for note in projection.notes:
         expected = ticks_to_seconds(note.onset_tick, ticks_per_quarter=ppq, tempo_changes=tempo)
-        assert seconds_at_tick(anchors, note.onset_tick) == pytest.approx(expected, abs=1e-6)
+        actual = tick_to_seconds_from_anchors(anchors, note.onset_tick)
+        assert actual == pytest.approx(expected, abs=1e-6)
 
 
 @pytest.mark.parametrize("demo_id", _demo_ids())
@@ -103,7 +104,7 @@ def test_note_onsets_round_trip_through_the_anchor_table(demo_id: str) -> None:
     projection = deserialize_fretboard_projection(payload["projection"])
     anchors = _anchors(payload)
     for note in projection.notes:
-        assert tick_at_seconds(anchors, note.onset_seconds) == note.onset_tick
+        assert seconds_to_tick_from_anchors(anchors, note.onset_seconds) == note.onset_tick
 
 
 @pytest.mark.parametrize("demo_id", _demo_ids())
@@ -138,3 +139,23 @@ def test_the_golden_lesson_anchors_span_its_declared_duration() -> None:
 def test_exported_anchor_entries_carry_only_tick_and_seconds(demo_id: str) -> None:
     for entry in _payload(demo_id)["timeline_anchors"]:
         assert set(entry) == {"tick", "seconds"}
+
+
+@pytest.mark.parametrize("demo_id", _demo_ids())
+def test_the_anchor_table_declares_its_own_version(demo_id: str) -> None:
+    """The leanest contract in the tranche still has to be identifiable.
+
+    Anchor entries carry only ``tick`` and ``seconds`` so the version is not
+    repeated on every row, but a payload that never states its version leaves the
+    browser to infer the shape by convention. The version sits beside the table.
+    """
+
+    payload = _payload(demo_id)
+    assert payload["timeline_anchors_schema_version"] == PRESENTATION_SCHEMA_VERSION
+
+
+def test_the_export_is_byte_identical_across_platforms() -> None:
+    """No CRLF from a Windows exporter: these files are digest-verified."""
+
+    raw = (PROJECTIONS / "half_steps_one_string.json").read_bytes()
+    assert b"\r\n" not in raw

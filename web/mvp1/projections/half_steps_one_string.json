@@ -797,6 +797,7 @@
     "objective": "Reduce difficulty by practicing half-step motion on one string",
     "teacher_note": "Teaching aid media is presentation-only; musical authority remains this assignment."
   },
+  "timeline_anchors_schema_version": "1.0.0",
   "timeline_anchors": [
     {
       "tick": 0,

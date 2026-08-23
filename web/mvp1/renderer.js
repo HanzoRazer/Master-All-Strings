@@ -217,6 +217,9 @@ export class FretboardRenderer {
           // sounding. Presentation metadata only -- never pitch or duration.
           zoneId: note.zone_semantics?.zone_id ?? null,
           zoneRoles: note.zone_semantics?.semantic_roles ?? [],
+          // D13: the readout names the tritone axis when the artifact declares
+          // one. Copied, never derived -- Zone semantics stay authoritative.
+          tritoneAxisId: note.zone_semantics?.tritone_axis_id ?? null,
         });
       });
 
@@ -392,7 +395,11 @@ export class FretboardRenderer {
     for (const note of this.notes) {
       if (!note.active || !note.zoneId || seen.has(note.zoneId)) continue;
       seen.add(note.zoneId);
-      zones.push({ zoneId: note.zoneId, roles: [...note.zoneRoles] });
+      zones.push({
+        zoneId: note.zoneId,
+        roles: [...note.zoneRoles],
+        tritoneAxisId: note.tritoneAxisId,
+      });
     }
     return zones;
   }
