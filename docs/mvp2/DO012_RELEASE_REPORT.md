@@ -1,6 +1,6 @@
 # DO-012 Release Report — MVP 2B Synchronized Teaching Timeline
 
-**Status:** IMPLEMENTED — EVIDENCE FROZEN
+**Status:** PUBLISHED TO MAIN — BASELINE FROZEN (see [DO012A_PUBLICATION_REPORT.md](DO012A_PUBLICATION_REPORT.md))
 **Branch:** `cursor/mvp2b-teaching-timeline-90b8`
 **PR:** [#20](https://github.com/HanzoRazer/Master-All-Strings/pull/20) → `main` · **Merge:** not authorized · **Tag:** not authorized
 
@@ -294,3 +294,33 @@ ticks**. Every probe passed, because the case was internally consistent — it
 simply exercised a tick domain the browser never sees. The generator now derives
 that case from the demo library, so it cannot drift from the lesson again, and a
 test asserts the case matches the projection it names.
+
+---
+
+## DO-012A closeout
+
+This report describes the DO-012 implementation as delivered by PR #20. It is
+kept as written; the alignment tranche did not rewrite history.
+
+PR #20 was squash-merged to `main` as `a420687`. An audit against the full
+Dev Order text then found gaps between what was delivered and what the order
+names — equivalent-but-differently-named utilities, two absent evidence fields,
+a Zone readout missing the tritone axis, a repetition proof that stopped at two,
+and three hygiene changes that had shipped in spirit despite being explicitly
+forbidden.
+
+**PR #21** closed those gaps and was merged as a two-parent merge commit,
+`8402058`, so the behaviour tranche and the alignment tranche remain separately
+inspectable.
+
+Numbers in the tables above are from the DO-012 tranche. The final certified
+figures are in the publication report:
+
+| Gate | DO-012 (this report) | DO-012A (final) |
+|---|---|---|
+| Linux | 1949 passed | **1980 passed, 0 failed** |
+| Windows | 1947 passed, 2 exceptions | 1978 passed, 2 exceptions |
+| Node | 146 passed | 146 passed |
+
+Full closeout, review findings, and the frozen baseline:
+[`DO012A_PUBLICATION_REPORT.md`](DO012A_PUBLICATION_REPORT.md).

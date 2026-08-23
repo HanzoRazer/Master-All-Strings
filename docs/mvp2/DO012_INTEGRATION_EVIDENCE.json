@@ -381,7 +381,8 @@
         "resolution": "recorded and deferred",
         "detail": "renderer.activeZones() evaluated twice per publish; a per-frame path, but it iterates at most a few dozen notes and both callers read the same authoritative source"
       }
-    ]
+    ],
+    "approved": true
   },
   "publication_verifier": {
     "script": "scripts/verify_do012a_publication.py",
@@ -395,5 +396,46 @@
       "evidence pack fields present",
       "baseline identities consistent"
     ]
+  },
+  "alignment_pr": 21,
+  "alignment_head_sha": "8f9ecbaf8324c5ba5cd5b9fc4e2331024025f204",
+  "alignment_merge_sha": "8402058ceeefec2ddd60faa682b2bd8ce5531731",
+  "post_merge_main_sha": "8402058ceeefec2ddd60faa682b2bd8ce5531731",
+  "publication_status": "published_to_main",
+  "mvp2b_baseline_sha": null,
+  "merge_method": {
+    "pr_21": "merge commit (two parents)",
+    "parents": [
+      "a4206873210031ba9947cacf9f9f6e1be9f1eb26",
+      "8f9ecbaf8324c5ba5cd5b9fc4e2331024025f204"
+    ],
+    "note": "D13 satisfied from PR #21 forward. PR #20 was squash-merged by the repository owner before this tranche; that topology is historical and was not repaired here."
+  },
+  "post_merge_verification": {
+    "merge_parents": 2,
+    "mvp1_reachable": true,
+    "do012_merge_reachable": true,
+    "alignment_head_reachable": true,
+    "publication_verifier": "PASS",
+    "pytest_windows": {
+      "passed": 1978,
+      "failed": 2,
+      "skipped": 2
+    },
+    "node": {
+      "passed": 146,
+      "failed": 0
+    },
+    "browser_smoke": {
+      "console_errors": 0,
+      "failed_requests": 0,
+      "workflow": "load, sync ON, play, 0.75x, seek, past-clip range, loop, one-string, Zone, practice, ISOLATE_PASSAGE auto-loop, detach",
+      "isolate_loop_ticks": [
+        0,
+        1440
+      ],
+      "isolate_loop_media_status": "synced",
+      "artifacts_note": "Screenshots were not committed: the post-merge closeout is restricted to the three authorized documentation paths, and widening it for images would have widened the exception."
+    }
   }
 }
