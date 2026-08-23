@@ -28,7 +28,7 @@
     "ruff": "PASS",
     "mypy_strict": "PASS (147 source files)",
     "pytest": {
-      "passed": 1976,
+      "passed": 1978,
       "failed": 2,
       "skipped": 2,
       "coverage_percent": 95.44
@@ -37,13 +37,13 @@
   },
   "wsl_linux_results": {
     "platform": "WSL Ubuntu 24.04, Python 3.12.3, clean clone",
-    "head_sha": "2b2615de90960bbfe3bf846f957f48ca21648702",
+    "head_sha": "4cefe31099b0c885ea7ceb38e0feb186e5a8aad1",
     "checkout_clean_lf": true,
     "crlf_json_files_in_resources": 0,
     "ruff": "PASS",
     "mypy_strict": "PASS (147 source files)",
     "pytest": {
-      "passed": 1949,
+      "passed": 1980,
       "failed": 0,
       "skipped": 2,
       "coverage_percent": 95.44
@@ -56,10 +56,10 @@
     "pip_bootstrap_note": "The distribution ships python3 without pip or ensurepip. pip was installed user-scope into ~/.local via get-pip.py --user, with no sudo and no system package changes.",
     "status": "PASS"
   },
-  "github_actions_run_id": 32625836882,
+  "github_actions_run_id": 32653647770,
   "github_actions_conclusion": "success",
-  "github_actions_head_sha": "2b4e26093a9428d516711a3c1d781def2b94619d",
-  "github_actions_url": "https://github.com/HanzoRazer/Master-All-Strings/actions/runs/32625836882",
+  "github_actions_head_sha": "4cefe31099b0c885ea7ceb38e0feb186e5a8aad1",
+  "github_actions_url": "https://github.com/HanzoRazer/Master-All-Strings/actions/runs/32653647770",
   "github_actions_note": "Authoritative repository gate: Ruff, strict mypy, pytest --cov on ubuntu-latest. Recorded after the evidence commit is pushed.",
   "node_results": {
     "platform": "Windows 11, Node built-in node:test runner",
@@ -381,6 +381,19 @@
         "resolution": "recorded and deferred",
         "detail": "renderer.activeZones() evaluated twice per publish; a per-frame path, but it iterates at most a few dozen notes and both callers read the same authoritative source"
       }
+    ]
+  },
+  "publication_verifier": {
+    "script": "scripts/verify_do012a_publication.py",
+    "result": "PASS",
+    "checks": [
+      "mvp-1 unchanged",
+      "DO-012 base ancestry",
+      "deferred hygiene absent from the alignment delta",
+      "no presentation contract declares canonical_revision_id",
+      "named timeline utilities importable",
+      "evidence pack fields present",
+      "baseline identities consistent"
     ]
   }
 }
