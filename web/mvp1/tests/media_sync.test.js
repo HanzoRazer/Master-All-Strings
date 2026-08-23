@@ -387,3 +387,71 @@ test("the follower never writes to the transport", () => {
 test("constructing without getElement is refused", () => {
   assert.throws(() => new MediaSyncFollower({ id: "x" }), /getElement/);
 });
+
+
+// --- unseekable media --------------------------------------------------------
+//
+// A media element can be fully buffered and still refuse to seek: the bundled
+// DO-011 placeholder clip reports seekable=[0,0] with buffered=[0,3]. Retrying
+// a seek it will always ignore is the thrashing D12 forbids, just slower.
+
+function unseekableMedia() {
+  const media = fakeMedia({ paused: false });
+  media.seekable = { length: 0, start: () => 0, end: () => 0 };
+  return media;
+}
+
+function partlySeekableMedia() {
+  const media = fakeMedia({ paused: false });
+  media.seekable = { length: 1, start: () => 0, end: () => 1.5 };
+  return media;
+}
+
+test("an unseekable element is reported DEGRADED instead of seeked forever", () => {
+  const media = unseekableMedia();
+  media.currentTime = 0;
+  const { follower: f } = follower(media);
+  for (let i = 0; i < 50; i += 1) {
+    const health = f.onTimeline(timelineState({ position_seconds: 2.0 }));
+    assert.equal(health.status, SyncStatus.DEGRADED);
+  }
+  assert.equal(f.hardSeekCount, 0);
+  assert.equal(media.currentTime, 0);
+});
+
+test("an explicit seek against an unseekable element also degrades", () => {
+  const media = unseekableMedia();
+  const { follower: f } = follower(media);
+  const health = f.onTimeline(timelineState({ position_seconds: 2.0 }), "seek");
+  assert.equal(health.status, SyncStatus.DEGRADED);
+  assert.equal(health.drift_ms, null);
+  assert.equal(f.hardSeekCount, 0);
+});
+
+test("a position inside the seekable range is still corrected", () => {
+  const media = partlySeekableMedia();
+  media.currentTime = 0;
+  const { follower: f } = follower(media);
+  f.onTimeline(timelineState({ position_seconds: 1.0 }));
+  assert.equal(f.hardSeekCount, 1);
+  assert.equal(media.currentTime, 1.0);
+});
+
+test("a position outside the seekable range degrades rather than seeking", () => {
+  const media = partlySeekableMedia();
+  media.currentTime = 0;
+  const { follower: f } = follower(media);
+  const health = f.onTimeline(timelineState({ position_seconds: 2.5 }));
+  assert.equal(health.status, SyncStatus.DEGRADED);
+  assert.equal(f.hardSeekCount, 0);
+});
+
+test("an element that reports no seekable property at all is assumed seekable", () => {
+  // Keeps the stub-friendly path working, and matches elements that have not
+  // yet reported ranges.
+  const media = fakeMedia({ paused: false });
+  media.currentTime = 5.0;
+  const { follower: f } = follower(media);
+  f.onTimeline(timelineState({ position_seconds: 1.0 }));
+  assert.equal(f.hardSeekCount, 1);
+});

@@ -1,6 +1,11 @@
 /* Synchronization state (DO-012). Deliberately modest: no shell redesign. */
 
 .sync-controls {
+  /* The Teaching Media panel is built on system colors (Canvas/CanvasText)
+     while the surrounding app sets its own near-white text. Inheriting that
+     text here renders light-on-light and the label disappears, so this control
+     uses the same basis as the panel it lives in. */
+  color: CanvasText;
   display: flex;
   align-items: center;
   gap: 0.75rem;

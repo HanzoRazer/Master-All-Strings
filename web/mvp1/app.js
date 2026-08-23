@@ -127,6 +127,51 @@ teachingTimeline.addFollower({
   },
 });
 
+/**
+ * Mirror synchronization state onto document.body as data- attributes.
+ *
+ * The window-level diagnostics object is only reachable from the page's own
+ * JavaScript context; a headless driver evaluating in an isolated world sees
+ * the DOM but not page globals. Mirroring here makes the same evidence
+ * capturable without a bridge, at the cost of a few string writes per publish.
+ *
+ * Non-public: these attributes are a debug seam, not an API.
+ */
+teachingTimeline.addFollower({
+  id: "diagnostics",
+  onTimeline: (state) => {
+    const data = document.body.dataset;
+    data.masLessonId = state.lesson_id;
+    data.masSequence = String(state.sequence);
+    data.masPositionTick = String(state.position_tick);
+    data.masPositionSeconds = state.position_seconds.toFixed(6);
+    data.masPlaying = String(state.playing);
+    data.masPlaybackRate = String(state.playback_rate);
+    data.masLoopEnabled = String(state.loop_enabled);
+    data.masLoopStartTick = state.loop_start_tick === null ? "" : String(state.loop_start_tick);
+    data.masLoopEndTick = state.loop_end_tick === null ? "" : String(state.loop_end_tick);
+    data.masRepetitionIndex = String(state.repetition_index);
+  },
+  onPlayhead: () => {
+    const data = document.body.dataset;
+    const health = mediaFollower.health();
+    data.masSyncMode = mediaPlayer.syncMode;
+    data.masSyncStatus = health ? health.status : "";
+    data.masSyncDriftMs = health && health.drift_ms !== null ? health.drift_ms.toFixed(3) : "";
+    data.masHardSeekCount = String(mediaFollower.hardSeekCount);
+    data.masBindingId = mediaPlayer.activeBinding()?.binding_id ?? "";
+    data.masActiveZones = renderer
+      .activeZones()
+      .map((zone) => zone.zoneId)
+      .join(" ");
+  },
+  onClear: () => {
+    for (const key of Object.keys(document.body.dataset)) {
+      if (key.startsWith("mas")) delete document.body.dataset[key];
+    }
+  },
+});
+
 function renderActiveZones() {
   const zones = renderer.activeZones();
   const node = $("zoneActive");

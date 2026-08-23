@@ -215,7 +215,13 @@ export class MediaSyncFollower {
     // Explicit repositioning events always earn a hard seek: after a seek or a
     // loop wrap the element is not "drifting", it is simply in the wrong place.
     const forcedSeek = reason === "seek" || reason === "loop-wrap" || reason === "restart";
+    const seekable = this._canSeekTo(element, expected);
+
     if (forcedSeek) {
+      if (!seekable) {
+        // Nothing to be done: the element will not go where the lesson is.
+        return this._health(SyncStatus.DEGRADED, expected, actual, null);
+      }
       this._hardSeek(element, expected, state, nowMs);
       return this._health(SyncStatus.CORRECTING, expected, actual, SyncCorrection.HARD_SEEK);
     }
@@ -224,6 +230,10 @@ export class MediaSyncFollower {
     const correction = chooseSyncCorrection(driftMs);
 
     if (correction === SyncCorrection.HARD_SEEK) {
+      if (!seekable) {
+        // Reporting DEGRADED once beats re-issuing a seek the element ignores.
+        return this._health(SyncStatus.DEGRADED, expected, actual, null);
+      }
       this._hardSeek(element, expected, state, nowMs);
     } else if (correction === SyncCorrection.RESAMPLE) {
       // Nudge toward alignment: ahead means slow down, behind means speed up.
@@ -248,6 +258,25 @@ export class MediaSyncFollower {
     } catch (_) {
       /* media control failure is reported through health, never thrown */
     }
+  }
+
+  /**
+   * Whether the element can actually be seeked to `seconds`.
+   *
+   * A media element can be fully buffered and still report an empty seekable
+   * range -- the bundled DO-011 placeholder clip does exactly that. Seeking it
+   * is a no-op, so without this check the follower would detect the same drift
+   * and re-issue the same futile seek forever.
+   */
+  _canSeekTo(element, seconds) {
+    const seekable = element.seekable;
+    // A stub or an element that has not reported ranges yet: assume it can.
+    if (!seekable || typeof seekable.length !== "number") return true;
+    if (seekable.length === 0) return false;
+    for (let index = 0; index < seekable.length; index += 1) {
+      if (seconds >= seekable.start(index) && seconds <= seekable.end(index)) return true;
+    }
+    return false;
   }
 
   _hardSeek(element, expectedSeconds, state, nowMs) {
