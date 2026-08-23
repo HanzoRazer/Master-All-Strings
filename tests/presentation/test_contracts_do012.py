@@ -404,3 +404,21 @@ def test_non_finite_drift_is_rejected() -> None:
 def test_blank_follower_id_is_rejected() -> None:
     with pytest.raises(PresentationContractError, match="follower_id"):
         _health(follower_id="")
+
+
+def test_optional_identifier_validator_accepts_none_and_rejects_blanks() -> None:
+    from master_all_strings.presentation.errors import require_optional_identifier
+
+    require_optional_identifier(None, "field")
+    require_optional_identifier("ok", "field")
+    with pytest.raises(PresentationContractError, match="field"):
+        require_optional_identifier("  ", "field")
+
+
+def test_number_validator_rejects_non_numbers_before_checking_finiteness() -> None:
+    from master_all_strings.presentation.errors import require_finite_number
+
+    with pytest.raises(PresentationContractError, match="must be a number"):
+        require_finite_number("1.0", "field")
+    with pytest.raises(PresentationContractError, match="must be a number"):
+        require_finite_number(True, "field")

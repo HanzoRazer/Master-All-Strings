@@ -4968,5 +4968,15 @@
     "description": "Three-repository Zone semantic integration proof",
     "objective": "Hear, see, slow, loop, and inspect Zone relationships",
     "teacher_note": "Reference Synth; Zone semantics originate in String Master"
-  }
+  },
+  "timeline_anchors": [
+    {
+      "tick": 0,
+      "seconds": 0.0
+    },
+    {
+      "tick": 5760,
+      "seconds": 7.5
+    }
+  ]
 }

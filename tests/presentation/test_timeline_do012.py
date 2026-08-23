@@ -401,3 +401,42 @@ def test_playback_rate_does_not_change_derived_position(constant_anchors) -> Non
         for rate in (0.5, 0.75, 1.0, 1.5)
     }
     assert len(set(ticks.values())) == 1
+
+
+# --- degenerate-table guards -------------------------------------------------
+#
+# These paths only fire on tables a well-formed export cannot produce. They
+# exist so a hand-authored or corrupted table degrades predictably instead of
+# dividing by zero, and they are exercised here for exactly that reason.
+
+
+def test_a_zero_duration_segment_resolves_to_its_lower_tick() -> None:
+    """Two anchors at the same instant: no slope, so the earlier tick wins."""
+
+    table = (
+        TimelineAnchorV1(schema_version=V, tick=0, seconds=0.0),
+        TimelineAnchorV1(schema_version=V, tick=960, seconds=0.0),
+        TimelineAnchorV1(schema_version=V, tick=1920, seconds=1.0),
+    )
+    assert tick_at_seconds(table, 0.0) == 0
+    assert tick_at_seconds(table, 0.5) == 1440
+
+
+def test_extrapolating_past_a_flat_final_segment_returns_its_endpoint() -> None:
+    table = (
+        TimelineAnchorV1(schema_version=V, tick=0, seconds=0.0),
+        TimelineAnchorV1(schema_version=V, tick=960, seconds=0.0),
+    )
+    assert seconds_at_tick(table, 5000) == 0.0
+    assert tick_at_seconds(table, 5.0) == 960
+
+
+def test_detached_binding_reverse_mapping_returns_nothing() -> None:
+    binding = _binding(sync_mode=MediaSyncMode.DETACHED)
+    assert media_time_to_lesson_time(binding, 1.0) is None
+
+
+def test_reverse_mapping_outside_the_media_range_returns_nothing() -> None:
+    binding = _binding(lesson_end_seconds=3.0, media_end_seconds=3.0)
+    assert media_time_to_lesson_time(binding, 3.5) is None
+    assert media_time_to_lesson_time(binding, 2.5) == pytest.approx(2.5)

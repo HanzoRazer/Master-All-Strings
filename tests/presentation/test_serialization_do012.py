@@ -156,3 +156,18 @@ def test_missing_optional_field_falls_back_to_the_declared_default() -> None:
     del payload["media_end_seconds"]
     restored = from_dict(MediaTimelineBindingV1, payload)
     assert restored.lesson_end_seconds is None
+
+
+def test_nested_dataclasses_encode_recursively() -> None:
+    """The encoder walks nested contracts rather than stringifying them."""
+
+    from dataclasses import dataclass
+
+    from master_all_strings.presentation.serialization import _encode
+
+    @dataclass(frozen=True)
+    class Outer:
+        inner: TimelineAnchorV1
+
+    encoded = _encode(Outer(inner=ANCHOR))
+    assert encoded == {"inner": {"schema_version": V, "tick": 1920, "seconds": 1.0}}

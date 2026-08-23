@@ -14,7 +14,7 @@ import { focusRangeFromEvaluation, renderResultsPanel } from "./results.js";
 import { Transport } from "./transport.js";
 import { MediaPlayerController, MediaSyncMode } from "./media-player.js";
 import { MediaSyncFollower } from "./media-sync.js";
-import { TeachingTimeline } from "./teaching-timeline.js";
+import { TeachingTimeline, resolveFocusRangeSeconds } from "./teaching-timeline.js";
 
 const $ = (id) => document.getElementById(id);
 const state = {
@@ -47,6 +47,18 @@ const practiceActions = new PracticeActionController({
     $("resultsStatus").textContent = message;
     $("statusLine").textContent = message;
   },
+  // DO-012: ISOLATE_PASSAGE now becomes a real loop. The Educational Engine
+  // still chooses the passage; this only converts its authoritative focus
+  // ticks into the seconds the shared transport speaks.
+  resolveFocusRange: (startTick, endTick) => {
+    if (!teachingTimeline.ready) return null;
+    try {
+      return resolveFocusRangeSeconds(teachingTimeline.anchors, startTick, endTick);
+    } catch (_) {
+      return null;
+    }
+  },
+  targetRepetitions: () => state.practice?.policy.loop.target_repetitions ?? null,
 });
 const params = new URLSearchParams(window.location.search);
 if (params.get("devGolden") === "1") {
@@ -241,6 +253,29 @@ function commitLoop() {
     renderer.setLoop(null);
     $("loopRange").textContent = error.message;
   }
+}
+
+/**
+ * Mirror the transport's loop into the loop controls.
+ *
+ * The transport stays authoritative: this reads from it after something else
+ * (an Educational action) has set a loop, so the inputs never disagree with
+ * what is actually looping.
+ */
+function syncLoopControlsFromTransport() {
+  const loop = transport.loop;
+  if (!loop || !loop.enabled) {
+    $("loopEnabled").checked = false;
+    renderer.setLoop(null);
+    $("loopRange").textContent = "Loop off";
+    return;
+  }
+  $("loopEnabled").checked = true;
+  $("loopStart").value = String(loop.startSeconds);
+  $("loopEnd").value = String(loop.endSeconds);
+  renderer.setLoop(loop);
+  $("loopRange").textContent =
+    `${loop.startSeconds.toFixed(2)}s–${loop.endSeconds.toFixed(2)}s`;
 }
 
 function configureLoopControls(practice, duration) {
@@ -575,6 +610,7 @@ $("btnApplyPrimary").addEventListener("click", async () => {
   const action = state.lastEvaluation?.evaluation?.primary_next_action;
   if (!action) return;
   await practiceActions.apply(action, educationApi);
+  syncLoopControlsFromTransport();
   if (action.action_type === "isolate_passage" && state.payload?.projection) {
     renderer.setFocusRange(
       focusRangeFromEvaluation(
@@ -689,6 +725,8 @@ window.__mvp2a = {
   teachingTimeline,
   mediaPlayer,
   mediaFollower,
+  practiceActions,
+  syncLoopControlsFromTransport,
 };
 
 /**

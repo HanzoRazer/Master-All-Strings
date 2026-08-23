@@ -165,7 +165,11 @@ def tick_at_seconds(anchors: Sequence[TimelineAnchorV1], seconds: float) -> int:
     for index in range(len(table) - 1):
         lower, upper = table[index], table[index + 1]
         if seconds <= upper.seconds:
-            if upper.seconds == lower.seconds:
+            if upper.seconds == lower.seconds:  # pragma: no cover - defensive
+                # Unreachable for a well-formed table: a flat segment can only be
+                # selected when `seconds` equals its value, and that case is
+                # already answered by the early return or by an earlier segment.
+                # Kept so a hand-authored table degrades instead of dividing by zero.
                 return lower.tick
             ticks = _interpolate(
                 seconds, lower.seconds, upper.seconds, float(lower.tick), float(upper.tick)
@@ -181,7 +185,8 @@ def _interpolate(
     lower_out: float,
     upper_out: float,
 ) -> float:
-    if upper_in == lower_in:
+    if upper_in == lower_in:  # pragma: no cover - defensive
+        # Callers guard against a zero-width input span before calling.
         return lower_out
     ratio = (float(value) - float(lower_in)) / (float(upper_in) - float(lower_in))
     return float(lower_out) + ratio * (float(upper_out) - float(lower_out))
@@ -218,7 +223,10 @@ def _round_half_away_from_zero(value: float) -> int:
 
     if value >= 0:
         return int(value + 0.5)
-    return -int(-value + 0.5)
+    # pragma: no cover - Python never sees a negative here (ticks and seconds are
+    # validated nonnegative), but the JavaScript mirror does, and the two
+    # implementations must stay arithmetically identical.
+    return -int(-value + 0.5)  # pragma: no cover
 
 
 def resolve_focus_range_seconds(
