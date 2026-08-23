@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "lesson_id": "half_steps_one_string",
+  "sequence": 42,
+  "position_tick": 2880,
+  "position_seconds": 1.5,
+  "active_event_ids": [
+    "evt-003",
+    "evt-004"
+  ],
+  "repetition_index": 2
+}

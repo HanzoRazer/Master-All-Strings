@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/presentation/timeline-anchor-v1.schema.json",
+  "title": "TimelineAnchorV1",
+  "description": "One (tick, seconds) pair authored by Musical Core timing. Anchors are emitted at every tempo boundary so a follower can interpolate within the canonical mapping instead of reimplementing it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "tick",
+    "seconds"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "tick": { "type": "integer", "minimum": 0 },
+    "seconds": { "type": "number", "minimum": 0 }
+  }
+}

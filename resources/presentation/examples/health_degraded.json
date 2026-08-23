@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "follower_id": "media:half-steps-demo-video",
+  "sequence": 11,
+  "status": "degraded",
+  "expected_time_seconds": 2.0,
+  "actual_time_seconds": null,
+  "drift_ms": null,
+  "last_correction": null
+}

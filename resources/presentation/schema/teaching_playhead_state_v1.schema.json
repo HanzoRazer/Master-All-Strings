@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/presentation/teaching-playhead-state-v1.schema.json",
+  "title": "TeachingPlayheadStateV1",
+  "description": "Score-agnostic playhead. active_event_ids are event IDs that already exist in the lesson projection; this layer never creates event identity. Deliberately carries no canonical_revision_id: durable score projections (DO-013) own that provenance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "lesson_id",
+    "sequence",
+    "position_tick",
+    "position_seconds",
+    "active_event_ids",
+    "repetition_index"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "lesson_id": { "type": "string", "minLength": 1 },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "position_tick": { "type": "integer", "minimum": 0 },
+    "position_seconds": { "type": "number", "minimum": 0 },
+    "active_event_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "repetition_index": { "type": "integer", "minimum": 0 }
+  }
+}

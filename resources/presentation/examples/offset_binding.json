@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "binding_id": "binding-offset",
+  "lesson_id": "half_steps_one_string",
+  "media_id": "half-steps-demo-video",
+  "sync_mode": "synchronized",
+  "lesson_anchor_seconds": 10.0,
+  "media_anchor_seconds": 3.0,
+  "lesson_end_seconds": null,
+  "media_end_seconds": null
+}

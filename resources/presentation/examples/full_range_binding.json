@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "binding_id": "binding-full-range",
+  "lesson_id": "ascending_scale",
+  "media_id": "ascending-scale-walkthrough",
+  "sync_mode": "synchronized",
+  "lesson_anchor_seconds": 0.0,
+  "media_anchor_seconds": 0.0,
+  "lesson_end_seconds": 4.8,
+  "media_end_seconds": 4.8
+}
