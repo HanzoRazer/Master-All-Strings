@@ -402,7 +402,7 @@
   "alignment_merge_sha": "8402058ceeefec2ddd60faa682b2bd8ce5531731",
   "post_merge_main_sha": "8402058ceeefec2ddd60faa682b2bd8ce5531731",
   "publication_status": "published_to_main",
-  "mvp2b_baseline_sha": null,
+  "mvp2b_baseline_sha": "2c72307e86d5ab03dfe8888b6be267d2e27540b1",
   "merge_method": {
     "pr_21": "merge commit (two parents)",
     "parents": [
@@ -437,5 +437,6 @@
       "isolate_loop_media_status": "synced",
       "artifacts_note": "Screenshots were not committed: the post-merge closeout is restricted to the three authorized documentation paths, and widening it for images would have widened the exception."
     }
-  }
+  },
+  "mvp2b_baseline_note": "Names the closeout commit that carries the complete report and evidence. This binding lives in a following commit because a commit cannot contain its own hash; the two differ only by this field, so branching from either inherits the same implementation and the same evidence."
 }

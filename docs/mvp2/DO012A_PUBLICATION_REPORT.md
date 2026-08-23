@@ -183,9 +183,16 @@ DO-013 / MVP 2C
 STATUS: READY TO BEGIN
 ```
 
-`mvp2b_baseline_sha` is recorded in `DO012_INTEGRATION_EVIDENCE.json` and names
-this closeout commit — the point at which the implementation and the evidence
-describing it are both complete. DO-013 branches from that SHA, not from either
-feature head.
+```text
+mvp2b_baseline_sha = 2c72307e86d5ab03dfe8888b6be267d2e27540b1
+```
+
+That is the closeout commit — the point at which the implementation and the
+evidence describing it are both complete. DO-013 branches from it, not from
+either feature head.
+
+The field is bound by the commit immediately following, because a commit cannot
+contain its own hash. The two differ only by that field, so branching from
+either inherits the same implementation and the same evidence.
 
 No `mvp-2`, `mvp-2b`, or `v2.0.0` tag was created.
