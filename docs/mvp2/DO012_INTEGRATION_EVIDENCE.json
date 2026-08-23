@@ -11,7 +11,7 @@
   "mvp1_release_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
   "mvp2a_baseline_sha": "2695993a601f6cc7b526294bdaac50ec5650cc23",
   "do012_base_sha": "2695993a601f6cc7b526294bdaac50ec5650cc23",
-  "do012_product_sha": "40d306cb84e6deb2a200ae2c099a2efef4c0b2a8",
+  "do012_product_sha": "2b2615de90960bbfe3bf846f957f48ca21648702",
   "evidence_sha": null,
   "base_reverified_before_branch": true,
   "contracts_added": [
@@ -37,13 +37,13 @@
   },
   "wsl_linux_results": {
     "platform": "WSL Ubuntu 24.04, Python 3.12.3, clean clone",
-    "head_sha": "40d306cb84e6deb2a200ae2c099a2efef4c0b2a8",
+    "head_sha": "2b2615de90960bbfe3bf846f957f48ca21648702",
     "checkout_clean_lf": true,
     "crlf_json_files_in_resources": 0,
     "ruff": "PASS",
     "mypy_strict": "PASS (147 source files)",
     "pytest": {
-      "passed": 1950,
+      "passed": 1949,
       "failed": 0,
       "skipped": 2,
       "coverage_percent": 95.44
@@ -352,5 +352,12 @@
     "upstream_packages_importing_presentation": [],
     "media_imports_presentation": true,
     "media_import_note": "One-way, because the sidecar carries MediaTimelineBindingV1. No cycle."
+  },
+  "follow_up_pull_request": null,
+  "merged_pull_request": {
+    "number": 20,
+    "merged_sha_on_main": "a4206873210031ba9947cacf9f9f6e1be9f1eb26",
+    "merge_style": "squash",
+    "note": "PR #20 was merged by the repository owner. DO-012 authorised the PR but not the merge; the merge was the owner's decision. The order-alignment work in this branch was completed afterwards and is delivered separately."
   }
 }
