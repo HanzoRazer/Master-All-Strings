@@ -1,0 +1,48 @@
+/* Synchronization state (DO-012). Deliberately modest: no shell redesign. */
+
+.sync-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.sync-controls .toggle-field {
+  margin: 0;
+}
+
+/* Health is diagnostic text, not decoration. Colour carries the same
+   distinction the status name does, so it stays readable without colour. */
+[data-sync-health] {
+  font-variant-numeric: tabular-nums;
+}
+
+[data-sync-health][data-status="synced"] {
+  color: #2e7d32;
+}
+
+[data-sync-health][data-status="drifting"],
+[data-sync-health][data-status="correcting"] {
+  color: #b26a00;
+}
+
+[data-sync-health][data-status="degraded"],
+[data-sync-health][data-status="unavailable"],
+[data-sync-health][data-status="out_of_binding_range"] {
+  color: #a33;
+}
+
+[data-sync-health][data-status="detached"] {
+  opacity: 0.75;
+}
+
+.zone-active {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Media whose loop/rate controls are transport-owned while synchronized. The
+   control stays visible so the learner can see what changed and why. */
+.media-controls [data-transport-owned="true"] {
+  opacity: 0.55;
+}

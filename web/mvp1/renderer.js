@@ -213,6 +213,10 @@ export class FretboardRenderer {
           normalized: clamp(note.normalized_position ?? 0, 0, 1),
           active: false,
           zoneClasses,
+          // Retained so the Teaching Timeline can report which Zone is
+          // sounding. Presentation metadata only -- never pitch or duration.
+          zoneId: note.zone_semantics?.zone_id ?? null,
+          zoneRoles: note.zone_semantics?.semantic_roles ?? [],
         });
       });
 
@@ -366,12 +370,38 @@ export class FretboardRenderer {
     );
   }
 
+  /** Event IDs currently sounding. Cheaper than building full diagnostics. */
+  activeEventIds() {
+    const ids = [];
+    for (const note of this.notes) {
+      if (note.active) ids.push(note.eventId);
+    }
+    return ids;
+  }
+
+  /**
+   * Zones occupied by the currently sounding notes, deduplicated and ordered.
+   *
+   * Simultaneous notes may sit in different Zones. Returning the set is honest;
+   * picking one "dominant" Zone would invent a semantic the artifact does not
+   * assert.
+   */
+  activeZones() {
+    const seen = new Set();
+    const zones = [];
+    for (const note of this.notes) {
+      if (!note.active || !note.zoneId || seen.has(note.zoneId)) continue;
+      seen.add(note.zoneId);
+      zones.push({ zoneId: note.zoneId, roles: [...note.zoneRoles] });
+    }
+    return zones;
+  }
+
   diagnostics() {
     return Object.freeze({
       positionSeconds: this.lastPositionSeconds,
-      activeEventIds: this.notes
-        .filter((note) => note.active)
-        .map((note) => note.eventId),
+      activeEventIds: this.activeEventIds(),
+      activeZones: this.activeZones(),
       zoneOverlayEnabled: this.zoneOverlayEnabled,
       zoneSemanticEventIds: this.notes
         .filter((note) => note.zoneClasses.length > 0)
