@@ -259,7 +259,24 @@ def test_load_evidence_rejects_a_non_object(verifier: ModuleType, tmp_path: Path
         verifier.load_evidence(bad)
 
 
-def test_merge_parent_count_reads_a_real_commit(verifier: ModuleType) -> None:
-    """HEAD of a linear branch has exactly one parent."""
+# Fixed points in history, not HEAD. A pull_request CI run checks out the
+# ephemeral refs/pull/N/merge commit, so HEAD there has two parents while a local
+# branch tip has one -- asserting on it tests the runner, not the function.
+KNOWN_MERGE_SHA = "dfeb4dc"  # Merge pull request #19
+KNOWN_LINEAR_SHA = "2695993"  # docs(mvp2a): finalize DO-011A publication evidence
 
-    assert verifier.merge_parent_count("HEAD") == 1
+
+def test_a_two_parent_merge_is_recognised(verifier: ModuleType) -> None:
+    assert verifier.merge_parent_count(KNOWN_MERGE_SHA) == 2
+
+
+def test_a_single_parent_commit_is_recognised(verifier: ModuleType) -> None:
+    assert verifier.merge_parent_count(KNOWN_LINEAR_SHA) == 1
+
+
+def test_an_unknown_ref_reports_no_parents_rather_than_raising(
+    verifier: ModuleType,
+) -> None:
+    """The verifier reports; it is not the place a bad ref explodes."""
+
+    assert verifier.merge_parent_count("0000000000000000000000000000000000000000") == 0
