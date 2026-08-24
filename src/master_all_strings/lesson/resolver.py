@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from master_all_strings.core.musical_events import MusicalEvent
+from master_all_strings.core.score.meter import MeterChangeV1
 
 from .enums import OpenStringPreference
 from .errors import LessonValidationError
@@ -66,6 +67,11 @@ class ResolvedLessonV1:
     teacher_overrides: tuple[TeacherOverrideV1, ...]
     instruction_objective: str | None
     teacher_note: str | None
+    # Meter is canonical musical context, and resolution used to drop it: the
+    # assignment declared it, nothing downstream received it, and anything needing
+    # measures had to reach back past this contract to the raw assignment. Carried
+    # here so ResolvedLessonV1 remains the single thing downstream consumers read.
+    meter_changes: tuple[MeterChangeV1, ...] = ()
     # Explicitly absent: routing. Callers must not receive routing here.
 
 
@@ -103,6 +109,7 @@ def resolve_lesson_assignment(assignment: LessonAssignmentV1) -> ResolvedLessonV
     source_tempo = _source_tempo_bpm(assignment)
     playback = _resolve_playback(assignment.playback, assignment, source_tempo)
     spatial = _resolve_spatial(assignment.spatial_guidance)
+    meter_changes = _resolve_meter_changes(assignment)
 
     return ResolvedLessonV1(
         assignment_id=assignment.assignment_id,
@@ -114,7 +121,28 @@ def resolve_lesson_assignment(assignment: LessonAssignmentV1) -> ResolvedLessonV
         teacher_overrides=assignment.teacher_overrides,
         instruction_objective=assignment.instruction.objective,
         teacher_note=assignment.instruction.teacher_note,
+        meter_changes=meter_changes,
     )
+
+
+def _resolve_meter_changes(assignment: LessonAssignmentV1) -> tuple[MeterChangeV1, ...]:
+    """Translate the assignment's meter map into canonical meter changes.
+
+    Sorted by tick and deduplicated last-writer-wins, matching how Musical Core
+    normalizes a tempo map. Two meter declarations at one tick is a contradiction
+    the assignment should not contain, and silently keeping both would push the
+    ambiguity into measure partitioning.
+    """
+
+    by_tick: dict[int, MeterChangeV1] = {}
+    for change in assignment.musical_content.meter_changes:
+        by_tick[change.tick] = MeterChangeV1(
+            schema_version=MeterChangeV1.SCHEMA_VERSION,
+            tick=change.tick,
+            numerator=change.numerator,
+            denominator=change.denominator,
+        )
+    return tuple(by_tick[tick] for tick in sorted(by_tick))
 
 
 def _source_tempo_bpm(assignment: LessonAssignmentV1) -> float | None:
