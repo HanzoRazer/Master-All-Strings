@@ -50,8 +50,10 @@ def _meter(numerator: int = 4, denominator: int = 4, tick: int = 0) -> MeterChan
 
 
 def _revision(demo_id: str = "half_steps_one_string"):
+    assignment = load_demo_assignment(demo_id)
     return build_authored_lesson_revision(
-        resolve_lesson_assignment(load_demo_assignment(demo_id))
+        resolve_lesson_assignment(assignment),
+        created_at=assignment.provenance.created_at_utc,
     ).revision
 
 

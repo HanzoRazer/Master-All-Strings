@@ -33,24 +33,13 @@ from master_all_strings.lesson.resolver import ResolvedLessonV1
 
 __all__ = [
     "AUTHORED_LESSON_POLICY_VERSION",
-    "AUTHORED_LESSON_CREATED_AT",
     "AuthoredLessonRevisionV1",
     "build_authored_lesson_revision",
 ]
 
 #: Names the translation this module performs, so a revision's provenance says
 #: which policy produced it rather than only that a human wrote the music.
-AUTHORED_LESSON_POLICY_VERSION = "AUTHORED_LESSON_CONSTRUCTION_V1"
-
-#: Revisions built from authored lessons carry a fixed creation stamp.
-#:
-#: Core excludes ``created_at`` from the content digest, so a wall clock would not
-#: change the revision id -- but it *is* a field on the revision, and the revision
-#: is exported as a checked-in artifact. A live timestamp would make that file
-#: differ on every export for a reason that has nothing to do with the lesson.
-#: The value is the MVP 1 release date: the point from which this corpus is
-#: authored, and a date rather than a fabricated instant.
-AUTHORED_LESSON_CREATED_AT = "2026-01-01T00:00:00Z"
+AUTHORED_LESSON_POLICY_VERSION = "AUTHORED_LESSON_REVISION_V1"
 
 
 @dataclass(frozen=True)
@@ -110,7 +99,7 @@ def _meter_changes(resolved: ResolvedLessonV1) -> tuple[MeterChangeV1, ...]:
 def build_authored_lesson_revision(
     resolved: ResolvedLessonV1,
     *,
-    created_at: str = AUTHORED_LESSON_CREATED_AT,
+    created_at: str,
 ) -> AuthoredLessonRevisionV1:
     """Mint the canonical revision for one authored lesson.
 
@@ -118,6 +107,15 @@ def build_authored_lesson_revision(
     ``content_id``, and Core derives the revision id from that plus the canonical
     musical content. The same lesson therefore yields the same revision id on
     every export, and editing its music yields a new one under the same document.
+
+    ``created_at`` is required and has no default. Core excludes it from the
+    content digest, so it cannot move the revision id -- but it is written into
+    the exported artifact, and a default would let a caller ship a timestamp it
+    never chose. Bundled lessons pass their own
+    ``provenance.created_at_utc``; synthetic fixtures pass an explicitly
+    synthetic stamp of their own. Neither may read a wall clock, which would make
+    a checked-in artifact differ on every export for a reason that has nothing to
+    do with the lesson.
 
     A fresh in-memory repository is used per call. The revision's *identity* is
     what survives -- carried into the projections and written to the exported
