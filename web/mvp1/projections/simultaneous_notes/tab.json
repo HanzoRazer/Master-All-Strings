@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "projection_id": "tab:rev-3b5be15df289a8483a0f57b9",
+  "canonical_revision_id": "rev-3b5be15df289a8483a0f57b9",
+  "projection_kind": "tab",
+  "payload": {
+    "schema_version": "1.0.0",
+    "canonical_revision_id": "rev-3b5be15df289a8483a0f57b9",
+    "instrument_profile_id": "guitar-standard-6",
+    "events": [
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-1",
+        "start_tick": 0,
+        "duration_ticks": 960,
+        "midi_note": 40,
+        "status": "playable",
+        "string_id": "string-6",
+        "fret": 0,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-2",
+        "start_tick": 0,
+        "duration_ticks": 960,
+        "midi_note": 47,
+        "status": "playable",
+        "string_id": "string-6",
+        "fret": 7,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-3",
+        "start_tick": 0,
+        "duration_ticks": 960,
+        "midi_note": 52,
+        "status": "playable",
+        "string_id": "string-6",
+        "fret": 12,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-4",
+        "start_tick": 960,
+        "duration_ticks": 480,
+        "midi_note": 55,
+        "status": "playable",
+        "string_id": "string-6",
+        "fret": 15,
+        "cents_offset": 0.0
+      }
+    ],
+    "unsupported_features": []
+  },
+  "digest": "sha256:4ccfe4dfad96be0a60ff73533015a019686cdddbd692d1d69638f5606a9ea0a2",
+  "unsupported_features": []
+}

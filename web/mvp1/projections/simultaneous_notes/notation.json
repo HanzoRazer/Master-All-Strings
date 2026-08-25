@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0.0",
+  "projection_id": "notation:rev-3b5be15df289a8483a0f57b9",
+  "canonical_revision_id": "rev-3b5be15df289a8483a0f57b9",
+  "projection_kind": "notation",
+  "payload": {
+    "schema_version": "1.0.0",
+    "canonical_revision_id": "rev-3b5be15df289a8483a0f57b9",
+    "ticks_per_quarter": 480,
+    "display_policy": "sharp_preferred_v1",
+    "measures": [
+      {
+        "schema_version": "1.0.0",
+        "measure_index": 0,
+        "start_tick": 0,
+        "end_tick": 1920,
+        "meter": {
+          "schema_version": "1.0.0",
+          "tick": 0,
+          "numerator": 4,
+          "denominator": 4
+        },
+        "events": [
+          {
+            "schema_version": "1.0.0",
+            "event_kind": "note",
+            "start_tick": 0,
+            "duration_ticks": 960,
+            "canonical_event_id": "ev-1",
+            "midi_note": 40,
+            "display_pitch": "E2",
+            "display_duration": "half",
+            "derivation": null
+          },
+          {
+            "schema_version": "1.0.0",
+            "event_kind": "note",
+            "start_tick": 0,
+            "duration_ticks": 960,
+            "canonical_event_id": "ev-2",
+            "midi_note": 47,
+            "display_pitch": "B2",
+            "display_duration": "half",
+            "derivation": null
+          },
+          {
+            "schema_version": "1.0.0",
+            "event_kind": "note",
+            "start_tick": 0,
+            "duration_ticks": 960,
+            "canonical_event_id": "ev-3",
+            "midi_note": 52,
+            "display_pitch": "E3",
+            "display_duration": "half",
+            "derivation": null
+          },
+          {
+            "schema_version": "1.0.0",
+            "event_kind": "note",
+            "start_tick": 960,
+            "duration_ticks": 480,
+            "canonical_event_id": "ev-4",
+            "midi_note": 55,
+            "display_pitch": "G3",
+            "display_duration": "quarter",
+            "derivation": null
+          }
+        ]
+      }
+    ],
+    "unsupported_features": [
+      {
+        "schema_version": "1.0.0",
+        "code": "voice_specific_rest_inference_unavailable",
+        "detail": "revision contains overlapping notes with no voice assignment; only global-silence rests are projected",
+        "canonical_event_id": null,
+        "start_tick": null
+      }
+    ]
+  },
+  "digest": "sha256:14d240d2a9efa51b06d8e2dd926331e8cf5e43210fbe2853a782f76b84a6dd15",
+  "unsupported_features": [
+    {
+      "schema_version": "1.0.0",
+      "code": "voice_specific_rest_inference_unavailable",
+      "detail": "revision contains overlapping notes with no voice assignment; only global-silence rests are projected",
+      "canonical_event_id": null,
+      "start_tick": null
+    }
+  ]
+}

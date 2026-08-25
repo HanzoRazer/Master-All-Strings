@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "revision_id": "rev-e3b0a1db2e0285d09fc33422",
+  "document_id": "score-teacher_override",
+  "revision_number": 1,
+  "parent_revision_id": null,
+  "created_at": "2026-08-11T00:00:00Z",
+  "ticks_per_quarter": 480,
+  "content_digest": "e3b0a1db2e0285d09fc3342288f83a72dd553bdc47d037566d428b27fc223393",
+  "provenance": {
+    "schema_version": "1.0.0",
+    "source_kind": "manual_construction",
+    "policy_version": "AUTHORED_LESSON_REVISION_V1",
+    "source_reference": "teacher_override",
+    "event_provenance": [],
+    "notes": []
+  },
+  "events": [
+    {
+      "event_id": "ev-1",
+      "midi_note": 64,
+      "start_tick": 0,
+      "duration_ticks": 480,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    },
+    {
+      "event_id": "ev-2",
+      "midi_note": 67,
+      "start_tick": 480,
+      "duration_ticks": 480,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    }
+  ],
+  "tempo_changes": [
+    {
+      "schema_version": "1.0.0",
+      "tick": 0,
+      "microseconds_per_quarter": 600000
+    }
+  ],
+  "meter_changes": [
+    {
+      "schema_version": "1.0.0",
+      "tick": 0,
+      "numerator": 4,
+      "denominator": 4
+    }
+  ]
+}

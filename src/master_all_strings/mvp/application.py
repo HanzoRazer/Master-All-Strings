@@ -125,4 +125,5 @@ class MvpApplication:
             warnings=result.projection.warnings,
             unsupported_features=result.projection.unsupported_features,
             one_string_teaching=result.one_string_teaching,
+            score=result.score,
         )

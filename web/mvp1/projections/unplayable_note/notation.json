@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0.0",
+  "projection_id": "notation:rev-5336c8b3c6698b26e579fc48",
+  "canonical_revision_id": "rev-5336c8b3c6698b26e579fc48",
+  "projection_kind": "notation",
+  "payload": {
+    "schema_version": "1.0.0",
+    "canonical_revision_id": "rev-5336c8b3c6698b26e579fc48",
+    "ticks_per_quarter": 480,
+    "display_policy": "sharp_preferred_v1",
+    "measures": [
+      {
+        "schema_version": "1.0.0",
+        "measure_index": 0,
+        "start_tick": 0,
+        "end_tick": 1920,
+        "meter": {
+          "schema_version": "1.0.0",
+          "tick": 0,
+          "numerator": 4,
+          "denominator": 4
+        },
+        "events": [
+          {
+            "schema_version": "1.0.0",
+            "event_kind": "note",
+            "start_tick": 0,
+            "duration_ticks": 480,
+            "canonical_event_id": "ev-1",
+            "midi_note": 45,
+            "display_pitch": "A2",
+            "display_duration": "quarter",
+            "derivation": null
+          },
+          {
+            "schema_version": "1.0.0",
+            "event_kind": "note",
+            "start_tick": 480,
+            "duration_ticks": 480,
+            "canonical_event_id": "ev-2",
+            "midi_note": 30,
+            "display_pitch": "F#1",
+            "display_duration": "quarter",
+            "derivation": null
+          },
+          {
+            "schema_version": "1.0.0",
+            "event_kind": "note",
+            "start_tick": 960,
+            "duration_ticks": 480,
+            "canonical_event_id": "ev-3",
+            "midi_note": 47,
+            "display_pitch": "B2",
+            "display_duration": "quarter",
+            "derivation": null
+          }
+        ]
+      }
+    ],
+    "unsupported_features": []
+  },
+  "digest": "sha256:f25eca3e0579ca0891235c8f6a908617757a3fbb85b68c3b82572b3a03fecf17",
+  "unsupported_features": []
+}

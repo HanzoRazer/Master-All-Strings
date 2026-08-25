@@ -9,6 +9,7 @@ from master_all_strings.mvp.errors import MvpError
 from master_all_strings.mvp.playback.models import LessonPlaybackPlanV1
 from master_all_strings.mvp.practice.models import PracticeSessionPolicyV1
 from master_all_strings.mvp.projection.models import FretboardScrollProjectionV1
+from master_all_strings.mvp.score_bundle import ScoreProjectionBundleV1
 from master_all_strings.mvp.teaching_aids import OneStringTeachingProjectionV1
 
 
@@ -85,3 +86,6 @@ class MvpProjectionResponseV1:
     warnings: tuple[str, ...] = ()
     unsupported_features: tuple[str, ...] = ()
     one_string_teaching: tuple[OneStringTeachingProjectionV1, ...] = ()
+    # DO-013: additive. Optional so any existing construction of this response
+    # keeps working without a score bundle.
+    score: ScoreProjectionBundleV1 | None = None

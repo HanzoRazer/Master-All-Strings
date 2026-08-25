@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0.0",
+  "projection_id": "tab:rev-9ac1cd971dfe054ebf07ecea",
+  "canonical_revision_id": "rev-9ac1cd971dfe054ebf07ecea",
+  "projection_kind": "tab",
+  "payload": {
+    "schema_version": "1.0.0",
+    "canonical_revision_id": "rev-9ac1cd971dfe054ebf07ecea",
+    "instrument_profile_id": "guitar-standard-6",
+    "events": [
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-1",
+        "start_tick": 0,
+        "duration_ticks": 480,
+        "midi_note": 40,
+        "status": "playable",
+        "string_id": "string-6",
+        "fret": 0,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-2",
+        "start_tick": 480,
+        "duration_ticks": 480,
+        "midi_note": 55,
+        "status": "playable",
+        "string_id": "string-6",
+        "fret": 15,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-3",
+        "start_tick": 960,
+        "duration_ticks": 480,
+        "midi_note": 45,
+        "status": "playable",
+        "string_id": "string-6",
+        "fret": 5,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-4",
+        "start_tick": 1440,
+        "duration_ticks": 480,
+        "midi_note": 59,
+        "status": "playable",
+        "string_id": "string-6",
+        "fret": 19,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-5",
+        "start_tick": 1920,
+        "duration_ticks": 480,
+        "midi_note": 50,
+        "status": "playable",
+        "string_id": "string-6",
+        "fret": 10,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-6",
+        "start_tick": 2400,
+        "duration_ticks": 480,
+        "midi_note": 64,
+        "status": "playable",
+        "string_id": "string-5",
+        "fret": 19,
+        "cents_offset": 0.0
+      }
+    ],
+    "unsupported_features": []
+  },
+  "digest": "sha256:3824a9c0d2d83f09325fc4f76477949fca33a7814042add402451f2e56fb0773",
+  "unsupported_features": []
+}
