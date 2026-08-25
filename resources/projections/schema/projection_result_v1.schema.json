@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/projections/projection-result-v1.schema.json",
+  "title": "ProjectionResultV1",
+  "description": "The generic envelope every projection travels in. It carries the citation (canonical_revision_id), the label (projection_kind), the deterministic digest, and one typed payload. The payload is validated as either shape here; the stronger invariants -- that the kind matches the payload's type, and that the envelope and payload cite the same revision -- are enforced in Python, where a mismatch can be reported as the specific contract violation it is rather than as a failed union branch.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "projection_id",
+    "canonical_revision_id",
+    "projection_kind",
+    "payload",
+    "digest"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "projection_id": { "type": "string", "minLength": 1 },
+    "canonical_revision_id": {
+      "description": "The revision this result was derived from. Excluded from the digest's inputs along with projection_id, so two identical renderings of one revision digest identically however they are labelled.",
+      "type": "string",
+      "minLength": 1
+    },
+    "projection_kind": { "enum": ["tab", "notation"] },
+    "payload": {
+      "oneOf": [
+        {
+          "$ref": "https://master-all-strings.dev/schema/projections/tab-projection-v1.schema.json"
+        },
+        {
+          "$ref": "https://master-all-strings.dev/schema/projections/notation-projection-v1.schema.json"
+        }
+      ]
+    },
+    "digest": {
+      "description": "sha256 over the payload, excluding the digest itself and projection_id.",
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "unsupported_features": {
+      "type": "array",
+      "items": {
+        "$ref": "https://master-all-strings.dev/schema/projections/projection-unsupported-feature-v1.schema.json"
+      }
+    }
+  }
+}

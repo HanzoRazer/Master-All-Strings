@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/projections/projection-request-v1.schema.json",
+  "title": "ProjectionRequestV1",
+  "description": "A request to project one canonical score revision. canonical_revision_id is required and names the revision the answer must be derived from, so a result can be checked against what was asked rather than trusted. instrument_profile_id is optional here because notation is fingering-independent; the requirement that TAB carry one, and that notation carry none, is a kind-dependent rule enforced in Python rather than encoded as schema polymorphism.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "request_id", "canonical_revision_id", "projection_kind"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "request_id": { "type": "string", "minLength": 1 },
+    "canonical_revision_id": { "type": "string", "minLength": 1 },
+    "projection_kind": { "enum": ["tab", "notation"] },
+    "instrument_profile_id": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "options": {
+      "description": "Ordered name/value pairs. Serialized as arrays of two strings so the request digests identically on every platform, which a JSON object's key order could not guarantee.",
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": { "type": "string" }
+      }
+    }
+  }
+}

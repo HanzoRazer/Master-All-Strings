@@ -116,10 +116,49 @@ def test_the_drift_check_rejects_a_tampered_fixture(tmp_path: Path) -> None:
         module.fixture_path(case).write_text(original, encoding="utf-8")
 
 
-def test_no_untracked_fixtures() -> None:
-    """The directory is the case list, so an orphan file cannot hide in it."""
+#: Generic envelope examples, emitted alongside the cases for schema conformance.
+ENVELOPES = [
+    "projection_request_tab",
+    "projection_request_notation",
+    "projection_result_tab",
+    "projection_result_notation",
+]
 
-    assert {path.stem for path in EXAMPLES.glob("*.json")} == set(ALL_CASES)
+
+def test_no_untracked_fixtures() -> None:
+    """The generator's output is the whole directory; an orphan cannot hide in it."""
+
+    assert {path.stem for path in EXAMPLES.glob("*.json")} == set(ALL_CASES) | set(ENVELOPES)
+
+
+@pytest.mark.parametrize("name", ENVELOPES)
+def test_every_envelope_example_is_checked_in(name: str) -> None:
+    assert (EXAMPLES / f"{name}.json").exists()
+
+
+def test_the_envelopes_carry_real_dispatcher_output() -> None:
+    """Built through project(), so the examples are envelopes the product emits."""
+
+    for label in ("tab", "notation"):
+        result = json.loads(
+            (EXAMPLES / f"projection_result_{label}.json").read_text(encoding="utf-8")
+        )
+        assert result["projection_kind"] == label
+        assert result["digest"].startswith("sha256:")
+        assert result["payload"]["canonical_revision_id"] == result["canonical_revision_id"]
+
+
+def test_a_notation_request_carries_no_instrument_profile() -> None:
+    """Fingering independence, visible in the request that asks for it."""
+
+    request = json.loads(
+        (EXAMPLES / "projection_request_notation.json").read_text(encoding="utf-8")
+    )
+    assert request["instrument_profile_id"] is None
+    tab_request = json.loads(
+        (EXAMPLES / "projection_request_tab.json").read_text(encoding="utf-8")
+    )
+    assert tab_request["instrument_profile_id"]
 
 
 # --- fixtures come from production, not from hand-written JSON ---------------

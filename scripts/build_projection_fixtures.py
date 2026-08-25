@@ -34,6 +34,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from master_all_strings.core.musical_events import MusicalEvent
+from master_all_strings.core.projections.contracts import (
+    PROJECTION_SCHEMA_VERSION,
+    ProjectionKind,
+    ProjectionRequestV1,
+)
+from master_all_strings.core.projections.dispatcher import project
 from master_all_strings.core.projections.notation import build_notation_projection
 from master_all_strings.core.projections.serialization import projection_to_json
 from master_all_strings.core.projections.tab import (
@@ -284,6 +290,61 @@ def fixture_path(case: SyntheticCase) -> Path:
     return EXAMPLES / f"{case.name}.json"
 
 
+#: Which case backs each envelope example, and under what name.
+#:
+#: The TAB envelope is built from the unresolved case and the notation envelope
+#: from the global-rest case, so the generic contracts are exercised carrying
+#: payloads that actually say something rather than the blandest available.
+ENVELOPE_SOURCES: tuple[tuple[str, SyntheticCase, ProjectionKind], ...] = (
+    ("tab", UNRESOLVED_TAB, ProjectionKind.TAB),
+    ("notation", GLOBAL_REST_NOTATION, ProjectionKind.NOTATION),
+)
+
+
+def build_request(
+    case: SyntheticCase, kind: ProjectionKind, revision: CanonicalScoreRevisionV1
+) -> ProjectionRequestV1:
+    """The request that asks for one case's projection.
+
+    Notation carries no instrument profile: it is fingering-independent, and a
+    profile reaching it would be a profile that could change it.
+    """
+
+    return ProjectionRequestV1(
+        schema_version=PROJECTION_SCHEMA_VERSION,
+        request_id=f"{kind.value}:{case.name}",
+        canonical_revision_id=revision.revision_id,
+        projection_kind=kind,
+        instrument_profile_id=(
+            INSTRUMENT_PROFILE_ID if kind is ProjectionKind.TAB else None
+        ),
+    )
+
+
+def render_envelopes() -> dict[str, str]:
+    """Serialize a real request and result for each projection kind.
+
+    Routed through the dispatcher rather than constructed directly, so the
+    envelope examples are envelopes the product actually produces -- digest
+    included.
+    """
+
+    rendered: dict[str, str] = {}
+    for label, case, kind in ENVELOPE_SOURCES:
+        revision = build_synthetic_revision(case)
+        request = build_request(case, kind, revision)
+        result = project(
+            request,
+            revision=revision,
+            selected=(
+                build_selection(case, revision) if kind is ProjectionKind.TAB else None
+            ),
+        )
+        rendered[f"projection_request_{label}"] = projection_to_json(request)
+        rendered[f"projection_result_{label}"] = projection_to_json(result)
+    return rendered
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -294,27 +355,31 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     EXAMPLES.mkdir(parents=True, exist_ok=True)
+    documents: dict[str, str] = {case.name: render_case(case) for case in CASES}
+    documents.update(render_envelopes())
+
     stale: list[str] = []
-    for case in CASES:
-        rendered = render_case(case)
-        path = fixture_path(case)
+    for name, rendered in documents.items():
+        path = EXAMPLES / f"{name}.json"
         if args.check:
             if not path.exists() or path.read_text(encoding="utf-8") != rendered:
-                stale.append(case.name)
+                stale.append(name)
             continue
         path.write_text(rendered, encoding="utf-8")
 
     if args.check:
         if stale:
-            print("stale projection fixtures: " + ", ".join(stale), file=sys.stderr)
+            print("stale projection fixtures: " + ", ".join(sorted(stale)), file=sys.stderr)
             print("run: python scripts/build_projection_fixtures.py", file=sys.stderr)
             return 1
-        print(f"projection fixtures current: {len(CASES)} cases")
+        print(f"projection fixtures current: {len(documents)} documents")
         return 0
 
-    print(f"wrote {len(CASES)} projection fixtures to {EXAMPLES}")
+    print(f"wrote {len(documents)} projection fixtures to {EXAMPLES}")
     for case in CASES:
         print(f"  {case.name}.json  -- {case.proves}")
+    for name in sorted(set(documents) - {case.name for case in CASES}):
+        print(f"  {name}.json  -- generic envelope conformance")
     return 0
 
 

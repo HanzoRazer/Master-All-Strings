@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "canonical_revision_id": "rev-93a7aeae95cd169c7c298810",
+  "ticks_per_quarter": 480,
+  "display_policy": "sharp_preferred_v1",
+  "measures": [
+    {
+      "schema_version": "1.0.0",
+      "measure_index": 0,
+      "start_tick": 0,
+      "end_tick": 1920,
+      "meter": {
+        "schema_version": "1.0.0",
+        "tick": 0,
+        "numerator": 4,
+        "denominator": 4
+      },
+      "events": [
+        {
+          "schema_version": "1.0.0",
+          "event_kind": "note",
+          "start_tick": 0,
+          "duration_ticks": 1920,
+          "canonical_event_id": "ev-1",
+          "midi_note": 64,
+          "display_pitch": "E4",
+          "display_duration": "whole",
+          "derivation": null,
+          "tied_to": "ev-2"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.0.0",
+      "measure_index": 1,
+      "start_tick": 1920,
+      "end_tick": 3840,
+      "meter": {
+        "schema_version": "1.0.0",
+        "tick": 0,
+        "numerator": 4,
+        "denominator": 4
+      },
+      "events": [
+        {
+          "schema_version": "1.0.0",
+          "event_kind": "note",
+          "start_tick": 1920,
+          "duration_ticks": 1920,
+          "canonical_event_id": "ev-2",
+          "midi_note": 64,
+          "display_pitch": "E4",
+          "display_duration": "whole",
+          "derivation": null
+        }
+      ]
+    }
+  ],
+  "unsupported_features": []
+}
