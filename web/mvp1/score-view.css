@@ -1,0 +1,138 @@
+/* Read-only score presentation (DO-013B).
+ *
+ * Scoped to the score surface. Nothing here restyles the existing fretboard,
+ * Zone, media, or practice panels.
+ *
+ * Active-event styling is deliberately a class toggle rather than an inline
+ * attribute: highlighting changes many times a second, and the renderer emits
+ * the same markup whether an event is lit or not.
+ */
+
+.score-panel {
+  margin-top: 1rem;
+}
+
+.score-panel__views {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.score-panel__view {
+  overflow-x: auto;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0.5rem;
+}
+
+.score-panel__unavailable {
+  padding: 0.75rem;
+  border: 1px dashed #d4d4d8;
+  border-radius: 6px;
+  color: #71717a;
+  font-size: 0.875rem;
+}
+
+/* --- tablature ----------------------------------------------------------- */
+
+.tab-view {
+  display: block;
+  max-width: 100%;
+}
+
+.tab-string {
+  stroke: #a1a1aa;
+  stroke-width: 1;
+}
+
+.tab-string-label {
+  fill: #52525b;
+  font: 11px/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
+.tab-event circle {
+  fill: #fff;
+  stroke: #3f3f46;
+  stroke-width: 1.5;
+}
+
+.tab-fret {
+  fill: #18181b;
+  font: 11px/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+  text-anchor: middle;
+}
+
+/* An event the instrument cannot produce. Marked, never given a fingering. */
+.tab-unplayable circle {
+  stroke: #b91c1c;
+  stroke-dasharray: 3 2;
+}
+
+.tab-unplayable .tab-fret {
+  fill: #b91c1c;
+}
+
+/* Canonical music with no selected realization. Distinct from unplayable:
+ * nobody decided this was impossible, only that nothing was chosen. */
+.tab-unresolved circle {
+  stroke: #a16207;
+  stroke-dasharray: 2 2;
+}
+
+.tab-unresolved .tab-fret {
+  fill: #a16207;
+}
+
+.tab-active circle {
+  fill: #fde68a;
+  stroke: #b45309;
+  stroke-width: 2.5;
+}
+
+.tab-loop {
+  fill: #e0f2fe;
+  stroke: none;
+}
+
+.tab-event {
+  cursor: pointer;
+}
+
+.tab-event:focus-visible circle {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .score-panel__view {
+    background: #18181b;
+    border-color: #3f3f46;
+  }
+
+  .tab-string {
+    stroke: #52525b;
+  }
+
+  .tab-string-label {
+    fill: #a1a1aa;
+  }
+
+  .tab-event circle {
+    fill: #18181b;
+    stroke: #d4d4d8;
+  }
+
+  .tab-fret {
+    fill: #f4f4f5;
+  }
+
+  .tab-active circle {
+    fill: #78350f;
+    stroke: #fbbf24;
+  }
+
+  .tab-loop {
+    fill: #1e3a5f;
+  }
+}
