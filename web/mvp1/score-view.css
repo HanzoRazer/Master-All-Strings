@@ -104,10 +104,145 @@
   outline-offset: 2px;
 }
 
+/* --- standard notation ---------------------------------------------------- */
+
+.notation-view {
+  display: block;
+  max-width: 100%;
+}
+
+.notation-staff-line,
+.notation-barline,
+.notation-ledger {
+  stroke: #3f3f46;
+  stroke-width: 1;
+}
+
+.notation-ledger {
+  stroke-width: 1.2;
+}
+
+.notation-clef {
+  font-size: 34px;
+  fill: #18181b;
+}
+
+.notation-tempo {
+  fill: #52525b;
+  font: 12px/1 ui-sans-serif, system-ui, sans-serif;
+}
+
+.notation-meter-numerator,
+.notation-meter-denominator {
+  fill: #18181b;
+  font: 600 13px/1 ui-serif, Georgia, serif;
+}
+
+.notation-notehead {
+  fill: #18181b;
+  stroke: #18181b;
+}
+
+/* Half and whole notes. The stroke stays so the ring reads at small sizes. */
+.notation-hollow {
+  fill: #fff;
+  stroke-width: 1.4;
+}
+
+.notation-stem,
+.notation-flag {
+  stroke: #18181b;
+  stroke-width: 1.2;
+  fill: none;
+}
+
+.notation-accidental {
+  fill: #18181b;
+  font: 14px/1 ui-serif, Georgia, serif;
+  text-anchor: middle;
+}
+
+.notation-dot {
+  fill: #18181b;
+}
+
+.notation-rest {
+  fill: #3f3f46;
+}
+
+/* A duration the V1 grammar cannot engrave. Deliberately not a rest glyph:
+ * showing a nearest value would misstate the music. */
+.notation-unspellable {
+  fill: #a16207;
+  font: 600 12px/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+  text-anchor: middle;
+}
+
+.notation-active .notation-notehead {
+  fill: #b45309;
+  stroke: #b45309;
+}
+
+.notation-active .notation-stem,
+.notation-active .notation-flag {
+  stroke: #b45309;
+}
+
+.notation-note {
+  cursor: pointer;
+}
+
+.notation-note:focus-visible .notation-notehead {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 @media (prefers-color-scheme: dark) {
   .score-panel__view {
     background: #18181b;
     border-color: #3f3f46;
+  }
+
+  .notation-staff-line,
+  .notation-barline,
+  .notation-ledger {
+    stroke: #a1a1aa;
+  }
+
+  .notation-clef,
+  .notation-meter-numerator,
+  .notation-meter-denominator,
+  .notation-accidental,
+  .notation-dot {
+    fill: #f4f4f5;
+  }
+
+  .notation-notehead {
+    fill: #f4f4f5;
+    stroke: #f4f4f5;
+  }
+
+  .notation-hollow {
+    fill: #18181b;
+  }
+
+  .notation-stem,
+  .notation-flag {
+    stroke: #f4f4f5;
+  }
+
+  .notation-rest {
+    fill: #d4d4d8;
+  }
+
+  .notation-active .notation-notehead {
+    fill: #fbbf24;
+    stroke: #fbbf24;
+  }
+
+  .notation-active .notation-stem,
+  .notation-active .notation-flag {
+    stroke: #fbbf24;
   }
 
   .tab-string {
