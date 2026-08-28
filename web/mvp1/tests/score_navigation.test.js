@@ -4,10 +4,15 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import { ScoreViewCoordinator } from "../score-view.js";
-import { mountTabView, applySelectedEventId as tabSelect } from "../tab-view.js";
 import {
-  mountNotationView,
+  applyActiveEventIds as tabActive,
+  applySelectedEventId as tabSelect,
+  mountTabView,
+} from "../tab-view.js";
+import {
+  applyActiveEventIds as notationActive,
   applySelectedEventId as notationSelect,
+  mountNotationView,
 } from "../notation-view.js";
 
 const repoUrl = (path) => fileURLToPath(new URL(path, import.meta.url));
@@ -324,6 +329,87 @@ test("selection survives active-set changes", async () => {
   view.applyActiveEventIds(["ev-1"]);
   assert.equal(state.tab.selected, "ev-2");
   assert.equal(view.selectedEventId, "ev-2");
+});
+
+test("selecting A while the playhead reports B keeps both states distinct", async () => {
+  // The conflation bug this exists to catch: selection quietly becoming
+  // activity, so the view claims the reader's cursor is the sounding note.
+  const { view, state } = await ready();
+  view.applyPlayhead({ active_event_ids: ["ev-2"] });
+  view.selectEvent("ev-1");
+
+  assert.deepEqual(view.activeEventIds, ["ev-2"]);
+  assert.equal(view.selectedEventId, "ev-1");
+  assert.deepEqual(state.tab.active, ["ev-2"]);
+  assert.equal(state.tab.selected, "ev-1");
+  assert.deepEqual(state.notation.active, ["ev-2"]);
+  assert.equal(state.notation.selected, "ev-1");
+
+  // And the order of operations must not matter.
+  const reversed = await ready();
+  reversed.view.selectEvent("ev-1");
+  reversed.view.applyPlayhead({ active_event_ids: ["ev-2"] });
+  assert.deepEqual(reversed.view.activeEventIds, ["ev-2"]);
+  assert.equal(reversed.view.selectedEventId, "ev-1");
+});
+
+test("the renderers mark A selected and B active as separate classes", () => {
+  // Asserted on the real renderers, not the fakes: two groups, two channels.
+  const groups = ["ev-1", "ev-2"].map(fakeGroup);
+  const root = { querySelectorAll: () => groups };
+
+  tabSelect(root, "ev-1");
+  tabActive(root, ["ev-2"]);
+
+  assert.equal(groups[0].classList.has("tab-selected"), true);
+  assert.equal(groups[0].classList.has("tab-active"), false);
+  assert.equal(groups[1].classList.has("tab-active"), true);
+  assert.equal(groups[1].classList.has("tab-selected"), false);
+});
+
+test("one event may be both selected and active without either being lost", () => {
+  const group = fakeGroup("ev-1");
+  const root = { querySelectorAll: () => [group] };
+
+  tabSelect(root, "ev-1");
+  tabActive(root, ["ev-1"]);
+  assert.equal(group.classList.has("tab-selected"), true);
+  assert.equal(group.classList.has("tab-active"), true);
+
+  // The playhead moves on; the selection stays where the reader put it.
+  tabActive(root, []);
+  assert.equal(group.classList.has("tab-active"), false);
+  assert.equal(group.classList.has("tab-selected"), true);
+
+  // And clearing the selection leaves activity alone.
+  tabActive(root, ["ev-1"]);
+  tabSelect(root, null);
+  assert.equal(group.classList.has("tab-selected"), false);
+  assert.equal(group.classList.has("tab-active"), true);
+});
+
+test("notation keeps the same separation for a doubly marked note", () => {
+  const group = fakeGroup("ev-1");
+  const root = { querySelectorAll: () => [group] };
+  notationSelect(root, "ev-1");
+  notationActive(root, ["ev-1"]);
+  assert.equal(group.classList.has("notation-selected"), true);
+  assert.equal(group.classList.has("notation-active"), true);
+
+  notationSelect(root, null);
+  assert.equal(group.classList.has("notation-active"), true);
+});
+
+test("the seek index holds ticks, leaving unit conversion to the existing seam", () => {
+  // Transport.seek takes seconds; the index stores Core-authored ticks. The
+  // bridge is DO-012's secondsAtTick over Core's anchor table, and it lives in
+  // the shell -- putting it here would make the coordinator convert time.
+  for (const event of TAB.payload.events) {
+    assert.equal(typeof event.start_tick, "number");
+  }
+  const code = readFileSync(repoUrl("../score-view.js"), "utf-8");
+  assert.doesNotMatch(code, /secondsAtTick/);
+  assert.doesNotMatch(code, /tickAtSeconds/);
 });
 
 test("the two channels use different classes on the real renderers", () => {
