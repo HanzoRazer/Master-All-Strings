@@ -343,3 +343,25 @@ export function applyActiveEventIds(root, activeEventIds) {
   }
   return applied;
 }
+
+/**
+ * Mark one event as selected.
+ *
+ * A separate class from `tab-active`, and deliberately so: selection is a
+ * reader's pointer, activity is the playhead's answer. Sharing one channel would
+ * let a click overwrite what is sounding, which would make the view lie about
+ * the music to show where someone clicked.
+ *
+ * Passing null clears the selection. Returns the id actually marked, or null.
+ */
+export function applySelectedEventId(root, canonicalEventId) {
+  if (!root?.querySelectorAll) return null;
+  let marked = null;
+  for (const group of root.querySelectorAll("[data-canonical-event-id]")) {
+    const id = group.getAttribute("data-canonical-event-id");
+    const isSelected = canonicalEventId !== null && id === canonicalEventId;
+    group.classList?.toggle("tab-selected", isSelected);
+    if (isSelected) marked = id;
+  }
+  return marked;
+}

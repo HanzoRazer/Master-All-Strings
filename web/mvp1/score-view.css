@@ -90,6 +90,19 @@
   stroke-width: 2.5;
 }
 
+/* Selection is a reader's pointer; active is the playhead's answer. Separate
+ * channels so a click can never overwrite what is sounding. An event can be
+ * both, and both must remain legible. */
+.tab-selected circle {
+  stroke: #2563eb;
+  stroke-width: 2.5;
+}
+
+.tab-selected .tab-fret {
+  fill: #1d4ed8;
+  font-weight: 700;
+}
+
 .tab-loop {
   fill: #e0f2fe;
   stroke: none;
@@ -188,6 +201,16 @@
   stroke: #b45309;
 }
 
+.notation-selected .notation-notehead {
+  stroke: #2563eb;
+  stroke-width: 2.2;
+}
+
+.notation-selected .notation-stem,
+.notation-selected .notation-flag {
+  stroke: #2563eb;
+}
+
 .notation-note {
   cursor: pointer;
 }
@@ -269,5 +292,19 @@
 
   .tab-loop {
     fill: #1e3a5f;
+  }
+
+  .tab-selected circle,
+  .notation-selected .notation-notehead {
+    stroke: #60a5fa;
+  }
+
+  .tab-selected .tab-fret {
+    fill: #93c5fd;
+  }
+
+  .notation-selected .notation-stem,
+  .notation-selected .notation-flag {
+    stroke: #60a5fa;
   }
 }

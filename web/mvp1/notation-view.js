@@ -601,3 +601,24 @@ export function applyActiveEventIds(root, activeEventIds) {
   }
   return applied;
 }
+
+/**
+ * Mark one note as selected.
+ *
+ * Independent of `notation-active`: selection is where a reader is pointing,
+ * activity is what the playhead says is sounding. One channel for both would let
+ * a click misreport the music.
+ *
+ * Passing null clears the selection. Returns the id actually marked, or null.
+ */
+export function applySelectedEventId(root, canonicalEventId) {
+  if (!root?.querySelectorAll) return null;
+  let marked = null;
+  for (const group of root.querySelectorAll("[data-canonical-event-id]")) {
+    const id = group.getAttribute("data-canonical-event-id");
+    const isSelected = canonicalEventId !== null && id === canonicalEventId;
+    group.classList?.toggle("notation-selected", isSelected);
+    if (isSelected) marked = id;
+  }
+  return marked;
+}

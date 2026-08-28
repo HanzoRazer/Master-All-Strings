@@ -23,11 +23,13 @@
 
 import {
   applyActiveEventIds as applyTabActive,
+  applySelectedEventId as applyTabSelection,
   mountTabView,
   seekTickForEvent as tabSeekTick,
 } from "./tab-view.js";
 import {
   applyActiveEventIds as applyNotationActive,
+  applySelectedEventId as applyNotationSelection,
   mountNotationView,
   seekTickForEvent as notationSeekTick,
 } from "./notation-view.js";
@@ -133,10 +135,16 @@ export function buildSeekIndex(tabPayload, notationPayload) {
 }
 
 const DEFAULT_RENDERERS = Object.freeze({
-  tab: { mount: mountTabView, applyActive: applyTabActive, seekTick: tabSeekTick },
+  tab: {
+    mount: mountTabView,
+    applyActive: applyTabActive,
+    applySelection: applyTabSelection,
+    seekTick: tabSeekTick,
+  },
   notation: {
     mount: mountNotationView,
     applyActive: applyNotationActive,
+    applySelection: applyNotationSelection,
     seekTick: notationSeekTick,
   },
 });
@@ -175,6 +183,13 @@ export class ScoreViewCoordinator {
     this.seekIndex = new Map();
     this.activeEventIds = [];
 
+    // Presentation state, not musical state. `selectedEventId` is where a reader
+    // is pointing and `lastSeekTick` is where the transport was last sent from
+    // here; neither is part of the score, and neither survives a lesson change.
+    this.selectedEventId = null;
+    this.lastSeekEventId = null;
+    this.lastSeekTick = null;
+
     // Per-view liveness. A view that failed to render is switched off on its
     // own; nothing about it reaches the other one.
     this.views = {
@@ -198,6 +213,9 @@ export class ScoreViewCoordinator {
     this.displayIndex = new Map();
     this.seekIndex = new Map();
     this.activeEventIds = [];
+    this.selectedEventId = null;
+    this.lastSeekEventId = null;
+    this.lastSeekTick = null;
     this.views.tab = { mounted: false, root: null, error: null };
     this.views.notation = { mounted: false, root: null, error: null };
   }
@@ -245,13 +263,16 @@ export class ScoreViewCoordinator {
     this.displayIndex = buildDisplayIndex(this.tabPayload, this.notationPayload);
     this.seekIndex = buildSeekIndex(this.tabPayload, this.notationPayload);
 
+    // Both views hand clicks back here rather than reaching the transport
+    // themselves, so one place resolves a canonical id to a position.
+    const onSeek = (canonicalEventId) => this.seekTo(canonicalEventId);
     this._mount("tab", {
       lanes: context?.projection?.instrument?.lanes ?? null,
-      onSeek: this._onSeek ?? undefined,
+      onSeek,
     });
     this._mount("notation", {
       tempoContext: context?.projection ?? null,
-      onSeek: this._onSeek ?? undefined,
+      onSeek,
     });
 
     const anyMounted = this.views.tab.mounted || this.views.notation.mounted;
@@ -338,6 +359,55 @@ export class ScoreViewCoordinator {
     this._setStatus(SCORE_STATUS.idle, null);
   }
 
+  // --- navigation ------------------------------------------------------------
+  //
+  // Reads the seek index and nothing else. No arithmetic: the tick was authored
+  // by Core and exported, and recomputing one here would be the browser deciding
+  // where a note begins.
+
+  /**
+   * Seek to where one canonical event begins.
+   *
+   * Deliberately does not touch `activeEventIds`. Moving the transport will make
+   * the playhead publish a new active set in its own time, and anticipating that
+   * here would mean guessing at the answer rather than waiting for it.
+   *
+   * Returns the tick sought to, or null for an event with no authored position.
+   */
+  seekTo(canonicalEventId) {
+    const tick = this.seekTickFor(canonicalEventId);
+    if (tick === null) return null;
+    this.lastSeekEventId = canonicalEventId;
+    this.lastSeekTick = tick;
+    if (typeof this._onSeek === "function") this._onSeek(canonicalEventId, tick);
+    return tick;
+  }
+
+  /**
+   * Mark one canonical event as selected across the score views.
+   *
+   * The fretboard's selection seam. It changes a highlight channel and nothing
+   * else -- not the active set, not the score, not the transport. An id one view
+   * cannot depict is simply unmarked there while the other still marks it.
+   *
+   * Passing null clears the selection.
+   */
+  selectEvent(canonicalEventId) {
+    this.selectedEventId = canonicalEventId ?? null;
+    const marked = { tab: null, notation: null };
+    for (const name of ["tab", "notation"]) {
+      const view = this.views[name];
+      if (!view.mounted) continue;
+      try {
+        marked[name] = this._renderers[name].applySelection(view.root, this.selectedEventId);
+      } catch (error) {
+        view.mounted = false;
+        view.error = String(error?.message ?? error);
+      }
+    }
+    return marked;
+  }
+
   // --- lookups ---------------------------------------------------------------
 
   /** How each view depicts one canonical event. Carries no timing. */
@@ -373,6 +443,9 @@ export class ScoreViewCoordinator {
       tabDigest: this.tabDigest,
       notationDigest: this.notationDigest,
       activeEventIds: [...this.activeEventIds],
+      selectedEventId: this.selectedEventId,
+      lastSeekEventId: this.lastSeekEventId,
+      lastSeekTick: this.lastSeekTick,
       indexedEventCount: this.displayIndex.size,
       seekTargetCount: this.seekIndex.size,
     };
