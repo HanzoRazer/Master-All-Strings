@@ -190,6 +190,11 @@ export class ScoreViewCoordinator {
     this.lastSeekEventId = null;
     this.lastSeekTick = null;
 
+    // What each view actually lit, as opposed to what it was asked to light.
+    // A view that is unmounted lights nothing, and diagnostics should say so
+    // rather than repeating the requested set back as if it had been drawn.
+    this.appliedActive = { tab: [], notation: [] };
+
     // Per-view liveness. A view that failed to render is switched off on its
     // own; nothing about it reaches the other one.
     this.views = {
@@ -216,6 +221,7 @@ export class ScoreViewCoordinator {
     this.selectedEventId = null;
     this.lastSeekEventId = null;
     this.lastSeekTick = null;
+    this.appliedActive = { tab: [], notation: [] };
     this.views.tab = { mounted: false, root: null, error: null };
     this.views.notation = { mounted: false, root: null, error: null };
   }
@@ -351,6 +357,7 @@ export class ScoreViewCoordinator {
         view.error = String(error?.message ?? error);
       }
     }
+    this.appliedActive = applied;
     return applied;
   }
 
@@ -443,6 +450,8 @@ export class ScoreViewCoordinator {
       tabDigest: this.tabDigest,
       notationDigest: this.notationDigest,
       activeEventIds: [...this.activeEventIds],
+      tabActiveEventIds: [...this.appliedActive.tab],
+      notationActiveEventIds: [...this.appliedActive.notation],
       selectedEventId: this.selectedEventId,
       lastSeekEventId: this.lastSeekEventId,
       lastSeekTick: this.lastSeekTick,
