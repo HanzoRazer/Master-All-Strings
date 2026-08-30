@@ -1,0 +1,249 @@
+{
+  "procedure": "DO-013D Stage 7 golden browser proof",
+  "driver": "external Chrome DevTools Protocol script (not committed)",
+  "browser": "Chromium 149.0.7827.55 (headless, playwright cache)",
+  "base_url": "http://127.0.0.1:8813",
+  "observations": [
+    {
+      "id": "B01",
+      "description": "application boots and score status is ready",
+      "result": "PASS",
+      "status": "ready"
+    },
+    {
+      "id": "B02",
+      "description": "no failed score-artifact requests",
+      "result": "PASS",
+      "failedScoreRequests": []
+    },
+    {
+      "id": "B03",
+      "description": "runtime, canonical revision, TAB and notation all agree",
+      "result": "PASS",
+      "agreement": {
+        "lesson": "ascending_scale",
+        "runtime": "rev-cc28c4e1b3a1e2ae9d130332",
+        "revision": "rev-cc28c4e1b3a1e2ae9d130332",
+        "tab": "rev-cc28c4e1b3a1e2ae9d130332",
+        "notation": "rev-cc28c4e1b3a1e2ae9d130332"
+      }
+    },
+    {
+      "id": "B04",
+      "description": "both views loaded and rendered real events",
+      "result": "PASS",
+      "tabLoaded": true,
+      "notationLoaded": true,
+      "tabEvents": 8,
+      "notationEvents": 8,
+      "staffLines": 5
+    },
+    {
+      "id": "B05",
+      "description": "playback produces an active canonical event",
+      "result": "PASS",
+      "activeEventIds": [
+        "ev-1"
+      ]
+    },
+    {
+      "id": "B06",
+      "description": "the active canonical id appears in TAB and notation",
+      "result": "PASS",
+      "crossView": {
+        "activeEventIds": [
+          "ev-1"
+        ],
+        "tabActiveEventIds": [
+          "ev-1"
+        ],
+        "notationActiveEventIds": [
+          "ev-1"
+        ],
+        "agreed": true
+      }
+    },
+    {
+      "id": "B07",
+      "description": "views remain loaded through pause",
+      "result": "PASS",
+      "status": "ready"
+    },
+    {
+      "id": "B08",
+      "description": "TAB click seeks to the clicked canonical event",
+      "result": "PASS",
+      "tabSeek": {
+        "clickedId": "ev-8",
+        "lastSeekEventId": "ev-8",
+        "lastSeekTick": 3360,
+        "positionBefore": 1.1756,
+        "positionAfter": 4.2,
+        "activeEventIds": [
+          "ev-8"
+        ]
+      }
+    },
+    {
+      "id": "B09",
+      "description": "notation click seeks to the clicked canonical event",
+      "result": "PASS",
+      "notationSeek": {
+        "clickedId": "ev-1",
+        "lastSeekEventId": "ev-1",
+        "lastSeekTick": 0,
+        "positionBefore": 4.2,
+        "positionAfter": 0
+      }
+    },
+    {
+      "id": "B18",
+      "description": "fretboard selection reaches the score views",
+      "result": "PASS",
+      "separation": {
+        "fretboardNotes": 8,
+        "selectedEventId": "ev-2",
+        "activeEventIds": [
+          "ev-1"
+        ],
+        "tabSelectedInDom": 1,
+        "notationSelectedInDom": 1,
+        "tabActiveInDom": 1
+      }
+    },
+    {
+      "id": "B10",
+      "description": "a selected event and an active event coexist and differ",
+      "result": "PASS",
+      "selectedEventId": "ev-2",
+      "activeEventIds": [
+        "ev-1"
+      ]
+    },
+    {
+      "id": "B11",
+      "description": "score views keep following at 0.75x",
+      "result": "PASS",
+      "activeEventIds": [
+        "ev-3"
+      ]
+    },
+    {
+      "id": "B12",
+      "description": "projection identity unchanged after a rate change",
+      "result": "PASS",
+      "before": {
+        "canonicalRevisionId": "rev-cc28c4e1b3a1e2ae9d130332",
+        "tabDigest": "sha256:7c1cf893229aba298f221d27b6f6e88149ea110bb44fdec35807cfefcb573010",
+        "notationDigest": "sha256:935cd7300c6d7858ab3559a020b8602bb958e06a251d9a790417c2241884b69b",
+        "tabEventCount": 8,
+        "notationEventCount": 8
+      },
+      "after": {
+        "canonicalRevisionId": "rev-cc28c4e1b3a1e2ae9d130332",
+        "tabDigest": "sha256:7c1cf893229aba298f221d27b6f6e88149ea110bb44fdec35807cfefcb573010",
+        "notationDigest": "sha256:935cd7300c6d7858ab3559a020b8602bb958e06a251d9a790417c2241884b69b",
+        "tabEventCount": 8,
+        "notationEventCount": 8
+      }
+    },
+    {
+      "id": "B13",
+      "description": "loop executes at least three repetitions",
+      "result": "PASS",
+      "repetitionIndex": 3,
+      "loopControlFound": true,
+      "checked": true
+    },
+    {
+      "id": "B14",
+      "description": "projection identity unchanged after looping",
+      "result": "PASS",
+      "before": {
+        "canonicalRevisionId": "rev-cc28c4e1b3a1e2ae9d130332",
+        "tabDigest": "sha256:7c1cf893229aba298f221d27b6f6e88149ea110bb44fdec35807cfefcb573010",
+        "notationDigest": "sha256:935cd7300c6d7858ab3559a020b8602bb958e06a251d9a790417c2241884b69b",
+        "tabEventCount": 8,
+        "notationEventCount": 8
+      },
+      "after": {
+        "canonicalRevisionId": "rev-cc28c4e1b3a1e2ae9d130332",
+        "tabDigest": "sha256:7c1cf893229aba298f221d27b6f6e88149ea110bb44fdec35807cfefcb573010",
+        "notationDigest": "sha256:935cd7300c6d7858ab3559a020b8602bb958e06a251d9a790417c2241884b69b",
+        "tabEventCount": 8,
+        "notationEventCount": 8
+      }
+    },
+    {
+      "id": "B15",
+      "description": "Zone coexists with the score views",
+      "result": "PASS",
+      "zoneEnabled": false
+    },
+    {
+      "id": "B16",
+      "description": "one-string teaching aid coexists",
+      "result": "PASS",
+      "options": 6
+    },
+    {
+      "id": "B17",
+      "description": "Teaching Media and transport remain usable",
+      "result": "PASS",
+      "mediaSyncMode": "detached"
+    },
+    {
+      "id": "B15-17-identity",
+      "description": "projection identity unchanged after coexistence exercises",
+      "result": "PASS",
+      "after": {
+        "canonicalRevisionId": "rev-cc28c4e1b3a1e2ae9d130332",
+        "tabDigest": "sha256:7c1cf893229aba298f221d27b6f6e88149ea110bb44fdec35807cfefcb573010",
+        "notationDigest": "sha256:935cd7300c6d7858ab3559a020b8602bb958e06a251d9a790417c2241884b69b",
+        "tabEventCount": 8,
+        "notationEventCount": 8
+      }
+    },
+    {
+      "id": "B19a",
+      "description": "changing lesson reloads the score views onto the new revision",
+      "result": "PASS",
+      "beforeSwitch": "rev-cc28c4e1b3a1e2ae9d130332",
+      "after": "rev-30e24696b277044941fa4aa8",
+      "status": "ready"
+    },
+    {
+      "id": "B19",
+      "description": "the concert-pitch register limitation is visible, not concealed",
+      "result": "PASS",
+      "registerEvidence": {
+        "lesson": "open_strings",
+        "status": "ready",
+        "ledgerLines": 19,
+        "limitations": [
+          "MVP2C_NOTATION_REGISTER_LIMITATION",
+          "MVP2C_NOTATION_ACCIDENTAL_LIMITATION"
+        ],
+        "canonicalRevisionId": "rev-30e24696b277044941fa4aa8",
+        "tabLoaded": true,
+        "notationLoaded": true
+      }
+    },
+    {
+      "id": "B20",
+      "description": "no DO-013-attributable console errors or score request failures",
+      "result": "PASS",
+      "consoleErrors": [],
+      "failedScoreRequests": [],
+      "allFailedRequests": []
+    }
+  ],
+  "totals": {
+    "checks": 22,
+    "passed": 22,
+    "failed": 0
+  },
+  "console_errors": [],
+  "failed_score_artifact_requests": [],
+  "all_failed_requests": []
+}
