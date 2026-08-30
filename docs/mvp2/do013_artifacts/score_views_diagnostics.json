@@ -1,4 +1,6 @@
 {
+  "candidate_sha": "59e4ea4f08343faa537c6d9ec612ea9c979f9eb7",
+  "execution_checkout_sha": "511054856bab33485fbf50f43f233ba254f08611",
   "lesson_id": "open_strings",
   "scoreViews": {
     "status": "ready",
@@ -82,7 +84,7 @@
       "clickedId": "ev-8",
       "lastSeekEventId": "ev-8",
       "lastSeekTick": 3360,
-      "positionBefore": 1.1756,
+      "positionBefore": 0.8321,
       "positionAfter": 4.2,
       "activeEventIds": [
         "ev-8"
@@ -104,6 +106,23 @@
       "tabSelectedInDom": 1,
       "notationSelectedInDom": 1,
       "tabActiveInDom": 1
+    },
+    "seekActivityAuthority": {
+      "published": [
+        "ev-1"
+      ],
+      "scoreActive": [
+        "ev-1"
+      ],
+      "tabActive": [
+        "ev-1"
+      ],
+      "notationActive": [
+        "ev-1"
+      ],
+      "agrees": true,
+      "tabSubset": true,
+      "notationSubset": true
     },
     "repetitionIndex": 3,
     "coexistence": {

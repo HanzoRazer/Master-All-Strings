@@ -1,23 +1,38 @@
 {
-  "procedure": "DO-013D Stage 7 golden browser proof",
+  "procedure": "DO-013E golden browser proof (B01-B24)",
   "driver": "external Chrome DevTools Protocol script (not committed)",
   "browser": "Chromium 149.0.7827.55 (headless, playwright cache)",
+  "platform": "Windows 11 / Node v24.11",
+  "candidate_sha": "59e4ea4f08343faa537c6d9ec612ea9c979f9eb7",
+  "execution_checkout_sha": "511054856bab33485fbf50f43f233ba254f08611",
   "base_url": "http://127.0.0.1:8813",
+  "lesson_sequence": [
+    "ascending_scale",
+    "open_strings"
+  ],
+  "numbering": "DO-013E B01-B24, with X-prefixed checks beyond the order's list",
+  "crosswalk_note": "The earlier 22/22 capture used a different local numbering; this run is renumbered onto DO-013E B01-B24 and adds the corrected B12 authority-consistency check.",
   "observations": [
     {
       "id": "B01",
-      "description": "application boots and score status is ready",
+      "description": "the real MVP server serves the application",
       "result": "PASS",
       "status": "ready"
     },
     {
       "id": "B02",
+      "description": "score status reaches ready",
+      "result": "PASS",
+      "status": "ready"
+    },
+    {
+      "id": "B03",
       "description": "no failed score-artifact requests",
       "result": "PASS",
       "failedScoreRequests": []
     },
     {
-      "id": "B03",
+      "id": "B04",
       "description": "runtime, canonical revision, TAB and notation all agree",
       "result": "PASS",
       "agreement": {
@@ -29,8 +44,8 @@
       }
     },
     {
-      "id": "B04",
-      "description": "both views loaded and rendered real events",
+      "id": "B05",
+      "description": "TAB is loaded and renders real events",
       "result": "PASS",
       "tabLoaded": true,
       "notationLoaded": true,
@@ -39,7 +54,17 @@
       "staffLines": 5
     },
     {
-      "id": "B05",
+      "id": "B06",
+      "description": "notation is loaded and renders real events",
+      "result": "PASS",
+      "tabLoaded": true,
+      "notationLoaded": true,
+      "tabEvents": 8,
+      "notationEvents": 8,
+      "staffLines": 5
+    },
+    {
+      "id": "B07",
       "description": "playback produces an active canonical event",
       "result": "PASS",
       "activeEventIds": [
@@ -47,7 +72,7 @@
       ]
     },
     {
-      "id": "B06",
+      "id": "B08",
       "description": "the active canonical id appears in TAB and notation",
       "result": "PASS",
       "crossView": {
@@ -64,20 +89,20 @@
       }
     },
     {
-      "id": "B07",
+      "id": "B09",
       "description": "views remain loaded through pause",
       "result": "PASS",
       "status": "ready"
     },
     {
-      "id": "B08",
+      "id": "B10",
       "description": "TAB click seeks to the clicked canonical event",
       "result": "PASS",
       "tabSeek": {
         "clickedId": "ev-8",
         "lastSeekEventId": "ev-8",
         "lastSeekTick": 3360,
-        "positionBefore": 1.1756,
+        "positionBefore": 0.8321,
         "positionAfter": 4.2,
         "activeEventIds": [
           "ev-8"
@@ -85,7 +110,7 @@
       }
     },
     {
-      "id": "B09",
+      "id": "B11",
       "description": "notation click seeks to the clicked canonical event",
       "result": "PASS",
       "notationSeek": {
@@ -97,7 +122,29 @@
       }
     },
     {
-      "id": "B18",
+      "id": "B12",
+      "description": "score activity equals the Teaching Playhead's published set after a seek",
+      "result": "PASS",
+      "authority": {
+        "published": [
+          "ev-1"
+        ],
+        "scoreActive": [
+          "ev-1"
+        ],
+        "tabActive": [
+          "ev-1"
+        ],
+        "notationActive": [
+          "ev-1"
+        ],
+        "agrees": true,
+        "tabSubset": true,
+        "notationSubset": true
+      }
+    },
+    {
+      "id": "B13",
       "description": "fretboard selection reaches the score views",
       "result": "PASS",
       "separation": {
@@ -112,7 +159,7 @@
       }
     },
     {
-      "id": "B10",
+      "id": "B14",
       "description": "a selected event and an active event coexist and differ",
       "result": "PASS",
       "selectedEventId": "ev-2",
@@ -121,7 +168,7 @@
       ]
     },
     {
-      "id": "B11",
+      "id": "B15",
       "description": "score views keep following at 0.75x",
       "result": "PASS",
       "activeEventIds": [
@@ -129,7 +176,7 @@
       ]
     },
     {
-      "id": "B12",
+      "id": "B16",
       "description": "projection identity unchanged after a rate change",
       "result": "PASS",
       "before": {
@@ -148,7 +195,7 @@
       }
     },
     {
-      "id": "B13",
+      "id": "B17",
       "description": "loop executes at least three repetitions",
       "result": "PASS",
       "repetitionIndex": 3,
@@ -156,7 +203,7 @@
       "checked": true
     },
     {
-      "id": "B14",
+      "id": "B18",
       "description": "projection identity unchanged after looping",
       "result": "PASS",
       "before": {
@@ -175,25 +222,25 @@
       }
     },
     {
-      "id": "B15",
+      "id": "B19",
       "description": "Zone coexists with the score views",
       "result": "PASS",
       "zoneEnabled": false
     },
     {
-      "id": "B16",
+      "id": "B20",
       "description": "one-string teaching aid coexists",
       "result": "PASS",
       "options": 6
     },
     {
-      "id": "B17",
+      "id": "B21",
       "description": "Teaching Media and transport remain usable",
       "result": "PASS",
       "mediaSyncMode": "detached"
     },
     {
-      "id": "B15-17-identity",
+      "id": "X01",
       "description": "projection identity unchanged after coexistence exercises",
       "result": "PASS",
       "after": {
@@ -205,7 +252,7 @@
       }
     },
     {
-      "id": "B19a",
+      "id": "X02",
       "description": "changing lesson reloads the score views onto the new revision",
       "result": "PASS",
       "beforeSwitch": "rev-cc28c4e1b3a1e2ae9d130332",
@@ -213,7 +260,7 @@
       "status": "ready"
     },
     {
-      "id": "B19",
+      "id": "B22",
       "description": "the concert-pitch register limitation is visible, not concealed",
       "result": "PASS",
       "registerEvidence": {
@@ -230,17 +277,22 @@
       }
     },
     {
-      "id": "B20",
-      "description": "no DO-013-attributable console errors or score request failures",
+      "id": "B23",
+      "description": "no DO-013-attributable console errors",
       "result": "PASS",
-      "consoleErrors": [],
+      "consoleErrors": []
+    },
+    {
+      "id": "B24",
+      "description": "no failed score-artifact requests",
+      "result": "PASS",
       "failedScoreRequests": [],
       "allFailedRequests": []
     }
   ],
   "totals": {
-    "checks": 22,
-    "passed": 22,
+    "checks": 26,
+    "passed": 26,
     "failed": 0
   },
   "console_errors": [],
