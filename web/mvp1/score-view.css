@@ -1,37 +1,50 @@
-/* Read-only score presentation (DO-013B).
+/* Read-only score presentation (DO-013).
  *
  * Scoped to the score surface. Nothing here restyles the existing fretboard,
  * Zone, media, or practice panels.
  *
- * Active-event styling is deliberately a class toggle rather than an inline
- * attribute: highlighting changes many times a second, and the renderer emits
- * the same markup whether an event is lit or not.
+ * Colours come from the shell's own variables rather than from literals. The
+ * first version of this file was theme-adaptive -- light defaults with a
+ * prefers-color-scheme override -- which was simply wrong for this application:
+ * the shell is unconditionally dark, so the score panels rendered as white
+ * rectangles pasted onto a dark page for every user whose OS reports a light
+ * preference. The golden browser capture showed it plainly.
+ *
+ * Active styling is a class toggle rather than an inline attribute: highlighting
+ * changes many times a second, and the renderer emits the same markup whether an
+ * event is lit or not.
  */
 
 .score-panel {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 .score-panel__views {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .score-panel__view {
   overflow-x: auto;
-  border: 1px solid #d4d4d8;
-  border-radius: 6px;
-  background: #fff;
-  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 0.75rem 1rem;
 }
 
 .score-panel__unavailable {
-  padding: 0.75rem;
-  border: 1px dashed #d4d4d8;
-  border-radius: 6px;
-  color: #71717a;
-  font-size: 0.875rem;
+  margin: 0;
+  padding: 0.7rem 1rem;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--muted);
+  font: 0.85rem/1.4 var(--font);
 }
 
 /* --- tablature ----------------------------------------------------------- */
@@ -42,69 +55,78 @@
 }
 
 .tab-string {
-  stroke: #a1a1aa;
+  stroke: var(--line);
   stroke-width: 1;
 }
 
 .tab-string-label {
-  fill: #52525b;
-  font: 11px/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+  fill: var(--muted);
+  font: 11px/1 var(--mono);
 }
 
 .tab-event circle {
-  fill: #fff;
-  stroke: #3f3f46;
+  fill: var(--panel-2);
+  stroke: var(--muted);
   stroke-width: 1.5;
 }
 
 .tab-fret {
-  fill: #18181b;
-  font: 11px/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+  fill: var(--ink);
+  font: 11px/1 var(--mono);
   text-anchor: middle;
 }
 
 /* An event the instrument cannot produce. Marked, never given a fingering. */
 .tab-unplayable circle {
-  stroke: #b91c1c;
+  stroke: var(--danger);
   stroke-dasharray: 3 2;
 }
 
 .tab-unplayable .tab-fret {
-  fill: #b91c1c;
+  fill: var(--danger);
 }
 
 /* Canonical music with no selected realization. Distinct from unplayable:
  * nobody decided this was impossible, only that nothing was chosen. */
 .tab-unresolved circle {
-  stroke: #a16207;
+  stroke: var(--accent);
   stroke-dasharray: 2 2;
 }
 
 .tab-unresolved .tab-fret {
-  fill: #a16207;
+  fill: var(--accent);
 }
 
 .tab-active circle {
-  fill: #fde68a;
-  stroke: #b45309;
+  fill: var(--play);
+  stroke: var(--accent);
   stroke-width: 2.5;
+}
+
+.tab-active .tab-fret {
+  fill: #12161c;
+  font-weight: 700;
 }
 
 /* Selection is a reader's pointer; active is the playhead's answer. Separate
  * channels so a click can never overwrite what is sounding. An event can be
  * both, and both must remain legible. */
 .tab-selected circle {
-  stroke: #2563eb;
+  stroke: var(--accent-2);
   stroke-width: 2.5;
 }
 
 .tab-selected .tab-fret {
-  fill: #1d4ed8;
+  fill: var(--accent-2);
   font-weight: 700;
 }
 
+.tab-active.tab-selected .tab-fret {
+  fill: #12161c;
+}
+
 .tab-loop {
-  fill: #e0f2fe;
+  fill: rgba(110, 196, 255, 0.12);
   stroke: none;
 }
 
@@ -113,7 +135,7 @@
 }
 
 .tab-event:focus-visible circle {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--accent-2);
   outline-offset: 2px;
 }
 
@@ -127,88 +149,89 @@
 .notation-staff-line,
 .notation-barline,
 .notation-ledger {
-  stroke: #3f3f46;
+  stroke: var(--line);
   stroke-width: 1;
 }
 
 .notation-ledger {
+  stroke: var(--muted);
   stroke-width: 1.2;
 }
 
 .notation-clef {
   font-size: 34px;
-  fill: #18181b;
+  fill: var(--ink);
 }
 
 .notation-tempo {
-  fill: #52525b;
-  font: 12px/1 ui-sans-serif, system-ui, sans-serif;
+  fill: var(--muted);
+  font: 12px/1 var(--font);
 }
 
 .notation-meter-numerator,
 .notation-meter-denominator {
-  fill: #18181b;
-  font: 600 13px/1 ui-serif, Georgia, serif;
+  fill: var(--ink);
+  font: 600 13px/1 var(--font);
 }
 
 .notation-notehead {
-  fill: #18181b;
-  stroke: #18181b;
+  fill: var(--ink);
+  stroke: var(--ink);
 }
 
 /* Half and whole notes. The stroke stays so the ring reads at small sizes. */
 .notation-hollow {
-  fill: #fff;
+  fill: var(--panel);
   stroke-width: 1.4;
 }
 
 .notation-stem,
 .notation-flag {
-  stroke: #18181b;
+  stroke: var(--ink);
   stroke-width: 1.2;
   fill: none;
 }
 
 .notation-accidental {
-  fill: #18181b;
-  font: 14px/1 ui-serif, Georgia, serif;
+  fill: var(--ink);
+  font: 14px/1 var(--font);
   text-anchor: middle;
 }
 
 .notation-dot {
-  fill: #18181b;
+  fill: var(--ink);
 }
 
 .notation-rest {
-  fill: #3f3f46;
+  fill: var(--muted);
 }
 
 /* A duration the V1 grammar cannot engrave. Deliberately not a rest glyph:
  * showing a nearest value would misstate the music. */
 .notation-unspellable {
-  fill: #a16207;
-  font: 600 12px/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+  fill: var(--accent);
+  font: 600 12px/1 var(--mono);
   text-anchor: middle;
 }
 
 .notation-active .notation-notehead {
-  fill: #b45309;
-  stroke: #b45309;
+  fill: var(--play);
+  stroke: var(--play);
 }
 
 .notation-active .notation-stem,
 .notation-active .notation-flag {
-  stroke: #b45309;
+  stroke: var(--play);
 }
 
 .notation-selected .notation-notehead {
-  stroke: #2563eb;
+  stroke: var(--accent-2);
   stroke-width: 2.2;
 }
 
 .notation-selected .notation-stem,
 .notation-selected .notation-flag {
-  stroke: #2563eb;
+  stroke: var(--accent-2);
 }
 
 .notation-note {
@@ -216,95 +239,6 @@
 }
 
 .notation-note:focus-visible .notation-notehead {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--accent-2);
   outline-offset: 2px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .score-panel__view {
-    background: #18181b;
-    border-color: #3f3f46;
-  }
-
-  .notation-staff-line,
-  .notation-barline,
-  .notation-ledger {
-    stroke: #a1a1aa;
-  }
-
-  .notation-clef,
-  .notation-meter-numerator,
-  .notation-meter-denominator,
-  .notation-accidental,
-  .notation-dot {
-    fill: #f4f4f5;
-  }
-
-  .notation-notehead {
-    fill: #f4f4f5;
-    stroke: #f4f4f5;
-  }
-
-  .notation-hollow {
-    fill: #18181b;
-  }
-
-  .notation-stem,
-  .notation-flag {
-    stroke: #f4f4f5;
-  }
-
-  .notation-rest {
-    fill: #d4d4d8;
-  }
-
-  .notation-active .notation-notehead {
-    fill: #fbbf24;
-    stroke: #fbbf24;
-  }
-
-  .notation-active .notation-stem,
-  .notation-active .notation-flag {
-    stroke: #fbbf24;
-  }
-
-  .tab-string {
-    stroke: #52525b;
-  }
-
-  .tab-string-label {
-    fill: #a1a1aa;
-  }
-
-  .tab-event circle {
-    fill: #18181b;
-    stroke: #d4d4d8;
-  }
-
-  .tab-fret {
-    fill: #f4f4f5;
-  }
-
-  .tab-active circle {
-    fill: #78350f;
-    stroke: #fbbf24;
-  }
-
-  .tab-loop {
-    fill: #1e3a5f;
-  }
-
-  .tab-selected circle,
-  .notation-selected .notation-notehead {
-    stroke: #60a5fa;
-  }
-
-  .tab-selected .tab-fret {
-    fill: #93c5fd;
-  }
-
-  .notation-selected .notation-stem,
-  .notation-selected .notation-flag {
-    stroke: #60a5fa;
-  }
 }

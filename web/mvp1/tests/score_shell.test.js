@@ -417,6 +417,33 @@ test("app.js wires the score views without owning them", () => {
   assert.equal((code.match(/secondsAtTick/g) || []).length, 2);
 });
 
+test("every lesson load reaches the score views, including a lesson change", () => {
+  // Regression for a defect the golden browser proof found: loadSession took an
+  // optional demo id, the lesson-change handler omitted it, and switching
+  // lessons left the score panel idle while every other surface reloaded. The
+  // id now comes from the applied payload, so no call site can forget it.
+  const code = readFileSync(repoUrl("../app.js"), "utf-8");
+
+  assert.doesNotMatch(code, /async function loadSession\(paths,/);
+  assert.match(code, /await loadScoreViews\(state\.payload\?\.demo_id/);
+
+  // Every loadSession call site passes paths only. Counted at bracket depth so
+  // an array-literal argument's own commas are not mistaken for a second one.
+  for (const match of code.matchAll(/loadSession\(/g)) {
+    let depth = 0;
+    let topLevelCommas = 0;
+    for (let i = match.index + "loadSession(".length; i < code.length; i += 1) {
+      const character = code[i];
+      if ("([{".includes(character)) depth += 1;
+      else if (")]}".includes(character)) {
+        if (depth === 0) break;
+        depth -= 1;
+      } else if (character === "," && depth === 0) topLevelCommas += 1;
+    }
+    assert.equal(topLevelCommas, 0, "a loadSession call still passes a second argument");
+  }
+});
+
 test("index.html mounts the score containers and its stylesheet", () => {
   const html = readFileSync(repoUrl("../index.html"), "utf-8");
   assert.match(html, /id="tabView"/);

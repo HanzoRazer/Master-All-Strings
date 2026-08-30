@@ -524,12 +524,15 @@ function sessionPathsForDemo(demoId) {
   ];
 }
 
-async function loadSession(paths, demoId = null) {
+async function loadSession(paths) {
   const artifacts = await Promise.all(paths.map((path) => loadJson(path)));
   applySessionArtifacts(...artifacts);
-  // After the timeline is bound, so the score views join a lesson that already
-  // has anchors to follow.
-  await loadScoreViews(demoId);
+  // The demo id comes from the payload the exporter stamped, not from a
+  // parameter. It was a parameter first, and the lesson-change handler forgot to
+  // pass it -- so switching lessons left the score views unloaded while every
+  // other surface reloaded. Reading it from the applied payload means no call
+  // site can omit it.
+  await loadScoreViews(state.payload?.demo_id ?? null);
 }
 
 async function loadInitialSession() {
@@ -548,7 +551,7 @@ async function loadInitialSession() {
     ]);
   }
   if (!state.demos.length) throw new Error("No lesson available");
-  return loadSession(sessionPathsForDemo(state.demos[0].demo_id), state.demos[0].demo_id);
+  return loadSession(sessionPathsForDemo(state.demos[0].demo_id));
 }
 
 async function bootstrap() {
