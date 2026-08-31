@@ -190,19 +190,30 @@ are included in that run.
 
 ---
 
-## 7. The Windows DO-008 condition, resolved
+## 7. The Windows DO-008 discrepancy — a confirmed platform checkout artifact
 
 Throughout this tranche the Windows checkout reported one failure:
 `test_do008_end_to_end.py::test_checked_in_bundle_correlates_all_authoritative_semantic_events`.
 
-The cause is a checkout artifact, now confirmed rather than assumed. The working
-tree's `resources/mvp2/do008_bundle/zone_semantics.json` carries one CRLF pair
-where the committed blob has LF, so its sha256 is `743977fe…` against the
-manifest's pinned `c59e5c83…`.
+**Nothing on Windows was changed, and the Windows condition itself is not
+resolved.** What authoritative Linux execution established is narrower and more
+useful: DO-008 is healthy, and the Windows discrepancy is isolated to CRLF
+transformation at checkout.
+
+The mechanism is confirmed rather than assumed. The Windows working tree's
+`resources/mvp2/do008_bundle/zone_semantics.json` carries one CRLF pair where the
+committed blob has LF, so its sha256 reads `743977fe…` against the manifest's
+pinned `c59e5c83…`. The bytes in git are correct; the bytes on that disk are not
+the bytes git stores.
 
 **On Linux CI the same test passes.** The Linux run reports 2534 passed against
 Windows' 2533 — the difference is exactly this test. No DO-008 file was modified,
 and `.gitattributes` was not touched.
+
+An auditor asking later why the Windows suite still reports 2533 rather than 2534
+should read that as the expected, documented state of a Windows checkout under
+the current `.gitattributes` configuration — not as an unresolved DO-008 defect,
+and not as something DO-013 fixed.
 
 DO-009's frozen digest remains
 `sha256:c1249457f3d9c9a26b19fc3f8338c1844bec9c6af08809b059d31b89949175d4`.
@@ -262,3 +273,22 @@ string_master_v.4.0-master (14)/
 Python; Windows certifies JavaScript units and the browser proof.
 
 Merge: **no**. MVP 2 tag: **no**. `mvp-1`: unchanged.
+
+---
+
+## 11. Publication report: not applicable at this lifecycle state
+
+DO-011 and DO-012 each carry a `_PUBLICATION_REPORT.md` alongside their release
+report. DO-013 deliberately does not, and the asymmetry is the point.
+
+Those tranches reached a publication lifecycle: they were merged, and their
+publication reports record an event that actually happened. DO-013 has not been
+authorized to merge. PR #23 remains draft, nothing has reached `main`, and no
+MVP 2 tag exists.
+
+Creating a publication report now for visual symmetry would weaken the evidence
+model by implying a publication event that has not occurred.
+
+If DO-013 is later authorized and merged, that subsequent tranche should create
+`DO013_PUBLICATION_REPORT.md` against the actual merge SHA and the post-merge CI
+evidence — the only point at which such a document can say anything true.
