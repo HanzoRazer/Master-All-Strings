@@ -1,0 +1,218 @@
+{
+  "schema_version": "1.0.0",
+  "dev_order": "DO-013",
+  "milestone": "MVP 2C",
+  "title": "Canonical revision wiring + synchronized TAB and standard notation",
+  "branch": "cursor/mvp2c-score-projections-90b8",
+  "pr_target": "main",
+  "pull_request": 23,
+  "pull_request_url": "https://github.com/HanzoRazer/Master-All-Strings/pull/23",
+  "pull_request_state": "draft",
+  "merge_authorized": false,
+  "tag_authorized": false,
+
+  "identity": {
+    "mvp1_release_sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc",
+    "mvp1_tag_unchanged": true,
+    "mvp2b_baseline_sha": "8bb4e5938d64802a02117b5de49c294909c09d7e",
+    "do013_base_sha": "10b706271ddf9ad1cf4d8d4d90cfb9e24927cb6e",
+    "do013_base_descends_from_mvp2b_baseline": true,
+    "do013_product_sha": "59e4ea4f08343faa537c6d9ec612ea9c979f9eb7",
+    "do013_browser_evidence_sha": "511054856bab33485fbf50f43f233ba254f08611",
+    "do013_supplementary_evidence_sha": "0bfca41bd85b1057f3d33dce2ca4d20976cfbb00",
+    "product_sha_note": "The product candidate is the last commit that changes executable product code. Evidence-only commits after it do not redefine product identity."
+  },
+
+  "implementation": {
+    "commit_ledger": [
+      { "sha": "8acaaf2", "stage": "baseline + architecture boundary" },
+      { "sha": "97baa9f", "stage": "meter through lesson resolution" },
+      { "sha": "ebf87f7", "stage": "document identity + canonical revision seam" },
+      { "sha": "3ea0fe1", "stage": "projection contracts + TAB/notation builders" },
+      { "sha": "bb6277b", "stage": "generic dispatcher + deterministic digests" },
+      { "sha": "b9f71e6", "stage": "authored provenance + lesson-stamped created_at" },
+      { "sha": "f40f3b8", "stage": "deterministic static score export" },
+      { "sha": "60e2e06", "stage": "synthetic projection edge fixtures" },
+      { "sha": "b0c13a5", "stage": "projection schema freeze" },
+      { "sha": "201f398", "stage": "schema rejection hardening" },
+      { "sha": "cfbe2ca", "stage": "browser TAB renderer" },
+      { "sha": "9da844f", "stage": "browser notation renderer" },
+      { "sha": "c4d3462", "stage": "score coordinator" },
+      { "sha": "28563fb", "stage": "cross-view navigation" },
+      { "sha": "ebb84c5", "stage": "selection/activity conflation lock" },
+      { "sha": "21ae5c2", "stage": "shell wiring, diagnostics, coexistence" },
+      { "sha": "59e4ea4", "stage": "browser-discovered defect corrections (product candidate)" },
+      { "sha": "5110548", "stage": "first golden browser evidence capture" },
+      { "sha": "0bfca41", "stage": "supplementary DO-013E-normalized browser evidence" }
+    ],
+    "history_rewritten": false,
+    "contracts_added": [
+      "ProjectionRequestV1",
+      "ProjectionResultV1",
+      "TabProjectionV1",
+      "NotationProjectionV1",
+      "ProjectionUnsupportedFeatureV1"
+    ],
+    "contracts_changed_during_certification": "none",
+    "schemas_changed_during_certification": "none",
+    "canonical_revision_wiring_introduced": true,
+    "canonical_revision_note": "Authored lessons mint a real CanonicalScoreRevisionV1 through CanonicalRevisionService with MANUAL_CONSTRUCTION provenance. No capture provenance is fabricated; event_provenance is empty because no capture exists behind an authored lesson.",
+    "defects_found_during_certification": [
+      {
+        "sha": "59e4ea4",
+        "defect": "Switching lessons left the score panel idle because loadSession took an optional demo id the lesson-change handler did not pass.",
+        "fix": "The demo id is read from the exported payload, so no call site can omit it.",
+        "found_by": "golden browser proof",
+        "regression_test": "web/mvp1/tests/score_shell.test.js"
+      },
+      {
+        "sha": "59e4ea4",
+        "defect": "Score panels rendered light-themed on an unconditionally dark shell, because score-view.css was written theme-adaptive.",
+        "fix": "Colours now come from the shell's own CSS variables.",
+        "found_by": "golden browser proof screenshot",
+        "regression_test": "visual, captured in do013_artifacts"
+      }
+    ]
+  },
+
+  "browser": {
+    "platform": "Windows 11",
+    "browser": "Chromium 149.0.7827.55 (headless)",
+    "driver": "external Chrome DevTools Protocol script, not committed",
+    "candidate_sha": "59e4ea4f08343faa537c6d9ec612ea9c979f9eb7",
+    "execution_checkout_sha": "511054856bab33485fbf50f43f233ba254f08611",
+    "checks_total": 26,
+    "checks_passed": 26,
+    "checks_failed": 0,
+    "numbering": "DO-013E B01-B24 plus X01/X02",
+    "lessons_exercised": ["ascending_scale", "open_strings"],
+    "score_status": "ready",
+    "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+    "tab_digest": "sha256:7c1cf893229aba298f221d27b6f6e88149ea110bb44fdec35807cfefcb573010",
+    "notation_digest": "sha256:935cd7300c6d7858ab3559a020b8602bb958e06a251d9a790417c2241884b69b",
+    "digests_match_python_suite": true,
+    "revision_agreement": "canonical revision, TAB and notation all cite the same revision",
+    "cross_view_identity": "the active canonical id appears in activeEventIds, tabActiveEventIds and notationActiveEventIds",
+    "tab_click_to_seek": "PASS",
+    "notation_click_to_seek": "PASS",
+    "seek_activity_authority": "PASS - score activeEventIds equals the Teaching Playhead published set; each renderer's drawn set is a subset",
+    "selection_activity_separation": "PASS - a selected event and an active event coexist and differ",
+    "fretboard_selection_reaches_score": "PASS",
+    "rate_coexistence": "PASS at 0.75x",
+    "rate_invariance": "PASS",
+    "loop_repetitions": 3,
+    "loop_invariance": "PASS",
+    "zone_coexistence": "PASS",
+    "one_string_coexistence": "PASS",
+    "lesson_media_coexistence": "PASS",
+    "lesson_change_reload": "PASS",
+    "console_errors": 0,
+    "failed_score_artifact_requests": 0,
+    "artifacts": [
+      "docs/mvp2/do013_artifacts/golden_score_overview.png",
+      "docs/mvp2/do013_artifacts/golden_tab_active.png",
+      "docs/mvp2/do013_artifacts/golden_notation_active.png",
+      "docs/mvp2/do013_artifacts/golden_loop.png",
+      "docs/mvp2/do013_artifacts/golden_notation_register_limitation.png",
+      "docs/mvp2/do013_artifacts/score_views_diagnostics.json",
+      "docs/mvp2/do013_artifacts/browser_smoke_summary.json"
+    ]
+  },
+
+  "node": {
+    "platform": "Windows 11",
+    "runtime": "Node v24.11.0",
+    "command": "node --test tests/*.test.js",
+    "passed": 328,
+    "failed": 0,
+    "linux_node_ci": "NOT PRESENT IN CURRENT REPOSITORY CI",
+    "deferred_ci_gap": "The repository's Linux CI workflow does not execute the Node suite. DO-013 uses the established Windows Node runtime for JavaScript-unit certification. This is a pre-existing CI limitation, not introduced by DO-013."
+  },
+
+  "linux_certification": {
+    "authority": "GitHub Actions ubuntu-latest",
+    "workflow": ".github/workflows/verify.yml",
+    "workflow_unmodified": true,
+    "github_actions_run_id": 33343196695,
+    "github_actions_head_sha": "0bfca41bd85b1057f3d33dce2ca4d20976cfbb00",
+    "github_actions_conclusion": "success",
+    "ruff": "PASS",
+    "mypy_strict": "PASS",
+    "pytest_passed": 2534,
+    "pytest_failed": 0,
+    "pytest_skipped": 3,
+    "coverage": "95.34%",
+    "coverage_threshold": "95.00%",
+    "wsl_status": "NOT_CERTIFICATION_CAPABLE",
+    "wsl_reasons": [
+      "no network access",
+      "no passwordless sudo",
+      "incomplete Python dependency set (referencing absent)",
+      "no Node runtime"
+    ],
+    "wsl_note": "An environment limitation of this workstation, not a product failure. GitHub Actions is the authoritative Linux gate."
+  },
+
+  "regressions": {
+    "do008_result": "PASS on Linux (tests/integrations/test_do008_end_to_end.py, 2 passed)",
+    "do008_windows_note": "The Windows checkout reports a sha256 mismatch on resources/mvp2/do008_bundle/zone_semantics.json because the working tree carries one CRLF pair where the committed blob has LF. Working-tree sha256:743977fe..., committed blob sha256:c59e5c83.... Confirmed a checkout artifact: the same test passes on Linux CI. No DO-008 file was modified.",
+    "do009_digest": "sha256:c1249457f3d9c9a26b19fc3f8338c1844bec9c6af08809b059d31b89949175d4",
+    "do009_digest_unchanged": true,
+    "do010_result": "PASS",
+    "do011_result": "PASS",
+    "do012_result": "PASS",
+    "do012a_result": "PASS",
+    "projection_schemas": "PASS",
+    "schema_rejection_matrix": "PASS (29 mutations across four contracts)",
+    "synthetic_fixtures": "PASS, drift-free (5 cases)",
+    "governance": "PASS",
+    "non_interference": "Musical Core, MSME, Zone semantics, Performance evidence, Educational interpretation and Teaching Timeline timing all unchanged except the authorized meter propagation and the additive projection/export artifacts."
+  },
+
+  "limitations": [
+    {
+      "code": "MVP2C_NOTATION_REGISTER_LIMITATION",
+      "description": "Concert-pitch guitar notes are rendered faithfully on a single treble staff. Low-register guitar material may therefore require extensive ledger lines. Guitar octave-transposing notation and alternate clefs are deferred.",
+      "evidence": "docs/mvp2/do013_artifacts/golden_notation_register_limitation.png"
+    },
+    {
+      "code": "MVP2C_NOTATION_ACCIDENTAL_LIMITATION",
+      "description": "An accidental is drawn for every note whose Core-authored display_pitch carries one. Measure-level accidental persistence is deferred, because carrying an accidental through the bar makes the printed glyph depend on neighbouring notes rather than on this note's spelling."
+    },
+    {
+      "code": "MVP2C_UNSUPPORTED_DURATION_PLACEHOLDER",
+      "description": "A note or derived rest whose duration the V1 grammar cannot spell exactly keeps its exact tick span and receives a neutral placeholder. No nearest-glyph approximation is made."
+    },
+    {
+      "code": "MVP2C_NO_TIE_INFERENCE",
+      "description": "Ties are never inferred. Adjacent same-pitch notes, including across a barline, remain independent events. The notation contract has no tie representation at all."
+    },
+    {
+      "code": "MVP2C_VOICE_SPECIFIC_REST_UNAVAILABLE",
+      "description": "Rests derive only from global silence. Per-voice rest inference is unavailable because the corpus carries no voice evidence."
+    },
+    {
+      "code": "DEFERRED_CI_GAP",
+      "description": "Linux CI does not execute the Node suite. JavaScript unit certification is Windows-based."
+    }
+  ],
+
+  "workspace": {
+    "tracked_tree_clean": true,
+    "untracked_unrelated_paths": [
+      "Master-All-Strings.code-workspace",
+      "sg-agentd-master (8)/",
+      "string_master_v.4.0-master (14)/"
+    ],
+    "untracked_note": "Pre-existing workspace material unrelated to DO-013. Left untouched, unstaged, and unmodified. The tracked tree is clean; the working directory as a whole is not."
+  },
+
+  "publication": {
+    "branch_pushed": true,
+    "draft_pull_request": 23,
+    "merged": false,
+    "mvp2_tag_created": false,
+    "mvp2_released": false,
+    "status": "IMPLEMENTED - BROWSER-PROVEN - CI-CERTIFIED - EVIDENCE-FROZEN - DRAFT PR OPEN"
+  }
+}
