@@ -391,25 +391,41 @@ def _mismatched_envelope() -> dict[str, Any]:
     return envelope
 
 
-def test_the_schema_alone_accepts_a_mismatched_envelope() -> None:
-    """Why the kind/payload rule is not in the schema (D3).
+def test_the_schema_refuses_a_mismatched_envelope() -> None:
+    """A schema-only consumer must not accept a mislabelled result.
 
-    ``payload`` is a oneOf, so a notation payload under ``projection_kind: tab``
-    satisfies it: one branch matched. Expressing the correspondence in JSON Schema
-    is possible but reports every unmatched branch instead of the single violation
-    that occurred, which is worse evidence than none. This test records that the
-    gap is deliberate -- if it ever starts failing, the schema gained the rule and
-    the Python guard below may be redundant rather than load-bearing.
+    This began as a oneOf on ``payload`` alone, which accepted a notation payload
+    under ``projection_kind: tab`` because one branch still matched. The
+    justification at the time was that a union reports every unmatched branch
+    rather than the one violation -- true of a union, but not a reason to leave
+    the rule out. The if/then form couples kind to payload and still reports
+    precisely, so the gap was closed rather than documented.
     """
 
-    assert _validator("projection_result_v1").is_valid(_mismatched_envelope())
+    assert not _validator("projection_result_v1").is_valid(_mismatched_envelope())
 
 
-def test_python_refuses_the_mismatch_the_schema_allows() -> None:
-    """The invariant itself, enforced where it can be reported precisely.
+def test_the_mismatch_is_reported_against_the_expected_payload() -> None:
+    """The diagnostic a union could not give: which shape was required."""
 
-    The error names the expected payload type, which is the diagnostic a oneOf
-    cannot produce.
+    errors = list(_validator("projection_result_v1").iter_errors(_mismatched_envelope()))
+    assert errors
+    assert any("payload" in list(error.absolute_path) for error in errors)
+
+
+@pytest.mark.parametrize("kind", ["tab", "notation"])
+def test_each_kind_accepts_its_own_payload(kind: str) -> None:
+    """So the refusal above is about the pairing, not about either payload."""
+
+    _validator("projection_result_v1").validate(_example(f"projection_result_{kind}"))
+
+
+def test_python_refuses_the_mismatch_too() -> None:
+    """Both descriptions now refuse it, and both should.
+
+    The schema protects consumers that never run Python; the contract protects
+    callers that never serialize. Neither is redundant, because neither sees the
+    cases the other does.
     """
 
     notation_payload = _build_notation_payload()

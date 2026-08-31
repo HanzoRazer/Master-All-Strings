@@ -158,10 +158,9 @@ export function hasUndisplayedTempoChanges(tempoContext) {
 function measureWidths(measures) {
   const spans = measures.map((m) => Math.max(1, m.end_tick - m.start_tick));
   const total = spans.reduce((sum, span) => sum + span, 0) || 1;
-  const available = Math.max(
-    measures.length * STAFF_GEOMETRY.measureMinWidth,
-    measures.length * STAFF_GEOMETRY.measureMinWidth,
-  );
+  // Total width scales with the number of bars, so bars keep a usable size as a
+  // lesson grows instead of being squeezed into a fixed span.
+  const available = measures.length * STAFF_GEOMETRY.measureMinWidth;
   return spans.map((span) => round2((span / total) * available));
 }
 

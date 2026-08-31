@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://master-all-strings.dev/schema/projections/projection-result-v1.schema.json",
   "title": "ProjectionResultV1",
-  "description": "The generic envelope every projection travels in. It carries the citation (canonical_revision_id), the label (projection_kind), the deterministic digest, and one typed payload. The payload is validated as either shape here; the stronger invariants -- that the kind matches the payload's type, and that the envelope and payload cite the same revision -- are enforced in Python, where a mismatch can be reported as the specific contract violation it is rather than as a failed union branch.",
+  "description": "The generic envelope every projection travels in. It carries the citation (canonical_revision_id), the label (projection_kind), the deterministic digest, and one typed payload. projection_kind and payload are coupled: a tab envelope must carry a TabProjectionV1 and a notation envelope a NotationProjectionV1, so a schema-only consumer cannot accept a mislabelled result. The remaining invariant -- that the envelope and payload cite the same revision -- stays in Python, since JSON Schema cannot compare two sibling values.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -23,14 +23,8 @@
     },
     "projection_kind": { "enum": ["tab", "notation"] },
     "payload": {
-      "oneOf": [
-        {
-          "$ref": "https://master-all-strings.dev/schema/projections/tab-projection-v1.schema.json"
-        },
-        {
-          "$ref": "https://master-all-strings.dev/schema/projections/notation-projection-v1.schema.json"
-        }
-      ]
+      "description": "The typed projection. Which shape is required is decided by projection_kind, in the allOf below.",
+      "type": "object"
     },
     "digest": {
       "description": "sha256 over the payload, excluding the digest itself and projection_id.",
@@ -43,5 +37,35 @@
         "$ref": "https://master-all-strings.dev/schema/projections/projection-unsupported-feature-v1.schema.json"
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "description": "A tab envelope must carry a TabProjectionV1. Expressed as if/then rather than a oneOf on payload alone: a union would accept a notation payload under projection_kind tab, since one branch would still match, and a schema-only consumer would have no way to notice.",
+      "if": {
+        "properties": { "projection_kind": { "const": "tab" } },
+        "required": ["projection_kind"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://master-all-strings.dev/schema/projections/tab-projection-v1.schema.json"
+          }
+        }
+      }
+    },
+    {
+      "description": "A notation envelope must carry a NotationProjectionV1.",
+      "if": {
+        "properties": { "projection_kind": { "const": "notation" } },
+        "required": ["projection_kind"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://master-all-strings.dev/schema/projections/notation-projection-v1.schema.json"
+          }
+        }
+      }
+    }
+  ]
 }

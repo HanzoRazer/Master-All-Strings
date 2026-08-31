@@ -261,9 +261,19 @@ def build_selection(
     selected: dict[str, SelectedSpatialRealizationV1] = {}
     for event in revision.events:
         if event.event_id in case.withheld_selection:
+            # Deliberately absent, which is what UNRESOLVED means.
             continue
         candidates = generate_candidates(event, profile)
         if not candidates:
+            # No candidates means the instrument cannot produce the pitch, which
+            # is UNPLAYABLE. Skipping instead would leave no entry at all and
+            # render as UNRESOLVED -- a different claim, and the wrong one: it
+            # would say nobody chose a position rather than that none exists.
+            # The orchestrator records this same reason on the product path.
+            selected[event.event_id] = SelectedSpatialRealizationV1(
+                canonical_event_id=event.event_id,
+                unplayable_reason="no_playable_position",
+            )
             continue
         selected[event.event_id] = SelectedSpatialRealizationV1(
             canonical_event_id=event.event_id, position=candidates[0]

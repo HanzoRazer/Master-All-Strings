@@ -19,7 +19,6 @@ from typing import Any
 
 from master_all_strings.core.projections.contracts import (
     NotationProjectionV1,
-    ProjectionRequestV1,
     TabProjectionV1,
 )
 from master_all_strings.core.score.errors import ScoreContractError
@@ -67,17 +66,20 @@ def projection_to_json(record: Any) -> str:
 
 
 def canonical_projection_digest(
-    payload: TabProjectionV1 | NotationProjectionV1 | ProjectionRequestV1,
+    payload: TabProjectionV1 | NotationProjectionV1,
 ) -> str:
     """Digest one typed projection payload.
 
     Computed over the payload rather than the envelope, so the same rendering of
     the same revision digests identically however it happens to be wrapped.
+
+    Payloads only. ``ProjectionRequestV1`` was accepted here at one point and
+    never passed: a request describes what was asked for, not what was rendered,
+    so a digest over one would answer a question nobody is asking while looking
+    interchangeable with a result digest at the call site.
     """
 
-    if not isinstance(
-        payload, (TabProjectionV1, NotationProjectionV1, ProjectionRequestV1)
-    ):
+    if not isinstance(payload, (TabProjectionV1, NotationProjectionV1)):
         raise ScoreContractError("expected a typed projection payload")
     encoded = {
         key: value

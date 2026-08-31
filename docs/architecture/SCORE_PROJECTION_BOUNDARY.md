@@ -80,6 +80,34 @@ export — so deserializing it reproduces the same identity and content.
 This is deliberately not a general score database. Runtime still uses the
 in-memory repository; the durable boundary is the artifact.
 
+### Compatibility note for existing consumers
+
+MVP 2C **adds** a per-lesson directory. It moves nothing.
+
+```text
+web/mvp1/projections/<lesson>.json        unchanged  fretboard projection
+web/mvp1/projections/<lesson>/            new        score artifacts
+```
+
+The flat per-lesson file every DO-008 and DO-012 consumer already reads keeps its
+path, its name, its schema, and its `behavior_digest`. A consumer that never asks
+for the score sees no difference.
+
+Two consequences worth stating for anyone reading the directory rather than a
+known path:
+
+- `projections/` now contains **directories as well as files**. Code that
+  enumerates it must filter. Everything in this repository addresses artifacts by
+  explicit path, and the fixture guard globs `*.json`, which does not match
+  directories — but an external consumer listing the folder would now see entries
+  that are not lesson projections.
+- The score artifacts are optional to a lesson. If they are absent or disagree
+  about their revision, the score views disable themselves and report why; the
+  fretboard, transport, media, Zone, and practice surfaces are unaffected.
+
+There is no migration to perform, and no consumer needs to change to keep
+working.
+
 ## What each projection is allowed to know
 
 ```text
