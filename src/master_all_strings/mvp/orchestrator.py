@@ -46,6 +46,10 @@ from master_all_strings.mvp.projection.models import (
     SelectionOrigin,
 )
 from master_all_strings.mvp.projection.timeline import build_core_tempo_map
+from master_all_strings.mvp.score_bundle import (
+    ScoreProjectionBundleV1,
+    build_score_projection_bundle,
+)
 from master_all_strings.mvp.teaching_aids import (
     OneStringTeachingProjectionV1,
     build_one_string_teaching_projection,
@@ -65,6 +69,10 @@ class MvpOrchestrationResultV1:
     bundle: MvpPracticeBundleV1
     candidate_counts: tuple[tuple[str, int], ...]
     one_string_teaching: tuple[OneStringTeachingProjectionV1, ...]
+    # DO-013: the lesson's canonical revision and the two score projections of
+    # it. Built here so one revision serves both, rather than each projection
+    # minting its own and citing a different state of the same lesson.
+    score: ScoreProjectionBundleV1
 
 
 class MvpLessonOrchestrator:
@@ -292,4 +300,13 @@ class MvpLessonOrchestrator:
             bundle=bundle,
             candidate_counts=tuple(candidate_counts),
             one_string_teaching=one_string_teaching,
+            score=build_score_projection_bundle(
+                resolved,
+                instrument_profile_id=profile.instrument_id,
+                selected_notes=tuple(selected_notes),
+                # The lesson's own authorship stamp, not the moment of export.
+                # This is the only place that holds the assignment, so it is the
+                # only place that can answer when the lesson was written.
+                created_at=assignment.provenance.created_at_utc,
+            ),
         )

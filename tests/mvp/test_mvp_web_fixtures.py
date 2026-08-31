@@ -34,11 +34,24 @@ def _projection_paths() -> list[Path]:
     ]
 
 
+#: DO-013 adds a per-lesson score directory beside the flat exports.
+SCORE_ARTIFACTS = ("canonical_revision.json", "tab.json", "notation.json")
+
+
+def _score_paths() -> list[Path]:
+    return [
+        WEB_ROOT / "projections" / entry.demo_id / name
+        for entry in load_demo_manifest()
+        for name in SCORE_ARTIFACTS
+    ]
+
+
 def _fixture_paths() -> list[Path]:
     paths = [WEB_ROOT / "demos.json", WEB_ROOT / "instruments.json"]
     paths += _projection_paths()
     paths += [WEB_ROOT / "playback" / f"{entry.demo_id}.json" for entry in load_demo_manifest()]
     paths += [WEB_ROOT / "practice" / f"{entry.demo_id}.json" for entry in load_demo_manifest()]
+    paths += _score_paths()
     return paths
 
 

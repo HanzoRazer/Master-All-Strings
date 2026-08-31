@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/projections/projection-unsupported-feature-v1.schema.json",
+  "title": "ProjectionUnsupportedFeatureV1",
+  "description": "One thing a projection declined to represent, reported rather than guessed at. The vocabulary is closed: a projection may only admit a limitation the contract already names, so a new kind of silence about the music cannot be introduced by writing a new string. canonical_event_id and start_tick are optional because some limitations belong to a derived artifact (a rest the builder computed) rather than to any canonical event.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "code", "detail"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "code": {
+      "enum": [
+        "unsupported_display_duration",
+        "tie_not_supported",
+        "voice_specific_rest_inference_unavailable"
+      ]
+    },
+    "detail": { "type": "string", "minLength": 1 },
+    "canonical_event_id": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "start_tick": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    }
+  }
+}

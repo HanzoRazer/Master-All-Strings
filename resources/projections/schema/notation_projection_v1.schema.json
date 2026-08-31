@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/projections/notation-projection-v1.schema.json",
+  "title": "NotationProjectionV1",
+  "description": "Standard notation derived from one canonical revision, independent of any fingering. Two absences are deliberate and load-bearing. There is no instrument_profile_id, because notation that could see a fingering could be changed by one. And there is no tie representation anywhere in this contract: the canonical revision carries no tie evidence, so a tie could only ever be inferred from pitch and adjacency, which is a guess dressed as engraving.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "canonical_revision_id",
+    "ticks_per_quarter",
+    "display_policy",
+    "measures"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "canonical_revision_id": { "type": "string", "minLength": 1 },
+    "ticks_per_quarter": { "type": "integer", "minimum": 1 },
+    "display_policy": {
+      "description": "How pitches are spelled for display. A policy, not canonical enharmonic truth: the revision records MIDI pitch, and this names the deterministic convention used to render it.",
+      "enum": ["sharp_preferred_v1"]
+    },
+    "measures": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/measure" }
+    },
+    "unsupported_features": {
+      "type": "array",
+      "items": {
+        "$ref": "https://master-all-strings.dev/schema/projections/projection-unsupported-feature-v1.schema.json"
+      }
+    }
+  },
+  "$defs": {
+    "measure": {
+      "title": "NotationMeasureV1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "measure_index", "start_tick", "end_tick", "meter"],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "measure_index": { "type": "integer", "minimum": 0 },
+        "start_tick": { "type": "integer", "minimum": 0 },
+        "end_tick": { "type": "integer", "minimum": 1 },
+        "meter": { "$ref": "#/$defs/meter" },
+        "events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/event" }
+        }
+      }
+    },
+    "meter": {
+      "title": "MeterChangeV1",
+      "description": "The meter in force for this measure, carried per measure rather than once per projection so a meter change is representable at all.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "tick", "numerator", "denominator"],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "tick": { "type": "integer", "minimum": 0 },
+        "numerator": { "type": "integer", "minimum": 1 },
+        "denominator": { "enum": [1, 2, 4, 8, 16, 32] }
+      }
+    },
+    "event": {
+      "title": "NotationEventV1",
+      "description": "A note or a projection-derived rest. display_duration is nullable throughout: a duration the V1 grammar cannot spell exactly is reported as unsupported and left null, because rounding it to the nearest note value would be the projection quietly altering the music.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "event_kind", "start_tick", "duration_ticks"],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "event_kind": { "enum": ["note", "rest"] },
+        "start_tick": { "type": "integer", "minimum": 0 },
+        "duration_ticks": { "type": "integer", "minimum": 1 },
+        "canonical_event_id": { "type": ["string", "null"], "minLength": 1 },
+        "midi_note": { "type": ["integer", "null"], "minimum": 0, "maximum": 127 },
+        "display_pitch": { "type": ["string", "null"], "minLength": 1 },
+        "display_duration": {
+          "type": ["string", "null"],
+          "enum": [
+            "whole",
+            "dotted_whole",
+            "half",
+            "dotted_half",
+            "quarter",
+            "dotted_quarter",
+            "eighth",
+            "dotted_eighth",
+            "sixteenth",
+            "dotted_sixteenth",
+            "thirty_second",
+            "dotted_thirty_second",
+            null
+          ]
+        },
+        "derivation": { "enum": ["global_silence", null] }
+      },
+      "allOf": [
+        {
+          "description": "A note is a view of a canonical event and must name it, along with the pitch it renders.",
+          "if": {
+            "properties": { "event_kind": { "const": "note" } },
+            "required": ["event_kind"]
+          },
+          "then": {
+            "properties": {
+              "canonical_event_id": { "type": "string" },
+              "midi_note": { "type": "integer" },
+              "display_pitch": { "type": "string" },
+              "derivation": { "type": "null" }
+            },
+            "required": ["canonical_event_id", "midi_note", "display_pitch"]
+          }
+        },
+        {
+          "description": "A rest is derived, not canonical: no event in the revision corresponds to it, so canonical_event_id must be null and the derivation that produced it must be stated. Only global silence can produce one -- per-voice rests would require voice evidence the corpus does not carry.",
+          "if": {
+            "properties": { "event_kind": { "const": "rest" } },
+            "required": ["event_kind"]
+          },
+          "then": {
+            "properties": {
+              "canonical_event_id": { "type": "null" },
+              "midi_note": { "type": "null" },
+              "display_pitch": { "type": "null" },
+              "derivation": { "const": "global_silence" }
+            },
+            "required": ["derivation"]
+          }
+        }
+      ]
+    }
+  }
+}

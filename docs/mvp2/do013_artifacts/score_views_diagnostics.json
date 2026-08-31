@@ -1,0 +1,154 @@
+{
+  "candidate_sha": "59e4ea4f08343faa537c6d9ec612ea9c979f9eb7",
+  "execution_checkout_sha": "511054856bab33485fbf50f43f233ba254f08611",
+  "lesson_id": "open_strings",
+  "scoreViews": {
+    "status": "ready",
+    "reason": null,
+    "canonicalRevisionId": "rev-30e24696b277044941fa4aa8",
+    "tabLoaded": true,
+    "notationLoaded": true,
+    "activeEventIds": [
+      "ev-1"
+    ],
+    "tabActiveEventIds": [
+      "ev-1"
+    ],
+    "notationActiveEventIds": [
+      "ev-1"
+    ],
+    "selectedEventId": null,
+    "lastSeekEventId": null,
+    "lastSeekTick": null,
+    "tabDigest": "sha256:c44de3f953ac3f5c39b4c02f1a8f75a20cb72644eb4a6e2e5c65066007023c0f",
+    "notationDigest": "sha256:135736a94b88f09870c8bef06f049b56d20f1aa5ed444d9dfd8bec6fe0420227",
+    "tabError": null,
+    "notationError": null,
+    "loopRange": {
+      "enabled": false,
+      "start_tick": 0,
+      "end_tick": 2880,
+      "target_repetitions": null
+    },
+    "repetitionIndex": 0,
+    "limitations": [
+      "MVP2C_NOTATION_REGISTER_LIMITATION",
+      "MVP2C_NOTATION_ACCIDENTAL_LIMITATION"
+    ]
+  },
+  "projectionIdentity": {
+    "initial": {
+      "canonicalRevisionId": "rev-cc28c4e1b3a1e2ae9d130332",
+      "tabDigest": "sha256:7c1cf893229aba298f221d27b6f6e88149ea110bb44fdec35807cfefcb573010",
+      "notationDigest": "sha256:935cd7300c6d7858ab3559a020b8602bb958e06a251d9a790417c2241884b69b",
+      "tabEventCount": 8,
+      "notationEventCount": 8
+    },
+    "afterRateChange": {
+      "canonicalRevisionId": "rev-cc28c4e1b3a1e2ae9d130332",
+      "tabDigest": "sha256:7c1cf893229aba298f221d27b6f6e88149ea110bb44fdec35807cfefcb573010",
+      "notationDigest": "sha256:935cd7300c6d7858ab3559a020b8602bb958e06a251d9a790417c2241884b69b",
+      "tabEventCount": 8,
+      "notationEventCount": 8
+    },
+    "afterLoop": {
+      "canonicalRevisionId": "rev-cc28c4e1b3a1e2ae9d130332",
+      "tabDigest": "sha256:7c1cf893229aba298f221d27b6f6e88149ea110bb44fdec35807cfefcb573010",
+      "notationDigest": "sha256:935cd7300c6d7858ab3559a020b8602bb958e06a251d9a790417c2241884b69b",
+      "tabEventCount": 8,
+      "notationEventCount": 8
+    },
+    "afterCoexistence": {
+      "canonicalRevisionId": "rev-cc28c4e1b3a1e2ae9d130332",
+      "tabDigest": "sha256:7c1cf893229aba298f221d27b6f6e88149ea110bb44fdec35807cfefcb573010",
+      "notationDigest": "sha256:935cd7300c6d7858ab3559a020b8602bb958e06a251d9a790417c2241884b69b",
+      "tabEventCount": 8,
+      "notationEventCount": 8
+    },
+    "invariant": true
+  },
+  "runtime": {
+    "crossView": {
+      "activeEventIds": [
+        "ev-1"
+      ],
+      "tabActiveEventIds": [
+        "ev-1"
+      ],
+      "notationActiveEventIds": [
+        "ev-1"
+      ],
+      "agreed": true
+    },
+    "tabSeek": {
+      "clickedId": "ev-8",
+      "lastSeekEventId": "ev-8",
+      "lastSeekTick": 3360,
+      "positionBefore": 0.8321,
+      "positionAfter": 4.2,
+      "activeEventIds": [
+        "ev-8"
+      ]
+    },
+    "notationSeek": {
+      "clickedId": "ev-1",
+      "lastSeekEventId": "ev-1",
+      "lastSeekTick": 0,
+      "positionBefore": 4.2,
+      "positionAfter": 0
+    },
+    "selectionVersusActivity": {
+      "fretboardNotes": 8,
+      "selectedEventId": "ev-2",
+      "activeEventIds": [
+        "ev-1"
+      ],
+      "tabSelectedInDom": 1,
+      "notationSelectedInDom": 1,
+      "tabActiveInDom": 1
+    },
+    "seekActivityAuthority": {
+      "published": [
+        "ev-1"
+      ],
+      "scoreActive": [
+        "ev-1"
+      ],
+      "tabActive": [
+        "ev-1"
+      ],
+      "notationActive": [
+        "ev-1"
+      ],
+      "agrees": true,
+      "tabSubset": true,
+      "notationSubset": true
+    },
+    "repetitionIndex": 3,
+    "coexistence": {
+      "zoneEnabled": false,
+      "zoneAfterScore": "ready",
+      "oneStringOptions": 6,
+      "oneStringAfterScore": "ready",
+      "mediaPresent": true,
+      "mediaDiagnostics": "detached",
+      "transportUsable": true
+    },
+    "registerEvidence": {
+      "lesson": "open_strings",
+      "status": "ready",
+      "ledgerLines": 19,
+      "limitations": [
+        "MVP2C_NOTATION_REGISTER_LIMITATION",
+        "MVP2C_NOTATION_ACCIDENTAL_LIMITATION"
+      ],
+      "canonicalRevisionId": "rev-30e24696b277044941fa4aa8",
+      "tabLoaded": true,
+      "notationLoaded": true
+    }
+  },
+  "limitations": [
+    "MVP2C_NOTATION_REGISTER_LIMITATION",
+    "MVP2C_NOTATION_ACCIDENTAL_LIMITATION"
+  ]
+}

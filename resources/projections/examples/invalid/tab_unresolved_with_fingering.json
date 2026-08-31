@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "canonical_revision_id": "rev-fb642497ac9451f4a29983bc",
+  "instrument_profile_id": "guitar-standard-6",
+  "events": [
+    {
+      "schema_version": "1.0.0",
+      "canonical_event_id": "ev-1",
+      "start_tick": 0,
+      "duration_ticks": 480,
+      "midi_note": 64,
+      "status": "playable",
+      "string_id": "string-5",
+      "fret": 19,
+      "cents_offset": 0.0
+    },
+    {
+      "schema_version": "1.0.0",
+      "canonical_event_id": "ev-2",
+      "start_tick": 480,
+      "duration_ticks": 480,
+      "midi_note": 65,
+      "status": "unresolved",
+      "string_id": "string-1",
+      "fret": 1,
+      "cents_offset": null
+    }
+  ],
+  "unsupported_features": []
+}

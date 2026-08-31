@@ -35,6 +35,12 @@ def format_document_id(suffix: str) -> str:
     return document_id
 
 
+#: Characters a lesson content id may contribute to a document id. Authored ids
+#: are slugs, so anything outside this set means the caller passed something that
+#: was never a lesson identity -- a path, a title, a digest.
+_LESSON_ID_ALLOWED = set("abcdefghijklmnopqrstuvwxyz0123456789_-")
+
+
 @runtime_checkable
 class DocumentIdAuthority(Protocol):
     """Issues document identities. Injected, never global."""
@@ -97,4 +103,51 @@ class FixedDocumentIdAuthority:
                 f"{self._document_id!r}"
             )
         self._used = True
+        return self._document_id
+
+
+class LessonDocumentIdAuthority:
+    """Maps a stable authored-lesson identity to a stable document identity.
+
+    A lesson that keeps its name is the same musical *work* across exports, so it
+    must keep its document id; editing its notes then produces a new revision of
+    that work rather than a new work. A UUID authority would mint a different
+    document -- and therefore a different revision id -- on every export, which
+    would make the exported artifacts churn for no musical reason.
+
+    The mapping is over the lesson's identity, never its content. Deriving the
+    document id from serialized musical bytes would collapse the two questions
+    this design keeps apart: *which work is this* and *which state of it*.
+    """
+
+    def __init__(self, content_id: str) -> None:
+        require_identifier(content_id, "content_id")
+        normalized = content_id.strip().lower()
+        illegal = sorted(set(normalized) - _LESSON_ID_ALLOWED)
+        if illegal:
+            raise ScoreContractError(
+                f"lesson content_id contains characters that cannot form a document id: "
+                f"{illegal}"
+            )
+        self._content_id = normalized
+        self._document_id = format_document_id(normalized)
+        self.issued: list[str] = []
+
+    @property
+    def content_id(self) -> str:
+        return self._content_id
+
+    @property
+    def document_id(self) -> str:
+        """The identity this authority will issue, without consuming anything."""
+        return self._document_id
+
+    def next_document_id(self) -> str:
+        """Return this lesson's document id.
+
+        Unlike the fixed test authority this does not refuse a second call: one
+        lesson exported twice is the same work both times, and refusing would make
+        re-export an error.
+        """
+        self.issued.append(self._document_id)
         return self._document_id

@@ -18,7 +18,18 @@ import { focusRangeFromEvaluation, renderResultsPanel } from "./results.js";
 import { Transport } from "./transport.js";
 import { MediaPlayerController, MediaSyncMode } from "./media-player.js";
 import { MediaSyncFollower } from "./media-sync.js";
-import { TeachingTimeline, resolveFocusRangeSeconds } from "./teaching-timeline.js";
+import {
+  TeachingTimeline,
+  resolveFocusRangeSeconds,
+  secondsAtTick,
+} from "./teaching-timeline.js";
+import { ScoreViewCoordinator } from "./score-view.js";
+import {
+  buildScoreDiagnostics,
+  createFretboardSelectionHandler,
+  createScoreSeekHandler,
+} from "./score-shell.js";
+import { NOTATION_LIMITATIONS } from "./notation-view.js";
 
 const $ = (id) => document.getElementById(id);
 const state = {
@@ -37,6 +48,32 @@ const transport = new Transport();
 // One coordinator over the one transport. It owns no clock; see
 // docs/architecture/SYNCHRONIZED_TEACHING_TIMELINE.md.
 const teachingTimeline = new TeachingTimeline({ transport });
+
+// The score views are followers of the existing timeline, not owners of one.
+// The shell holds the reference so it can connect the transport and fretboard;
+// the score state itself lives in the coordinator.
+const scoreView = new ScoreViewCoordinator({
+  loadJson,
+  containers: {
+    get tab() {
+      return document.getElementById("tabView");
+    },
+    get notation() {
+      return document.getElementById("notationView");
+    },
+  },
+  onSeek: (canonicalEventId, tick) => scoreSeek(canonicalEventId, tick),
+  onStatus: (status, reason) => renderScoreStatus(status, reason),
+});
+
+// Ticks in, seconds out, through DO-012's already-governed mapping seam.
+const scoreSeek = createScoreSeekHandler({
+  timeline: teachingTimeline,
+  transport,
+  secondsAtTick,
+});
+
+const selectFromFretboard = createFretboardSelectionHandler({ coordinator: scoreView });
 const midiInput = new WebMidiInput();
 $("btnFakeMidi").hidden = !midiInput.fakeMode;
 const capture = new PerformanceCaptureController({
@@ -120,6 +157,9 @@ const mediaFollower = new MediaSyncFollower({
   onHealth: (health) => mediaPlayer.renderHealth(health),
 });
 teachingTimeline.addFollower(mediaFollower);
+// One follower for both score views. Registering per renderer would put two
+// subscriptions on one clock and give them two chances to disagree.
+teachingTimeline.addFollower(scoreView.follower());
 
 // The fretboard and Zone display are followers too: they read the timeline
 // rather than deriving musical position for themselves.
@@ -447,6 +487,29 @@ function renderTeachingView() {
   renderer.setZoneOverlay($("zoneOverlay").checked);
 }
 
+function renderScoreStatus(status, reason) {
+  const panel = document.getElementById("scorePanel");
+  if (!panel) return;
+  panel.dataset.scoreStatus = status;
+  const notice = document.getElementById("scoreUnavailable");
+  if (!notice) return;
+  // A score that cannot be shown says so and stops there. The lesson, its
+  // transport, media, Zone, and practice are all still usable.
+  notice.hidden = status !== "unavailable";
+  notice.textContent =
+    status === "unavailable" ? `Score views unavailable (${reason || "unknown"})` : "";
+}
+
+async function loadScoreViews(demoId) {
+  if (!demoId) return;
+  // Never allowed to break lesson loading: the score is one surface among many.
+  try {
+    await scoreView.load(demoId);
+  } catch (error) {
+    renderScoreStatus("unavailable", error?.message || "load failed");
+  }
+}
+
 async function loadJson(path) {
   const response = await fetch(path, { cache: "no-store" });
   if (!response.ok) throw new Error(`Failed to load ${path}`);
@@ -464,6 +527,12 @@ function sessionPathsForDemo(demoId) {
 async function loadSession(paths) {
   const artifacts = await Promise.all(paths.map((path) => loadJson(path)));
   applySessionArtifacts(...artifacts);
+  // The demo id comes from the payload the exporter stamped, not from a
+  // parameter. It was a parameter first, and the lesson-change handler forgot to
+  // pass it -- so switching lessons left the score views unloaded while every
+  // other surface reloaded. Reading it from the applied payload means no call
+  // site can omit it.
+  await loadScoreViews(state.payload?.demo_id ?? null);
 }
 
 async function loadInitialSession() {
@@ -803,7 +872,20 @@ window.__masDiagnostics = {
     },
     zones: renderer.activeZones(),
   }),
+  scoreViews: () =>
+    buildScoreDiagnostics({
+      coordinator: scoreView,
+      limitations: NOTATION_LIMITATIONS,
+      loopRange: state.practice?.policy?.loop ?? null,
+      repetitionIndex: transport.repetitionCount,
+    }),
 };
+// Fretboard selection reaches the score views as a canonical event id and
+// nothing else. It marks a highlight channel; it does not decide what is active.
+$("scrollCanvas").addEventListener("click", (event) => {
+  selectFromFretboard(event.target);
+});
+
 bootstrap();
 setStage("lesson");
 requestAnimationFrame(tick);

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/projections/tab-projection-v1.schema.json",
+  "title": "TabProjectionV1",
+  "description": "Guitar tablature derived from one canonical revision plus the spatial evidence already selected for it. TAB is not a spatial authority: it reports the realization it was given, or says it has none. That is why status is a closed three-value vocabulary and why string_id and fret are nullable -- an event without selected evidence must be representable as unresolved, since the alternative is a plausible fret nobody chose.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "canonical_revision_id",
+    "instrument_profile_id",
+    "events"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "canonical_revision_id": { "type": "string", "minLength": 1 },
+    "instrument_profile_id": { "type": "string", "minLength": 1 },
+    "events": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tabEvent" }
+    },
+    "unsupported_features": {
+      "type": "array",
+      "items": {
+        "$ref": "https://master-all-strings.dev/schema/projections/projection-unsupported-feature-v1.schema.json"
+      }
+    }
+  },
+  "$defs": {
+    "tabEvent": {
+      "title": "TabEventV1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "canonical_event_id",
+        "start_tick",
+        "duration_ticks",
+        "midi_note",
+        "status"
+      ],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "canonical_event_id": {
+          "description": "Always present. A TAB event is a view of a canonical event, never an event of its own, so this is the identity the fretboard and notation views join on.",
+          "type": "string",
+          "minLength": 1
+        },
+        "start_tick": { "type": "integer", "minimum": 0 },
+        "duration_ticks": { "type": "integer", "minimum": 1 },
+        "midi_note": { "type": "integer", "minimum": 0, "maximum": 127 },
+        "status": {
+          "description": "playable: selected spatial evidence exists and is reported. unplayable: the instrument cannot produce this pitch, an explicit outcome the spatial layer already reached. unresolved: canonical music exists but no realization was selected for it.",
+          "enum": ["playable", "unplayable", "unresolved"]
+        },
+        "string_id": { "type": ["string", "null"], "minLength": 1 },
+        "fret": { "type": ["integer", "null"], "minimum": 0 },
+        "cents_offset": { "type": ["number", "null"] }
+      },
+      "allOf": [
+        {
+          "description": "A playable event must carry the realization that made it playable; anything else would be a status with no evidence behind it.",
+          "if": { "properties": { "status": { "const": "playable" } }, "required": ["status"] },
+          "then": {
+            "properties": {
+              "string_id": { "type": "string" },
+              "fret": { "type": "integer" }
+            },
+            "required": ["string_id", "fret"]
+          }
+        },
+        {
+          "description": "An event with no selected realization must not carry one. This is the schema-level half of the rule that TAB never invents a fingering.",
+          "if": {
+            "properties": { "status": { "enum": ["unplayable", "unresolved"] } },
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "string_id": { "type": "null" },
+              "fret": { "type": "null" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

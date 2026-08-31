@@ -8,6 +8,10 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from master_all_strings.core.projections.serialization import (
+    projection_to_json,
+)
+from master_all_strings.core.score.serialization import revision_to_dict
 from master_all_strings.core.score.tempo import TempoChangeV1
 from master_all_strings.mvp.demo_library import load_demo_manifest
 from master_all_strings.mvp.models import MvpLessonSummaryV1, MvpProjectionResponseV1
@@ -25,6 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 
 __all__ = [
     "atomic_write_text",
+    "export_score_projections",
     "projection_timeline_anchors",
     "export_demo_catalog",
     "export_instrument_catalog",
@@ -193,7 +198,45 @@ def export_web_fixtures(app: MvpApplication, web_root: Path) -> int:
             web_root / "practice" / f"{summary.demo_id}.json",
         )
         written += 3
+        # Score artifacts live in a per-lesson directory beside the existing flat
+        # exports, which stay exactly where their consumers expect them.
+        written += len(
+            export_score_projections(response, web_root / "projections" / summary.demo_id)
+        )
     return written
+
+
+def export_score_projections(
+    response: MvpProjectionResponseV1, lesson_dir: Path
+) -> tuple[Path, ...]:
+    """Write one lesson's canonical revision and its two score projections.
+
+    The revision is exported, not merely computed. A projection citing a
+    revision id nothing stores is decoration: the citation has to be resolvable
+    against something a reader can open, which is what this directory is for.
+
+    Returns an empty tuple when the response carries no score bundle, so callers
+    that predate DO-013 keep working.
+    """
+
+    bundle = response.score
+    if bundle is None:
+        return ()
+
+    revision_path = lesson_dir / "canonical_revision.json"
+    tab_path = lesson_dir / "tab.json"
+    notation_path = lesson_dir / "notation.json"
+
+    revision_json = json.dumps(
+        revision_to_dict(bundle.revision), indent=2, ensure_ascii=False
+    )
+    atomic_write_text(revision_path, revision_json + "\n")
+    # Each projection is written inside its envelope, so the file carries the
+    # revision citation and the digest alongside the payload rather than leaving a
+    # reader to recompute either.
+    atomic_write_text(tab_path, projection_to_json(bundle.tab))
+    atomic_write_text(notation_path, projection_to_json(bundle.notation))
+    return (revision_path, tab_path, notation_path)
 
 
 def export_manifest_copy(output_path: Path) -> Path:

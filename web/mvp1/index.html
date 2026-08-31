@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="./media-player.css" />
     <link rel="stylesheet" href="./teaching-timeline.css" />
+    <link rel="stylesheet" href="./score-view.css" />
   </head>
   <body>
     <div class="app">
@@ -245,6 +246,22 @@
             <button type="button" data-rate="1.5">1.50×</button>
           </div>
         </div>
+
+        <section class="score-panel" id="scorePanel" aria-label="Score views">
+          <p class="score-panel__unavailable" id="scoreUnavailable" hidden></p>
+          <div class="score-panel__views">
+            <div
+              class="score-panel__view"
+              id="tabView"
+              aria-label="Tablature"
+            ></div>
+            <div
+              class="score-panel__view"
+              id="notationView"
+              aria-label="Standard notation"
+            ></div>
+          </div>
+        </section>
       </main>
     </div>
 

@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.0.0",
+  "revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+  "document_id": "score-ascending_scale",
+  "revision_number": 1,
+  "parent_revision_id": null,
+  "created_at": "2026-08-11T00:00:00Z",
+  "ticks_per_quarter": 480,
+  "content_digest": "cc28c4e1b3a1e2ae9d130332100c35700733fa23ceb97b310b354790f39f21e3",
+  "provenance": {
+    "schema_version": "1.0.0",
+    "source_kind": "manual_construction",
+    "policy_version": "AUTHORED_LESSON_REVISION_V1",
+    "source_reference": "ascending_scale",
+    "event_provenance": [],
+    "notes": []
+  },
+  "events": [
+    {
+      "event_id": "ev-1",
+      "midi_note": 64,
+      "start_tick": 0,
+      "duration_ticks": 480,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    },
+    {
+      "event_id": "ev-2",
+      "midi_note": 66,
+      "start_tick": 480,
+      "duration_ticks": 480,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    },
+    {
+      "event_id": "ev-3",
+      "midi_note": 67,
+      "start_tick": 960,
+      "duration_ticks": 480,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    },
+    {
+      "event_id": "ev-4",
+      "midi_note": 69,
+      "start_tick": 1440,
+      "duration_ticks": 480,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    },
+    {
+      "event_id": "ev-5",
+      "midi_note": 71,
+      "start_tick": 1920,
+      "duration_ticks": 480,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    },
+    {
+      "event_id": "ev-6",
+      "midi_note": 73,
+      "start_tick": 2400,
+      "duration_ticks": 480,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    },
+    {
+      "event_id": "ev-7",
+      "midi_note": 75,
+      "start_tick": 2880,
+      "duration_ticks": 480,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    },
+    {
+      "event_id": "ev-8",
+      "midi_note": 76,
+      "start_tick": 3360,
+      "duration_ticks": 480,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    }
+  ],
+  "tempo_changes": [
+    {
+      "schema_version": "1.0.0",
+      "tick": 0,
+      "microseconds_per_quarter": 600000
+    }
+  ],
+  "meter_changes": [
+    {
+      "schema_version": "1.0.0",
+      "tick": 0,
+      "numerator": 4,
+      "denominator": 4
+    }
+  ]
+}

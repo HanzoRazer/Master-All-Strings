@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "revision_id": "rev-3b5be15df289a8483a0f57b9",
+  "document_id": "score-simultaneous_notes",
+  "revision_number": 1,
+  "parent_revision_id": null,
+  "created_at": "2026-08-11T00:00:00Z",
+  "ticks_per_quarter": 480,
+  "content_digest": "3b5be15df289a8483a0f57b96ca4cc4870a080973d22950e22b4d658738f8ecd",
+  "provenance": {
+    "schema_version": "1.0.0",
+    "source_kind": "manual_construction",
+    "policy_version": "AUTHORED_LESSON_REVISION_V1",
+    "source_reference": "simultaneous_notes",
+    "event_provenance": [],
+    "notes": []
+  },
+  "events": [
+    {
+      "event_id": "ev-1",
+      "midi_note": 40,
+      "start_tick": 0,
+      "duration_ticks": 960,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    },
+    {
+      "event_id": "ev-2",
+      "midi_note": 47,
+      "start_tick": 0,
+      "duration_ticks": 960,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    },
+    {
+      "event_id": "ev-3",
+      "midi_note": 52,
+      "start_tick": 0,
+      "duration_ticks": 960,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    },
+    {
+      "event_id": "ev-4",
+      "midi_note": 55,
+      "start_tick": 960,
+      "duration_ticks": 480,
+      "velocity": 80,
+      "cents_offset": 0.0,
+      "voice_id": null
+    }
+  ],
+  "tempo_changes": [
+    {
+      "schema_version": "1.0.0",
+      "tick": 0,
+      "microseconds_per_quarter": 600000
+    }
+  ],
+  "meter_changes": [
+    {
+      "schema_version": "1.0.0",
+      "tick": 0,
+      "numerator": 4,
+      "denominator": 4
+    }
+  ]
+}

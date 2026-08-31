@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0.0",
+  "projection_id": "tab:rev-5eec3b4504d674f0ce971aa7",
+  "canonical_revision_id": "rev-5eec3b4504d674f0ce971aa7",
+  "projection_kind": "tab",
+  "payload": {
+    "schema_version": "1.0.0",
+    "canonical_revision_id": "rev-5eec3b4504d674f0ce971aa7",
+    "instrument_profile_id": "guitar-standard-6",
+    "events": [
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-1",
+        "start_tick": 0,
+        "duration_ticks": 480,
+        "midi_note": 45,
+        "status": "playable",
+        "string_id": "string-5",
+        "fret": 0,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-2",
+        "start_tick": 480,
+        "duration_ticks": 480,
+        "midi_note": 47,
+        "status": "playable",
+        "string_id": "string-5",
+        "fret": 2,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-3",
+        "start_tick": 960,
+        "duration_ticks": 480,
+        "midi_note": 48,
+        "status": "playable",
+        "string_id": "string-5",
+        "fret": 3,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-4",
+        "start_tick": 1440,
+        "duration_ticks": 480,
+        "midi_note": 50,
+        "status": "playable",
+        "string_id": "string-4",
+        "fret": 0,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-5",
+        "start_tick": 1920,
+        "duration_ticks": 480,
+        "midi_note": 52,
+        "status": "playable",
+        "string_id": "string-4",
+        "fret": 2,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-6",
+        "start_tick": 2400,
+        "duration_ticks": 480,
+        "midi_note": 53,
+        "status": "playable",
+        "string_id": "string-4",
+        "fret": 3,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-7",
+        "start_tick": 2880,
+        "duration_ticks": 480,
+        "midi_note": 55,
+        "status": "playable",
+        "string_id": "string-3",
+        "fret": 0,
+        "cents_offset": 0.0
+      },
+      {
+        "schema_version": "1.0.0",
+        "canonical_event_id": "ev-8",
+        "start_tick": 3360,
+        "duration_ticks": 480,
+        "midi_note": 57,
+        "status": "playable",
+        "string_id": "string-3",
+        "fret": 2,
+        "cents_offset": 0.0
+      }
+    ],
+    "unsupported_features": []
+  },
+  "digest": "sha256:64f6aac989632a1ae21b710447165549a677aa6284e1527ea75a83975bab312e",
+  "unsupported_features": []
+}
