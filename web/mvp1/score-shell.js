@@ -91,5 +91,42 @@ export function buildScoreDiagnostics({ coordinator, limitations = [], loopRange
     loopRange: loopRange ? { ...loopRange } : null,
     repetitionIndex,
     limitations: [...limitations],
+    guidanceStatus: base.guidanceStatus ?? "idle",
+    guidanceDigest: base.guidanceDigest ?? null,
+    guidedEventIds: [...(base.guidedEventIds ?? [])],
+    tabGuidedEventIds: [...(base.tabGuidedEventIds ?? [])],
+    notationGuidedEventIds: [...(base.notationGuidedEventIds ?? [])],
+    guidanceAction: base.guidanceAction ?? null,
+    guidanceRange: base.guidanceRange ? { ...base.guidanceRange } : null,
+    guidanceError: base.guidanceError ?? null,
+  };
+}
+
+/**
+ * Present educational guidance on the score views.
+ *
+ * Display only. Transport is not mutated here; the learner must accept an
+ * action through the existing practice-action controller.
+ */
+export function presentTeachingGuidance({ coordinator, renderer = null, projection = null }) {
+  const applied = coordinator.applyGuidance(projection);
+  if (renderer && typeof renderer.applyGuidedEventIds === "function") {
+    renderer.applyGuidedEventIds(coordinator.guidedEventIds);
+  }
+  return applied;
+}
+
+/**
+ * Explicit learner acceptance of the Educational next action.
+ *
+ * Showing guidance never calls this. The returned handler reuses the existing
+ * practice-action / Transport seam and does not invent a clock or rate.
+ */
+export function createGuidanceAcceptHandler({ practiceActions, educationApi, onAccepted = null }) {
+  return async (action) => {
+    if (!action || !practiceActions || !educationApi) return null;
+    const result = await practiceActions.apply(action, educationApi);
+    if (typeof onAccepted === "function") onAccepted(action, result);
+    return result;
   };
 }

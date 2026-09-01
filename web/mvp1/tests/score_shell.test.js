@@ -6,7 +6,9 @@ import test from "node:test";
 import {
   buildScoreDiagnostics,
   createFretboardSelectionHandler,
+  createGuidanceAcceptHandler,
   createScoreSeekHandler,
+  presentTeachingGuidance,
 } from "../score-shell.js";
 import { ScoreViewCoordinator } from "../score-view.js";
 import { NOTATION_LIMITATIONS } from "../notation-view.js";
@@ -40,7 +42,10 @@ function loaderFor(overrides = {}) {
 }
 
 function fakeRenderers(failures = {}) {
-  const state = { tab: { active: [], selected: null }, notation: { active: [], selected: null } };
+  const state = {
+    tab: { active: [], selected: null, guided: [] },
+    notation: { active: [], selected: null, guided: [] },
+  };
   const make = (name) => ({
     mount: () => {
       if (failures[`${name}Mount`]) throw new Error(`${name} mount failed`);
@@ -53,6 +58,10 @@ function fakeRenderers(failures = {}) {
     applySelection: (root, id) => {
       state[name].selected = id;
       return id;
+    },
+    applyGuidance: (root, ids) => {
+      state[name].guided = [...ids];
+      return [...ids];
     },
   });
   return { renderers: { tab: make("tab"), notation: make("notation") }, state };
@@ -450,4 +459,108 @@ test("index.html mounts the score containers and its stylesheet", () => {
   assert.match(html, /id="notationView"/);
   assert.match(html, /id="scoreUnavailable"/);
   assert.match(html, /score-view\.css/);
+});
+
+test("presentTeachingGuidance fans ids without touching transport or activity", async () => {
+  const { coordinator, transport, state } = await harness();
+  coordinator.applyPlayhead({ active_event_ids: ["ev-1"] });
+  const rate = transport.playbackRate;
+  presentTeachingGuidance({
+    coordinator,
+    projection: {
+      items: [{ canonical_event_id: "ev-3" }],
+      next_action: { action_type: "slow_down", target_rate: 0.75 },
+      guidance_digest: "sha256:guide",
+    },
+  });
+  assert.deepEqual(coordinator.guidedEventIds, ["ev-3"]);
+  assert.deepEqual(state.tab.guided, ["ev-3"]);
+  assert.deepEqual(coordinator.activeEventIds, ["ev-1"]);
+  assert.equal(transport.playbackRate, rate);
+  assert.equal(transport.loop, null);
+});
+
+test("diagnostics expose guidance observationally without becoming authority", async () => {
+  const { coordinator } = await harness();
+  coordinator.applyGuidance({
+    items: [{ canonical_event_id: "ev-2" }],
+    next_action: { action_type: "isolate_passage", focus_start_tick: 960, focus_end_tick: 1920 },
+    guidance_digest: "sha256:guide",
+  });
+  const diagnostics = buildScoreDiagnostics({
+    coordinator,
+    limitations: NOTATION_LIMITATIONS,
+    loopRange: { enabled: false },
+    repetitionIndex: 0,
+  });
+  assert.equal(diagnostics.guidanceStatus, "ready");
+  assert.equal(diagnostics.guidanceDigest, "sha256:guide");
+  assert.deepEqual(diagnostics.guidedEventIds, ["ev-2"]);
+  assert.equal(diagnostics.guidanceAction, "isolate_passage");
+  assert.deepEqual(diagnostics.guidanceRange, { startTick: 960, endTick: 1920 });
+  diagnostics.guidedEventIds.push("ev-9");
+  assert.deepEqual(coordinator.guidedEventIds, ["ev-2"]);
+  assert.equal(diagnostics.tabDigest, TAB.digest);
+  assert.equal(diagnostics.notationDigest, NOTATION.digest);
+  assert.equal(diagnostics.canonicalRevisionId, REVISION.revision_id);
+});
+
+test("accepted slowdown reuses Transport.setRate and leaves projection identity", async () => {
+  const { coordinator, transport } = await harness();
+  coordinator.applyGuidance({
+    items: [{ canonical_event_id: "ev-1" }],
+    next_action: { action_type: "slow_down", target_rate: 0.75 },
+    guidance_digest: "sha256:guide",
+  });
+  const digest = coordinator.diagnostics().guidanceDigest;
+  const tab = coordinator.tabDigest;
+  let applied = 0;
+  const accept = createGuidanceAcceptHandler({
+    practiceActions: {
+      apply: async (action) => {
+        applied += 1;
+        transport.setRate(action.target_rate);
+        return { status: "applied" };
+      },
+    },
+    educationApi: { applyAction: async () => ({ status: "applied" }) },
+  });
+  assert.equal(transport.playbackRate, 1);
+  assert.equal(applied, 0);
+  await accept({ action_type: "slow_down", target_rate: 0.75 });
+  assert.equal(applied, 1);
+  assert.equal(transport.playbackRate, 0.75);
+  assert.equal(coordinator.diagnostics().guidanceDigest, digest);
+  assert.equal(coordinator.tabDigest, tab);
+});
+
+test("accepted isolate uses the Educational range through the existing loop seam", async () => {
+  const { coordinator, transport, timeline } = await harness();
+  const action = {
+    action_type: "isolate_passage",
+    focus_start_tick: 960,
+    focus_end_tick: 1920,
+    message_key: "action.isolate_passage",
+  };
+  coordinator.applyGuidance({
+    items: [{ canonical_event_id: "ev-3" }],
+    next_action: action,
+    guidance_digest: "sha256:guide",
+  });
+  const { PracticeActionController } = await import("../practice_actions.js");
+  const { resolveFocusRangeSeconds } = await import("../teaching-timeline.js");
+  const actions = new PracticeActionController({
+    transport,
+    resolveFocusRange: (startTick, endTick) =>
+      resolveFocusRangeSeconds(timeline.anchors, startTick, endTick),
+  });
+  const accept = createGuidanceAcceptHandler({
+    practiceActions: actions,
+    educationApi: { applyAction: async () => ({ status: "applied" }) },
+  });
+  await accept(action);
+  assert.equal(transport.loop.enabled, true);
+  assert.equal(transport.loop.startSeconds, 1.5);
+  assert.equal(transport.loop.endSeconds, 3.0);
+  assert.equal(coordinator.diagnostics().guidanceAction, "isolate_passage");
 });

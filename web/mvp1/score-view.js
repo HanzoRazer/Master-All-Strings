@@ -23,12 +23,14 @@
 
 import {
   applyActiveEventIds as applyTabActive,
+  applyGuidedEventIds as applyTabGuidance,
   applySelectedEventId as applyTabSelection,
   mountTabView,
   seekTickForEvent as tabSeekTick,
 } from "./tab-view.js";
 import {
   applyActiveEventIds as applyNotationActive,
+  applyGuidedEventIds as applyNotationGuidance,
   applySelectedEventId as applyNotationSelection,
   mountNotationView,
   seekTickForEvent as notationSeekTick,
@@ -36,6 +38,19 @@ import {
 
 /** One follower for both score views; two would be two subscriptions to one clock. */
 export const SCORE_VIEW_FOLLOWER_ID = "score-views";
+
+/** Canonical ids cited by event-level guidance items, in projection order. */
+export function guidedEventIdsFromProjection(projection) {
+  const ids = [];
+  const seen = new Set();
+  for (const item of projection?.items ?? []) {
+    const id = item.canonical_event_id;
+    if (typeof id !== "string" || !id || seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+  }
+  return ids;
+}
 
 export const SCORE_STATUS = Object.freeze({
   idle: "idle",
@@ -139,12 +154,14 @@ const DEFAULT_RENDERERS = Object.freeze({
     mount: mountTabView,
     applyActive: applyTabActive,
     applySelection: applyTabSelection,
+    applyGuidance: applyTabGuidance,
     seekTick: tabSeekTick,
   },
   notation: {
     mount: mountNotationView,
     applyActive: applyNotationActive,
     applySelection: applyNotationSelection,
+    applyGuidance: applyNotationGuidance,
     seekTick: notationSeekTick,
   },
 });
@@ -190,10 +207,17 @@ export class ScoreViewCoordinator {
     this.lastSeekEventId = null;
     this.lastSeekTick = null;
 
+    // Educational guidance. Independent of activity and selection. The
+    // projection is cited, never recomputed here.
+    this.guidance = null;
+    this.guidedEventIds = [];
+    this.guidanceError = null;
+
     // What each view actually lit, as opposed to what it was asked to light.
     // A view that is unmounted lights nothing, and diagnostics should say so
     // rather than repeating the requested set back as if it had been drawn.
     this.appliedActive = { tab: [], notation: [] };
+    this.appliedGuided = { tab: [], notation: [] };
 
     // Per-view liveness. A view that failed to render is switched off on its
     // own; nothing about it reaches the other one.
@@ -221,7 +245,11 @@ export class ScoreViewCoordinator {
     this.selectedEventId = null;
     this.lastSeekEventId = null;
     this.lastSeekTick = null;
+    this.guidance = null;
+    this.guidedEventIds = [];
+    this.guidanceError = null;
     this.appliedActive = { tab: [], notation: [] };
+    this.appliedGuided = { tab: [], notation: [] };
     this.views.tab = { mounted: false, root: null, error: null };
     this.views.notation = { mounted: false, root: null, error: null };
   }
@@ -415,6 +443,42 @@ export class ScoreViewCoordinator {
     return marked;
   }
 
+  /**
+   * Apply a teaching-guidance projection as a third highlight channel.
+   *
+   * Reads canonical event ids from the projection. Does not write the playhead
+   * active set, does not change selection, and does not mutate TAB/notation
+   * payloads or their digests.
+   */
+  applyGuidance(projection) {
+    this.guidance = projection ?? null;
+    this.guidanceError = null;
+    const ids = guidedEventIdsFromProjection(projection);
+    return this.applyGuidedEventIds(ids);
+  }
+
+  /** Fan one guided set out to both views, isolating a failure in either. */
+  applyGuidedEventIds(guidedEventIds) {
+    const ids = Array.isArray(guidedEventIds) ? [...guidedEventIds] : [];
+    this.guidedEventIds = ids;
+    const applied = { tab: [], notation: [] };
+    for (const name of ["tab", "notation"]) {
+      const view = this.views[name];
+      if (!view.mounted) continue;
+      const apply = this._renderers[name].applyGuidance;
+      if (typeof apply !== "function") continue;
+      try {
+        applied[name] = apply(view.root, ids) ?? [];
+      } catch (error) {
+        view.mounted = false;
+        view.error = String(error?.message ?? error);
+        this.guidanceError = view.error;
+      }
+    }
+    this.appliedGuided = applied;
+    return applied;
+  }
+
   // --- lookups ---------------------------------------------------------------
 
   /** How each view depicts one canonical event. Carries no timing. */
@@ -457,6 +521,21 @@ export class ScoreViewCoordinator {
       lastSeekTick: this.lastSeekTick,
       indexedEventCount: this.displayIndex.size,
       seekTargetCount: this.seekIndex.size,
+      guidanceStatus: this.guidance ? "ready" : "idle",
+      guidanceDigest: this.guidance?.guidance_digest ?? null,
+      guidedEventIds: [...this.guidedEventIds],
+      tabGuidedEventIds: [...this.appliedGuided.tab],
+      notationGuidedEventIds: [...this.appliedGuided.notation],
+      guidanceAction: this.guidance?.next_action?.action_type ?? null,
+      guidanceRange:
+        this.guidance?.next_action?.focus_start_tick != null &&
+        this.guidance?.next_action?.focus_end_tick != null
+          ? {
+              startTick: this.guidance.next_action.focus_start_tick,
+              endTick: this.guidance.next_action.focus_end_tick,
+            }
+          : null,
+      guidanceError: this.guidanceError,
     };
   }
 }

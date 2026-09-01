@@ -41,8 +41,8 @@ function loaderFor(overrides = {}) {
 /** Renderers recording active and selection channels separately. */
 function fakeRenderers() {
   const state = {
-    tab: { active: [], selected: null },
-    notation: { active: [], selected: null },
+    tab: { active: [], selected: null, guided: [] },
+    notation: { active: [], selected: null, guided: [] },
   };
   const make = (name) => ({
     mount: (container, payload, options) => ({ name, payload, options }),
@@ -60,6 +60,17 @@ function fakeRenderers() {
               (m.events ?? []).some((e) => e.canonical_event_id === id),
             );
       return depicts ? id : null;
+    },
+    applyGuidance: (root, ids) => {
+      const available = new Set(
+        name === "tab"
+          ? (root.payload.events ?? []).map((e) => e.canonical_event_id)
+          : (root.payload.measures ?? []).flatMap((m) =>
+              (m.events ?? []).map((e) => e.canonical_event_id).filter(Boolean),
+            ),
+      );
+      state[name].guided = ids.filter((id) => available.has(id));
+      return [...state[name].guided];
     },
   });
   return { renderers: { tab: make("tab"), notation: make("notation") }, state };
@@ -514,4 +525,56 @@ test("no timing arithmetic reaches the navigation path", () => {
   }
   // Seek positions are read from the index, never computed.
   assert.match(code, /seekTickFor\(canonicalEventId\)/);
+});
+
+test("active, selected, and guided can all differ simultaneously", async () => {
+  const { view, state } = await ready();
+  view.applyPlayhead({ active_event_ids: ["ev-1"] });
+  view.selectEvent("ev-2");
+  view.applyGuidedEventIds(["ev-3"]);
+
+  assert.deepEqual(view.activeEventIds, ["ev-1"]);
+  assert.equal(view.selectedEventId, "ev-2");
+  assert.deepEqual(view.guidedEventIds, ["ev-3"]);
+  assert.deepEqual(state.tab.active, ["ev-1"]);
+  assert.equal(state.tab.selected, "ev-2");
+  assert.deepEqual(state.tab.guided, ["ev-3"]);
+  assert.deepEqual(state.notation.active, ["ev-1"]);
+  assert.equal(state.notation.selected, "ev-2");
+  assert.deepEqual(state.notation.guided, ["ev-3"]);
+});
+
+test("guidance never writes the Teaching Timeline active set", async () => {
+  const { view, state } = await ready();
+  view.applyPlayhead({ active_event_ids: ["ev-1"] });
+  view.applyGuidance({
+    items: [{ canonical_event_id: "ev-3" }],
+    next_action: { action_type: "repeat" },
+    guidance_digest: "sha256:test",
+  });
+  assert.deepEqual(view.activeEventIds, ["ev-1"]);
+  assert.deepEqual(state.tab.active, ["ev-1"]);
+  assert.deepEqual(view.guidedEventIds, ["ev-3"]);
+});
+
+test("guidance does not mutate TAB or notation digests", async () => {
+  const { view } = await ready();
+  const tab = view.tabDigest;
+  const notation = view.notationDigest;
+  const revision = view.revisionId;
+  view.applyGuidance({
+    items: [{ canonical_event_id: "ev-2" }],
+    next_action: { action_type: "slow_down", target_rate: 0.75 },
+  });
+  assert.equal(view.tabDigest, tab);
+  assert.equal(view.notationDigest, notation);
+  assert.equal(view.revisionId, revision);
+});
+
+test("unrenderable guidance is not moved onto a neighbouring event", async () => {
+  const { view, state } = await ready();
+  view.applyGuidedEventIds(["ev-ghost"]);
+  assert.deepEqual(view.guidedEventIds, ["ev-ghost"]);
+  assert.deepEqual(state.tab.guided, []);
+  assert.deepEqual(state.notation.guided, []);
 });

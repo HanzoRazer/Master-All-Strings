@@ -54,6 +54,7 @@ function fakeRenderers(failures = {}) {
       calls[name].push([...ids]);
       return [...ids];
     },
+    applyGuidance: (root, ids) => [...ids],
   });
   return { renderers: { tab: make("tab"), notation: make("notation") }, calls };
 }
@@ -448,4 +449,14 @@ test("a status callback observes transitions", async () => {
   const { view } = coordinator({ onStatus: (status, reason) => seen.push([status, reason]) });
   await view.load(DEMO);
   assert.deepEqual(seen.at(-1), [SCORE_STATUS.ready, null]);
+});
+
+test("guidance fan-out does not rewrite the active set", async () => {
+  const { view, calls } = coordinator();
+  await view.load(DEMO);
+  view.applyActiveEventIds(["ev-1"]);
+  view.applyGuidedEventIds(["ev-3"]);
+  assert.deepEqual(view.activeEventIds, ["ev-1"]);
+  assert.deepEqual(view.guidedEventIds, ["ev-3"]);
+  assert.deepEqual(calls.tab.at(-1), ["ev-1"]);
 });
