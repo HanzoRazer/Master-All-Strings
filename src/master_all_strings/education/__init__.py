@@ -32,6 +32,7 @@ from master_all_strings.education.guidance import (
     serialize_guidance_projection,
     sort_guidance_items,
 )
+from master_all_strings.education.guidance_builder import build_teaching_guidance_projection
 from master_all_strings.education.messages import MESSAGE_CATALOG_V1
 from master_all_strings.education.serialization import (
     compute_evaluation_digest,
@@ -58,6 +59,7 @@ __all__ = [
     "PracticeSessionHistory",
     "TeachingGuidanceItemV1",
     "TeachingGuidanceProjectionV1",
+    "build_teaching_guidance_projection",
     "compute_evaluation_digest",
     "compute_guidance_digest",
     "evaluate_alignment_findings",
