@@ -20,7 +20,8 @@
     "do013_product_sha": "59e4ea4f08343faa537c6d9ec612ea9c979f9eb7",
     "do013_browser_evidence_sha": "511054856bab33485fbf50f43f233ba254f08611",
     "do013_supplementary_evidence_sha": "0bfca41bd85b1057f3d33dce2ca4d20976cfbb00",
-    "product_sha_note": "The product candidate is the last commit that changes executable product code. Evidence-only commits after it do not redefine product identity."
+    "do013_evidence_freeze_sha": "92529366a29ed62e94f5f94fe4b4651e27c2e07f",
+    "product_sha_note": "The product candidate is the last commit that changes executable product code. 5110548 preserves the original browser proof; 0bfca41 normalizes that proof to the final B01-B24 contract without rewriting history; 9252936 freezes the certification evidence. Evidence-only commits after the product SHA do not redefine product identity."
   },
 
   "implementation": {
@@ -43,7 +44,8 @@
       { "sha": "21ae5c2", "stage": "shell wiring, diagnostics, coexistence" },
       { "sha": "59e4ea4", "stage": "browser-discovered defect corrections (product candidate)" },
       { "sha": "5110548", "stage": "first golden browser evidence capture" },
-      { "sha": "0bfca41", "stage": "supplementary DO-013E-normalized browser evidence" }
+      { "sha": "0bfca41", "stage": "supplementary DO-013E-normalized browser evidence" },
+      { "sha": "9252936", "stage": "evidence freeze — DO-013E CLOSED / PASS" }
     ],
     "history_rewritten": false,
     "contracts_added": [
@@ -133,9 +135,10 @@
     "authority": "GitHub Actions ubuntu-latest",
     "workflow": ".github/workflows/verify.yml",
     "workflow_unmodified": true,
-    "github_actions_run_id": 33343196695,
-    "github_actions_head_sha": "0bfca41bd85b1057f3d33dce2ca4d20976cfbb00",
+    "github_actions_run_id": 33344173567,
+    "github_actions_head_sha": "92529366a29ed62e94f5f94fe4b4651e27c2e07f",
     "github_actions_conclusion": "success",
+    "intermediate_run_note": "Run 33343196695 on 0bfca41 was green and authorized writing the freeze; run 33344173567 on 9252936 is the final DO-013E certification gate.",
     "ruff": "PASS",
     "mypy_strict": "PASS",
     "pytest_passed": 2534,
@@ -154,8 +157,8 @@
   },
 
   "regressions": {
-    "do008_result": "PASS on Linux (tests/integrations/test_do008_end_to_end.py, 2 passed)",
-    "do008_windows_note": "The Windows checkout reports a sha256 mismatch on resources/mvp2/do008_bundle/zone_semantics.json because the working tree carries one CRLF pair where the committed blob has LF. Working-tree sha256:743977fe..., committed blob sha256:c59e5c83.... Confirmed a checkout artifact: the same test passes on Linux CI. No DO-008 file was modified.",
+    "do008_result": "PASS on authoritative Linux (tests/integrations/test_do008_end_to_end.py, 2 passed)",
+    "do008_windows_note": "Confirmed platform checkout artifact — not a resolved Windows condition. Nothing on Windows was changed. Authoritative Linux execution shows DO-008 is healthy; the Windows discrepancy is isolated to CRLF transformation at checkout. The Windows working tree's resources/mvp2/do008_bundle/zone_semantics.json carries one CRLF pair where the committed blob has LF, so its sha256 reads 743977fe... against the manifest pin c59e5c83.... Linux reports 2534 passed where Windows reports 2533; the difference is exactly this test. A Windows suite remaining at 2533 is the expected documented state under the current .gitattributes configuration, not an unresolved DO-008 defect and not something DO-013 fixed.",
     "do009_digest": "sha256:c1249457f3d9c9a26b19fc3f8338c1844bec9c6af08809b059d31b89949175d4",
     "do009_digest_unchanged": true,
     "do010_result": "PASS",
@@ -213,6 +216,19 @@
     "merged": false,
     "mvp2_tag_created": false,
     "mvp2_released": false,
-    "status": "IMPLEMENTED - BROWSER-PROVEN - CI-CERTIFIED - EVIDENCE-FROZEN - DRAFT PR OPEN"
+    "publication_report": "NOT_APPLICABLE",
+    "publication_report_note": "DO013_PUBLICATION_REPORT.md is intentionally absent. DO-011/DO-012 publication reports record merge events that occurred; DO-013 is evidence-frozen but not merged. Creating one for symmetry would imply a publication event that has not occurred. A later publication/merge closeout may create it against the actual merge SHA and post-merge CI.",
+    "status": "IMPLEMENTED - BROWSER-PROVEN - CI-CERTIFIED - EVIDENCE-FROZEN - DRAFT PR OPEN - DO-013E CLOSED/PASS"
+  },
+
+  "do013e_closeout": {
+    "status": "CLOSED",
+    "result": "PASS",
+    "evidence_freeze_sha": "92529366a29ed62e94f5f94fe4b4651e27c2e07f",
+    "final_linux_ci_run_id": 33344173567,
+    "merge_authorized": false,
+    "mvp2_tag_authorized": false,
+    "publication_report": "NOT_APPLICABLE_YET",
+    "boundary": "Stop. Next authorized action is a distinct DO-013 publication/merge closeout if merge is authorized; otherwise advance to the next MVP 2 capability with PR #23 frozen for review."
   }
 }
