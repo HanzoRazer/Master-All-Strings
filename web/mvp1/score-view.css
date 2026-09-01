@@ -125,6 +125,22 @@
   fill: #12161c;
 }
 
+/* Educational guidance is a third channel. Dashed green, never the play-head
+ * fill and never the selection stroke, so the three states can coexist. */
+.tab-guided circle {
+  stroke: var(--ok);
+  stroke-width: 2.4;
+  stroke-dasharray: 4 2;
+}
+
+.tab-guided .tab-fret {
+  fill: var(--ok);
+}
+
+.tab-active.tab-guided .tab-fret {
+  fill: #12161c;
+}
+
 .tab-loop {
   fill: rgba(110, 196, 255, 0.12);
   stroke: none;
@@ -232,6 +248,18 @@
 .notation-selected .notation-stem,
 .notation-selected .notation-flag {
   stroke: var(--accent-2);
+}
+
+.notation-guided .notation-notehead {
+  stroke: var(--ok);
+  stroke-width: 2.2;
+  stroke-dasharray: 3 2;
+}
+
+.notation-guided .notation-stem,
+.notation-guided .notation-flag {
+  stroke: var(--ok);
+  stroke-dasharray: 3 2;
 }
 
 .notation-note {

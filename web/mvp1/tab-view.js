@@ -108,8 +108,9 @@ export function tabTotalTicks(payload) {
  * highlights here is literally the set the playhead published.
  */
 export function tabLayoutModel(payload, options = {}) {
-  const { lanes = null, activeEventIds = [], loopRange = null } = options;
+  const { lanes = null, activeEventIds = [], guidedEventIds = [], loopRange = null } = options;
   const active = new Set(activeEventIds);
+  const guided = new Set(guidedEventIds);
   const { rows, derived } = tabRows(payload, lanes);
   const rowIndex = new Map(rows.map((row, index) => [row.stringId, index]));
 
@@ -142,6 +143,7 @@ export function tabLayoutModel(payload, options = {}) {
       midiNote: event.midi_note,
       label: event.status === "playable" ? String(event.fret) : STATUS_GLYPH[event.status] ?? "?",
       active: active.has(event.canonical_event_id),
+      guided: guided.has(event.canonical_event_id),
       x: xFor(event.start_tick),
       y: yFor(index),
       rowIndex: index,
@@ -207,7 +209,7 @@ export function tabSvgTree(model) {
     children.push({
       tag: "g",
       attrs: {
-        class: `${STATUS_CLASS[event.status] ?? "tab-event"}${event.active ? " tab-active" : ""}`,
+        class: `${STATUS_CLASS[event.status] ?? "tab-event"}${event.active ? " tab-active" : ""}${event.guided ? " tab-guided" : ""}`,
         "data-canonical-event-id": event.canonicalEventId,
         // Carried so the binder can seek without re-deriving timing. It is the
         // projection's own tick, not a position read from any clock.
@@ -364,4 +366,24 @@ export function applySelectedEventId(root, canonicalEventId) {
     if (isSelected) marked = id;
   }
   return marked;
+}
+
+/**
+ * Mark educational guidance independently of activity and selection.
+ *
+ * A guided event is not therefore playing, and a playing event is not therefore
+ * guided. Passing an id the projection cannot depict lights nothing; the
+ * missing target is not moved to a neighbour.
+ */
+export function applyGuidedEventIds(root, guidedEventIds) {
+  if (!root?.querySelectorAll) return [];
+  const guided = new Set(guidedEventIds ?? []);
+  const applied = [];
+  for (const group of root.querySelectorAll("[data-canonical-event-id]")) {
+    const id = group.getAttribute("data-canonical-event-id");
+    const isGuided = guided.has(id);
+    group.classList?.toggle("tab-guided", isGuided);
+    if (isGuided) applied.push(id);
+  }
+  return applied;
 }

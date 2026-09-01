@@ -9,6 +9,8 @@ import {
   STAFF_TOP_STEP,
   UNSPELLABLE_GLYPH,
   applyActiveEventIds,
+  applyGuidedEventIds,
+  applySelectedEventId,
   hasUndisplayedTempoChanges,
   initialTempoBpm,
   ledgerStepsFor,
@@ -491,4 +493,53 @@ test("applyActiveEventIds toggles only the ids given", () => {
   assert.equal(groups[0].classList.has("notation-active"), false);
   assert.equal(groups[1].classList.has("notation-active"), true);
   assert.deepEqual(applyActiveEventIds(null, ["ev-1"]), []);
+});
+
+test("applyGuidedEventIds is independent of activity and selection", () => {
+  const groups = ["ev-1", "ev-2", "ev-3"].map((id) => {
+    const classes = new Set();
+    return {
+      getAttribute: () => id,
+      classList: {
+        toggle: (name, on) => (on ? classes.add(name) : classes.delete(name)),
+        has: (name) => classes.has(name),
+      },
+    };
+  });
+  const root = { querySelectorAll: () => groups };
+  applyActiveEventIds(root, ["ev-1"]);
+  applySelectedEventId(root, "ev-2");
+  assert.deepEqual(applyGuidedEventIds(root, ["ev-3"]), ["ev-3"]);
+  assert.equal(groups[0].classList.has("notation-active"), true);
+  assert.equal(groups[0].classList.has("notation-guided"), false);
+  assert.equal(groups[1].classList.has("notation-selected"), true);
+  assert.equal(groups[2].classList.has("notation-guided"), true);
+});
+
+test("an unrenderable guided id lights no neighbouring notation event", () => {
+  const groups = ["ev-1", "ev-2"].map((id) => {
+    const classes = new Set();
+    return {
+      getAttribute: () => id,
+      classList: {
+        toggle: (name, on) => (on ? classes.add(name) : classes.delete(name)),
+        has: (name) => classes.has(name),
+      },
+    };
+  });
+  const root = { querySelectorAll: () => groups };
+  assert.deepEqual(applyGuidedEventIds(root, ["ev-ghost"]), []);
+  assert.equal(groups[0].classList.has("notation-guided"), false);
+  assert.equal(groups[1].classList.has("notation-guided"), false);
+});
+
+test("derived rests never receive event-level guidance", () => {
+  const rest = load("../../../resources/projections/examples/global_rest_notation.json");
+  const model = notationLayoutModel(rest, { guidedEventIds: ["ev-1", "ev-2"] });
+  for (const event of model.events) {
+    if (event.kind === "rest") {
+      assert.equal(event.canonicalEventId, null);
+      assert.equal(event.guided, false);
+    }
+  }
 });

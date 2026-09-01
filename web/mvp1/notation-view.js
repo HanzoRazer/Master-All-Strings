@@ -172,8 +172,9 @@ function measureWidths(measures) {
  * no canonical event is sounding during one.
  */
 export function notationLayoutModel(payload, options = {}) {
-  const { activeEventIds = [], tempoContext = null } = options;
+  const { activeEventIds = [], guidedEventIds = [], tempoContext = null } = options;
   const active = new Set(activeEventIds);
+  const guided = new Set(guidedEventIds);
   const measures = payload?.measures ?? [];
   const widths = measureWidths(measures);
 
@@ -224,6 +225,7 @@ export function notationLayoutModel(payload, options = {}) {
           dotted: String(event.display_duration ?? "").startsWith("dotted_"),
           spellable: event.display_duration !== null,
           active: active.has(event.canonical_event_id),
+          guided: guided.has(event.canonical_event_id),
           measureIndex: measure.measure_index,
         });
       } else {
@@ -239,6 +241,7 @@ export function notationLayoutModel(payload, options = {}) {
           spellable: event.display_duration !== null,
           dotted: String(event.display_duration ?? "").startsWith("dotted_"),
           active: false,
+          guided: false,
           measureIndex: measure.measure_index,
         });
       }
@@ -485,7 +488,7 @@ export function notationSvgTree(model) {
     const attrs = {
       class:
         event.kind === "note"
-          ? `notation-event notation-note${event.active ? " notation-active" : ""}`
+          ? `notation-event notation-note${event.active ? " notation-active" : ""}${event.guided ? " notation-guided" : ""}`
           : "notation-event notation-rest-group",
       "data-start-tick": event.startTick,
     };
@@ -620,4 +623,23 @@ export function applySelectedEventId(root, canonicalEventId) {
     if (isSelected) marked = id;
   }
   return marked;
+}
+
+/**
+ * Educational guidance, independent of activity and selection.
+ *
+ * Derived rests have no canonical event id and therefore cannot receive
+ * event-level guidance. An id this view cannot depict is ignored, not moved.
+ */
+export function applyGuidedEventIds(root, guidedEventIds) {
+  if (!root?.querySelectorAll) return [];
+  const guided = new Set(guidedEventIds ?? []);
+  const applied = [];
+  for (const group of root.querySelectorAll("[data-canonical-event-id]")) {
+    const id = group.getAttribute("data-canonical-event-id");
+    const isGuided = guided.has(id);
+    group.classList?.toggle("notation-guided", isGuided);
+    if (isGuided) applied.push(id);
+  }
+  return applied;
 }
