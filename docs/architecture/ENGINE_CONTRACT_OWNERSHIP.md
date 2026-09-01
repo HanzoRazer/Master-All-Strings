@@ -21,6 +21,7 @@ Every cross-engine contract has exactly one owning engine and one versioning aut
 | `PracticeNextActionV1` | Educational | Educational | Creative | immutable | interpretation | — | Educational |
 | `PracticeAttemptSummaryV1` | Educational | Educational | Creative | immutable | interpretation | — | Educational |
 | `PracticeEvaluationResultV1` | Educational | Educational | Creative | immutable | interpretation | PerformanceSessionEvidenceV1 | Educational |
+| `TeachingGuidanceProjectionV1` | Educational | Educational | Creative | immutable | interpretation | PerformanceSessionEvidenceV1 | Educational |
 | `LearningObject` | Educational | Educational | Creative | versioned | neither | — | Educational |
 | `LessonAssignmentV1` | Educational | Educational | Creative | versioned | neither | — | Educational |
 | `CurriculumRegistry` | Educational | Educational | — | versioned | neither | — | Educational |
