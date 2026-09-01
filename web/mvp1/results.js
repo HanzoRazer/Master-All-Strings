@@ -1,5 +1,17 @@
 /** Results panel helpers for Educational PracticeEvaluationResultV1. */
 
+export function guidedEventIdsFromGuidance(guidance) {
+  const ids = [];
+  const seen = new Set();
+  for (const item of guidance?.items ?? []) {
+    const id = item.canonical_event_id;
+    if (typeof id !== "string" || !id || seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+  }
+  return ids;
+}
+
 export function renderResultsPanel(root, payload) {
   if (!root) return;
   root.replaceChildren();
@@ -10,19 +22,27 @@ export function renderResultsPanel(root, payload) {
   const evaluation = payload.evaluation;
   const messages = payload.messages || {};
   const primary = evaluation.primary_next_action;
+  const guidance = payload.guidance || null;
+  const guidedIds = guidedEventIdsFromGuidance(guidance);
   const summary = document.createElement("div");
   summary.className = "results-summary";
+  summary.dataset.action = primary.action_type;
+  if (guidance?.guidance_digest) {
+    summary.dataset.guidanceDigest = guidance.guidance_digest;
+  }
+  const continueHint =
+    primary.action_type === "continue"
+      ? `<p class="hint subtle">CONTINUE means no immediate repetition is required under this policy — not mastery.</p>`
+      : `<p class="hint subtle">This recommendation is advisory until you accept it. Accepting reuses the existing transport controls.</p>`;
   summary.innerHTML = `
     <p class="results-action" data-action="${primary.action_type}">
       <strong>Next:</strong> ${messages[primary.message_key] || primary.message_key}
     </p>
-    <p class="hint subtle">
-      CONTINUE means no immediate repetition is required under this policy —
-      not mastery.
-    </p>
+    ${continueHint}
     <p class="hint">
       Findings: ${evaluation.findings.length} · Actionable:
       ${evaluation.summary.actionable_finding_count}
+      ${guidedIds.length ? ` · Guided events: ${guidedIds.join(", ")}` : ""}
     </p>
   `;
   root.append(summary);
@@ -33,7 +53,9 @@ export function renderResultsPanel(root, payload) {
     const item = document.createElement("li");
     item.dataset.severity = finding.severity;
     item.dataset.type = finding.finding_type;
+    const eventLabel = (finding.expected_event_refs || []).join(", ");
     item.textContent = messages[finding.message_key] || finding.message_key;
+    if (eventLabel) item.dataset.events = eventLabel;
     list.append(item);
   }
   root.append(list);
