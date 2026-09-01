@@ -7,8 +7,10 @@
 | Branch | `cursor/mvp2c-score-projections-90b8` |
 | Draft PR | [#23](https://github.com/HanzoRazer/Master-All-Strings/pull/23) → `main` |
 | Status | IMPLEMENTED · BROWSER-PROVEN · CI-CERTIFIED · EVIDENCE-FROZEN |
+| DO-013E | **CLOSED / PASS** at `9252936` |
 | Merged | **No** — not authorized |
 | MVP 2 tag | **No** — not authorized |
+| Publication report | **Not applicable** at this lifecycle state |
 
 ---
 
@@ -55,9 +57,13 @@ provenance is fabricated: an authored lesson has no capture behind it, so
 | `do013_product_sha` | **`59e4ea4f08343faa537c6d9ec612ea9c979f9eb7`** |
 | Browser evidence SHA | `511054856bab33485fbf50f43f233ba254f08611` |
 | Supplementary evidence SHA | `0bfca41bd85b1057f3d33dce2ca4d20976cfbb00` |
+| Evidence freeze SHA | **`92529366a29ed62e94f5f94fe4b4651e27c2e07f`** |
 
 The product SHA is the last commit that changes executable product code.
-Evidence-only commits after it do not redefine product identity.
+`5110548` preserves the original browser proof; `0bfca41` normalizes that proof
+to the final B01–B24 contract without rewriting history; `9252936` freezes the
+certification evidence. Evidence-only commits after the product SHA do not
+redefine product identity.
 
 ---
 
@@ -84,6 +90,7 @@ Evidence-only commits after it do not redefine product identity.
 | `59e4ea4` | Browser-discovered defect corrections — **product candidate** |
 | `5110548` | First golden browser evidence capture |
 | `0bfca41` | Supplementary DO-013E-normalized evidence |
+| `9252936` | Evidence freeze — **DO-013E CLOSED / PASS** |
 
 History was not rewritten, squashed, or repartitioned.
 
@@ -175,7 +182,15 @@ and no Node. That is an environment limitation, not a product failure.
 
 ## 6. Authoritative Linux certification
 
-**GitHub Actions run [`33343196695`](https://github.com/HanzoRazer/Master-All-Strings/actions/runs/33343196695)** on head `0bfca41` — conclusion **success**.
+**Final gate:** GitHub Actions run
+[`33344173567`](https://github.com/HanzoRazer/Master-All-Strings/actions/runs/33344173567)
+on evidence-freeze head `9252936` — conclusion **success**. That run closes the
+last DO-013E certification gate.
+
+An earlier green run
+[`33343196695`](https://github.com/HanzoRazer/Master-All-Strings/actions/runs/33343196695)
+on `0bfca41` authorized writing the freeze; it is intermediate evidence, not the
+final certified SHA.
 
 | Gate | Result |
 |---|---|
@@ -278,17 +293,70 @@ Merge: **no**. MVP 2 tag: **no**. `mvp-1`: unchanged.
 
 ## 11. Publication report: not applicable at this lifecycle state
 
-DO-011 and DO-012 each carry a `_PUBLICATION_REPORT.md` alongside their release
-report. DO-013 deliberately does not, and the asymmetry is the point.
+Publication report: **not applicable at this lifecycle state**; PR #23 remains
+draft and merge is not authorized. `DO013_PUBLICATION_REPORT.md` is intentionally
+absent.
 
-Those tranches reached a publication lifecycle: they were merged, and their
-publication reports record an event that actually happened. DO-013 has not been
-authorized to merge. PR #23 remains draft, nothing has reached `main`, and no
-MVP 2 tag exists.
+DO-011 and DO-012 each carry a `_PUBLICATION_REPORT.md` alongside their release
+report because those tranches reached a publication lifecycle: they were merged,
+and their publication reports record an event that actually happened. DO-013
+implementation is complete, browser-proven, candidate-CI-certified, and
+evidence-frozen — but it is **not** merged and **not** published to `main`.
 
 Creating a publication report now for visual symmetry would weaken the evidence
 model by implying a publication event that has not occurred.
 
-If DO-013 is later authorized and merged, that subsequent tranche should create
+If DO-013 is later authorized and merged, that subsequent
+**DO-013 publication/merge closeout** tranche should create
 `DO013_PUBLICATION_REPORT.md` against the actual merge SHA and the post-merge CI
 evidence — the only point at which such a document can say anything true.
+
+---
+
+## 12. Final disposition — DO-013E CLOSED / PASS
+
+```text
+DO-013 / MVP 2C
+
+Product SHA:          59e4ea4
+Golden evidence:      5110548
+Supplemental evidence:0bfca41
+Evidence freeze:      9252936
+
+Browser:              PASS — 26/26
+Windows Node:         PASS — 328/328
+Linux pytest:         PASS — 2534/2534 executable tests
+Linux skipped:        3
+Linux coverage:       95.34%
+Ruff:                 PASS
+mypy:                 PASS
+Schemas:              PASS
+Fixture drift:        NONE
+Governance:           PASS
+DO-008:               PASS on authoritative Linux
+DO-009:               frozen digest preserved
+DO-010:               PASS
+DO-011:               PASS
+DO-012/012A:          PASS
+
+PR:                    #23
+PR state:              DRAFT
+Base:                  main
+Branch tip:            9252936
+
+Evidence:              FROZEN
+Implementation:        COMPLETE
+Certification:         COMPLETE
+Review readiness:      READY
+
+Publication report:    NOT APPLICABLE YET
+Merge:                 NOT AUTHORIZED
+MVP 2 tag:             NOT AUTHORIZED
+mvp-1:                 UNCHANGED
+```
+
+**Stop at this boundary.** DO-013E does not extend into further implementation.
+The next authorized action for this workstream is a distinct DO-013
+publication/merge closeout if and when merge is authorized; otherwise the
+program may advance to the next MVP 2 capability while PR #23 remains frozen
+for review.
