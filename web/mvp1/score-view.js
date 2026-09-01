@@ -322,6 +322,37 @@ export class ScoreViewCoordinator {
   }
 
   /** Mount one view, containing any failure to that view alone. */
+  /**
+   * Re-apply the sticky highlight channels to one freshly mounted view.
+   *
+   * The active set repairs itself: the playhead republishes many times a second,
+   * so a view that missed an update gets the next one. Guidance and selection do
+   * not -- each is applied once, when an evaluation lands or a reader clicks --
+   * so a view mounting afterwards would stay blank while its sibling showed the
+   * marks, and nothing would ever correct it.
+   *
+   * Today `_mount` only runs inside `load()`, which clears both first, so there
+   * is no ordering hazard to fix. This exists so that adding any remount path
+   * later cannot silently reintroduce one.
+   */
+  _replayChannels(name) {
+    const view = this.views[name];
+    if (!view.mounted) return;
+    const renderer = this._renderers[name];
+    try {
+      if (this.guidedEventIds.length && typeof renderer.applyGuidance === "function") {
+        renderer.applyGuidance(view.root, [...this.guidedEventIds]);
+      }
+      if (this.selectedEventId && typeof renderer.applySelection === "function") {
+        renderer.applySelection(view.root, this.selectedEventId);
+      }
+    } catch (error) {
+      // A replay failure costs this view only, exactly as a mount failure does.
+      view.mounted = false;
+      view.error = String(error?.message ?? error);
+    }
+  }
+
   _mount(name, options) {
     const view = this.views[name];
     try {
@@ -333,6 +364,7 @@ export class ScoreViewCoordinator {
       view.root = root;
       view.mounted = true;
       view.error = null;
+      this._replayChannels(name);
     } catch (error) {
       // Deliberately swallowed. A renderer that throws must cost its own view
       // and nothing else -- not the other score view, and not the lesson.

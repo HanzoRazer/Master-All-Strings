@@ -371,3 +371,57 @@ def test_schema_does_not_accept_a_mutated_copy_of_a_valid_payload() -> None:
 def test_serialize_guidance_projection_rejects_non_projection() -> None:
     with pytest.raises(EducationContractError):
         serialize_guidance_projection(_item())  # type: ignore[arg-type]
+
+
+# --- digest is content-addressed regardless of caller discipline -------------
+
+
+def test_the_digest_ignores_the_order_items_arrive_in() -> None:
+    """The digest sorts internally rather than trusting its caller.
+
+    ``sort_keys`` orders a mapping's keys but never a list, so hashing items in
+    the order given would make the digest depend on the order findings happened
+    to be iterated. The builder sorts before calling, but the function is public
+    and a different caller need not.
+    """
+
+    first = _item(event_id="ev-1")
+    second = _item("timing-late-0002", event_id="ev-2")
+
+    def digest_for(items):
+        return compute_guidance_digest(
+            canonical_revision_id="rev-1",
+            performance_session_id="session-1",
+            evaluation_digest="sha256:" + "0" * 64,
+            policy_version=GUIDANCE_POLICY_VERSION,
+            items=items,
+            next_action=_continue(),
+        )
+
+    assert digest_for((first, second)) == digest_for((second, first))
+
+
+def test_the_digest_still_distinguishes_different_content() -> None:
+    """Sorting must not flatten genuinely different guidance into one hash."""
+
+    def digest_for(items):
+        return compute_guidance_digest(
+            canonical_revision_id="rev-1",
+            performance_session_id="session-1",
+            evaluation_digest="sha256:" + "0" * 64,
+            policy_version=GUIDANCE_POLICY_VERSION,
+            items=items,
+            next_action=_continue(),
+        )
+
+    one = (_item(event_id="ev-1"),)
+    two = (_item(event_id="ev-1"), _item("timing-late-0002", event_id="ev-2"))
+    assert digest_for(one) != digest_for(two)
+
+
+def test_projection_with_digest_is_a_declared_export() -> None:
+    """It is imported directly by callers, so the module should say it is public."""
+
+    from master_all_strings.education import guidance
+
+    assert "projection_with_digest" in guidance.__all__

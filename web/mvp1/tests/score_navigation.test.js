@@ -578,3 +578,49 @@ test("unrenderable guidance is not moved onto a neighbouring event", async () =>
   assert.deepEqual(state.tab.guided, []);
   assert.deepEqual(state.notation.guided, []);
 });
+
+// --- sticky channels survive a mount ----------------------------------------
+
+test("guidance and selection are replayed onto a view that mounts afterwards", async () => {
+  // The active set repairs itself, because the playhead republishes constantly.
+  // Guidance and selection are applied once and would otherwise stay missing on
+  // a view that mounted after them, with nothing to correct it later.
+  const { view, state } = await ready();
+  view.applyGuidedEventIds(["ev-1"]);
+  view.selectEvent("ev-2");
+
+  // A view goes down and is remounted, as a future remount path would do.
+  view.views.tab.mounted = false;
+  state.tab.guided = [];
+  state.tab.selected = null;
+
+  view._mount("tab", {});
+
+  assert.deepEqual(state.tab.guided, ["ev-1"]);
+  assert.equal(state.tab.selected, "ev-2");
+});
+
+test("replay writes nothing when no sticky channel is set", async () => {
+  const { view, state } = await ready();
+  view.views.tab.mounted = false;
+  state.tab.guided = [];
+  state.tab.selected = null;
+
+  view._mount("tab", {});
+
+  assert.deepEqual(state.tab.guided, []);
+  assert.equal(state.tab.selected, null);
+});
+
+test("replay never revives the active set, which has its own authority", async () => {
+  // Activity comes from the playhead. A remount must not re-assert a stale
+  // active set the timeline may since have changed.
+  const { view, state } = await ready();
+  view.applyActiveEventIds(["ev-3"]);
+  view.views.tab.mounted = false;
+  state.tab.active = [];
+
+  view._mount("tab", {});
+
+  assert.deepEqual(state.tab.active, []);
+});

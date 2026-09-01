@@ -34,6 +34,7 @@ __all__ = [
     "TeachingGuidanceProjectionV1",
     "compute_guidance_digest",
     "guided_event_ids",
+    "projection_with_digest",
     "serialize_guidance_projection",
     "sort_guidance_items",
 ]
@@ -216,12 +217,20 @@ def compute_guidance_digest(
 
     Same revision + evaluation + policy version must hash identically. Zone
     context, provenance, and the digest field itself are excluded.
+
+    Items are sorted here rather than trusted to arrive sorted. ``sort_keys``
+    orders a mapping's keys but never a list, so hashing items in the order given
+    would make the digest depend on the order findings happened to be iterated --
+    two identical sets of guidance would digest differently. ``build_teaching_
+    guidance_projection`` already sorts before calling, so this changes no
+    existing digest; it removes the possibility that a different caller gets a
+    different answer for the same content.
     """
 
     payload = {
         "canonical_revision_id": canonical_revision_id,
         "evaluation_digest": evaluation_digest,
-        "items": [_item_digest_dict(item) for item in items],
+        "items": [_item_digest_dict(item) for item in sort_guidance_items(items)],
         "next_action": to_dict(next_action),
         "performance_session_id": performance_session_id,
         "policy_version": policy_version,
