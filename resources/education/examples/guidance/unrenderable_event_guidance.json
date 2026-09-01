@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0.0",
+  "canonical_revision_id": "rev-b85e77022251b045cfe38b7d",
+  "performance_session_id": "session-unrenderable",
+  "evaluation_digest": "sha256:7981919d3b800b7f794a6fd3aab2b4595aa670a22ae010e8c49a124eb7d647cd",
+  "policy_version": "teaching-guidance-v1",
+  "items": [
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "timing-late-0001",
+      "finding_type": "late_entry",
+      "severity": "focus",
+      "evidence_refs": [
+        "aligned:ev-ghost"
+      ],
+      "message_key": "finding.late_entry",
+      "canonical_event_id": "ev-ghost",
+      "observed_value": 140.0,
+      "threshold_value": 100.0,
+      "zone_context": null
+    }
+  ],
+  "next_action": {
+    "schema_version": "1.0.0",
+    "action_type": "repeat",
+    "reason_finding_ids": [
+      "timing-late-0001"
+    ],
+    "message_key": "action.repeat",
+    "target_rate": null,
+    "focus_start_tick": null,
+    "focus_end_tick": null,
+    "teaching_aid": null
+  },
+  "guidance_digest": "sha256:7e0fc455f231d88aa741a2ea081c22db3ff3240f408e19f0200fa8ac725449c2",
+  "provenance": {
+    "evaluation_digest": "sha256:7981919d3b800b7f794a6fd3aab2b4595aa670a22ae010e8c49a124eb7d647cd",
+    "producer": "TeachingGuidanceProjectionV1/v1"
+  }
+}

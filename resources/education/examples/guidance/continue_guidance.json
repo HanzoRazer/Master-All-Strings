@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "canonical_revision_id": "rev-b85e77022251b045cfe38b7d",
+  "performance_session_id": "session-do014",
+  "evaluation_digest": "sha256:58baf1851eec1ca5bd8df1a89b6ba078456acc694166589a7e197da13a6d9305",
+  "policy_version": "teaching-guidance-v1",
+  "items": [],
+  "next_action": {
+    "schema_version": "1.0.0",
+    "action_type": "continue",
+    "reason_finding_ids": [],
+    "message_key": "action.continue",
+    "target_rate": null,
+    "focus_start_tick": null,
+    "focus_end_tick": null,
+    "teaching_aid": null
+  },
+  "guidance_digest": "sha256:85598a1ff9195eea5a9ea382cdff2e755492988170304030a01506d5a15e5c0a",
+  "provenance": {
+    "evaluation_digest": "sha256:58baf1851eec1ca5bd8df1a89b6ba078456acc694166589a7e197da13a6d9305",
+    "producer": "TeachingGuidanceProjectionV1/v1"
+  }
+}
