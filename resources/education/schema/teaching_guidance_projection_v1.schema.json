@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/education/teaching-guidance-projection-v1.schema.json",
+  "title": "TeachingGuidanceProjectionV1",
+  "description": "Score-aware projection of PracticeEvaluationResultV1 onto canonical event identity. Educational findings and next actions are cited, not recomputed. Canonical event IDs are the cross-view join key. This projection must not mutate canonicalRevisionId, tabDigest, or notationDigest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "canonical_revision_id",
+    "performance_session_id",
+    "evaluation_digest",
+    "policy_version",
+    "items",
+    "next_action",
+    "guidance_digest",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "canonical_revision_id": { "type": "string", "minLength": 1 },
+    "performance_session_id": { "type": "string", "minLength": 1 },
+    "evaluation_digest": { "type": "string", "pattern": "^sha256:" },
+    "policy_version": { "type": "string", "minLength": 1 },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/teachingGuidanceItem" }
+    },
+    "next_action": { "$ref": "#/$defs/nextAction" },
+    "guidance_digest": { "type": "string", "pattern": "^sha256:" },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "teachingGuidanceItem": {
+      "title": "TeachingGuidanceItemV1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "finding_id",
+        "finding_type",
+        "severity",
+        "evidence_refs",
+        "message_key",
+        "canonical_event_id",
+        "observed_value",
+        "threshold_value",
+        "zone_context"
+      ],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "finding_id": { "type": "string", "minLength": 1 },
+        "finding_type": {
+          "type": "string",
+          "enum": [
+            "early_entry",
+            "late_entry",
+            "pitch_difference",
+            "expected_note_missing",
+            "unexpected_note",
+            "duration_short",
+            "duration_long",
+            "repetition_improved",
+            "repetition_regressed",
+            "findings_concentrated"
+          ]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "focus", "significant"]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "message_key": { "type": "string", "minLength": 1 },
+        "canonical_event_id": {
+          "description": "Canonical musical event identity copied from the finding. Null when the finding has no expected-event target. Never minted by this projection.",
+          "type": ["string", "null"],
+          "minLength": 1
+        },
+        "observed_value": { "type": ["number", "null"] },
+        "threshold_value": { "type": ["number", "null"] },
+        "zone_context": {
+          "description": "Optional Zone explanatory enrichment. Must not change finding classification, severity, next action, or guided-event membership.",
+          "type": ["string", "null"],
+          "minLength": 1
+        }
+      }
+    },
+    "nextAction": {
+      "title": "PracticeNextActionV1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "action_type",
+        "reason_finding_ids",
+        "message_key",
+        "target_rate",
+        "focus_start_tick",
+        "focus_end_tick",
+        "teaching_aid"
+      ],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "action_type": {
+          "type": "string",
+          "enum": [
+            "continue",
+            "repeat",
+            "slow_down",
+            "isolate_passage",
+            "view_one_string",
+            "enable_zone_view"
+          ]
+        },
+        "reason_finding_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "message_key": { "type": "string", "minLength": 1 },
+        "target_rate": {
+          "type": ["number", "null"],
+          "minimum": 0.5,
+          "maximum": 1.5
+        },
+        "focus_start_tick": { "type": ["integer", "null"], "minimum": 0 },
+        "focus_end_tick": { "type": ["integer", "null"], "minimum": 0 },
+        "teaching_aid": { "type": ["string", "null"], "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "description": "ISOLATE_PASSAGE range must be well-ordered when both bounds are present.",
+          "if": {
+            "properties": {
+              "focus_start_tick": { "type": "integer" },
+              "focus_end_tick": { "type": "integer" }
+            },
+            "required": ["focus_start_tick", "focus_end_tick"]
+          },
+          "then": {
+            "properties": {
+              "focus_end_tick": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

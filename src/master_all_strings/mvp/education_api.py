@@ -15,6 +15,7 @@ from master_all_strings.education.contracts import (
 )
 from master_all_strings.education.errors import EducationContractError
 from master_all_strings.education.evaluation import PracticeEvaluator
+from master_all_strings.education.guidance_builder import build_teaching_guidance_projection
 from master_all_strings.education.messages import MESSAGE_CATALOG_V1
 from master_all_strings.education.serialization import to_dict
 from master_all_strings.education.session_history import PracticeSessionHistory
@@ -116,7 +117,11 @@ def _tempo_from_dict(payload: dict[str, Any]) -> TempoChangeV1:
     return TempoChangeV1("1.0.0", int(payload.get("tick", 0)), us)
 
 
-def _enrich(result_dict: dict[str, Any]) -> dict[str, Any]:
+def _enrich(
+    result_dict: dict[str, Any],
+    *,
+    guidance: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     messages = {
         finding["message_key"]: MESSAGE_CATALOG_V1[finding["message_key"]]
         for finding in result_dict["findings"]
@@ -129,6 +134,7 @@ def _enrich(result_dict: dict[str, Any]) -> dict[str, Any]:
     return {
         "evaluation": result_dict,
         "messages": messages,
+        "guidance": guidance,
         "hardware_status": {
             "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
             "audio_output": "UNVERIFIED_AUDIO_OUTPUT",
@@ -208,7 +214,16 @@ class LocalPracticeEvaluationApi:
             alignment = self._align_from_payload(payload)
         current_rate = float(payload.get("current_rate", 1.0))
         result = self.evaluator.evaluate(alignment, current_rate=current_rate)
-        enriched = _enrich(to_dict(result))
+        guidance_payload = None
+        revision_id = payload.get("canonical_revision_id")
+        if isinstance(revision_id, str) and revision_id.strip():
+            guidance_payload = to_dict(
+                build_teaching_guidance_projection(
+                    result,
+                    canonical_revision_id=revision_id.strip(),
+                )
+            )
+        enriched = _enrich(to_dict(result), guidance=guidance_payload)
         self.last_result = enriched
         return enriched
 

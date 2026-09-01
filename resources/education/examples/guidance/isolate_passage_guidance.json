@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "canonical_revision_id": "rev-b85e77022251b045cfe38b7d",
+  "performance_session_id": "session-isolate",
+  "evaluation_digest": "sha256:6a36e5dc1579a2ebea1c826fd2ed8d58019364386c4e38abf19e9c669b685bd1",
+  "policy_version": "teaching-guidance-v1",
+  "items": [
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "timing-late-0001",
+      "finding_type": "late_entry",
+      "severity": "focus",
+      "evidence_refs": [
+        "aligned:ev-3"
+      ],
+      "message_key": "finding.late_entry",
+      "canonical_event_id": "ev-3",
+      "observed_value": 140.0,
+      "threshold_value": 100.0,
+      "zone_context": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "timing-late-0002",
+      "finding_type": "late_entry",
+      "severity": "focus",
+      "evidence_refs": [
+        "aligned:ev-4"
+      ],
+      "message_key": "finding.late_entry",
+      "canonical_event_id": "ev-4",
+      "observed_value": 140.0,
+      "threshold_value": 100.0,
+      "zone_context": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "timing-late-0003",
+      "finding_type": "late_entry",
+      "severity": "focus",
+      "evidence_refs": [
+        "aligned:ev-5"
+      ],
+      "message_key": "finding.late_entry",
+      "canonical_event_id": "ev-5",
+      "observed_value": 140.0,
+      "threshold_value": 100.0,
+      "zone_context": null
+    }
+  ],
+  "next_action": {
+    "schema_version": "1.0.0",
+    "action_type": "isolate_passage",
+    "reason_finding_ids": [
+      "timing-late-0001",
+      "timing-late-0002",
+      "timing-late-0003"
+    ],
+    "message_key": "action.isolate_passage",
+    "target_rate": null,
+    "focus_start_tick": 960,
+    "focus_end_tick": 1920,
+    "teaching_aid": null
+  },
+  "guidance_digest": "sha256:b0750a32dcbc4c3981c53becc50bdd960f7554526d3c172ba2521ddbd4240f56",
+  "provenance": {
+    "evaluation_digest": "sha256:6a36e5dc1579a2ebea1c826fd2ed8d58019364386c4e38abf19e9c669b685bd1",
+    "producer": "TeachingGuidanceProjectionV1/v1"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0.0",
+  "canonical_revision_id": "rev-b85e77022251b045cfe38b7d",
+  "performance_session_id": "session-multiple",
+  "evaluation_digest": "sha256:c2296b334f9ced8405b36926a1eab746ea3116ed9c720790b102fe5c7b3cecda",
+  "policy_version": "teaching-guidance-v1",
+  "items": [
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "pitch-0001",
+      "finding_type": "pitch_difference",
+      "severity": "focus",
+      "evidence_refs": [
+        "aligned:ev-3@0:obs-3"
+      ],
+      "message_key": "finding.pitch_difference",
+      "canonical_event_id": "ev-3",
+      "observed_value": 2.0,
+      "threshold_value": 1.0,
+      "zone_context": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "finding_id": "timing-late-0001",
+      "finding_type": "late_entry",
+      "severity": "focus",
+      "evidence_refs": [
+        "aligned:ev-1@0:obs-1"
+      ],
+      "message_key": "finding.late_entry",
+      "canonical_event_id": "ev-1",
+      "observed_value": 140.0,
+      "threshold_value": 100.0,
+      "zone_context": null
+    }
+  ],
+  "next_action": {
+    "schema_version": "1.0.0",
+    "action_type": "repeat",
+    "reason_finding_ids": [
+      "timing-late-0001",
+      "pitch-0001"
+    ],
+    "message_key": "action.repeat",
+    "target_rate": null,
+    "focus_start_tick": null,
+    "focus_end_tick": null,
+    "teaching_aid": null
+  },
+  "guidance_digest": "sha256:83812c7936451bf49e813874418cee047dfb68ff0984173cbccccfdd9c7ac335",
+  "provenance": {
+    "evaluation_digest": "sha256:c2296b334f9ced8405b36926a1eab746ea3116ed9c720790b102fe5c7b3cecda",
+    "producer": "TeachingGuidanceProjectionV1/v1"
+  }
+}

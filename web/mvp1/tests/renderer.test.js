@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  applyFretboardGuidedEventIds,
   observedEvidencePresentation,
   oneStringViewProjection,
   zonePresentationClasses,
@@ -157,4 +158,42 @@ test("the readout copies artifact values and computes no intervals", () => {
     zoneReadoutText([{ zoneId: "ZONE_9", tritoneAxisId: "not-an-interval" }]),
     "Zone: ZONE_9 · Anchor: not-an-interval",
   );
+});
+
+function classStub(id) {
+  const classes = new Set(["note", "zone-1"]);
+  return {
+    dataset: { eventId: id },
+    getAttribute: (name) => (name === "data-event-id" ? id : null),
+    classList: {
+      toggle: (name, on) => (on ? classes.add(name) : classes.delete(name)),
+      has: (name) => classes.has(name),
+      contains: (name) => classes.has(name),
+    },
+  };
+}
+
+test("fretboard guidance uses dataset.eventId and lights only that note", () => {
+  const notes = ["ev-1", "ev-2", "ev-3"].map(classStub);
+  const root = { querySelectorAll: () => notes };
+  assert.deepEqual(applyFretboardGuidedEventIds(root, ["ev-2"]), ["ev-2"]);
+  assert.equal(notes[1].classList.has("guided"), true);
+  assert.equal(notes[0].classList.has("guided"), false);
+  assert.equal(notes[2].classList.has("guided"), false);
+});
+
+test("fretboard guidance coexists with Zone classes and does not rewrite them", () => {
+  const notes = ["ev-1"].map(classStub);
+  const root = { querySelectorAll: () => notes };
+  applyFretboardGuidedEventIds(root, ["ev-1"]);
+  assert.equal(notes[0].classList.has("guided"), true);
+  assert.equal(notes[0].classList.has("zone-1"), true);
+});
+
+test("an unrenderable fretboard guidance id is not moved to a neighbour", () => {
+  const notes = ["ev-1", "ev-2"].map(classStub);
+  const root = { querySelectorAll: () => notes };
+  assert.deepEqual(applyFretboardGuidedEventIds(root, ["ev-ghost"]), []);
+  assert.equal(notes[0].classList.has("guided"), false);
+  assert.equal(notes[1].classList.has("guided"), false);
 });

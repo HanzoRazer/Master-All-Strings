@@ -23,6 +23,16 @@ from master_all_strings.education.evaluation import (
     evaluate_alignment_findings,
     evaluate_practice_attempt,
 )
+from master_all_strings.education.guidance import (
+    GUIDANCE_POLICY_VERSION,
+    GUIDANCE_SCHEMA_VERSION,
+    TeachingGuidanceItemV1,
+    TeachingGuidanceProjectionV1,
+    compute_guidance_digest,
+    serialize_guidance_projection,
+    sort_guidance_items,
+)
+from master_all_strings.education.guidance_builder import build_teaching_guidance_projection
 from master_all_strings.education.messages import MESSAGE_CATALOG_V1
 from master_all_strings.education.serialization import (
     compute_evaluation_digest,
@@ -32,6 +42,8 @@ from master_all_strings.education.serialization import (
 from master_all_strings.education.session_history import PracticeSessionHistory
 
 __all__ = [
+    "GUIDANCE_POLICY_VERSION",
+    "GUIDANCE_SCHEMA_VERSION",
     "MESSAGE_CATALOG_V1",
     "EducationContractError",
     "PracticeAttemptSummaryV1",
@@ -45,9 +57,15 @@ __all__ = [
     "PracticeNextActionType",
     "PracticeNextActionV1",
     "PracticeSessionHistory",
+    "TeachingGuidanceItemV1",
+    "TeachingGuidanceProjectionV1",
+    "build_teaching_guidance_projection",
     "compute_evaluation_digest",
+    "compute_guidance_digest",
     "evaluate_alignment_findings",
     "evaluate_practice_attempt",
     "serialize_evaluation_result",
+    "serialize_guidance_projection",
+    "sort_guidance_items",
     "to_dict",
 ]

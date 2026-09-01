@@ -5,6 +5,8 @@ import test from "node:test";
 
 import {
   applyActiveEventIds,
+  applyGuidedEventIds,
+  applySelectedEventId,
   escapeXml,
   renderTabSvg,
   seekTickForEvent,
@@ -328,4 +330,62 @@ test("applyActiveEventIds toggles only the ids it is given", () => {
 
 test("applyActiveEventIds on a missing root is a no-op", () => {
   assert.deepEqual(applyActiveEventIds(null, ["ev-1"]), []);
+});
+
+function classStub(id) {
+  const classes = new Set();
+  return {
+    getAttribute: () => id,
+    classList: {
+      toggle: (name, on) => (on ? classes.add(name) : classes.delete(name)),
+      has: (name) => classes.has(name),
+    },
+  };
+}
+
+test("applyGuidedEventIds toggles only the ids it is given", () => {
+  const groups = ["ev-1", "ev-2", "ev-3"].map(classStub);
+  const root = { querySelectorAll: () => groups };
+  assert.deepEqual(applyGuidedEventIds(root, ["ev-2"]), ["ev-2"]);
+  assert.equal(groups[1].classList.has("tab-guided"), true);
+  assert.equal(groups[0].classList.has("tab-guided"), false);
+  assert.deepEqual(applyGuidedEventIds(null, ["ev-1"]), []);
+});
+
+test("active, selected, and guided remain independent class channels", () => {
+  const groups = ["ev-1", "ev-2", "ev-3"].map(classStub);
+  const root = { querySelectorAll: () => groups };
+  applyActiveEventIds(root, ["ev-1"]);
+  applySelectedEventId(root, "ev-2");
+  applyGuidedEventIds(root, ["ev-3"]);
+  assert.equal(groups[0].classList.has("tab-active"), true);
+  assert.equal(groups[0].classList.has("tab-guided"), false);
+  assert.equal(groups[1].classList.has("tab-selected"), true);
+  assert.equal(groups[1].classList.has("tab-active"), false);
+  assert.equal(groups[2].classList.has("tab-guided"), true);
+  assert.equal(groups[2].classList.has("tab-active"), false);
+});
+
+test("an unrenderable guided id lights no neighbouring TAB event", () => {
+  const groups = ["ev-1", "ev-2"].map(classStub);
+  const root = { querySelectorAll: () => groups };
+  assert.deepEqual(applyGuidedEventIds(root, ["ev-ghost"]), []);
+  assert.equal(groups[0].classList.has("tab-guided"), false);
+  assert.equal(groups[1].classList.has("tab-guided"), false);
+});
+
+test("layout guided flag does not alter coordinates or status", () => {
+  const plain = tabLayoutModel(UNPLAYABLE, { lanes: LANES, activeEventIds: ["ev-1"] });
+  const guided = tabLayoutModel(UNPLAYABLE, {
+    lanes: LANES,
+    activeEventIds: ["ev-1"],
+    guidedEventIds: ["ev-2"],
+  });
+  assert.deepEqual(
+    plain.events.map((item) => [item.canonicalEventId, item.x, item.y, item.status]),
+    guided.events.map((item) => [item.canonicalEventId, item.x, item.y, item.status]),
+  );
+  assert.equal(guided.events.find((e) => e.canonicalEventId === "ev-2").guided, true);
+  assert.equal(guided.events.find((e) => e.canonicalEventId === "ev-1").active, true);
+  assert.equal(guided.events.find((e) => e.canonicalEventId === "ev-1").guided, false);
 });

@@ -386,6 +386,17 @@ input[type="number"] {
   box-shadow: 0 0 0 1px rgba(255, 210, 122, 0.35);
 }
 
+.note.guided {
+  outline: 2px dashed var(--ok);
+  outline-offset: 2px;
+}
+
+.note.active.guided {
+  box-shadow:
+    0 0 0 1px rgba(255, 210, 122, 0.35),
+    0 0 0 3px rgba(121, 211, 163, 0.35);
+}
+
 :root {
   --zone-1: #1a4d8f;
   --zone-2: #d4860f;

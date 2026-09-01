@@ -27,7 +27,9 @@ import { ScoreViewCoordinator } from "./score-view.js";
 import {
   buildScoreDiagnostics,
   createFretboardSelectionHandler,
+  createGuidanceAcceptHandler,
   createScoreSeekHandler,
+  presentTeachingGuidance,
 } from "./score-shell.js";
 import { NOTATION_LIMITATIONS } from "./notation-view.js";
 
@@ -100,6 +102,10 @@ const practiceActions = new PracticeActionController({
     }
   },
   targetRepetitions: () => state.practice?.policy.loop.target_repetitions ?? null,
+});
+const acceptGuidance = createGuidanceAcceptHandler({
+  practiceActions,
+  educationApi,
 });
 const params = new URLSearchParams(window.location.search);
 if (params.get("devGolden") === "1") {
@@ -719,9 +725,19 @@ $("btnStopAttempt").addEventListener("click", async () => {
       })),
       observed_events: evidence.observed_events || [],
       repetition_count: Math.max(1, transport.snapshot().repetitionCount || 1),
+      canonical_revision_id: scoreView.revisionId,
     });
     state.lastEvaluation = evaluation;
     renderResultsPanel($("resultsPanel"), evaluation);
+    presentTeachingGuidance({
+      coordinator: scoreView,
+      renderer,
+      projection: evaluation.guidance,
+    });
+    const data = document.body.dataset;
+    data.masGuidedEventIds = (scoreView.guidedEventIds || []).join(",");
+    data.masGuidanceAction = evaluation.guidance?.next_action?.action_type || "";
+    data.masGuidanceDigest = evaluation.guidance?.guidance_digest || "";
     const focus = focusRangeFromEvaluation(evaluation.evaluation, projection);
     renderer.setFocusRange(focus);
     setStage("results");
@@ -732,9 +748,11 @@ $("btnStopAttempt").addEventListener("click", async () => {
 });
 $("btnFakeMidi").addEventListener("click", () => midiInput.emitFakeScale());
 $("btnApplyPrimary").addEventListener("click", async () => {
-  const action = state.lastEvaluation?.evaluation?.primary_next_action;
+  const action =
+    state.lastEvaluation?.guidance?.next_action ||
+    state.lastEvaluation?.evaluation?.primary_next_action;
   if (!action) return;
-  await practiceActions.apply(action, educationApi);
+  await acceptGuidance(action);
   syncLoopControlsFromTransport();
   if (action.action_type === "isolate_passage" && state.payload?.projection) {
     renderer.setFocusRange(
@@ -879,6 +897,17 @@ window.__masDiagnostics = {
       loopRange: state.practice?.policy?.loop ?? null,
       repetitionIndex: transport.repetitionCount,
     }),
+  guidance: () => ({
+    status: scoreView.diagnostics().guidanceStatus,
+    guidanceDigest: scoreView.diagnostics().guidanceDigest,
+    guidedEventIds: [...scoreView.guidedEventIds],
+    guidanceAction: scoreView.diagnostics().guidanceAction,
+    guidanceRange: scoreView.diagnostics().guidanceRange,
+    guidanceError: scoreView.diagnostics().guidanceError,
+    tabDigest: scoreView.tabDigest,
+    notationDigest: scoreView.notationDigest,
+    canonicalRevisionId: scoreView.revisionId,
+  }),
 };
 // Fretboard selection reaches the score views as a canonical event id and
 // nothing else. It marks a highlight channel; it does not decide what is active.

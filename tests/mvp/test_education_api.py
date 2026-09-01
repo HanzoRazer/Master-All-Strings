@@ -48,6 +48,7 @@ def test_evaluate_aligned_payload_and_apply_action() -> None:
     session = api.handle("session", {})
     assert session["attempt_count"] == 1
     assert api.handle("get", {})["evaluation"]["evaluation_digest"].startswith("sha256:")
+    assert result["guidance"] is None
 
 
 def test_evaluate_from_expected_and_observed_notes() -> None:
@@ -118,3 +119,39 @@ def test_evaluate_from_expected_and_observed_notes() -> None:
     )
     types = {f["finding_type"] for f in result["evaluation"]["findings"]}
     assert "pitch_difference" in types
+
+
+def test_evaluate_with_revision_returns_guidance_without_re_scoring() -> None:
+    api = LocalPracticeEvaluationApi()
+    result = api.handle(
+        "evaluate",
+        {
+            "assignment_id": "a1",
+            "content_id": "c1",
+            "performance_session_id": "p-guide",
+            "canonical_revision_id": "rev-b85e77022251b045cfe38b7d",
+            "aligned_events": [
+                {
+                    "status": "matched_exact_pitch",
+                    "expected_event_id": "ev-1",
+                    "observed_event_id": "obs-1",
+                    "repetition_index": 0,
+                    "timing_delta_ms": 140,
+                    "pitch_delta_semitones": 0,
+                    "expected_start_tick": 0,
+                }
+            ],
+        },
+    )
+    assert result["evaluation"]["primary_next_action"]["action_type"] in {
+        "continue",
+        "repeat",
+        "slow_down",
+        "isolate_passage",
+    }
+    guidance = result["guidance"]
+    assert guidance is not None
+    assert guidance["canonical_revision_id"] == "rev-b85e77022251b045cfe38b7d"
+    assert guidance["items"][0]["canonical_event_id"] == "ev-1"
+    assert guidance["items"][0]["finding_id"] == result["evaluation"]["findings"][0]["finding_id"]
+    assert "mastered" not in str(guidance).lower()

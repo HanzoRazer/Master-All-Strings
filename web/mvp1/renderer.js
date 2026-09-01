@@ -97,6 +97,23 @@ export function observedEvidencePresentation(event) {
   });
 }
 
+/**
+ * Toggle educational guidance on fretboard notes using the canonical event-id
+ * seam. Presentation only: no fingering inference, no neighbour substitution.
+ */
+export function applyFretboardGuidedEventIds(root, guidedEventIds) {
+  if (!root?.querySelectorAll) return [];
+  const guided = new Set(guidedEventIds ?? []);
+  const applied = [];
+  for (const el of root.querySelectorAll("[data-event-id]")) {
+    const id = el.dataset?.eventId ?? el.getAttribute("data-event-id");
+    const isGuided = guided.has(id);
+    el.classList?.toggle("guided", isGuided);
+    if (isGuided) applied.push(id);
+  }
+  return applied;
+}
+
 export class FretboardRenderer {
   constructor(roots) {
     this.roots = roots;
@@ -114,6 +131,7 @@ export class FretboardRenderer {
     this.loopRegion = null;
     this.lastPositionSeconds = 0;
     this.zoneOverlayEnabled = false;
+    this.requestedGuidedEventIds = [];
   }
 
   load(projection) {
@@ -231,6 +249,7 @@ export class FretboardRenderer {
           release: note.release_seconds,
           normalized: clamp(note.normalized_position ?? 0, 0, 1),
           active: false,
+          guided: false,
           zoneClasses,
           // Retained so the Teaching Timeline can report which Zone is
           // sounding. Presentation metadata only -- never pitch or duration.
@@ -258,6 +277,7 @@ export class FretboardRenderer {
     );
 
     this._buildNeckMap(projection, lanes);
+    this.applyGuidedEventIds(this.requestedGuidedEventIds);
   }
 
   _buildNeckMap(projection, lanes) {
@@ -392,6 +412,18 @@ export class FretboardRenderer {
     );
   }
 
+  /**
+   * Educational guidance on existing canonical `dataset.eventId` notes.
+   *
+   * Does not alter MSME, fingering, or the time-derived `active` class. An id
+   * with no note is ignored rather than assigned to a neighbour.
+   */
+  applyGuidedEventIds(guidedEventIds) {
+    const ids = Array.isArray(guidedEventIds) ? [...guidedEventIds] : [];
+    this.requestedGuidedEventIds = ids;
+    return applyFretboardGuidedEventIds(this.roots?.scrollCanvas, ids);
+  }
+
   /** Event IDs currently sounding. Cheaper than building full diagnostics. */
   activeEventIds() {
     const ids = [];
@@ -432,6 +464,7 @@ export class FretboardRenderer {
       zoneSemanticEventIds: this.notes
         .filter((note) => note.zoneClasses.length > 0)
         .map((note) => note.eventId),
+      guidedEventIds: [...this.requestedGuidedEventIds],
     });
   }
 }
