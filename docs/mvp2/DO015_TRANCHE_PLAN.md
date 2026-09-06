@@ -98,8 +98,8 @@ models remain outside this contract.
 8. Adversarial authority tests
 9. Full MAS certification
 
-Stage 1 is contract/schema only. It does not implement the lifecycle service,
-API, or browser.
+Stage 1 is contract/schema only. Stage 2 is the lifecycle service in
+`guided_session_service.py`. API, fixtures, and browser work remain later.
 
 ## Session status (minimal)
 

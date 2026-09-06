@@ -49,6 +49,15 @@ from master_all_strings.education.guided_session import (
     serialize_guided_practice_session,
     session_with_digest,
 )
+from master_all_strings.education.guided_session_service import (
+    append_evaluated_attempt,
+    begin_next_attempt,
+    close_session,
+    create_from_first_evaluated_attempt,
+    record_action_disposition,
+    record_action_execution,
+    transition_session,
+)
 from master_all_strings.education.messages import MESSAGE_CATALOG_V1
 from master_all_strings.education.serialization import (
     compute_evaluation_digest,
@@ -85,16 +94,23 @@ __all__ = [
     "TeachingGuidanceItemV1",
     "TeachingGuidanceProjectionV1",
     "append_attempt",
+    "append_evaluated_attempt",
+    "begin_next_attempt",
     "build_teaching_guidance_projection",
+    "close_session",
+    "create_from_first_evaluated_attempt",
     "compute_evaluation_digest",
     "compute_guidance_digest",
     "compute_session_digest",
     "evaluate_alignment_findings",
     "evaluate_practice_attempt",
+    "record_action_disposition",
+    "record_action_execution",
     "serialize_evaluation_result",
     "serialize_guidance_projection",
     "serialize_guided_practice_session",
     "session_with_digest",
     "sort_guidance_items",
     "to_dict",
+    "transition_session",
 ]
