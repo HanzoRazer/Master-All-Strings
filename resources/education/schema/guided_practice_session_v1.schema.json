@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/education/guided-practice-session-v1.schema.json",
+  "title": "GuidedPracticeSessionV1",
+  "description": "Guided practice session orchestration record. Records session progression, learner disposition, and execution state for the primary DO-014 next_action. Does not choose Educational actions, score a performance, or authorize VIEW_ONE_STRING / ENABLE_ZONE_VIEW.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_version",
+    "session_id",
+    "assignment_id",
+    "content_id",
+    "canonical_revision_id",
+    "status",
+    "attempts",
+    "current_attempt_index",
+    "session_digest",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "policy_version": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "assignment_id": { "type": "string", "minLength": 1 },
+    "content_id": { "type": "string", "minLength": 1 },
+    "canonical_revision_id": { "type": "string", "minLength": 1 },
+    "status": { "$ref": "#/$defs/sessionStatus" },
+    "attempts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/guidedPracticeAttempt" }
+    },
+    "current_attempt_index": { "type": ["integer", "null"], "minimum": 0 },
+    "session_digest": { "type": "string", "pattern": "^sha256:" },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "sessionStatus": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "AWAITING_ACTION",
+        "AWAITING_ATTEMPT",
+        "CLOSED",
+        "TRANSITIONED",
+        "ABORTED"
+      ]
+    },
+    "actionDisposition": {
+      "type": "string",
+      "enum": ["PENDING", "ACCEPTED", "DECLINED"]
+    },
+    "executionStatus": {
+      "description": "ACCEPTED does not imply SUCCEEDED. UNSUPPORTED is the truthful state for Educational actions outside DO-015 scope and does not authorize those capabilities.",
+      "type": "string",
+      "enum": ["NOT_REQUESTED", "PENDING", "SUCCEEDED", "FAILED", "UNSUPPORTED"]
+    },
+    "nextAction": {
+      "title": "PracticeNextActionV1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "action_type",
+        "reason_finding_ids",
+        "message_key",
+        "target_rate",
+        "focus_start_tick",
+        "focus_end_tick",
+        "teaching_aid"
+      ],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "action_type": {
+          "type": "string",
+          "enum": [
+            "continue",
+            "repeat",
+            "slow_down",
+            "isolate_passage",
+            "view_one_string",
+            "enable_zone_view"
+          ]
+        },
+        "reason_finding_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "message_key": { "type": "string", "minLength": 1 },
+        "target_rate": {
+          "type": ["number", "null"],
+          "minimum": 0.5,
+          "maximum": 1.5
+        },
+        "focus_start_tick": { "type": ["integer", "null"], "minimum": 0 },
+        "focus_end_tick": { "type": ["integer", "null"], "minimum": 0 },
+        "teaching_aid": { "type": ["string", "null"], "minLength": 1 }
+      }
+    },
+    "practiceContext": {
+      "title": "GuidedPracticeContextV1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "playback_rate",
+        "loop_start_tick",
+        "loop_end_tick"
+      ],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "playback_rate": { "type": ["number", "null"], "minimum": 0.5, "maximum": 1.5 },
+        "loop_start_tick": { "type": ["integer", "null"], "minimum": 0 },
+        "loop_end_tick": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "guidedPracticeAction": {
+      "title": "GuidedPracticeActionV1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "recommended_action",
+        "action_disposition",
+        "execution_status",
+        "executed_action"
+      ],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "recommended_action": { "$ref": "#/$defs/nextAction" },
+        "action_disposition": { "$ref": "#/$defs/actionDisposition" },
+        "execution_status": { "$ref": "#/$defs/executionStatus" },
+        "executed_action": {
+          "anyOf": [{ "$ref": "#/$defs/nextAction" }, { "type": "null" }]
+        }
+      }
+    },
+    "guidedPracticeAttempt": {
+      "title": "GuidedPracticeAttemptV1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "attempt_id",
+        "attempt_index",
+        "assignment_id",
+        "content_id",
+        "canonical_revision_id",
+        "performance_session_id",
+        "evaluation_digest",
+        "guidance_digest",
+        "action",
+        "practice_context"
+      ],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "attempt_id": { "type": "string", "minLength": 1 },
+        "attempt_index": { "type": "integer", "minimum": 0 },
+        "assignment_id": { "type": "string", "minLength": 1 },
+        "content_id": { "type": "string", "minLength": 1 },
+        "canonical_revision_id": { "type": "string", "minLength": 1 },
+        "performance_session_id": { "type": "string", "minLength": 1 },
+        "evaluation_digest": { "type": "string", "pattern": "^sha256:" },
+        "guidance_digest": { "type": "string", "pattern": "^sha256:" },
+        "action": { "$ref": "#/$defs/guidedPracticeAction" },
+        "practice_context": { "$ref": "#/$defs/practiceContext" }
+      }
+    }
+  }
+}
