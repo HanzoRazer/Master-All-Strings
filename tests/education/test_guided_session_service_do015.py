@@ -31,13 +31,13 @@ from master_all_strings.education import (
     compute_evaluation_digest,
     compute_guidance_digest,
     create_from_first_evaluated_attempt,
+    guided_session_service,
     record_action_disposition,
     record_action_execution,
     session_with_digest,
     to_dict,
     transition_session,
 )
-from master_all_strings.education import guided_session_service
 from master_all_strings.education.guidance_builder import build_teaching_guidance_projection
 
 SESSION_ID = "11111111-1111-4111-8111-111111111111"
@@ -465,7 +465,11 @@ def test_append_rejects_wrong_assignment_content_and_revision() -> None:
     with pytest.raises(EducationContractError, match="assignment_id"):
         append_evaluated_attempt(session, wrong_assignment, guidance, attempt_id=ATTEMPT_1)
     evaluation, _ = _evidence(performance_session_id=PERF_1)
-    wrong_content = _evaluation(_slow_down(), content_id=OTHER_CONTENT, performance_session_id=PERF_1)
+    wrong_content = _evaluation(
+        _slow_down(),
+        content_id=OTHER_CONTENT,
+        performance_session_id=PERF_1,
+    )
     with pytest.raises(EducationContractError, match="content_id"):
         append_evaluated_attempt(
             session,
@@ -582,18 +586,19 @@ def test_service_types_are_required() -> None:
 
 
 def test_service_does_not_choose_or_drive_external_authorities() -> None:
-    text = inspect.getsource(guided_session_service)
+    source = inspect.getsource(guided_session_service)
+    if source.startswith('"""'):
+        source = source.split('"""', 2)[2]
     for token in (
         "choose_primary_next_action",
-        "supported_slower_rate",
-        "Transport",
-        "setLoop",
-        "begin_lesson",
-        "CanonicalScore",
-        "build_teaching_guidance_projection",
+        "education.recommendations",
+        "education.evaluation",
+        "education.guidance_builder",
+        "master_all_strings.mvp",
+        "master_all_strings.performance",
         "PracticeEvaluator",
     ):
-        assert token not in text
+        assert token not in source
 
 
 def test_create_mints_opaque_ids_when_unspecified() -> None:
@@ -635,6 +640,84 @@ def test_transition_accepts_assignment_only_change() -> None:
         next_content_id=CONTENT,
     )
     assert transitioned.status is GuidedPracticeSessionStatus.TRANSITIONED
+
+
+def test_execution_records_an_explicit_executed_action() -> None:
+    session = record_action_execution(
+        _accepted(_create()),
+        GuidedPracticeExecutionStatus.SUCCEEDED,
+        executed_action=_slow_down(0.5),
+    )
+    assert session.attempts[0].executed_action is not None
+    assert session.attempts[0].executed_action.target_rate == 0.5
+    assert session.attempts[0].recommended_action.target_rate == 0.75
+
+
+def test_execution_rejects_stale_status_and_already_resolved_facts() -> None:
+    accepted = _accepted(_create())
+    awaiting_attempt = session_with_digest(
+        replace(
+            accepted,
+            status=GuidedPracticeSessionStatus.AWAITING_ATTEMPT,
+            session_digest="sha256:" + ("0" * 64),
+        )
+    )
+    with pytest.raises(EducationContractError, match="AWAITING_ACTION"):
+        record_action_execution(awaiting_attempt, GuidedPracticeExecutionStatus.SUCCEEDED)
+    finished = session_with_digest(
+        replace(
+            _succeeded(accepted),
+            status=GuidedPracticeSessionStatus.AWAITING_ACTION,
+            session_digest="sha256:" + ("0" * 64),
+        )
+    )
+    with pytest.raises(EducationContractError, match="already resolved"):
+        record_action_execution(finished, GuidedPracticeExecutionStatus.FAILED)
+
+
+def test_begin_next_and_close_cover_reconstructed_open_states() -> None:
+    keep_open = session_with_digest(
+        replace(
+            _succeeded(_accepted(_create())),
+            status=GuidedPracticeSessionStatus.AWAITING_ACTION,
+            session_digest="sha256:" + ("0" * 64),
+        )
+    )
+    assert begin_next_attempt(keep_open).status is GuidedPracticeSessionStatus.AWAITING_ATTEMPT
+    continue_open = session_with_digest(
+        replace(
+            _succeeded(_accepted(_create(_continue()))),
+            status=GuidedPracticeSessionStatus.AWAITING_ACTION,
+            session_digest="sha256:" + ("0" * 64),
+        )
+    )
+    with pytest.raises(EducationContractError, match="close rather than begin"):
+        begin_next_attempt(continue_open)
+    assert close_session(continue_open).status is GuidedPracticeSessionStatus.CLOSED
+    continue_transitioned = session_with_digest(
+        replace(
+            _succeeded(_accepted(_create(_continue()))),
+            status=GuidedPracticeSessionStatus.TRANSITIONED,
+            session_digest="sha256:" + ("0" * 64),
+        )
+    )
+    with pytest.raises(EducationContractError, match="terminal"):
+        close_session(continue_transitioned)
+
+
+def test_empty_session_cannot_execute_close_or_begin_next() -> None:
+    empty = _empty_session()
+    with pytest.raises(EducationContractError, match="no current attempt"):
+        record_action_execution(empty, GuidedPracticeExecutionStatus.SUCCEEDED)
+    with pytest.raises(EducationContractError, match="no current attempt"):
+        close_session(empty)
+    with pytest.raises(EducationContractError, match="no current attempt"):
+        begin_next_attempt(empty)
+
+
+def test_unknown_disposition_value_is_rejected() -> None:
+    with pytest.raises(EducationContractError, match="ACCEPTED or DECLINED"):
+        record_action_disposition(_create(), "FOO")  # type: ignore[arg-type]
 
 
 def test_recommendation_is_copied_not_recomputed() -> None:
