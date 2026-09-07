@@ -88,7 +88,7 @@ models remain outside this contract.
 
 0. Baseline engineering record (this document)
 1. `GuidedPracticeSessionV1` contract, schema, serialization, digest
-2. Session service: create / append / disposition / execution / close / transition
+2. Session service: create / append / disposition / execution / transition
 3. Fixtures for accept, decline, isolate, repeat, continue, failure, switch
 4. Additive education/practice API
 5. Accept/Decline UI (replace Apply)
@@ -100,6 +100,72 @@ models remain outside this contract.
 
 Stage 1 is contract/schema only. Stage 2 is the lifecycle service in
 `guided_session_service.py`. API, fixtures, and browser work remain later.
+
+## Stage 2 gate closure
+
+Patch-forward from the Stage 2 implementation baseline. Do not reset to
+Stage 1 and reimplement.
+
+```text
+5392ec7   Stage 0/1 contract baseline
+ba69b66   Stage 2 implementation
+b3b8462   Stage 2 implementation/hardening
+follow-up Stage 2 gate-closure remediation (this document)
+```
+
+Final Stage 2 public service names (kept; not renamed to illustrative spellings):
+
+```text
+create_from_first_evaluated_attempt
+append_evaluated_attempt
+record_action_disposition
+record_action_execution
+transition_session
+```
+
+`close_session` and `begin_next_attempt` are not public. Inspection found no
+independent required caller. Ordinary successful closure is caused only by:
+
+```text
+CONTINUE + ACCEPTED + SUCCEEDED → CLOSED
+```
+
+Decline and recorded execution already transition an open session to
+`AWAITING_ATTEMPT`; `append_evaluated_attempt` performs the next lifecycle
+transition. Callers must supply opaque `session_id` and `attempt_id`. The
+service validates non-empty/uniqueness and does not mint identities.
+
+`UNSUPPORTED` is reserved for Educational actions whose execution capability
+lies outside this tranche:
+
+```text
+VIEW_ONE_STRING + ACCEPTED → UNSUPPORTED allowed
+ENABLE_ZONE_VIEW + ACCEPTED → UNSUPPORTED allowed
+CONTINUE + ACCEPTED → SUCCEEDED | FAILED; UNSUPPORTED invalid
+SLOW_DOWN / ISOLATE_PASSAGE / REPEAT → UNSUPPORTED invalid
+```
+
+Cross-object evidence checks remain the two independently supplied
+relationships (`performance_session_id`, `evaluation_digest`). After
+construction, `attempt.guidance_digest` equals `guidance.guidance_digest`.
+There is no caller-supplied `guidance_digest`.
+
+Gate results for this follow-up:
+
+```text
+targeted Stage 1+2 tests     89 passed
+  test_guided_session_contract_do015.py
+  test_guided_session_service_do015.py
+ruff check src tests         PASS
+mypy (strict, src)           PASS (160 source files)
+protected surfaces vs main   unchanged
+  PracticeSessionHistory
+  governance/engine_architecture_v1.json
+  API / src/master_all_strings/mvp
+  web/mvp1
+```
+
+Stage 3 fixtures and later stages remain unauthorized.
 
 ## Session status (minimal)
 

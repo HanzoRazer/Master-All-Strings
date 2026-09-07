@@ -51,8 +51,6 @@ from master_all_strings.education.guided_session import (
 )
 from master_all_strings.education.guided_session_service import (
     append_evaluated_attempt,
-    begin_next_attempt,
-    close_session,
     create_from_first_evaluated_attempt,
     record_action_disposition,
     record_action_execution,
@@ -95,9 +93,7 @@ __all__ = [
     "TeachingGuidanceProjectionV1",
     "append_attempt",
     "append_evaluated_attempt",
-    "begin_next_attempt",
     "build_teaching_guidance_projection",
-    "close_session",
     "create_from_first_evaluated_attempt",
     "compute_evaluation_digest",
     "compute_guidance_digest",

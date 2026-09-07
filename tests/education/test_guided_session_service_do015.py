@@ -26,8 +26,6 @@ from master_all_strings.education import (
     PracticeNextActionV1,
     TeachingGuidanceProjectionV1,
     append_evaluated_attempt,
-    begin_next_attempt,
-    close_session,
     compute_evaluation_digest,
     compute_guidance_digest,
     create_from_first_evaluated_attempt,
@@ -255,15 +253,26 @@ def _empty_session() -> GuidedPracticeSessionV1:
 
 
 def test_create_from_first_evaluated_attempt_is_awaiting_action() -> None:
-    session = _create()
+    evaluation, guidance = _evidence()
+    session = create_from_first_evaluated_attempt(
+        evaluation,
+        guidance,
+        session_id=SESSION_ID,
+        attempt_id=ATTEMPT_0,
+    )
+    assert session.session_id == SESSION_ID
     assert session.attempts != ()
     assert session.current_attempt_index == 0
+    assert session.attempts[0].attempt_id == ATTEMPT_0
     assert session.attempts[0].attempt_index == 0
     assert session.attempts[0].action_disposition is GuidedPracticeActionDisposition.PENDING
     assert session.attempts[0].execution_status is GuidedPracticeExecutionStatus.NOT_REQUESTED
     assert session.status is GuidedPracticeSessionStatus.AWAITING_ACTION
     assert session.attempts[0].recommended_action.action_type is PracticeNextActionType.SLOW_DOWN
     assert session.attempts[0].recommended_action.target_rate == 0.75
+    assert evaluation.performance_session_id == guidance.performance_session_id
+    assert evaluation.evaluation_digest == guidance.evaluation_digest
+    assert session.attempts[0].guidance_digest == guidance.guidance_digest
 
 
 def test_service_does_not_create_an_empty_session() -> None:
@@ -306,9 +315,8 @@ def test_successful_continue_closes_the_session() -> None:
     session = _succeeded(_accepted(_create(_continue())))
     assert session.status is GuidedPracticeSessionStatus.CLOSED
     assert session.attempts[0].recommended_action.action_type is PracticeNextActionType.CONTINUE
+    assert session.attempts[0].action_disposition is GuidedPracticeActionDisposition.ACCEPTED
     assert session.attempts[0].execution_status is GuidedPracticeExecutionStatus.SUCCEEDED
-    closed = close_session(session)
-    assert closed is session
 
 
 def test_unsupported_view_actions_are_recoverable_not_continue() -> None:
@@ -361,10 +369,13 @@ def test_append_after_keep_open_preserves_identity_and_prior_attempt() -> None:
 
 
 def test_append_after_decline_uses_new_evidence_ids() -> None:
-    session = begin_next_attempt(_declined(_create()))
+    session = _declined(_create())
     evaluation, guidance = _evidence(performance_session_id=PERF_1)
     extended = append_evaluated_attempt(session, evaluation, guidance, attempt_id=ATTEMPT_1)
+    assert session.status is GuidedPracticeSessionStatus.AWAITING_ATTEMPT
     assert extended.attempts[1].action_disposition is GuidedPracticeActionDisposition.PENDING
+    assert extended.attempts[1].attempt_id == ATTEMPT_1
+    assert extended.attempts[1].guidance_digest == guidance.guidance_digest
     assert extended.status is GuidedPracticeSessionStatus.AWAITING_ACTION
 
 
@@ -391,9 +402,19 @@ def test_transition_records_lesson_change_and_does_not_create_next_session() -> 
 def test_create_rejects_incomplete_evidence_chain() -> None:
     evaluation, guidance = _evidence()
     with pytest.raises(EducationContractError, match="evidence chain"):
-        create_from_first_evaluated_attempt("evaluation", guidance)  # type: ignore[arg-type]
+        create_from_first_evaluated_attempt(
+            "evaluation",  # type: ignore[arg-type]
+            guidance,
+            session_id=SESSION_ID,
+            attempt_id=ATTEMPT_0,
+        )
     with pytest.raises(EducationContractError, match="evidence chain"):
-        create_from_first_evaluated_attempt(evaluation, "guidance")  # type: ignore[arg-type]
+        create_from_first_evaluated_attempt(
+            evaluation,
+            "guidance",  # type: ignore[arg-type]
+            session_id=SESSION_ID,
+            attempt_id=ATTEMPT_0,
+        )
     mismatched_session = replace(
         guidance,
         performance_session_id=PERF_1,
@@ -407,7 +428,12 @@ def test_create_rejects_incomplete_evidence_chain() -> None:
         ),
     )
     with pytest.raises(EducationContractError, match="performance_session_id"):
-        create_from_first_evaluated_attempt(evaluation, mismatched_session)
+        create_from_first_evaluated_attempt(
+            evaluation,
+            mismatched_session,
+            session_id=SESSION_ID,
+            attempt_id=ATTEMPT_0,
+        )
     mismatched_digest = replace(
         guidance,
         evaluation_digest="sha256:" + ("c" * 64),
@@ -421,7 +447,12 @@ def test_create_rejects_incomplete_evidence_chain() -> None:
         ),
     )
     with pytest.raises(EducationContractError, match="evaluation_digest"):
-        create_from_first_evaluated_attempt(evaluation, mismatched_digest)
+        create_from_first_evaluated_attempt(
+            evaluation,
+            mismatched_digest,
+            session_id=SESSION_ID,
+            attempt_id=ATTEMPT_0,
+        )
     other_action = _repeat()
     mismatched_action = replace(
         guidance,
@@ -436,7 +467,12 @@ def test_create_rejects_incomplete_evidence_chain() -> None:
         ),
     )
     with pytest.raises(EducationContractError, match="next_action"):
-        create_from_first_evaluated_attempt(evaluation, mismatched_action)
+        create_from_first_evaluated_attempt(
+            evaluation,
+            mismatched_action,
+            session_id=SESSION_ID,
+            attempt_id=ATTEMPT_0,
+        )
 
 
 def test_append_rejects_awaiting_action_closed_and_transitioned() -> None:
@@ -533,25 +569,33 @@ def test_succeeded_is_rejected_for_unsupported_actions() -> None:
 
 def test_continue_cannot_close_before_successful_execution() -> None:
     pending = _create(_continue())
-    with pytest.raises(EducationContractError, match="successful execution"):
-        close_session(pending)
+    assert pending.status is GuidedPracticeSessionStatus.AWAITING_ACTION
     accepted = _accepted(pending)
-    with pytest.raises(EducationContractError, match="successful execution"):
-        close_session(accepted)
+    assert accepted.status is GuidedPracticeSessionStatus.AWAITING_ACTION
     failed = record_action_execution(accepted, GuidedPracticeExecutionStatus.FAILED)
-    with pytest.raises(EducationContractError, match="successful execution"):
-        close_session(failed)
     assert failed.status is GuidedPracticeSessionStatus.AWAITING_ATTEMPT
+    assert failed.status is not GuidedPracticeSessionStatus.CLOSED
 
 
-def test_begin_next_attempt_rejects_unresolved_and_successful_continue() -> None:
-    with pytest.raises(EducationContractError, match="resolved disposition"):
-        begin_next_attempt(_create())
-    with pytest.raises(EducationContractError, match="recorded execution"):
-        begin_next_attempt(_accepted(_create()))
-    closed = _succeeded(_accepted(_create(_continue())))
-    with pytest.raises(EducationContractError, match="terminal"):
-        begin_next_attempt(closed)
+def test_continue_unsupported_is_rejected() -> None:
+    with pytest.raises(EducationContractError, match="UNSUPPORTED"):
+        record_action_execution(
+            _accepted(_create(_continue())),
+            GuidedPracticeExecutionStatus.UNSUPPORTED,
+        )
+
+
+@pytest.mark.parametrize(
+    "action_factory",
+    [_slow_down, _isolate, _repeat],
+    ids=["slow_down", "isolate_passage", "repeat"],
+)
+def test_supported_keep_open_actions_reject_unsupported(action_factory: object) -> None:
+    with pytest.raises(EducationContractError, match="UNSUPPORTED"):
+        record_action_execution(
+            _accepted(_create(action_factory())),  # type: ignore[operator]
+            GuidedPracticeExecutionStatus.UNSUPPORTED,
+        )
 
 
 def test_transition_rejects_terminal_sessions_and_same_lesson() -> None:
@@ -580,7 +624,12 @@ def test_transition_rejects_terminal_sessions_and_same_lesson() -> None:
 def test_service_types_are_required() -> None:
     evaluation, guidance = _evidence()
     with pytest.raises(EducationContractError, match="GuidedPracticeSessionV1"):
-        append_evaluated_attempt("session", evaluation, guidance)  # type: ignore[arg-type]
+        append_evaluated_attempt(
+            "session",  # type: ignore[arg-type]
+            evaluation,
+            guidance,
+            attempt_id=ATTEMPT_1,
+        )
     with pytest.raises(EducationContractError, match="GuidedPracticeSessionV1"):
         record_action_disposition("session", GuidedPracticeActionDisposition.ACCEPTED)  # type: ignore[arg-type]
 
@@ -597,16 +646,39 @@ def test_service_does_not_choose_or_drive_external_authorities() -> None:
         "master_all_strings.mvp",
         "master_all_strings.performance",
         "PracticeEvaluator",
+        "uuid4",
+        "uuid.uuid4",
     ):
         assert token not in source
 
 
-def test_create_mints_opaque_ids_when_unspecified() -> None:
+def test_create_requires_caller_supplied_opaque_ids() -> None:
     evaluation, guidance = _evidence()
-    session = create_from_first_evaluated_attempt(evaluation, guidance)
-    assert session.session_id
-    assert session.attempts[0].attempt_id
-    assert session.session_id != session.attempts[0].attempt_id
+    with pytest.raises(TypeError, match="session_id"):
+        create_from_first_evaluated_attempt(evaluation, guidance)
+    with pytest.raises(EducationContractError, match="session_id"):
+        create_from_first_evaluated_attempt(
+            evaluation,
+            guidance,
+            session_id="",
+            attempt_id=ATTEMPT_0,
+        )
+    with pytest.raises(EducationContractError, match="attempt_id"):
+        create_from_first_evaluated_attempt(
+            evaluation,
+            guidance,
+            session_id=SESSION_ID,
+            attempt_id=" ",
+        )
+
+
+def test_append_requires_caller_supplied_attempt_id() -> None:
+    session = _declined(_create())
+    evaluation, guidance = _evidence(performance_session_id=PERF_1)
+    with pytest.raises(TypeError, match="attempt_id"):
+        append_evaluated_attempt(session, evaluation, guidance)
+    with pytest.raises(EducationContractError, match="attempt_id"):
+        append_evaluated_attempt(session, evaluation, guidance, attempt_id="")
 
 
 def test_pending_disposition_and_invalid_execution_status_are_rejected() -> None:
@@ -625,11 +697,23 @@ def test_append_rejects_duplicate_performance_session_id() -> None:
         append_evaluated_attempt(session, evaluation, guidance, attempt_id=ATTEMPT_1)
 
 
-def test_begin_next_attempt_is_idempotent_after_decline() -> None:
-    declined = _declined(_create())
-    again = begin_next_attempt(declined)
-    assert again is declined
-    assert again.status is GuidedPracticeSessionStatus.AWAITING_ATTEMPT
+def test_public_lifecycle_api_excludes_close_and_begin_next() -> None:
+    from master_all_strings import education
+
+    for name in ("close_session", "begin_next_attempt"):
+        assert name not in education.__all__
+        assert name not in guided_session_service.__all__
+        assert not hasattr(education, name)
+        assert not hasattr(guided_session_service, name)
+    for name in (
+        "create_from_first_evaluated_attempt",
+        "append_evaluated_attempt",
+        "record_action_disposition",
+        "record_action_execution",
+        "transition_session",
+    ):
+        assert name in education.__all__
+        assert name in guided_session_service.__all__
 
 
 def test_transition_accepts_assignment_only_change() -> None:
@@ -675,44 +759,10 @@ def test_execution_rejects_stale_status_and_already_resolved_facts() -> None:
         record_action_execution(finished, GuidedPracticeExecutionStatus.FAILED)
 
 
-def test_begin_next_and_close_cover_reconstructed_open_states() -> None:
-    keep_open = session_with_digest(
-        replace(
-            _succeeded(_accepted(_create())),
-            status=GuidedPracticeSessionStatus.AWAITING_ACTION,
-            session_digest="sha256:" + ("0" * 64),
-        )
-    )
-    assert begin_next_attempt(keep_open).status is GuidedPracticeSessionStatus.AWAITING_ATTEMPT
-    continue_open = session_with_digest(
-        replace(
-            _succeeded(_accepted(_create(_continue()))),
-            status=GuidedPracticeSessionStatus.AWAITING_ACTION,
-            session_digest="sha256:" + ("0" * 64),
-        )
-    )
-    with pytest.raises(EducationContractError, match="close rather than begin"):
-        begin_next_attempt(continue_open)
-    assert close_session(continue_open).status is GuidedPracticeSessionStatus.CLOSED
-    continue_transitioned = session_with_digest(
-        replace(
-            _succeeded(_accepted(_create(_continue()))),
-            status=GuidedPracticeSessionStatus.TRANSITIONED,
-            session_digest="sha256:" + ("0" * 64),
-        )
-    )
-    with pytest.raises(EducationContractError, match="terminal"):
-        close_session(continue_transitioned)
-
-
-def test_empty_session_cannot_execute_close_or_begin_next() -> None:
+def test_empty_session_cannot_execute() -> None:
     empty = _empty_session()
     with pytest.raises(EducationContractError, match="no current attempt"):
         record_action_execution(empty, GuidedPracticeExecutionStatus.SUCCEEDED)
-    with pytest.raises(EducationContractError, match="no current attempt"):
-        close_session(empty)
-    with pytest.raises(EducationContractError, match="no current attempt"):
-        begin_next_attempt(empty)
 
 
 def test_unknown_disposition_value_is_rejected() -> None:

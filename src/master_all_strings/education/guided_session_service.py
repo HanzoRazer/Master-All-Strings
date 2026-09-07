@@ -1,13 +1,14 @@
 """Guided practice session lifecycle (DO-015 Stage 2).
 
-Records create / append / disposition / execution / close / transition facts.
-Does not choose Educational next actions, derive Transport parameters, score a
-performance, or mutate completed attempt records in place.
+Records create / append / disposition / execution / transition facts.
+Ordinary successful closure is caused by CONTINUE + ACCEPTED + SUCCEEDED.
+Does not mint session or attempt identities, choose Educational next actions,
+derive Transport parameters, score a performance, or mutate completed attempt
+records in place.
 """
 
 from __future__ import annotations
 
-import uuid
 from dataclasses import replace
 
 from master_all_strings.education.contracts import (
@@ -33,8 +34,6 @@ from master_all_strings.education.guided_session import (
 
 __all__ = [
     "append_evaluated_attempt",
-    "begin_next_attempt",
-    "close_session",
     "create_from_first_evaluated_attempt",
     "record_action_disposition",
     "record_action_execution",
@@ -66,13 +65,6 @@ _TERMINAL_STATUSES = frozenset(
         GuidedPracticeSessionStatus.ABORTED,
     }
 )
-
-
-def _opaque_id(provided: str | None, field_name: str) -> str:
-    if provided is None:
-        return str(uuid.uuid4())
-    require_identifier(provided, field_name)
-    return provided
 
 
 def _default_context() -> GuidedPracticeContextV1:
@@ -177,6 +169,7 @@ def _attempt_from_evidence(
         canonical_revision_id=guidance.canonical_revision_id,
         performance_session_id=evaluation.performance_session_id,
         evaluation_digest=evaluation.evaluation_digest,
+        # Construction invariant: copy the authoritative guidance digest.
         guidance_digest=guidance.guidance_digest,
         action=GuidedPracticeActionV1(
             schema_version=SESSION_SCHEMA_VERSION,
@@ -192,24 +185,26 @@ def create_from_first_evaluated_attempt(
     evaluation: PracticeEvaluationResultV1,
     guidance: TeachingGuidanceProjectionV1,
     *,
-    session_id: str | None = None,
-    attempt_id: str | None = None,
+    session_id: str,
+    attempt_id: str,
     practice_context: GuidedPracticeContextV1 | None = None,
 ) -> GuidedPracticeSessionV1:
     """Create a session from the first complete evaluated evidence chain."""
 
     evaluation, guidance = _require_evidence_chain(evaluation, guidance)
+    require_identifier(session_id, "session_id")
+    require_identifier(attempt_id, "attempt_id")
     attempt = _attempt_from_evidence(
         evaluation,
         guidance,
-        attempt_id=_opaque_id(attempt_id, "attempt_id"),
+        attempt_id=attempt_id,
         attempt_index=0,
         practice_context=practice_context or _default_context(),
     )
     draft = GuidedPracticeSessionV1(
         schema_version=SESSION_SCHEMA_VERSION,
         policy_version=SESSION_POLICY_VERSION,
-        session_id=_opaque_id(session_id, "session_id"),
+        session_id=session_id,
         assignment_id=evaluation.assignment_id,
         content_id=evaluation.content_id,
         canonical_revision_id=guidance.canonical_revision_id,
@@ -227,7 +222,7 @@ def append_evaluated_attempt(
     evaluation: PracticeEvaluationResultV1,
     guidance: TeachingGuidanceProjectionV1,
     *,
-    attempt_id: str | None = None,
+    attempt_id: str,
     attempt_index: int | None = None,
     practice_context: GuidedPracticeContextV1 | None = None,
 ) -> GuidedPracticeSessionV1:
@@ -235,6 +230,7 @@ def append_evaluated_attempt(
 
     session = _require_session(session)
     evaluation, guidance = _require_evidence_chain(evaluation, guidance)
+    require_identifier(attempt_id, "attempt_id")
     if session.status is not GuidedPracticeSessionStatus.AWAITING_ATTEMPT:
         raise EducationContractError("append requires session.status AWAITING_ATTEMPT")
     if evaluation.assignment_id != session.assignment_id:
@@ -246,8 +242,7 @@ def append_evaluated_attempt(
     expected_index = len(session.attempts)
     if attempt_index is not None and attempt_index != expected_index:
         raise EducationContractError("duplicate attempt_index")
-    next_attempt_id = _opaque_id(attempt_id, "attempt_id")
-    if any(item.attempt_id == next_attempt_id for item in session.attempts):
+    if any(item.attempt_id == attempt_id for item in session.attempts):
         raise EducationContractError("duplicate attempt_id")
     if any(
         item.performance_session_id == evaluation.performance_session_id
@@ -257,7 +252,7 @@ def append_evaluated_attempt(
     attempt = _attempt_from_evidence(
         evaluation,
         guidance,
-        attempt_id=next_attempt_id,
+        attempt_id=attempt_id,
         attempt_index=expected_index,
         practice_context=practice_context or _default_context(),
     )
@@ -347,6 +342,13 @@ def record_action_execution(
         and action_type in _UNSUPPORTED_ACTIONS
     ):
         raise EducationContractError("SUCCEEDED is not valid for unsupported Educational actions")
+    if (
+        execution_status is GuidedPracticeExecutionStatus.UNSUPPORTED
+        and action_type not in _UNSUPPORTED_ACTIONS
+    ):
+        raise EducationContractError(
+            "UNSUPPORTED is only valid for VIEW_ONE_STRING and ENABLE_ZONE_VIEW"
+        )
     recorded_executed: PracticeNextActionV1 | None
     if execution_status is GuidedPracticeExecutionStatus.UNSUPPORTED:
         recorded_executed = None
@@ -370,61 +372,6 @@ def record_action_execution(
     else:
         next_status = GuidedPracticeSessionStatus.AWAITING_ATTEMPT
     return _replace_current_attempt(session, updated, status=next_status)
-
-
-def begin_next_attempt(session: GuidedPracticeSessionV1) -> GuidedPracticeSessionV1:
-    """Mark an open session ready for the next evaluated attempt."""
-
-    session = _require_session(session)
-    if session.status in _TERMINAL_STATUSES:
-        raise EducationContractError("begin_next_attempt is not valid for a terminal session")
-    current = _current_attempt(session)
-    if current.action_disposition is GuidedPracticeActionDisposition.PENDING:
-        raise EducationContractError("begin_next_attempt requires a resolved disposition")
-    if (
-        current.action_disposition is GuidedPracticeActionDisposition.ACCEPTED
-        and current.execution_status is GuidedPracticeExecutionStatus.PENDING
-    ):
-        raise EducationContractError("begin_next_attempt requires a recorded execution fact")
-    if (
-        current.recommended_action.action_type is PracticeNextActionType.CONTINUE
-        and current.action_disposition is GuidedPracticeActionDisposition.ACCEPTED
-        and current.execution_status is GuidedPracticeExecutionStatus.SUCCEEDED
-    ):
-        raise EducationContractError("successful CONTINUE must close rather than begin next")
-    if session.status is GuidedPracticeSessionStatus.AWAITING_ATTEMPT:
-        return session
-    return session_with_digest(
-        replace(
-            session,
-            status=GuidedPracticeSessionStatus.AWAITING_ATTEMPT,
-            session_digest=_PLACEHOLDER_DIGEST,
-        )
-    )
-
-
-def close_session(session: GuidedPracticeSessionV1) -> GuidedPracticeSessionV1:
-    """Close after accepted-and-successfully-executed CONTINUE."""
-
-    session = _require_session(session)
-    current = _current_attempt(session)
-    if not (
-        current.recommended_action.action_type is PracticeNextActionType.CONTINUE
-        and current.action_disposition is GuidedPracticeActionDisposition.ACCEPTED
-        and current.execution_status is GuidedPracticeExecutionStatus.SUCCEEDED
-    ):
-        raise EducationContractError("CONTINUE closure requires successful execution")
-    if session.status is GuidedPracticeSessionStatus.CLOSED:
-        return session
-    if session.status in _TERMINAL_STATUSES:
-        raise EducationContractError("close_session is not valid for a terminal session")
-    return session_with_digest(
-        replace(
-            session,
-            status=GuidedPracticeSessionStatus.CLOSED,
-            session_digest=_PLACEHOLDER_DIGEST,
-        )
-    )
 
 
 def transition_session(
