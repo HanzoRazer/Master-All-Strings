@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import json
 from collections.abc import Callable
-from dataclasses import fields
+from dataclasses import fields, replace
 from pathlib import Path
 from typing import Any
 
@@ -478,6 +478,35 @@ def test_digest_ignores_provenance() -> None:
         provenance=(("producer", "b"), ("assembled_at", "wall-clock")),
     )
     assert plain.session_digest == audited.session_digest
+
+
+def test_session_digest_exclusion_set_is_locked() -> None:
+    from master_all_strings.education import guided_session
+
+    assert guided_session._DIGEST_EXCLUDED_SESSION_FIELDS == frozenset(
+        {"session_digest", "provenance"}
+    )
+    assert {item.name for item in fields(GuidedPracticeSessionV1)} == {
+        "schema_version",
+        "policy_version",
+        "session_id",
+        "assignment_id",
+        "content_id",
+        "canonical_revision_id",
+        "status",
+        "attempts",
+        "current_attempt_index",
+        "session_digest",
+        "provenance",
+    }
+    session = _session((_attempt(),), status=GuidedPracticeSessionStatus.AWAITING_ACTION)
+    mutated = replace(
+        session,
+        provenance=(("producer", "wall-clock"),),
+        session_digest="sha256:" + ("e" * 64),
+    )
+    assert compute_session_digest(session) == compute_session_digest(mutated)
+    assert compute_session_digest(mutated) == session.session_digest
 
 
 def test_digest_changes_when_attempt_content_changes() -> None:

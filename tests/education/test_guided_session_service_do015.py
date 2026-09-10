@@ -317,6 +317,7 @@ def test_successful_continue_closes_the_session() -> None:
     assert session.attempts[0].recommended_action.action_type is PracticeNextActionType.CONTINUE
     assert session.attempts[0].action_disposition is GuidedPracticeActionDisposition.ACCEPTED
     assert session.attempts[0].execution_status is GuidedPracticeExecutionStatus.SUCCEEDED
+    assert session.attempts[0].executed_action == session.attempts[0].recommended_action
 
 
 def test_unsupported_view_actions_are_recoverable_not_continue() -> None:
@@ -339,6 +340,7 @@ def test_failed_execution_awaits_next_attempt() -> None:
     )
     assert session.status is GuidedPracticeSessionStatus.AWAITING_ATTEMPT
     assert session.attempts[0].execution_status is GuidedPracticeExecutionStatus.FAILED
+    assert session.attempts[0].executed_action == session.attempts[0].recommended_action
 
 
 def test_append_after_keep_open_preserves_identity_and_prior_attempt() -> None:
@@ -726,6 +728,47 @@ def test_transition_accepts_assignment_only_change() -> None:
     assert transitioned.status is GuidedPracticeSessionStatus.TRANSITIONED
 
 
+def test_omitted_executed_action_records_the_recommendation() -> None:
+    session = _succeeded(_accepted(_create()))
+    recorded = session.attempts[0].executed_action
+    recommended = session.attempts[0].recommended_action
+    assert recorded is recommended
+    assert recorded == recommended
+
+
+def test_executed_action_cannot_hide_a_different_action_type() -> None:
+    accepted = _accepted(_create(_slow_down()))
+    with pytest.raises(EducationContractError, match="action_type"):
+        record_action_execution(
+            accepted,
+            GuidedPracticeExecutionStatus.SUCCEEDED,
+            executed_action=_continue(),
+        )
+    with pytest.raises(EducationContractError, match="action_type"):
+        record_action_execution(
+            accepted,
+            GuidedPracticeExecutionStatus.FAILED,
+            executed_action=_repeat(),
+        )
+    continue_accepted = _accepted(_create(_continue()))
+    with pytest.raises(EducationContractError, match="action_type"):
+        record_action_execution(
+            continue_accepted,
+            GuidedPracticeExecutionStatus.SUCCEEDED,
+            executed_action=_slow_down(),
+        )
+    assert continue_accepted.status is GuidedPracticeSessionStatus.AWAITING_ACTION
+
+
+def test_unsupported_rejects_a_supplied_executed_action() -> None:
+    with pytest.raises(EducationContractError, match="executed_action"):
+        record_action_execution(
+            _accepted(_create(_view_one_string())),
+            GuidedPracticeExecutionStatus.UNSUPPORTED,
+            executed_action=_view_one_string(),
+        )
+
+
 def test_execution_records_an_explicit_executed_action() -> None:
     session = record_action_execution(
         _accepted(_create()),
@@ -733,6 +776,7 @@ def test_execution_records_an_explicit_executed_action() -> None:
         executed_action=_slow_down(0.5),
     )
     assert session.attempts[0].executed_action is not None
+    assert session.attempts[0].executed_action.action_type is PracticeNextActionType.SLOW_DOWN
     assert session.attempts[0].executed_action.target_rate == 0.5
     assert session.attempts[0].recommended_action.target_rate == 0.75
 

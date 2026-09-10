@@ -150,10 +150,18 @@ relationships (`performance_session_id`, `evaluation_digest`). After
 construction, `attempt.guidance_digest` equals `guidance.guidance_digest`.
 There is no caller-supplied `guidance_digest`.
 
-Gate results for this follow-up:
+Gate results for the Stage 2 gate-closure follow-up were 89 targeted tests.
+Pre-merge boundary hardening additionally locks:
 
 ```text
-targeted Stage 1+2 tests     89 passed
+omitted executed_action     records recommended_action
+supplied executed_action    same action_type only
+UNSUPPORTED                 must not record executed_action
+session digest exclusions   session_digest, provenance
+```
+
+```text
+targeted Stage 1+2 tests     93 passed
   test_guided_session_contract_do015.py
   test_guided_session_service_do015.py
 ruff check src tests         PASS

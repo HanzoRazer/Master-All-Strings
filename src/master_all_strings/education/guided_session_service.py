@@ -318,7 +318,15 @@ def record_action_execution(
     *,
     executed_action: PracticeNextActionV1 | None = None,
 ) -> GuidedPracticeSessionV1:
-    """Record an external execution fact. Does not perform the action."""
+    """Record an external execution fact. Does not perform the action.
+
+    Omitting ``executed_action`` records the current ``recommended_action``.
+    That default means the recommendation itself was executed, not that a
+    different Educational action ran. A different parameterization of the
+    same ``action_type`` must be passed explicitly. A different
+    ``action_type`` is rejected so execution of another action cannot be
+    hidden behind this recommendation.
+    """
 
     session = _require_session(session)
     current = _current_attempt(session)
@@ -351,8 +359,16 @@ def record_action_execution(
         )
     recorded_executed: PracticeNextActionV1 | None
     if execution_status is GuidedPracticeExecutionStatus.UNSUPPORTED:
+        if executed_action is not None:
+            raise EducationContractError("UNSUPPORTED must not record executed_action")
         recorded_executed = None
     elif executed_action is not None:
+        if not isinstance(executed_action, PracticeNextActionV1):
+            raise EducationContractError("executed_action must be a PracticeNextActionV1")
+        if executed_action.action_type is not action_type:
+            raise EducationContractError(
+                "executed_action.action_type must match recommended_action"
+            )
         recorded_executed = executed_action
     else:
         recorded_executed = current.recommended_action
