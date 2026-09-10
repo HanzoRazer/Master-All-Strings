@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0.0",
+  "policy_version": "guided-practice-session-v1",
+  "session_id": "session-do015-continue_declined",
+  "assignment_id": "assignment-do015-001",
+  "content_id": "content-do015-001",
+  "canonical_revision_id": "revision-do015-001",
+  "status": "AWAITING_ATTEMPT",
+  "attempts": [
+    {
+      "schema_version": "1.0.0",
+      "attempt_id": "attempt-do015-continue_declined-0",
+      "attempt_index": 0,
+      "assignment_id": "assignment-do015-001",
+      "content_id": "content-do015-001",
+      "canonical_revision_id": "revision-do015-001",
+      "performance_session_id": "performance-session-do015-continue_declined-0",
+      "evaluation_digest": "sha256:40ed834b547e437581c5d215aa09716ad12aa6ca4e48ede5c7e1827fe34e1470",
+      "guidance_digest": "sha256:07022645499323ee4ca4ba56769c24a1bfb1f91e21c2ffcc23eee45786d9fdf2",
+      "action": {
+        "schema_version": "1.0.0",
+        "recommended_action": {
+          "schema_version": "1.0.0",
+          "action_type": "continue",
+          "reason_finding_ids": [],
+          "message_key": "action.continue",
+          "target_rate": null,
+          "focus_start_tick": null,
+          "focus_end_tick": null,
+          "teaching_aid": null
+        },
+        "action_disposition": "DECLINED",
+        "execution_status": "NOT_REQUESTED",
+        "executed_action": null
+      },
+      "practice_context": {
+        "schema_version": "1.0.0",
+        "playback_rate": null,
+        "loop_start_tick": null,
+        "loop_end_tick": null
+      }
+    }
+  ],
+  "current_attempt_index": 0,
+  "session_digest": "sha256:e8533df9330b1eee13b37aa3b4341ad6478843cf78a60f359d21eae53391f9f3",
+  "provenance": {
+    "policy_version": "guided-practice-session-v1",
+    "producer": "GuidedPracticeSessionV1/v1",
+    "schema_version": "1.0.0",
+    "source": "education.guided_session_service"
+  }
+}
