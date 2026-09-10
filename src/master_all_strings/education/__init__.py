@@ -1,7 +1,8 @@
-"""Educational Engine — practice evaluation and feedback (DO-010).
+"""Educational Engine — practice evaluation, guidance, and guided sessions.
 
-Performance measures. Education interprets. This package must never rewrite
-``PerformanceSessionEvidenceV1`` or invent substitute measurement fields.
+Performance measures. Education interprets. Guided-session orchestration records
+disposition and execution without rewriting measurement fields or choosing the
+Educational next action.
 """
 
 from __future__ import annotations
@@ -33,6 +34,28 @@ from master_all_strings.education.guidance import (
     sort_guidance_items,
 )
 from master_all_strings.education.guidance_builder import build_teaching_guidance_projection
+from master_all_strings.education.guided_session import (
+    SESSION_POLICY_VERSION,
+    SESSION_SCHEMA_VERSION,
+    GuidedPracticeActionDisposition,
+    GuidedPracticeActionV1,
+    GuidedPracticeAttemptV1,
+    GuidedPracticeContextV1,
+    GuidedPracticeExecutionStatus,
+    GuidedPracticeSessionStatus,
+    GuidedPracticeSessionV1,
+    append_attempt,
+    compute_session_digest,
+    serialize_guided_practice_session,
+    session_with_digest,
+)
+from master_all_strings.education.guided_session_service import (
+    append_evaluated_attempt,
+    create_from_first_evaluated_attempt,
+    record_action_disposition,
+    record_action_execution,
+    transition_session,
+)
 from master_all_strings.education.messages import MESSAGE_CATALOG_V1
 from master_all_strings.education.serialization import (
     compute_evaluation_digest,
@@ -45,7 +68,16 @@ __all__ = [
     "GUIDANCE_POLICY_VERSION",
     "GUIDANCE_SCHEMA_VERSION",
     "MESSAGE_CATALOG_V1",
+    "SESSION_POLICY_VERSION",
+    "SESSION_SCHEMA_VERSION",
     "EducationContractError",
+    "GuidedPracticeActionDisposition",
+    "GuidedPracticeActionV1",
+    "GuidedPracticeAttemptV1",
+    "GuidedPracticeContextV1",
+    "GuidedPracticeExecutionStatus",
+    "GuidedPracticeSessionStatus",
+    "GuidedPracticeSessionV1",
     "PracticeAttemptSummaryV1",
     "PracticeEvaluationPolicyV1",
     "PracticeEvaluationResultV1",
@@ -59,13 +91,22 @@ __all__ = [
     "PracticeSessionHistory",
     "TeachingGuidanceItemV1",
     "TeachingGuidanceProjectionV1",
+    "append_attempt",
+    "append_evaluated_attempt",
     "build_teaching_guidance_projection",
+    "create_from_first_evaluated_attempt",
     "compute_evaluation_digest",
     "compute_guidance_digest",
+    "compute_session_digest",
     "evaluate_alignment_findings",
     "evaluate_practice_attempt",
+    "record_action_disposition",
+    "record_action_execution",
     "serialize_evaluation_result",
     "serialize_guidance_projection",
+    "serialize_guided_practice_session",
+    "session_with_digest",
     "sort_guidance_items",
     "to_dict",
+    "transition_session",
 ]
