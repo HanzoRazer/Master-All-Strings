@@ -221,7 +221,64 @@ protected surfaces vs main  unchanged
   Transport
 ```
 
-Stage 4 API integration is not authorized.
+Stage 4 API integration is authorized on a new branch from merged `main`.
+
+## Stage 4 additive API
+
+PR #28 merged. Stage 4 does not continue the Stage 3 feature branch.
+
+```text
+stage2_checkpoint_sha   = a4e23ad4031cbd7693aa459ba4e7f04d680f942f
+stage3_product_sha      = 0c19b37f0936a0cbb99285b5b3ca40bbe6b07a2d
+stage3_merge_sha        = 8046e854e2d75922a33898ffba4ff3568556f6a6
+stage4_base_sha         = 8046e854e2d75922a33898ffba4ff3568556f6a6
+Stage 4 branch          = cursor/do015-guided-session-api-ce6b
+```
+
+`git merge-base --is-ancestor 8046e854e2d75922a33898ffba4ff3568556f6a6 HEAD` holds.
+Stage 4 branched from that merge commit (`origin/main` at entry), not from
+`cursor/do015-guided-practice-session-ce6b`.
+
+Storage is an in-memory repository (`get` / `put` only). No SQLite, filesystem,
+or Redis. The store does not implement transitions.
+
+Route inventory (additive under the existing `/api/education/*` namespace):
+
+```text
+POST /api/education/guided-sessions
+GET  /api/education/guided-sessions/{session_id}
+POST /api/education/guided-sessions/{session_id}/disposition
+POST /api/education/guided-sessions/{session_id}/execution
+POST /api/education/guided-sessions/{session_id}/attempts
+POST /api/education/guided-sessions/{session_id}/transition
+```
+
+`close` / `begin-next` are not API operations. Every mutating route delegates to
+the Stage 2 public service. HTTP mapping is `400` malformed, `404` unknown
+session, `409` illegal lifecycle / identity conflict. Known rejections are not
+`500`. Failed requests do not replace the stored session.
+
+```text
+API tests                     35 passed
+  test_guided_session_api_do015.py
+targeted Stage 1–4 tests      178 passed
+  test_guided_session_contract_do015.py
+  test_guided_session_service_do015.py
+  test_guided_session_fixtures_do015.py
+  test_guided_session_api_do015.py
+generator --check             PASS
+ruff check src tests          PASS
+mypy (strict, src)            PASS (161 source files)
+protected surfaces vs main    unchanged except additive API registration
+  PracticeSessionHistory
+  governance/engine_architecture_v1.json
+  web/mvp1
+  Transport
+  Stage 3 fixture bytes
+  Stage 2 service
+```
+
+Stage 5 Accept/Decline UI is not authorized on this branch.
 
 ## Session status (minimal)
 

@@ -16,6 +16,7 @@ if str(_SRC) not in sys.path:
 from master_all_strings.mvp.application import MvpApplication  # noqa: E402
 from master_all_strings.mvp.education_api import LocalPracticeEvaluationApi  # noqa: E402
 from master_all_strings.mvp.errors import MvpError, format_mvp_error  # noqa: E402
+from master_all_strings.mvp.guided_session_api import LocalGuidedPracticeSessionApi  # noqa: E402
 from master_all_strings.mvp.local_server import serve_mvp_directory  # noqa: E402
 from master_all_strings.mvp.performance_api import LocalPerformanceCaptureApi  # noqa: E402
 from master_all_strings.mvp.web_export import (  # noqa: E402
@@ -132,6 +133,7 @@ def main(argv: list[str] | None = None) -> int:
             path=path,
             performance_api=LocalPerformanceCaptureApi(),
             education_api=LocalPracticeEvaluationApi(),
+            guided_session_api=LocalGuidedPracticeSessionApi(),
         )
         print(f"serving: {url}")
         try:
