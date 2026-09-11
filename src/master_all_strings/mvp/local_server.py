@@ -29,6 +29,7 @@ def find_available_local_port(host: str = "127.0.0.1") -> int:
 class _QuietHandler(SimpleHTTPRequestHandler):
     performance_api: Any = None
     education_api: Any = None
+    guided_session_api: Any = None
     media_root: Path | None = None
 
     def log_message(self, format: str, *args: object) -> None:  # noqa: A003
@@ -37,6 +38,9 @@ class _QuietHandler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         path = unquote(parsed.path)
+        if path.startswith("/api/education/guided-sessions"):
+            self._guided_session_http("GET", path, {})
+            return
         if path.startswith("/api/v1/lessons/") and path.endswith("/media"):
             lesson_key = path[len("/api/v1/lessons/") : -len("/media")].strip("/")
             if not lesson_key or "/" in lesson_key:
@@ -85,10 +89,34 @@ class _QuietHandler(SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_POST(self) -> None:  # noqa: N802
+        parsed = urlparse(self.path)
+        path = unquote(parsed.path)
+        if path.startswith("/api/education/guided-sessions"):
+            try:
+                length = int(self.headers.get("content-length", "0"))
+                payload = json.loads(self.rfile.read(length) or b"{}")
+            except json.JSONDecodeError:
+                body = json.dumps({"error": "malformed JSON"}).encode()
+                self.send_response(400)
+                self.send_header("content-type", "application/json")
+                self.send_header("content-length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if not isinstance(payload, dict):
+                body = json.dumps({"error": "payload must be an object"}).encode()
+                self.send_response(400)
+                self.send_header("content-type", "application/json")
+                self.send_header("content-length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            self._guided_session_http("POST", path, payload)
+            return
         api = None
-        if self.path.startswith("/api/performance/") and self.performance_api is not None:
+        if path.startswith("/api/performance/") and self.performance_api is not None:
             api = self.performance_api
-        elif self.path.startswith("/api/education/") and self.education_api is not None:
+        elif path.startswith("/api/education/") and self.education_api is not None:
             api = self.education_api
         else:
             self.send_error(404)
@@ -110,6 +138,19 @@ class _QuietHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
 
+    def _guided_session_http(self, method: str, path: str, payload: dict[str, Any]) -> None:
+        api = self.guided_session_api
+        if api is None:
+            self.send_error(404, "guided session API is not enabled")
+            return
+        status, result = api.handle_http(method, path, payload)
+        body = json.dumps(result).encode()
+        self.send_response(status)
+        self.send_header("content-type", "application/json")
+        self.send_header("content-length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
 
 def serve_mvp_directory(
     directory: Path,
@@ -120,6 +161,7 @@ def serve_mvp_directory(
     path: str = "/index.html",
     performance_api: object | None = None,
     education_api: object | None = None,
+    guided_session_api: object | None = None,
     media_root: Path | None = None,
 ) -> tuple[ThreadingHTTPServer, threading.Thread, str]:
     """Serve ``directory`` on localhost. Returns server, thread, and URL."""
@@ -131,6 +173,7 @@ def serve_mvp_directory(
 
     Handler.performance_api = performance_api
     Handler.education_api = education_api
+    Handler.guided_session_api = guided_session_api
     Handler.media_root = media_root or default_media_root()
     handler = functools.partial(Handler, directory=str(directory))
     server = ThreadingHTTPServer((host, chosen), handler)
