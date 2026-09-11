@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0.0",
+  "policy_version": "guided-practice-session-v1",
+  "session_id": "session-do015-slow_down_accepted",
+  "assignment_id": "assignment-do015-001",
+  "content_id": "content-do015-001",
+  "canonical_revision_id": "revision-do015-001",
+  "status": "AWAITING_ATTEMPT",
+  "attempts": [
+    {
+      "schema_version": "1.0.0",
+      "attempt_id": "attempt-do015-slow_down_accepted-0",
+      "attempt_index": 0,
+      "assignment_id": "assignment-do015-001",
+      "content_id": "content-do015-001",
+      "canonical_revision_id": "revision-do015-001",
+      "performance_session_id": "performance-session-do015-slow_down_accepted-0",
+      "evaluation_digest": "sha256:63804d21408458f1b6b7502e04ae5990715a27dedc69a0bda746530e6176c635",
+      "guidance_digest": "sha256:25cbd4267ef5b24bcb85b7c1c145f965dfb8657976a13e6e8806f2e23c5e2bc8",
+      "action": {
+        "schema_version": "1.0.0",
+        "recommended_action": {
+          "schema_version": "1.0.0",
+          "action_type": "slow_down",
+          "reason_finding_ids": [
+            "finding-do015-001"
+          ],
+          "message_key": "action.slow_down",
+          "target_rate": 0.75,
+          "focus_start_tick": null,
+          "focus_end_tick": null,
+          "teaching_aid": null
+        },
+        "action_disposition": "ACCEPTED",
+        "execution_status": "SUCCEEDED",
+        "executed_action": {
+          "schema_version": "1.0.0",
+          "action_type": "slow_down",
+          "reason_finding_ids": [
+            "finding-do015-001"
+          ],
+          "message_key": "action.slow_down",
+          "target_rate": 0.75,
+          "focus_start_tick": null,
+          "focus_end_tick": null,
+          "teaching_aid": null
+        }
+      },
+      "practice_context": {
+        "schema_version": "1.0.0",
+        "playback_rate": null,
+        "loop_start_tick": null,
+        "loop_end_tick": null
+      }
+    }
+  ],
+  "current_attempt_index": 0,
+  "session_digest": "sha256:8ba81502ae314655aee2a08622d5836831cb40fbaf6aba06a383a2187ac9bbe6",
+  "provenance": {
+    "policy_version": "guided-practice-session-v1",
+    "producer": "GuidedPracticeSessionV1/v1",
+    "schema_version": "1.0.0",
+    "source": "education.guided_session_service"
+  }
+}

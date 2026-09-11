@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "policy_version": "guided-practice-session-v1",
+  "session_id": "session-do015-lesson_transition",
+  "assignment_id": "assignment-do015-001",
+  "content_id": "content-do015-001",
+  "canonical_revision_id": "revision-do015-001",
+  "status": "TRANSITIONED",
+  "attempts": [
+    {
+      "schema_version": "1.0.0",
+      "attempt_id": "attempt-do015-lesson_transition-0",
+      "attempt_index": 0,
+      "assignment_id": "assignment-do015-001",
+      "content_id": "content-do015-001",
+      "canonical_revision_id": "revision-do015-001",
+      "performance_session_id": "performance-session-do015-lesson_transition-0",
+      "evaluation_digest": "sha256:26648864222055706c5daf839be78855f176efd35c13ae59caf938b72458a632",
+      "guidance_digest": "sha256:c6b54d149c0b38f252dcdc21d9336ad797baac8e6aaa4d80985ead1d8f1a4a48",
+      "action": {
+        "schema_version": "1.0.0",
+        "recommended_action": {
+          "schema_version": "1.0.0",
+          "action_type": "slow_down",
+          "reason_finding_ids": [
+            "finding-do015-001"
+          ],
+          "message_key": "action.slow_down",
+          "target_rate": 0.75,
+          "focus_start_tick": null,
+          "focus_end_tick": null,
+          "teaching_aid": null
+        },
+        "action_disposition": "ACCEPTED",
+        "execution_status": "SUCCEEDED",
+        "executed_action": {
+          "schema_version": "1.0.0",
+          "action_type": "slow_down",
+          "reason_finding_ids": [
+            "finding-do015-001"
+          ],
+          "message_key": "action.slow_down",
+          "target_rate": 0.75,
+          "focus_start_tick": null,
+          "focus_end_tick": null,
+          "teaching_aid": null
+        }
+      },
+      "practice_context": {
+        "schema_version": "1.0.0",
+        "playback_rate": null,
+        "loop_start_tick": null,
+        "loop_end_tick": null
+      }
+    }
+  ],
+  "current_attempt_index": 0,
+  "session_digest": "sha256:5d54d222572eae5b29e73593dea92dde22168c939749acc25c30f95e650a6d65",
+  "provenance": {
+    "next_assignment_id": "assignment-do015-002",
+    "next_content_id": "content-do015-002",
+    "policy_version": "guided-practice-session-v1",
+    "producer": "GuidedPracticeSessionV1/v1",
+    "schema_version": "1.0.0",
+    "source": "education.guided_session_service",
+    "transition_reason": "lesson_content_change"
+  }
+}

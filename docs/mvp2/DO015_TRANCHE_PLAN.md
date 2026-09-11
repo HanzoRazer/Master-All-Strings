@@ -99,7 +99,8 @@ models remain outside this contract.
 9. Full MAS certification
 
 Stage 1 is contract/schema only. Stage 2 is the lifecycle service in
-`guided_session_service.py`. API, fixtures, and browser work remain later.
+`guided_session_service.py`. Stage 3 is the deterministic fixture matrix.
+API and browser work remain later.
 
 ## Stage 2 gate closure
 
@@ -173,7 +174,54 @@ protected surfaces vs main   unchanged
   web/mvp1
 ```
 
-Stage 3 fixtures and later stages remain unauthorized.
+Stage 3 fixtures are authorized on this branch. Later stages remain unauthorized.
+
+## Stage 3 fixture matrix
+
+Generator: `scripts/build_guided_session_fixtures.py`
+`--check` regenerates in memory and compares committed bytes.
+
+Directory: `resources/education/examples/guided_sessions/`
+
+```text
+slow_down_accepted.json
+slow_down_declined.json
+isolate_passage_accepted.json
+repeat_accepted.json
+continue_accepted_closed.json
+continue_declined.json
+execution_failed.json
+view_one_string_unsupported.json
+lesson_transition.json
+three_attempt_progression.json
+```
+
+All ten are produced by public Stage 2 operations from fixed opaque IDs.
+No `uuid4()`, no wall-clock time, no hand-authored impossible states.
+Revision mismatch, duplicate identities, `VIEW_ONE_STRING + SUCCEEDED`,
+`CONTINUE + UNSUPPORTED`, and failed CONTINUE are service-rejection /
+semantic tests, not golden success artifacts.
+
+```text
+Stage 2 checkpoint SHA      a4e23ad4031cbd7693aa459ba4e7f04d680f942f
+fixture files               10
+fixture tests               50 passed
+targeted Stage 1–3 tests    143 passed
+  test_guided_session_contract_do015.py
+  test_guided_session_service_do015.py
+  test_guided_session_fixtures_do015.py
+generator --check           PASS
+ruff check src tests        PASS
+mypy (strict, src)          PASS (160 source files)
+protected surfaces vs main  unchanged
+  PracticeSessionHistory
+  governance/engine_architecture_v1.json
+  API / src/master_all_strings/mvp
+  web/mvp1
+  Transport
+```
+
+Stage 4 API integration is not authorized.
 
 ## Session status (minimal)
 

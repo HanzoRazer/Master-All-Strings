@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0.0",
+  "policy_version": "guided-practice-session-v1",
+  "session_id": "session-do015-continue_accepted_closed",
+  "assignment_id": "assignment-do015-001",
+  "content_id": "content-do015-001",
+  "canonical_revision_id": "revision-do015-001",
+  "status": "CLOSED",
+  "attempts": [
+    {
+      "schema_version": "1.0.0",
+      "attempt_id": "attempt-do015-continue_accepted_closed-0",
+      "attempt_index": 0,
+      "assignment_id": "assignment-do015-001",
+      "content_id": "content-do015-001",
+      "canonical_revision_id": "revision-do015-001",
+      "performance_session_id": "performance-session-do015-continue_accepted_closed-0",
+      "evaluation_digest": "sha256:a32f50c0a81bc981e3d1f154a94398d25a2141441da3f2a7e2f30c01a34009d6",
+      "guidance_digest": "sha256:44961918fbc068efad26e66b3791915364e67cfacacb9de79ef313382a1c09bc",
+      "action": {
+        "schema_version": "1.0.0",
+        "recommended_action": {
+          "schema_version": "1.0.0",
+          "action_type": "continue",
+          "reason_finding_ids": [],
+          "message_key": "action.continue",
+          "target_rate": null,
+          "focus_start_tick": null,
+          "focus_end_tick": null,
+          "teaching_aid": null
+        },
+        "action_disposition": "ACCEPTED",
+        "execution_status": "SUCCEEDED",
+        "executed_action": {
+          "schema_version": "1.0.0",
+          "action_type": "continue",
+          "reason_finding_ids": [],
+          "message_key": "action.continue",
+          "target_rate": null,
+          "focus_start_tick": null,
+          "focus_end_tick": null,
+          "teaching_aid": null
+        }
+      },
+      "practice_context": {
+        "schema_version": "1.0.0",
+        "playback_rate": null,
+        "loop_start_tick": null,
+        "loop_end_tick": null
+      }
+    }
+  ],
+  "current_attempt_index": 0,
+  "session_digest": "sha256:a7ff0fce91fd31304447821627e8618cc0e579fb037518e590bc34ec6d376802",
+  "provenance": {
+    "policy_version": "guided-practice-session-v1",
+    "producer": "GuidedPracticeSessionV1/v1",
+    "schema_version": "1.0.0",
+    "source": "education.guided_session_service"
+  }
+}

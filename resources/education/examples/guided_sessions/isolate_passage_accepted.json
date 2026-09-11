@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0.0",
+  "policy_version": "guided-practice-session-v1",
+  "session_id": "session-do015-isolate_passage_accepted",
+  "assignment_id": "assignment-do015-001",
+  "content_id": "content-do015-001",
+  "canonical_revision_id": "revision-do015-001",
+  "status": "AWAITING_ATTEMPT",
+  "attempts": [
+    {
+      "schema_version": "1.0.0",
+      "attempt_id": "attempt-do015-isolate_passage_accepted-0",
+      "attempt_index": 0,
+      "assignment_id": "assignment-do015-001",
+      "content_id": "content-do015-001",
+      "canonical_revision_id": "revision-do015-001",
+      "performance_session_id": "performance-session-do015-isolate_passage_accepted-0",
+      "evaluation_digest": "sha256:de2e6157db3a1ef47016541f70866fb7d6dfa00a6ee9dde7592907dd5d145d42",
+      "guidance_digest": "sha256:259084ab9343818b5e85a188e71ce07c41eae94b70b4518467f04a7a05c26510",
+      "action": {
+        "schema_version": "1.0.0",
+        "recommended_action": {
+          "schema_version": "1.0.0",
+          "action_type": "isolate_passage",
+          "reason_finding_ids": [
+            "finding-do015-001"
+          ],
+          "message_key": "action.isolate_passage",
+          "target_rate": null,
+          "focus_start_tick": 960,
+          "focus_end_tick": 1920,
+          "teaching_aid": null
+        },
+        "action_disposition": "ACCEPTED",
+        "execution_status": "SUCCEEDED",
+        "executed_action": {
+          "schema_version": "1.0.0",
+          "action_type": "isolate_passage",
+          "reason_finding_ids": [
+            "finding-do015-001"
+          ],
+          "message_key": "action.isolate_passage",
+          "target_rate": null,
+          "focus_start_tick": 960,
+          "focus_end_tick": 1920,
+          "teaching_aid": null
+        }
+      },
+      "practice_context": {
+        "schema_version": "1.0.0",
+        "playback_rate": null,
+        "loop_start_tick": null,
+        "loop_end_tick": null
+      }
+    }
+  ],
+  "current_attempt_index": 0,
+  "session_digest": "sha256:8d4c602363c96a9e2ece77c3436b4e26d8d2cdbf040564f880b18ac833d01aa7",
+  "provenance": {
+    "policy_version": "guided-practice-session-v1",
+    "producer": "GuidedPracticeSessionV1/v1",
+    "schema_version": "1.0.0",
+    "source": "education.guided_session_service"
+  }
+}
