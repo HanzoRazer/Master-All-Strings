@@ -12,7 +12,19 @@ export function guidedEventIdsFromGuidance(guidance) {
   return ids;
 }
 
-export function renderResultsPanel(root, payload) {
+function dispositionCopy(guidedSession) {
+  const action = guidedSession?.attempts?.[guidedSession.current_attempt_index ?? 0]?.action;
+  const disposition = action?.action_disposition;
+  if (disposition === "ACCEPTED") {
+    return "Accepted — ready to apply";
+  }
+  if (disposition === "DECLINED") {
+    return "Declined. The recommendation was not applied.";
+  }
+  return "Accept or decline this recommendation. Accepting does not apply it.";
+}
+
+export function renderResultsPanel(root, payload, guidedSession = null) {
   if (!root) return;
   root.replaceChildren();
   if (!payload?.evaluation) {
@@ -30,15 +42,27 @@ export function renderResultsPanel(root, payload) {
   if (guidance?.guidance_digest) {
     summary.dataset.guidanceDigest = guidance.guidance_digest;
   }
+  const attemptAction =
+    guidedSession?.attempts?.[guidedSession.current_attempt_index ?? 0]?.action;
+  if (attemptAction?.action_disposition) {
+    summary.dataset.disposition = attemptAction.action_disposition;
+    summary.dataset.execution = attemptAction.execution_status || "";
+  }
   const continueHint =
     primary.action_type === "continue"
       ? `<p class="hint subtle">CONTINUE means no immediate repetition is required under this policy — not mastery.</p>`
-      : `<p class="hint subtle">This recommendation is advisory until you accept it. Accepting reuses the existing transport controls.</p>`;
+      : "";
+  const dispositionHint = `<p class="hint subtle disposition-status"${
+    attemptAction?.action_disposition
+      ? ` data-disposition="${attemptAction.action_disposition}"`
+      : ""
+  }>${dispositionCopy(guidedSession)}</p>`;
   summary.innerHTML = `
     <p class="results-action" data-action="${primary.action_type}">
       <strong>Next:</strong> ${messages[primary.message_key] || primary.message_key}
     </p>
     ${continueHint}
+    ${dispositionHint}
     <p class="hint">
       Findings: ${evaluation.findings.length} · Actionable:
       ${evaluation.summary.actionable_finding_count}

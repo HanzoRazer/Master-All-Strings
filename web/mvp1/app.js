@@ -14,6 +14,13 @@ import {
   LocalEducationApi,
   PracticeActionController,
 } from "./practice_actions.js";
+import { LocalGuidedSessionApi } from "./guided_session_api.js";
+import {
+  GuidedSessionController,
+  applyDispositionControls,
+  canRecordDisposition,
+  createGuidanceDispositionHandler,
+} from "./guided_disposition.js";
 import { focusRangeFromEvaluation, renderResultsPanel } from "./results.js";
 import { Transport } from "./transport.js";
 import { MediaPlayerController, MediaSyncMode } from "./media-player.js";
@@ -27,7 +34,6 @@ import { ScoreViewCoordinator } from "./score-view.js";
 import {
   buildScoreDiagnostics,
   createFretboardSelectionHandler,
-  createGuidanceAcceptHandler,
   createScoreSeekHandler,
   presentTeachingGuidance,
 } from "./score-shell.js";
@@ -84,6 +90,16 @@ const capture = new PerformanceCaptureController({
   api: new LocalPerformanceApi(),
 });
 const educationApi = new LocalEducationApi();
+const guidedSessions = new GuidedSessionController({
+  api: new LocalGuidedSessionApi(),
+});
+const recordGuidanceDisposition = createGuidanceDispositionHandler({
+  guidedSessionApi: guidedSessions.api,
+  getSessionId: () => guidedSessions.session?.session_id ?? null,
+  onResolved: (_disposition, session) => {
+    guidedSessions.session = session;
+  },
+});
 const practiceActions = new PracticeActionController({
   transport,
   onStatus: (message) => {
@@ -102,10 +118,6 @@ const practiceActions = new PracticeActionController({
     }
   },
   targetRepetitions: () => state.practice?.policy.loop.target_repetitions ?? null,
-});
-const acceptGuidance = createGuidanceAcceptHandler({
-  practiceActions,
-  educationApi,
 });
 const params = new URLSearchParams(window.location.search);
 if (params.get("devGolden") === "1") {
@@ -269,6 +281,21 @@ function setStage(stage) {
   // Status is always visible.
 }
 
+function syncDispositionUi() {
+  applyDispositionControls(
+    {
+      accept: $("btnAcceptGuidance"),
+      decline: $("btnDeclineGuidance"),
+      apply: $("btnApplyPrimary"),
+      status: $("resultsStatus"),
+    },
+    guidedSessions.session,
+  );
+  if (state.lastEvaluation) {
+    renderResultsPanel($("resultsPanel"), state.lastEvaluation, guidedSessions.session);
+  }
+}
+
 document.querySelectorAll(".workflow-step").forEach((button) => {
   button.addEventListener("click", () => setStage(button.dataset.stage));
 });
@@ -412,7 +439,9 @@ function applySessionArtifacts(payload, playback, practice) {
       $("statusLine").textContent = error.message || "Education session failed";
     });
   state.lastEvaluation = null;
+  guidedSessions.reset();
   renderResultsPanel($("resultsPanel"), null);
+  syncDispositionUi();
   renderer.setFocusRange(null);
   clearError();
   transport.pause();
@@ -728,7 +757,18 @@ $("btnStopAttempt").addEventListener("click", async () => {
       canonical_revision_id: scoreView.revisionId,
     });
     state.lastEvaluation = evaluation;
-    renderResultsPanel($("resultsPanel"), evaluation);
+    try {
+      await guidedSessions.syncFromEvaluation({
+        evaluation: evaluation.evaluation,
+        guidance: evaluation.guidance,
+      });
+    } catch (sessionError) {
+      guidedSessions.reset();
+      $("resultsStatus").textContent =
+        sessionError.message || "Guided session could not be created";
+    }
+    renderResultsPanel($("resultsPanel"), evaluation, guidedSessions.session);
+    syncDispositionUi();
     presentTeachingGuidance({
       coordinator: scoreView,
       renderer,
@@ -747,33 +787,27 @@ $("btnStopAttempt").addEventListener("click", async () => {
   }
 });
 $("btnFakeMidi").addEventListener("click", () => midiInput.emitFakeScale());
-$("btnApplyPrimary").addEventListener("click", async () => {
-  const action =
-    state.lastEvaluation?.guidance?.next_action ||
-    state.lastEvaluation?.evaluation?.primary_next_action;
-  if (!action) return;
-  await acceptGuidance(action);
-  syncLoopControlsFromTransport();
-  if (action.action_type === "isolate_passage" && state.payload?.projection) {
-    renderer.setFocusRange(
-      focusRangeFromEvaluation(
-        {
-          summary: {
-            focus_ranges: [
-              {
-                start_tick: action.focus_start_tick,
-                end_tick: action.focus_end_tick,
-                finding_ids: action.reason_finding_ids || [],
-              },
-            ],
-          },
-        },
-        state.payload.projection,
-      ),
-    );
+async function recordLearnerDisposition(disposition) {
+  if (!canRecordDisposition(guidedSessions.session)) return;
+  try {
+    await recordGuidanceDisposition(disposition);
+    syncDispositionUi();
+    $("statusLine").textContent =
+      disposition === "ACCEPTED"
+        ? "Accepted — ready to apply"
+        : "Recommendation declined";
+  } catch (error) {
+    $("resultsStatus").textContent = error.message || "Disposition failed";
+    $("statusLine").textContent = error.message || "Disposition failed";
   }
-  setStage("practice");
-});
+}
+
+$("btnAcceptGuidance").addEventListener("click", () =>
+  recordLearnerDisposition("ACCEPTED"),
+);
+$("btnDeclineGuidance").addEventListener("click", () =>
+  recordLearnerDisposition("DECLINED"),
+);
 $("btnGoldenDemo").addEventListener("click", async () => {
   try {
     const result = await educationApi.goldenDemo();
@@ -864,6 +898,7 @@ window.__mvp2a = {
   loadSession,
   captureDiagnostics,
   educationApi,
+  guidedSessions,
   setStage,
   teachingTimeline,
   mediaPlayer,
@@ -907,6 +942,15 @@ window.__masDiagnostics = {
     tabDigest: scoreView.tabDigest,
     notationDigest: scoreView.notationDigest,
     canonicalRevisionId: scoreView.revisionId,
+    guidedSessionId: guidedSessions.session?.session_id ?? null,
+    actionDisposition:
+      guidedSessions.session?.attempts?.[
+        guidedSessions.session.current_attempt_index ?? 0
+      ]?.action?.action_disposition ?? null,
+    executionStatus:
+      guidedSessions.session?.attempts?.[
+        guidedSessions.session.current_attempt_index ?? 0
+      ]?.action?.execution_status ?? null,
   }),
 };
 // Fretboard selection reaches the score views as a canonical event id and
@@ -917,4 +961,5 @@ $("scrollCanvas").addEventListener("click", (event) => {
 
 bootstrap();
 setStage("lesson");
+syncDispositionUi();
 requestAnimationFrame(tick);

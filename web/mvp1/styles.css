@@ -689,3 +689,15 @@ input[type="number"] {
 .results-action {
   margin: 0;
 }
+
+.disposition-actions {
+  grid-template-columns: 1fr 1fr;
+}
+
+.disposition-status[data-disposition="ACCEPTED"] {
+  color: var(--accent);
+}
+
+.disposition-status[data-disposition="DECLINED"] {
+  color: var(--muted);
+}
