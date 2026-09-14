@@ -105,8 +105,8 @@ export function buildScoreDiagnostics({ coordinator, limitations = [], loopRange
 /**
  * Present educational guidance on the score views.
  *
- * Display only. Transport is not mutated here; the learner must accept an
- * action through the existing practice-action controller.
+ * Display only. Transport is not mutated here. Accept/Decline record
+ * disposition through the guided-session API; they do not apply the action.
  */
 export function presentTeachingGuidance({ coordinator, renderer = null, projection = null }) {
   const applied = coordinator.applyGuidance(projection);
@@ -114,19 +114,4 @@ export function presentTeachingGuidance({ coordinator, renderer = null, projecti
     renderer.applyGuidedEventIds(coordinator.guidedEventIds);
   }
   return applied;
-}
-
-/**
- * Explicit learner acceptance of the Educational next action.
- *
- * Showing guidance never calls this. The returned handler reuses the existing
- * practice-action / Transport seam and does not invent a clock or rate.
- */
-export function createGuidanceAcceptHandler({ practiceActions, educationApi, onAccepted = null }) {
-  return async (action) => {
-    if (!action || !practiceActions || !educationApi) return null;
-    const result = await practiceActions.apply(action, educationApi);
-    if (typeof onAccepted === "function") onAccepted(action, result);
-    return result;
-  };
 }

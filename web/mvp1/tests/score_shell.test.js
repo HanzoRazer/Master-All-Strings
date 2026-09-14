@@ -6,10 +6,10 @@ import test from "node:test";
 import {
   buildScoreDiagnostics,
   createFretboardSelectionHandler,
-  createGuidanceAcceptHandler,
   createScoreSeekHandler,
   presentTeachingGuidance,
 } from "../score-shell.js";
+import { createGuidanceDispositionHandler } from "../guided_disposition.js";
 import { ScoreViewCoordinator } from "../score-view.js";
 import { NOTATION_LIMITATIONS } from "../notation-view.js";
 import { TeachingTimeline, secondsAtTick } from "../teaching-timeline.js";
@@ -505,7 +505,7 @@ test("diagnostics expose guidance observationally without becoming authority", a
   assert.equal(diagnostics.canonicalRevisionId, REVISION.revision_id);
 });
 
-test("accepted slowdown reuses Transport.setRate and leaves projection identity", async () => {
+test("accepting a recommendation records disposition and does not mutate Transport", async () => {
   const { coordinator, transport } = await harness();
   coordinator.applyGuidance({
     items: [{ canonical_event_id: "ev-1" }],
@@ -514,28 +514,41 @@ test("accepted slowdown reuses Transport.setRate and leaves projection identity"
   });
   const digest = coordinator.diagnostics().guidanceDigest;
   const tab = coordinator.tabDigest;
-  let applied = 0;
-  const accept = createGuidanceAcceptHandler({
-    practiceActions: {
-      apply: async (action) => {
-        applied += 1;
-        transport.setRate(action.target_rate);
-        return { status: "applied" };
+  const calls = [];
+  const accept = createGuidanceDispositionHandler({
+    guidedSessionApi: {
+      recordDisposition: async (sessionId, disposition) => {
+        calls.push({ sessionId, disposition });
+        return {
+          session_id: sessionId,
+          status: "AWAITING_ACTION",
+          attempts: [
+            {
+              action: {
+                action_disposition: disposition,
+                execution_status: "PENDING",
+              },
+            },
+          ],
+          current_attempt_index: 0,
+        };
       },
     },
-    educationApi: { applyAction: async () => ({ status: "applied" }) },
+    getSessionId: () => "session-do015-accept",
   });
   assert.equal(transport.playbackRate, 1);
-  assert.equal(applied, 0);
-  await accept({ action_type: "slow_down", target_rate: 0.75 });
-  assert.equal(applied, 1);
-  assert.equal(transport.playbackRate, 0.75);
+  const session = await accept("ACCEPTED");
+  assert.deepEqual(calls, [{ sessionId: "session-do015-accept", disposition: "ACCEPTED" }]);
+  assert.equal(session.attempts[0].action.action_disposition, "ACCEPTED");
+  assert.equal(session.attempts[0].action.execution_status, "PENDING");
+  assert.equal(transport.playbackRate, 1);
+  assert.equal(transport.loop, null);
   assert.equal(coordinator.diagnostics().guidanceDigest, digest);
   assert.equal(coordinator.tabDigest, tab);
 });
 
-test("accepted isolate uses the Educational range through the existing loop seam", async () => {
-  const { coordinator, transport, timeline } = await harness();
+test("accepting isolate does not set a Transport loop", async () => {
+  const { coordinator, transport } = await harness();
   const action = {
     action_type: "isolate_passage",
     focus_start_tick: 960,
@@ -547,20 +560,27 @@ test("accepted isolate uses the Educational range through the existing loop seam
     next_action: action,
     guidance_digest: "sha256:guide",
   });
-  const { PracticeActionController } = await import("../practice_actions.js");
-  const { resolveFocusRangeSeconds } = await import("../teaching-timeline.js");
-  const actions = new PracticeActionController({
-    transport,
-    resolveFocusRange: (startTick, endTick) =>
-      resolveFocusRangeSeconds(timeline.anchors, startTick, endTick),
+  const accept = createGuidanceDispositionHandler({
+    guidedSessionApi: {
+      recordDisposition: async () => ({
+        session_id: "session-do015-isolate",
+        status: "AWAITING_ACTION",
+        attempts: [
+          {
+            action: {
+              recommended_action: action,
+              action_disposition: "ACCEPTED",
+              execution_status: "PENDING",
+            },
+          },
+        ],
+        current_attempt_index: 0,
+      }),
+    },
+    getSessionId: () => "session-do015-isolate",
   });
-  const accept = createGuidanceAcceptHandler({
-    practiceActions: actions,
-    educationApi: { applyAction: async () => ({ status: "applied" }) },
-  });
-  await accept(action);
-  assert.equal(transport.loop.enabled, true);
-  assert.equal(transport.loop.startSeconds, 1.5);
-  assert.equal(transport.loop.endSeconds, 3.0);
+  await accept("ACCEPTED");
+  assert.equal(transport.loop, null);
+  assert.equal(transport.playbackRate, 1);
   assert.equal(coordinator.diagnostics().guidanceAction, "isolate_passage");
 });
