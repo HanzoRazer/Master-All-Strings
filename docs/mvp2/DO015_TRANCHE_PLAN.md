@@ -278,7 +278,65 @@ protected surfaces vs main    unchanged except additive API registration
   Stage 2 service
 ```
 
-Stage 5 Accept/Decline UI is not authorized on this branch.
+Stage 5 Accept/Decline UI is authorized on a new branch from merged Stage 4 `main`.
+
+## Stage 5 Accept/Decline UI
+
+PR #29 merged Stage 4. Stage 5 does not continue the Stage 4 feature branch.
+
+```text
+stage4_product_sha      = f2da2e123fc9a6bc30884d7e7964039752daa290
+stage4_merge_sha        = f686b18904bd4dd3022a7c8641b0980114f1f705
+stage5_base_sha         = f686b18904bd4dd3022a7c8641b0980114f1f705
+Stage 5 branch          = cursor/do015-guided-accept-decline-ce6b
+```
+
+`git merge-base --is-ancestor f686b18904bd4dd3022a7c8641b0980114f1f705 HEAD` holds.
+
+Learner controls this stage:
+
+```text
+ACCEPT  → POST /api/education/guided-sessions/{id}/disposition {disposition: ACCEPTED}
+DECLINE → POST /api/education/guided-sessions/{id}/disposition {disposition: DECLINED}
+```
+
+After ACCEPT the UI shows `Accepted — ready to apply` and locks Accept/Decline.
+`#btnApplyPrimary` remains in the DOM as `Apply recommendation` but is hidden and
+disabled. It is not an Accept path and is not an execution control.
+
+Hard invariant:
+
+```text
+Accept/Decline
+  → disposition API only
+  → no practiceActions.apply()
+  → no Transport.setRate / setLoop
+  → no recording start
+  → no lesson advance
+```
+
+The first evaluated attempt creates the guided session through the Stage 4
+create route. After DECLINE the next evaluation appends. Opaque `session_id`
+and `attempt_id` are caller-supplied.
+
+```text
+Node tests                    365 passed
+  web/mvp1/tests/*.test.js
+targeted Stage 1–4 tests      178 passed
+generator --check             PASS
+ruff check src tests          PASS
+mypy (strict, src)            PASS (161 source files)
+protected surfaces vs main    unchanged except Stage 5 browser UI
+  PracticeSessionHistory
+  governance/engine_architecture_v1.json
+  Transport implementation
+  Teaching Timeline implementation
+  Stage 3 fixture bytes
+  Stage 2 service
+  Stage 4 API semantics
+```
+
+Stage 6 Apply-recommendation execution is not authorized on this branch.
 
 ## Session status (minimal)
 
