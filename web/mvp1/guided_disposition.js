@@ -33,12 +33,30 @@ export function canApplyGuidedAction(session) {
   );
 }
 
-export function dispositionControlState(session) {
+export function dispositionControlState(session, executionDiagnostics = null) {
   const action = currentAttemptAction(session);
   const disposition = action?.action_disposition ?? null;
+  const execution = action?.execution_status ?? null;
   const pending = canRecordDisposition(session);
+  const acceptedPending = canApplyGuidedAction(session);
+  const terminal = ["SUCCEEDED", "FAILED", "UNSUPPORTED"].includes(execution);
+  const partial =
+    executionDiagnostics?.runtimeStatus === "SUCCEEDED" &&
+    executionDiagnostics?.evidenceStatus === "FAILED";
+  const applying = executionDiagnostics?.phase === "applying";
+  const applyEnabled = acceptedPending && !partial && !applying;
   let statusText = "";
-  if (session && disposition === "ACCEPTED") {
+  if (applying) {
+    statusText = "Applying…";
+  } else if (partial) {
+    statusText = "Evidence recording failed";
+  } else if (session && execution === "SUCCEEDED") {
+    statusText = "Applied";
+  } else if (session && execution === "FAILED") {
+    statusText = "Execution failed";
+  } else if (session && execution === "UNSUPPORTED") {
+    statusText = "Unsupported";
+  } else if (session && disposition === "ACCEPTED") {
     statusText = "Accepted — ready to apply";
   } else if (session && disposition === "DECLINED") {
     statusText = "Declined. The recommendation was not applied.";
@@ -49,16 +67,16 @@ export function dispositionControlState(session) {
   return {
     acceptEnabled: pending,
     declineEnabled: pending,
-    applyHidden: true,
-    applyDisabled: true,
+    applyHidden: !(applyEnabled || terminal || partial || applying),
+    applyDisabled: !applyEnabled,
     statusText,
     disposition,
-    executionStatus: action?.execution_status ?? null,
+    executionStatus: execution,
   };
 }
 
-export function applyDispositionControls(elements, session) {
-  const state = dispositionControlState(session);
+export function applyDispositionControls(elements, session, executionDiagnostics = null) {
+  const state = dispositionControlState(session, executionDiagnostics);
   if (elements.accept) {
     elements.accept.disabled = !state.acceptEnabled;
   }
@@ -66,8 +84,8 @@ export function applyDispositionControls(elements, session) {
     elements.decline.disabled = !state.declineEnabled;
   }
   if (elements.apply) {
-    elements.apply.hidden = true;
-    elements.apply.disabled = true;
+    elements.apply.hidden = state.applyHidden;
+    elements.apply.disabled = state.applyDisabled;
   }
   if (elements.status) {
     elements.status.textContent = state.statusText;
@@ -151,6 +169,16 @@ export class GuidedSessionController {
   async recordDisposition(disposition) {
     if (!canRecordDisposition(this.session)) return this.session;
     this.session = await this.api.recordDisposition(this.session.session_id, disposition);
+    return this.session;
+  }
+
+  async recordExecution(executionStatus, executedAction) {
+    if (!canApplyGuidedAction(this.session)) return this.session;
+    this.session = await this.api.recordExecution(
+      this.session.session_id,
+      executionStatus,
+      executedAction,
+    );
     return this.session;
   }
 }

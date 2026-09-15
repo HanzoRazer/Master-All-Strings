@@ -27,9 +27,8 @@ export class PracticeActionController {
       focus_end_tick: action.focus_end_tick,
       message_key: action.message_key,
     });
-    if (action.action_type === "slow_down" && action.target_rate != null) {
-      this.transport.setRate(Number(action.target_rate));
-      this.onStatus(`Slow down to ${action.target_rate}×`);
+    if (action.action_type === "slow_down") {
+      this.applySlowDown(action);
     } else if (action.action_type === "isolate_passage") {
       this.applyIsolatePassage(action);
     } else if (action.action_type === "repeat") {
@@ -38,6 +37,27 @@ export class PracticeActionController {
       this.onStatus("Continue — no immediate repetition required under this policy");
     }
     return result;
+  }
+
+  /**
+   * Runtime-only SLOW_DOWN. Uses the Educational target_rate as given.
+   * Does not choose a slower rate and does not record guided-session evidence.
+   *
+   * @returns {boolean} whether Transport.setRate actually ran
+   */
+  applySlowDown(action) {
+    if (action?.target_rate == null) {
+      this.onStatus("Slow down (missing target_rate; rate not applied)");
+      return false;
+    }
+    try {
+      this.transport.setRate(Number(action.target_rate));
+    } catch (error) {
+      this.onStatus(`Slow down (${error.message})`);
+      return false;
+    }
+    this.onStatus(`Slow down to ${action.target_rate}×`);
+    return true;
   }
 
   /**

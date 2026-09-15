@@ -24,7 +24,31 @@ function dispositionCopy(guidedSession) {
   return "Accept or decline this recommendation. Accepting does not apply it.";
 }
 
-export function renderResultsPanel(root, payload, guidedSession = null) {
+export function executionCopy(guidedSession, executionDiagnostics = null) {
+  if (executionDiagnostics?.phase === "applying") return "Applying…";
+  if (
+    executionDiagnostics?.runtimeStatus === "SUCCEEDED" &&
+    executionDiagnostics?.evidenceStatus === "FAILED"
+  ) {
+    return "Evidence recording failed";
+  }
+  const action = guidedSession?.attempts?.[guidedSession.current_attempt_index ?? 0]?.action;
+  const execution = action?.execution_status;
+  if (action?.action_disposition === "ACCEPTED" && execution === "PENDING") {
+    return "Ready to apply";
+  }
+  if (execution === "SUCCEEDED") return "Applied";
+  if (execution === "FAILED") return "Execution failed";
+  if (execution === "UNSUPPORTED") return "Unsupported";
+  return "";
+}
+
+export function renderResultsPanel(
+  root,
+  payload,
+  guidedSession = null,
+  executionDiagnostics = null,
+) {
   if (!root) return;
   root.replaceChildren();
   if (!payload?.evaluation) {
@@ -48,6 +72,15 @@ export function renderResultsPanel(root, payload, guidedSession = null) {
     summary.dataset.disposition = attemptAction.action_disposition;
     summary.dataset.execution = attemptAction.execution_status || "";
   }
+  if (guidedSession?.status) {
+    summary.dataset.sessionStatus = guidedSession.status;
+  }
+  if (executionDiagnostics?.runtimeStatus) {
+    summary.dataset.runtimeExecution = executionDiagnostics.runtimeStatus;
+  }
+  if (executionDiagnostics?.evidenceStatus) {
+    summary.dataset.evidenceRecording = executionDiagnostics.evidenceStatus;
+  }
   const continueHint =
     primary.action_type === "continue"
       ? `<p class="hint subtle">CONTINUE means no immediate repetition is required under this policy — not mastery.</p>`
@@ -57,12 +90,25 @@ export function renderResultsPanel(root, payload, guidedSession = null) {
       ? ` data-disposition="${attemptAction.action_disposition}"`
       : ""
   }>${dispositionCopy(guidedSession)}</p>`;
+  const executionText = executionCopy(guidedSession, executionDiagnostics);
+  const executionHint = executionText
+    ? `<p class="hint subtle execution-status"${
+        attemptAction?.execution_status
+          ? ` data-execution="${attemptAction.execution_status}"`
+          : ""
+      }${
+        executionDiagnostics?.evidenceStatus
+          ? ` data-evidence="${executionDiagnostics.evidenceStatus}"`
+          : ""
+      }>${executionText}</p>`
+    : "";
   summary.innerHTML = `
     <p class="results-action" data-action="${primary.action_type}">
       <strong>Next:</strong> ${messages[primary.message_key] || primary.message_key}
     </p>
     ${continueHint}
     ${dispositionHint}
+    ${executionHint}
     <p class="hint">
       Findings: ${evaluation.findings.length} · Actionable:
       ${evaluation.summary.actionable_finding_count}

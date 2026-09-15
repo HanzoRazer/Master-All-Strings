@@ -694,10 +694,27 @@ input[type="number"] {
   grid-template-columns: 1fr 1fr;
 }
 
+.disposition-actions:has(#btnApplyPrimary:not([hidden])) {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
 .disposition-status[data-disposition="ACCEPTED"] {
   color: var(--accent);
 }
 
 .disposition-status[data-disposition="DECLINED"] {
+  color: var(--muted);
+}
+
+.execution-status[data-execution="SUCCEEDED"] {
+  color: var(--accent);
+}
+
+.execution-status[data-execution="FAILED"],
+.execution-status[data-evidence="FAILED"] {
+  color: var(--danger);
+}
+
+.execution-status[data-execution="UNSUPPORTED"] {
   color: var(--muted);
 }
