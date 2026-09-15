@@ -397,9 +397,11 @@ does not automatically retry the runtime action.
 Node tests                    400 passed
   web/mvp1/tests/*.test.js
 targeted Stage 1–4 tests      178 passed
-generator --check             PASS required
-ruff check src tests          PASS required
-mypy (strict, src)            PASS required
+full pytest                   2786 passed, 3 skipped
+coverage                      95.61%
+generator --check             PASS
+ruff check src tests          PASS
+mypy (strict, src)            PASS (161 source files)
 protected surfaces vs main    unchanged except Stage 6 browser execution wiring
   PracticeSessionHistory
   governance/engine_architecture_v1.json
