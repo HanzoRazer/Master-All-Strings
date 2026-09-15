@@ -24,6 +24,15 @@ export function canRecordDisposition(session) {
   );
 }
 
+export function canApplyGuidedAction(session) {
+  const action = currentAttemptAction(session);
+  return Boolean(
+    session &&
+      action?.action_disposition === "ACCEPTED" &&
+      action?.execution_status === "PENDING",
+  );
+}
+
 export function dispositionControlState(session) {
   const action = currentAttemptAction(session);
   const disposition = action?.action_disposition ?? null;
