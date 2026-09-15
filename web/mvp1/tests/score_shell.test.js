@@ -10,6 +10,7 @@ import {
   presentTeachingGuidance,
 } from "../score-shell.js";
 import { createGuidanceDispositionHandler } from "../guided_disposition.js";
+import { createGuidedApplyHandler } from "../guided-action-executor.js";
 import { ScoreViewCoordinator } from "../score-view.js";
 import { NOTATION_LIMITATIONS } from "../notation-view.js";
 import { TeachingTimeline, secondsAtTick } from "../teaching-timeline.js";
@@ -583,4 +584,64 @@ test("accepting isolate does not set a Transport loop", async () => {
   assert.equal(transport.loop, null);
   assert.equal(transport.playbackRate, 1);
   assert.equal(coordinator.diagnostics().guidanceAction, "isolate_passage");
+});
+
+test("applying an accepted recommendation mutates Transport and preserves score identity", async () => {
+  const { coordinator, transport } = await harness();
+  coordinator.applyGuidance({
+    items: [{ canonical_event_id: "ev-1" }],
+    next_action: { action_type: "slow_down", target_rate: 0.5 },
+    guidance_digest: "sha256:guide",
+  });
+  const digest = coordinator.diagnostics().guidanceDigest;
+  const tab = coordinator.tabDigest;
+  const notation = coordinator.notationDigest;
+  const revision = coordinator.revisionId;
+  let session = {
+    session_id: "session-do015-apply",
+    status: "AWAITING_ACTION",
+    canonical_revision_id: revision,
+    current_attempt_index: 0,
+    attempts: [
+      {
+        attempt_id: "attempt-0",
+        performance_session_id: "performance-session-0",
+        evaluation_digest: "sha256:eval",
+        guidance_digest: digest,
+        action: {
+          recommended_action: { action_type: "slow_down", target_rate: 0.5 },
+          action_disposition: "ACCEPTED",
+          execution_status: "PENDING",
+        },
+      },
+    ],
+  };
+  const apply = createGuidedApplyHandler({
+    getSession: () => session,
+    setSession: (next) => {
+      session = next;
+    },
+    recordExecution: async (_id, executionStatus, executedAction) => ({
+      ...session,
+      status: "AWAITING_ATTEMPT",
+      attempts: [
+        {
+          ...session.attempts[0],
+          action: {
+            ...session.attempts[0].action,
+            execution_status: executionStatus,
+            executed_action: executedAction,
+          },
+        },
+      ],
+    }),
+    getRuntime: () => ({ transport }),
+  });
+  await apply();
+  assert.equal(transport.playbackRate, 0.5);
+  assert.equal(session.status, "AWAITING_ATTEMPT");
+  assert.equal(coordinator.diagnostics().guidanceDigest, digest);
+  assert.equal(coordinator.tabDigest, tab);
+  assert.equal(coordinator.notationDigest, notation);
+  assert.equal(coordinator.revisionId, revision);
 });

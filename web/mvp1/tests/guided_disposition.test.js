@@ -6,6 +6,7 @@ import test from "node:test";
 import {
   GuidedSessionController,
   applyDispositionControls,
+  canApplyGuidedAction,
   canRecordDisposition,
   createGuidanceDispositionHandler,
   currentAttemptAction,
@@ -78,6 +79,24 @@ function fakeApi() {
         ],
       });
     },
+    recordExecution: async (sessionId, executionStatus, executedAction) => {
+      calls.push({ op: "execution", sessionId, executionStatus, executedAction });
+      return pendingSession({
+        session_id: sessionId,
+        status: executionStatus === "SUCCEEDED" ? "AWAITING_ATTEMPT" : "AWAITING_ACTION",
+        attempts: [
+          {
+            attempt_id: "attempt-0",
+            action: {
+              recommended_action: { action_type: "slow_down", target_rate: 0.75 },
+              action_disposition: "ACCEPTED",
+              execution_status: executionStatus,
+              executed_action: executedAction ?? null,
+            },
+          },
+        ],
+      });
+    },
   };
 }
 
@@ -141,6 +160,28 @@ test("decline records DECLINED/NOT_REQUESTED and does not touch Transport", asyn
   assert.equal(transport.loop, null);
 });
 
+test("recordExecution consumes the server-returned session", async () => {
+  const api = fakeApi();
+  const controller = new GuidedSessionController({
+    api,
+    newId: () => "id",
+  });
+  await controller.syncFromEvaluation({
+    evaluation: { evaluation_digest: "sha256:e" },
+    guidance: { guidance_digest: "sha256:g" },
+  });
+  await controller.recordDisposition("ACCEPTED");
+  assert.equal(canApplyGuidedAction(controller.session), true);
+  const session = await controller.recordExecution("SUCCEEDED", {
+    action_type: "slow_down",
+    target_rate: 0.75,
+  });
+  assert.equal(session.status, "AWAITING_ATTEMPT");
+  assert.equal(currentAttemptAction(session).execution_status, "SUCCEEDED");
+  assert.equal(api.calls[api.calls.length - 1].op, "execution");
+  assert.equal(canApplyGuidedAction(session), false);
+});
+
 test("a resolved disposition cannot be recorded again", async () => {
   const api = fakeApi();
   const controller = new GuidedSessionController({
@@ -178,10 +219,10 @@ test("after decline, the next evaluation appends rather than creating a new sess
   assert.equal(session.current_attempt_index, 1);
 });
 
-test("disposition controls hide Apply and lock after accept", () => {
+test("disposition controls enable Apply only after accept", () => {
   const accept = stubElement();
   const decline = stubElement();
-  const apply = stubElement({ hidden: false, disabled: false });
+  const apply = stubElement({ hidden: true, disabled: true });
   const status = stubElement();
   applyDispositionControls(
     { accept, decline, apply, status },
@@ -189,6 +230,7 @@ test("disposition controls hide Apply and lock after accept", () => {
       attempts: [
         {
           action: {
+            recommended_action: { action_type: "slow_down", target_rate: 0.75 },
             action_disposition: "ACCEPTED",
             execution_status: "PENDING",
           },
@@ -198,11 +240,31 @@ test("disposition controls hide Apply and lock after accept", () => {
   );
   assert.equal(accept.disabled, true);
   assert.equal(decline.disabled, true);
-  assert.equal(apply.hidden, true);
-  assert.equal(apply.disabled, true);
+  assert.equal(apply.hidden, false);
+  assert.equal(apply.disabled, false);
   assert.equal(status.textContent, "Accepted — ready to apply");
   assert.equal(status.dataset.disposition, "ACCEPTED");
   assert.equal(status.dataset.execution, "PENDING");
+});
+
+test("finalized execution disables Apply", () => {
+  const apply = stubElement({ hidden: false, disabled: false });
+  applyDispositionControls(
+    { apply },
+    pendingSession({
+      attempts: [
+        {
+          action: {
+            recommended_action: { action_type: "slow_down", target_rate: 0.75 },
+            action_disposition: "ACCEPTED",
+            execution_status: "SUCCEEDED",
+          },
+        },
+      ],
+    }),
+  );
+  assert.equal(apply.hidden, false);
+  assert.equal(apply.disabled, true);
 });
 
 test("pending controls enable Accept/Decline and keep Apply unreachable", () => {
@@ -227,12 +289,20 @@ test("the disposition handler ignores unknown values and missing sessions", asyn
 test("disposition modules do not apply actions or mutate Transport", () => {
   const disposition = readFileSync(repoUrl("../guided_disposition.js"), "utf-8");
   const app = readFileSync(repoUrl("../app.js"), "utf-8");
-  for (const source of [disposition, app]) {
-    assert.doesNotMatch(source, /practiceActions\.apply/);
-    assert.doesNotMatch(source, /createGuidanceAcceptHandler/);
-    assert.doesNotMatch(source, /btnApplyPrimary"\)\.addEventListener/);
-  }
+  assert.doesNotMatch(disposition, /practiceActions\.apply/);
+  assert.doesNotMatch(disposition, /createGuidanceAcceptHandler/);
   assert.doesNotMatch(disposition, /setRate/);
   assert.doesNotMatch(disposition, /setLoop/);
+  assert.doesNotMatch(disposition, /executeGuidedAction/);
+  assert.doesNotMatch(app, /practiceActions\.apply\(/);
+  assert.doesNotMatch(app, /createGuidanceAcceptHandler/);
   assert.doesNotMatch(app, /await acceptGuidance/);
+  const acceptFn = app.slice(
+    app.indexOf("async function recordLearnerDisposition"),
+    app.indexOf("$(\"btnAcceptGuidance\")"),
+  );
+  assert.doesNotMatch(acceptFn, /executeGuidedAction/);
+  assert.doesNotMatch(acceptFn, /recordExecution/);
+  assert.doesNotMatch(acceptFn, /setRate/);
+  assert.match(app, /btnApplyPrimary"\)\.addEventListener/);
 });

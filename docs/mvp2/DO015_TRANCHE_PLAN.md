@@ -338,6 +338,82 @@ protected surfaces vs main    unchanged except Stage 5 browser UI
 
 Stage 6 Apply-recommendation execution is not authorized on this branch.
 
+## Stage 6 accepted-guidance execution
+
+PR #30 merged Stage 5. Stage 6 does not continue the Stage 5 feature branch.
+
+```text
+stage5_product_sha      = 6f11b3518296702043564b7b10c65c26e9498f78
+stage5_merge_sha        = 91b5ba27ffc4a553b8b95f2da203c36418f86436
+stage6_base_sha         = 91b5ba27ffc4a553b8b95f2da203c36418f86436
+Stage 6 branch          = cursor/do015-guided-action-execution-df74
+```
+
+`git merge-base --is-ancestor 91b5ba27ffc4a553b8b95f2da203c36418f86436 HEAD` holds.
+Stage 6 branched from that merge commit (`origin/main` at entry).
+
+Learner sequence this stage:
+
+```text
+recommendation
+     ↓
+Accept  → disposition API only (Stage 5 unchanged)
+     ↓
+ACCEPTED / PENDING
+     ↓
+Apply recommendation
+     ↓
+guided-action-executor  → existing runtime seam
+     ↓
+SUCCEEDED | FAILED | UNSUPPORTED
+     ↓
+POST /api/education/guided-sessions/{id}/execution
+     ↓
+server-returned GuidedPracticeSessionV1
+```
+
+`#btnApplyPrimary` is enabled only for `ACCEPTED` + `PENDING`. Accept still makes
+zero Transport calls. Apply cannot run before acceptance, after decline, or
+after a finalized execution status.
+
+Runtime mapping (no new policy, no new tick converter, no new Transport):
+
+```text
+SLOW_DOWN        → PracticeActionController.applySlowDown → Transport.setRate(target_rate)
+ISOLATE_PASSAGE  → PracticeActionController.applyIsolatePassage
+                   resolveFocusRangeSeconds → secondsAtTick(start) / secondsAtTick(end)
+                   → Transport.setLoop
+REPEAT           → no rate/loop/recording mutation; readiness for Arm/Start
+CONTINUE         → no Transport mutation; CLOSED comes from Stage 2 via Stage 4
+VIEW_ONE_STRING  → no runtime mutation; execution_status UNSUPPORTED, executed_action null
+ENABLE_ZONE_VIEW → no runtime mutation; execution_status UNSUPPORTED, executed_action null
+```
+
+Partial success (runtime changed, evidence POST failed) keeps the local session
+at the pre-execution server state, surfaces `Evidence recording failed`, and
+does not automatically retry the runtime action.
+
+```text
+Node tests                    400 passed
+  web/mvp1/tests/*.test.js
+targeted Stage 1–4 tests      178 passed
+full pytest                   2786 passed, 3 skipped
+coverage                      95.61%
+generator --check             PASS
+ruff check src tests          PASS
+mypy (strict, src)            PASS (161 source files)
+protected surfaces vs main    unchanged except Stage 6 browser execution wiring
+  PracticeSessionHistory
+  governance/engine_architecture_v1.json
+  Transport implementation
+  Teaching Timeline implementation
+  Stage 3 fixture bytes
+  Stage 2 service
+  Stage 4 API semantics
+```
+
+Stage 7 attempt-history UI is not authorized on this branch.
+
 ## Session status (minimal)
 
 `ACTIVE`, `AWAITING_ACTION`, `AWAITING_ATTEMPT`, `CLOSED`, `TRANSITIONED`,

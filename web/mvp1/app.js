@@ -21,6 +21,7 @@ import {
   canRecordDisposition,
   createGuidanceDispositionHandler,
 } from "./guided_disposition.js";
+import { createGuidedApplyHandler } from "./guided-action-executor.js";
 import { focusRangeFromEvaluation, renderResultsPanel } from "./results.js";
 import { Transport } from "./transport.js";
 import { MediaPlayerController, MediaSyncMode } from "./media-player.js";
@@ -50,6 +51,7 @@ const state = {
   diagnostics: [],
   stage: "lesson",
   lastEvaluation: null,
+  executionDiagnostics: null,
 };
 
 const transport = new Transport();
@@ -98,6 +100,46 @@ const recordGuidanceDisposition = createGuidanceDispositionHandler({
   getSessionId: () => guidedSessions.session?.session_id ?? null,
   onResolved: (_disposition, session) => {
     guidedSessions.session = session;
+  },
+});
+const applyAcceptedRecommendation = createGuidedApplyHandler({
+  getSession: () => guidedSessions.session,
+  setSession: (session) => {
+    guidedSessions.session = session;
+  },
+  recordExecution: (sessionId, executionStatus, executedAction) =>
+    guidedSessions.api.recordExecution(sessionId, executionStatus, executedAction),
+  getRuntime: () => ({
+    transport,
+    applySlowDown: (action) => practiceActions.applySlowDown(action),
+    applyIsolatePassage: (action) => practiceActions.applyIsolatePassage(action),
+    capture,
+  }),
+  onDiagnostics: (diagnostics) => {
+    state.executionDiagnostics = diagnostics;
+    if (diagnostics.phase === "applying") {
+      $("statusLine").textContent = "Applying…";
+    } else if (
+      diagnostics.phase === "complete" &&
+      diagnostics.evidenceStatus === "FAILED"
+    ) {
+      $("statusLine").textContent =
+        diagnostics.runtimeStatus === "SUCCEEDED"
+          ? "Evidence recording failed"
+          : diagnostics.error || "Recommendation execution failed";
+    }
+    syncDispositionUi();
+  },
+  onResolved: (_session, runtime) => {
+    syncLoopControlsFromTransport();
+    const status =
+      runtime.status === "SUCCEEDED"
+        ? "Recommendation applied"
+        : runtime.status === "UNSUPPORTED"
+          ? "Recommendation is unsupported"
+          : "Recommendation execution failed";
+    $("statusLine").textContent = status;
+    syncDispositionUi();
   },
 });
 const practiceActions = new PracticeActionController({
@@ -290,9 +332,15 @@ function syncDispositionUi() {
       status: $("resultsStatus"),
     },
     guidedSessions.session,
+    state.executionDiagnostics,
   );
   if (state.lastEvaluation) {
-    renderResultsPanel($("resultsPanel"), state.lastEvaluation, guidedSessions.session);
+    renderResultsPanel(
+      $("resultsPanel"),
+      state.lastEvaluation,
+      guidedSessions.session,
+      state.executionDiagnostics,
+    );
   }
 }
 
@@ -439,6 +487,7 @@ function applySessionArtifacts(payload, playback, practice) {
       $("statusLine").textContent = error.message || "Education session failed";
     });
   state.lastEvaluation = null;
+  state.executionDiagnostics = null;
   guidedSessions.reset();
   renderResultsPanel($("resultsPanel"), null);
   syncDispositionUi();
@@ -757,6 +806,7 @@ $("btnStopAttempt").addEventListener("click", async () => {
       canonical_revision_id: scoreView.revisionId,
     });
     state.lastEvaluation = evaluation;
+    state.executionDiagnostics = null;
     try {
       await guidedSessions.syncFromEvaluation({
         evaluation: evaluation.evaluation,
@@ -767,7 +817,12 @@ $("btnStopAttempt").addEventListener("click", async () => {
       $("resultsStatus").textContent =
         sessionError.message || "Guided session could not be created";
     }
-    renderResultsPanel($("resultsPanel"), evaluation, guidedSessions.session);
+    renderResultsPanel(
+      $("resultsPanel"),
+      evaluation,
+      guidedSessions.session,
+      state.executionDiagnostics,
+    );
     syncDispositionUi();
     presentTeachingGuidance({
       coordinator: scoreView,
@@ -808,6 +863,7 @@ $("btnAcceptGuidance").addEventListener("click", () =>
 $("btnDeclineGuidance").addEventListener("click", () =>
   recordLearnerDisposition("DECLINED"),
 );
+$("btnApplyPrimary").addEventListener("click", () => applyAcceptedRecommendation());
 $("btnGoldenDemo").addEventListener("click", async () => {
   try {
     const result = await educationApi.goldenDemo();
@@ -904,6 +960,7 @@ window.__mvp2a = {
   mediaPlayer,
   mediaFollower,
   practiceActions,
+  applyAcceptedRecommendation,
   syncLoopControlsFromTransport,
 };
 
@@ -951,6 +1008,12 @@ window.__masDiagnostics = {
       guidedSessions.session?.attempts?.[
         guidedSessions.session.current_attempt_index ?? 0
       ]?.action?.execution_status ?? null,
+    executionRequestedAction: state.executionDiagnostics?.requestedAction ?? null,
+    executionRuntimeStatus: state.executionDiagnostics?.runtimeStatus ?? null,
+    executionEvidenceStatus: state.executionDiagnostics?.evidenceStatus ?? null,
+    executionError: state.executionDiagnostics?.error ?? null,
+    runtimeRate: transport.playbackRate,
+    runtimeLoop: transport.loop,
   }),
 };
 // Fretboard selection reaches the score views as a canonical event id and

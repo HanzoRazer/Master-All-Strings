@@ -66,24 +66,56 @@ test("recordDisposition posts ACCEPTED or DECLINED only", async () => {
   assert.deepEqual(JSON.parse(calls[0].options.body), { disposition: "ACCEPTED" });
 });
 
-test("the client has no execution method", () => {
-  const api = new LocalGuidedSessionApi({
-    fetchImpl: async () => jsonResponse(200, {}),
+test("recordExecution posts the Stage 4 execution payload", async () => {
+  const recommended = {
+    action_type: "slow_down",
+    target_rate: 0.5,
+    message_key: "action.slow_down",
+  };
+  const { calls, fetchImpl } = fakeFetch(() =>
+    jsonResponse(200, {
+      session_id: "session-1",
+      status: "AWAITING_ATTEMPT",
+      attempts: [
+        {
+          action: {
+            action_disposition: "ACCEPTED",
+            execution_status: "SUCCEEDED",
+            executed_action: recommended,
+          },
+        },
+      ],
+    }),
+  );
+  const api = new LocalGuidedSessionApi({ fetchImpl });
+  await api.recordExecution("session-1", "SUCCEEDED", recommended);
+  assert.equal(calls[0].url, `${GUIDED_SESSION_API_PREFIX}/session-1/execution`);
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    execution_status: "SUCCEEDED",
+    executed_action: recommended,
   });
-  assert.equal(typeof api.recordExecution, "undefined");
-  assert.equal(typeof api.apply, "undefined");
+});
+
+test("recordExecution posts null executed_action for UNSUPPORTED", async () => {
+  const { calls, fetchImpl } = fakeFetch(() =>
+    jsonResponse(200, {
+      session_id: "session-1",
+      attempts: [
+        { action: { action_disposition: "ACCEPTED", execution_status: "UNSUPPORTED" } },
+      ],
+    }),
+  );
+  const api = new LocalGuidedSessionApi({ fetchImpl });
+  await api.recordExecution("session-1", "UNSUPPORTED", null);
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    execution_status: "UNSUPPORTED",
+    executed_action: null,
+  });
 });
 
 test("client source does not mention Transport or apply_action", () => {
   const source = readFileSync(repoUrl("../guided_session_api.js"), "utf-8");
-  for (const token of [
-    "setRate",
-    "setLoop",
-    "apply_action",
-    "practiceActions",
-    "recordExecution",
-    "execution_status",
-  ]) {
+  for (const token of ["setRate", "setLoop", "apply_action", "practiceActions"]) {
     assert.doesNotMatch(source, new RegExp(token));
   }
 });

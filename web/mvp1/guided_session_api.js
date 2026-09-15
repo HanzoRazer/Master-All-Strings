@@ -1,7 +1,8 @@
 /** Browser client for the DO-015 Stage 4 guided-session API.
 
-Transport/adaptation only. This module records learner disposition. It does
-not choose Educational actions, mint identities, or execute Transport.
+Transport/adaptation only. This module records learner disposition and
+execution evidence. It does not choose Educational actions, mint identities,
+or execute Transport.
 */
 
 export const GUIDED_SESSION_API_PREFIX = "/api/education/guided-sessions";
@@ -34,6 +35,18 @@ export class LocalGuidedSessionApi {
     return this._request("POST", `/${encodeURIComponent(sessionId)}/disposition`, {
       disposition,
     });
+  }
+
+  async recordExecution(sessionId, executionStatus, executedAction) {
+    const payload = { execution_status: executionStatus };
+    if (arguments.length >= 3) {
+      payload.executed_action = executedAction ?? null;
+    }
+    return this._request(
+      "POST",
+      `/${encodeURIComponent(sessionId)}/execution`,
+      payload,
+    );
   }
 
   async append({ sessionId, attemptId, evaluation, guidance }) {
