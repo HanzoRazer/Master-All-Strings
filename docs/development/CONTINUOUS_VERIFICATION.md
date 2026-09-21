@@ -22,6 +22,7 @@ in the pull-request checks interface. The workflow fails if any gate fails.
 | Ruff lint | `ruff check src tests` | The configured lint rules (`E, F, I, B, UP`). Lint only — no formatter is enforced. |
 | mypy strict | `mypy` | Strict-mode type checking over `src`. Strictness is enabled in `[tool.mypy]`, so no CLI flag is passed. Tests are not in scope. |
 | pytest with coverage | `pytest --cov --cov-report=term-missing` | The full suite — including golden-vector and schema validation, which run inside pytest — and a repository-wide coverage floor. |
+| in-flight register | `python scripts/check_in_flight.py` | That `docs/development/IN_FLIGHT.md` agrees with the open pull requests and the branches on `origin`. It is what one agent reads to find out what another is already working on, so a register that has drifted is worse than none. Needs `pull-requests: read`; degrades to the checks it can make when GitHub cannot be reached. |
 
 ## Coverage policy
 
