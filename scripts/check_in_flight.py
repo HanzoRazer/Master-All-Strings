@@ -9,6 +9,10 @@ pull requests and the branches on ``origin``.
 
 It reports; it does not edit. Exit status 0 means the register agrees with the
 repository, 1 means it does not.
+
+Output is ASCII only, like the other verifiers here. The register is written
+with em dashes and a check that cannot print its own findings on a legacy
+console is not a check.
 """
 
 from __future__ import annotations
@@ -28,6 +32,7 @@ COLUMNS = ("Order", "Branch", "Agent", "PR", "Base", "State", "Updated")
 STATES = ("in flight", "in review", "green", "blocked")
 UNSET = {"—", "-", ""}
 
+_SEPARATOR = re.compile(r"^\|?[\s:|-]*-[\s:|-]*\|?$")
 _SHA = re.compile(r"^[0-9a-f]{7,40}$")
 _PR = re.compile(r"^#\d+$")
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -49,6 +54,12 @@ class Row:
     @property
     def pr_number(self) -> int | None:
         return int(self.pr[1:]) if _PR.match(self.pr) else None
+
+
+def _ascii(text: str) -> str:
+    """Fold to ASCII so a finding can always be printed."""
+
+    return text.replace("—", "-").encode("ascii", "replace").decode("ascii")
 
 
 def _cells(line: str) -> list[str]:
@@ -88,8 +99,20 @@ def parse_register(text: str) -> tuple[list[Row], list[str]]:
         )
         return [], problems
 
+    # A markdown table needs the `| --- |` line. Without it the first entry
+    # would be read as the separator and silently vanish -- an in-flight branch
+    # no one can see is the exact failure this file exists to prevent.
+    separator = lines[header_at + 1] if header_at + 1 < len(lines) else ""
+    first_row = header_at + 2
+    if not _SEPARATOR.match(separator.strip()):
+        problems.append(
+            f"table has no '| --- |' separator under its header "
+            f"(IN_FLIGHT.md:{header_at + 2})"
+        )
+        first_row = header_at + 1
+
     rows: list[Row] = []
-    for offset, line in enumerate(lines[header_at + 2 :], start=header_at + 3):
+    for offset, line in enumerate(lines[first_row:], start=first_row + 1):
         stripped = line.strip()
         if not stripped.startswith("|"):
             break
@@ -109,6 +132,7 @@ def validate_rows(rows: list[Row]) -> list[str]:
 
     problems: list[str] = []
     seen: dict[str, int] = {}
+    seen_prs: dict[int, int] = {}
     for row in rows:
         where = f"IN_FLIGHT.md:{row.line_number}"
         if not row.branch or row.branch in UNSET:
@@ -124,11 +148,20 @@ def validate_rows(rows: list[Row]) -> list[str]:
         if row.base not in UNSET and not _SHA.match(row.base):
             problems.append(f"base {row.base!r} is not a sha ({where})")
         if row.pr not in UNSET and not _PR.match(row.pr):
-            problems.append(f"PR {row.pr!r} should look like '#32' or '—' ({where})")
+            problems.append(f"PR {row.pr!r} should look like '#32', or '-' if none ({where})")
         if not _DATE.match(row.updated):
             problems.append(f"updated {row.updated!r} should be YYYY-MM-DD ({where})")
         if not row.agent or row.agent in UNSET:
             problems.append(f"row has no agent ({where})")
+        if not row.order or row.order in UNSET:
+            problems.append(f"row has no order ({where})")
+        number = row.pr_number
+        if number is not None:
+            if number in seen_prs:
+                problems.append(
+                    f"PR #{number} is listed twice ({where} and line {seen_prs[number]})"
+                )
+            seen_prs[number] = row.line_number
     return problems
 
 
@@ -169,13 +202,29 @@ def reconcile(
                 problems.append(
                     f"PR #{number} is open on {branch} but has no row in the register"
                 )
-        open_numbers = set(open_prs.values())
+        # A number on its own proves nothing: the register's promise is which
+        # *branch* is in flight, so the number has to belong to that branch.
+        head_of = {number: branch for branch, number in open_prs.items()}
         for row in rows:
+            where = f"IN_FLIGHT.md:{row.line_number}"
             number = row.pr_number
-            if number is not None and number not in open_numbers:
+            if number is None:
+                if row.branch in open_prs:
+                    problems.append(
+                        f"PR #{open_prs[row.branch]} is open on {row.branch} but the "
+                        f"register row still has no PR ({where})"
+                    )
+                continue
+            head = head_of.get(number)
+            if head is None:
                 problems.append(
                     f"register names PR #{number}, which is not open "
-                    f"(IN_FLIGHT.md:{row.line_number}) -- delete the row if it merged"
+                    f"({where}) -- delete the row if it merged"
+                )
+            elif head != row.branch:
+                problems.append(
+                    f"register puts PR #{number} on {row.branch}, but it is open on "
+                    f"{head} ({where})"
                 )
     return problems
 
@@ -253,10 +302,10 @@ def main(argv: list[str] | None = None) -> int:
         problems += reconcile(rows, prs, branches, current_branch())
 
     for note in skipped:
-        print(f"note  {note}")
+        print(_ascii(f"note  {note}"))
     if problems:
         for problem in problems:
-            print(f"FAIL  {problem}")
+            print(_ascii(f"FAIL  {problem}"))
         print(f"\nin-flight register: {len(problems)} problem(s)")
         return 1
 

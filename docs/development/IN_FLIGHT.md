@@ -42,7 +42,9 @@ Add your row in the **first commit on the branch**, before you push:
 - **Updated** — the date you last touched the row, `YYYY-MM-DD`.
 
 Update `State` when it changes — particularly to `green`, which is what says
-the branch is finished and safe to merge. Delete the row when the PR merges.
+the branch is finished and safe to merge. Fill in `PR` as soon as the pull
+request exists: a row that still says `—` while a pull request is open is drift
+like any other. Delete the row when the PR merges.
 
 Run `python scripts/check_in_flight.py` before pushing. It reconciles this file
 against the open pull requests and the branches on `origin` and reports where

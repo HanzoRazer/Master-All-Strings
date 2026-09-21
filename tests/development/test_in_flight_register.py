@@ -170,3 +170,55 @@ def test_the_branch_you_are_on_need_not_be_pushed_yet() -> None:
     assert check.reconcile(rows, {}, set(), "cursor/do015-next-ab12") == []
     # Any other row still has to exist on origin.
     assert check.reconcile(rows, {}, set(), "some/other-branch") != []
+
+
+def test_a_pull_request_number_must_belong_to_the_row_that_claims_it() -> None:
+    # The register's promise is which *branch* is in flight. A number that is
+    # open on someone else's branch makes the row a lie that reads as true.
+    rows, _ = check.parse_register(HEADER + ROW)
+    problems = check.reconcile(rows, {"some/other-branch": 40}, {"cursor/do015-next-ab12"})
+    assert any(
+        "puts PR #40 on cursor/do015-next-ab12, but it is open on some/other-branch" in item
+        for item in problems
+    )
+
+
+def test_an_open_pull_request_the_row_has_not_recorded_yet_is_reported() -> None:
+    # Under-reporting is drift too: the row says no PR while one is open on it.
+    rows, _ = check.parse_register(HEADER + NO_PR_ROW)
+    problems = check.reconcile(rows, {"cursor/do015-next-ab12": 40}, {"cursor/do015-next-ab12"})
+    assert any("still has no PR" in item for item in problems)
+
+
+def test_the_same_pull_request_on_two_rows_is_refused() -> None:
+    second = ROW.replace("cursor/do015-next-ab12", "cursor/something-else")
+    rows, _ = check.parse_register(HEADER + ROW + second)
+    assert any("PR #40 is listed twice" in item for item in check.validate_rows(rows))
+
+
+def test_a_row_that_says_nothing_about_the_work_is_refused() -> None:
+    rows, _ = check.parse_register(HEADER + ROW.replace("DO-015 Stage 8", "—"))
+    assert any("no order" in item for item in check.validate_rows(rows))
+
+
+def test_a_table_with_no_separator_does_not_swallow_its_first_row() -> None:
+    # Without the `| --- |` line the first entry would be read as the separator
+    # and vanish -- an in-flight branch nobody can see.
+    broken = (
+        "## In flight\n\n| Order | Branch | Agent | PR | Base | State | Updated |\n" + ROW
+    )
+    rows, problems = check.parse_register(broken)
+    assert any("no '| --- |' separator" in item for item in problems)
+    assert [row.branch for row in rows] == ["cursor/do015-next-ab12"]
+
+
+def test_findings_print_on_a_console_that_is_not_utf8() -> None:
+    # The register is written with em dashes, and this repository already has a
+    # script that fails in CI for printing a character cp437 cannot encode.
+    rows, _ = check.parse_register(HEADER + ROW.replace("#40", "not-a-pr"))
+    problems = check.validate_rows(rows)
+    assert problems
+    for problem in problems:
+        rendered = check._ascii(f"FAIL  {problem}")
+        rendered.encode("cp437")  # raises if a finding is unprintable
+        rendered.encode("ascii")
