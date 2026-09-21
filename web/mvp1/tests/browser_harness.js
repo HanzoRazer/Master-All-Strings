@@ -188,16 +188,17 @@ export function createFetch(routes = {}) {
     const path = String(url);
     const body = init.body ? JSON.parse(init.body) : null;
     calls.push({ method, path, body });
+    const route = lookup(method, path);
     // Lesson artifacts, score projections and anchors come off disk exactly as
-    // served, so the page loads the repository's own lessons.
-    if (!path.startsWith("/")) {
+    // served, so the page loads the repository's own lessons. A route wins over
+    // disk, which is how a test serves the same lesson at another revision.
+    if (route === undefined && !path.startsWith("/")) {
       try {
         return jsonResponse(JSON.parse(repoFile(`../${path.replace(/^\.\//, "")}`)));
       } catch {
         return jsonResponse({ error: `no such artifact ${path}` }, { status: 404 });
       }
     }
-    const route = lookup(method, path);
     if (route === undefined) {
       return jsonResponse({ error: `unrouted ${method} ${path}` }, { status: 404 });
     }
@@ -214,6 +215,7 @@ export function createFetch(routes = {}) {
     to: (method, prefix) =>
       calls.filter((call) => call.method === method && call.path.startsWith(prefix)),
     route: (key, value) => table.set(key, value),
+    unroute: (key) => table.delete(key),
   };
 }
 

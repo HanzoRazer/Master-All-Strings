@@ -334,7 +334,21 @@ function resultsRenderOptions() {
   };
 }
 
+/**
+ * Render every guided surface from current state.
+ *
+ * The panel, the history region and the controls read the same session through
+ * one function so they cannot be refreshed apart from each other -- which is
+ * how a live Apply button ends up next to an empty history.
+ */
 function syncDispositionUi() {
+  renderResultsPanel(
+    $("resultsPanel"),
+    state.lastEvaluation,
+    guidedSessions.activeSession,
+    state.executionDiagnostics,
+    resultsRenderOptions(),
+  );
   applyDispositionControls(
     {
       accept: $("btnAcceptGuidance"),
@@ -345,15 +359,6 @@ function syncDispositionUi() {
     guidedSessions.activeSession,
     state.executionDiagnostics,
   );
-  if (state.lastEvaluation) {
-    renderResultsPanel(
-      $("resultsPanel"),
-      state.lastEvaluation,
-      guidedSessions.activeSession,
-      state.executionDiagnostics,
-      resultsRenderOptions(),
-    );
-  }
 }
 
 document.querySelectorAll(".workflow-step").forEach((button) => {
@@ -490,9 +495,13 @@ function applySessionArtifacts(payload, playback, practice) {
     assignmentId: playback.assignment_id,
     contentId: playback.content_id,
   });
+  // The loaded revision is not known yet -- the score views resolve it after
+  // this returns -- so the context carries none, and a session recorded against
+  // some revision of this lesson stays inert until that agreement is proven.
   guidedSessions.setLessonContext({
     assignmentId: playback.assignment_id,
     contentId: playback.content_id,
+    canonicalRevisionId: null,
   });
   educationApi
     .beginLesson({
@@ -509,18 +518,9 @@ function applySessionArtifacts(payload, playback, practice) {
   // service to transition it; if that failed, the record stays and the lesson
   // pin above keeps it from acting on this lesson.
   //
-  // The history renders from the active session rather than from nothing: a
-  // session that still belongs to the lesson being loaded -- a reload, or a
-  // return to a lesson whose transition never went through -- has attempts the
-  // controls can act on, and the panel has to agree with the controls about
-  // whether they exist.
-  renderResultsPanel(
-    $("resultsPanel"),
-    null,
-    guidedSessions.activeSession,
-    null,
-    resultsRenderOptions(),
-  );
+  // Every guided surface is drawn from the active session, so a session that
+  // still belongs to the lesson being loaded shows its attempts, and one that
+  // does not shows nothing and drives nothing.
   syncDispositionUi();
   renderer.setFocusRange(null);
   clearError();
@@ -663,21 +663,6 @@ async function loadSession(paths) {
       status: "FAILED",
       error: transitionError.message || String(transitionError),
     };
-    // Render again so the failure reaches the results panel. The status line is
-    // not enough on its own: the lesson picker overwrites it with "Loaded ..."
-    // the moment this returns, and the guided session would be left stale with
-    // nothing on screen saying so.
-    renderResultsPanel(
-      $("resultsPanel"),
-      state.lastEvaluation,
-      guidedSessions.activeSession,
-      state.executionDiagnostics,
-      resultsRenderOptions(),
-    );
-    const message =
-      transitionError.message || "Guided session could not be transitioned";
-    $("statusLine").textContent = message;
-    $("resultsStatus").textContent = message;
   }
   // The demo id comes from the payload the exporter stamped, not from a
   // parameter. It was a parameter first, and the lesson-change handler forgot to
@@ -685,6 +670,28 @@ async function loadSession(paths) {
   // other surface reloaded. Reading it from the applied payload means no call
   // site can omit it.
   await loadScoreViews(state.payload?.demo_id ?? null);
+  // Now the loaded revision is known. It is the same value an evaluation pins a
+  // session to -- scoreView.revisionId is what the evaluate request carries --
+  // so completing the pin here is what decides whether a preserved session is
+  // this lesson's. Rendering again is part of the same answer: the controls and
+  // the history must not disagree about it.
+  guidedSessions.setLessonContext({
+    assignmentId: state.playback?.assignment_id,
+    contentId: state.playback?.content_id,
+    canonicalRevisionId: scoreView.revisionId,
+  });
+  syncDispositionUi();
+  if (transitionError) {
+    // Said last, and in two places. The disposition controls own the results
+    // line and would blank it, and the lesson picker overwrites the status line
+    // with "Loaded ..." as soon as this returns -- so the panel's own history
+    // region, drawn from state.progressionDiagnostics just above, is what
+    // actually keeps the failure on screen.
+    const message =
+      transitionError.message || "Guided session could not be transitioned";
+    $("statusLine").textContent = message;
+    $("resultsStatus").textContent = message;
+  }
 }
 
 async function loadInitialSession() {
@@ -891,13 +898,6 @@ $("btnStopAttempt").addEventListener("click", async () => {
         error: sessionError.message || String(sessionError),
       };
     }
-    renderResultsPanel(
-      $("resultsPanel"),
-      evaluation,
-      guidedSessions.activeSession,
-      state.executionDiagnostics,
-      resultsRenderOptions(),
-    );
     syncDispositionUi();
     if (state.progressionDiagnostics) {
       // Said last, because the disposition controls own this line and would

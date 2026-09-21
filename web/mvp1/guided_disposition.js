@@ -204,9 +204,21 @@ export class GuidedSessionController {
     return this.session;
   }
 
-  /** Pin the controller to the lesson currently loaded in the browser. */
-  setLessonContext({ assignmentId, contentId } = {}) {
-    this.lessonContext = { assignmentId, contentId };
+  /**
+   * Pin the controller to the lesson currently loaded in the browser.
+   *
+   * All three pins matter, and the canonical revision is the one that is easy
+   * to leave out: a session belongs to the revision its evidence was evaluated
+   * against, so the same assignment and content at a different revision is a
+   * different lesson as far as this session is concerned.
+   *
+   * `canonicalRevisionId` is null while the loaded revision is still being
+   * resolved. That is not "any revision will do" -- a session carrying a
+   * revision cannot match an unresolved context, so it stays inert until the
+   * revision is known to agree.
+   */
+  setLessonContext({ assignmentId, contentId, canonicalRevisionId = null } = {}) {
+    this.lessonContext = { assignmentId, contentId, canonicalRevisionId };
     return this.lessonContext;
   }
 
@@ -214,14 +226,20 @@ export class GuidedSessionController {
    * The session that belongs to the lesson on screen, or null.
    *
    * `session` stays as the server last returned it; `activeSession` is what may
-   * drive learner controls. They differ only when a lesson switch could not be
-   * transitioned: the record survives, but it does not act on another lesson.
+   * drive learner controls. They differ when a lesson switch could not be
+   * transitioned, and when the lesson on screen is not the one the session was
+   * recorded against: the record survives either way, but it acts on nothing.
+   *
+   * This is the same boundary the append path enforces, applied earlier. An
+   * append against the wrong revision is refused by the service; a control the
+   * learner can press against the wrong revision should never have been live.
    */
   get activeSession() {
     if (!this.session || !this.lessonContext) return this.session;
-    const { assignmentId, contentId } = this.lessonContext;
+    const { assignmentId, contentId, canonicalRevisionId } = this.lessonContext;
     return this.session.assignment_id === assignmentId &&
-      this.session.content_id === contentId
+      this.session.content_id === contentId &&
+      (this.session.canonical_revision_id ?? null) === (canonicalRevisionId ?? null)
       ? this.session
       : null;
   }
@@ -318,15 +336,19 @@ export class GuidedSessionController {
   }
 
   async recordDisposition(disposition) {
-    if (!canRecordDisposition(this.session)) return this.session;
-    this.session = await this.api.recordDisposition(this.session.session_id, disposition);
+    // Through activeSession, so a session the loaded lesson does not own cannot
+    // be answered here either. One rule about what may act, not two.
+    const session = this.activeSession;
+    if (!canRecordDisposition(session)) return this.session;
+    this.session = await this.api.recordDisposition(session.session_id, disposition);
     return this.session;
   }
 
   async recordExecution(executionStatus, executedAction) {
-    if (!canApplyGuidedAction(this.session)) return this.session;
+    const session = this.activeSession;
+    if (!canApplyGuidedAction(session)) return this.session;
     this.session = await this.api.recordExecution(
-      this.session.session_id,
+      session.session_id,
       executionStatus,
       executedAction,
     );

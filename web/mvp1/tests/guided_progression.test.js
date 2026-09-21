@@ -8,6 +8,7 @@ import {
   GuidedSessionController,
   canApplyGuidedAction,
   canRecordDisposition,
+  dispositionControlState,
   guidedSessionPinMismatch,
   isTerminalSession,
 } from "../guided_disposition.js";
@@ -592,4 +593,93 @@ test("the browser keeps no lifecycle rules of its own", () => {
     assert.doesNotMatch(code, /attempts\.push\(/);
     assert.doesNotMatch(code, /current_attempt_index\s*=[^=]/);
   }
+});
+
+test("a session from another revision of the same lesson is not actionable", async () => {
+  const api = fakeApi();
+  const controller = controllerWith(api, {
+    seed: session({ status: "AWAITING_ACTION" }),
+  });
+  controller.setLessonContext({
+    assignmentId: ASSIGNMENT,
+    contentId: CONTENT,
+    canonicalRevisionId: "revision-do015-002",
+  });
+
+  // The record is kept. It is simply not this lesson's.
+  assert.notEqual(controller.session, null);
+  assert.equal(controller.session.canonical_revision_id, REVISION);
+  assert.equal(controller.activeSession, null);
+  assert.equal(canRecordDisposition(controller.activeSession), false);
+  assert.equal(canApplyGuidedAction(controller.activeSession), false);
+  const controls = dispositionControlState(controller.activeSession);
+  assert.equal(controls.acceptEnabled, false);
+  assert.equal(controls.declineEnabled, false);
+  assert.equal(controls.applyDisabled, true);
+  assert.equal(controls.applyHidden, true);
+
+  // And nothing can be recorded against it while the loaded revision differs.
+  await controller.recordDisposition("ACCEPTED");
+  await controller.recordExecution("SUCCEEDED", { action_type: "slow_down" });
+  await assert.rejects(() =>
+    controller.syncFromEvaluation(
+      evidence(1, { guidance: { canonical_revision_id: "revision-do015-002" } }),
+    ),
+  );
+  assert.deepEqual(api.ops(), []);
+});
+
+test("the preserved session becomes actionable again at its own revision", async () => {
+  const api = fakeApi();
+  const controller = controllerWith(api, {
+    seed: session({ status: "AWAITING_ACTION" }),
+  });
+  const recorded = JSON.stringify(controller.session);
+  controller.setLessonContext({
+    assignmentId: ASSIGNMENT,
+    contentId: CONTENT,
+    canonicalRevisionId: "revision-do015-002",
+  });
+  assert.equal(controller.activeSession, null);
+
+  controller.setLessonContext({
+    assignmentId: ASSIGNMENT,
+    contentId: CONTENT,
+    canonicalRevisionId: REVISION,
+  });
+  assert.equal(controller.activeSession, controller.session);
+  assert.equal(JSON.stringify(controller.session), recorded);
+  assert.equal(canRecordDisposition(controller.activeSession), true);
+  await controller.recordDisposition("ACCEPTED");
+  assert.deepEqual(api.ops(), ["disposition"]);
+});
+
+test("an unresolved revision leaves a recorded session inert until it agrees", () => {
+  const controller = controllerWith(fakeApi(), {
+    seed: session({ status: "AWAITING_ACTION" }),
+  });
+  // What the browser holds between loading a lesson and resolving its score
+  // revision. Unknown is not "any": the session waits.
+  controller.setLessonContext({ assignmentId: ASSIGNMENT, contentId: CONTENT });
+  assert.equal(controller.activeSession, null);
+  controller.setLessonContext({
+    assignmentId: ASSIGNMENT,
+    contentId: CONTENT,
+    canonicalRevisionId: REVISION,
+  });
+  assert.equal(controller.activeSession, controller.session);
+});
+
+test("a session with no revision pin matches a lesson with none either", () => {
+  const controller = controllerWith(fakeApi(), {
+    seed: session({ status: "AWAITING_ACTION", canonical_revision_id: null }),
+  });
+  controller.setLessonContext({ assignmentId: ASSIGNMENT, contentId: CONTENT });
+  assert.equal(controller.activeSession, controller.session);
+  controller.setLessonContext({
+    assignmentId: ASSIGNMENT,
+    contentId: CONTENT,
+    canonicalRevisionId: REVISION,
+  });
+  assert.equal(controller.activeSession, null);
 });

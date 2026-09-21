@@ -468,7 +468,13 @@ lesson switch         LocalGuidedSessionApi.transition() →
 
 lesson pin            controller.session is the record;
                       controller.activeSession is what may drive controls,
-                      and is null when the record belongs to another lesson
+                      and is null when the record belongs to another lesson --
+                      assignment, content AND canonical revision, the same
+                      three pins the append path enforces
+                      an unresolved revision (null) does not match a session
+                      that carries one: the context completes only when
+                      loadScoreViews resolves scoreView.revisionId, which is
+                      the value an evaluation pins a session to
 
 identity pin          evidence whose assignment_id / content_id /
                       canonical_revision_id disagrees with the session is
@@ -527,10 +533,30 @@ nothing, so a lesson whose session is still open -- a reload, or a return after
 a failed transition -- does not show an empty history while its Apply control
 is live.
 
+### Revision pinning
+
+Review of `0a9e5ab` found `activeSession` pinned on assignment and content
+only, while the append path pinned all three. The same lesson re-cut at a new
+canonical revision therefore left the old session actionable: the append would
+be refused later, correctly, but the controls should never have been live.
+
+Both now pin the same three fields. `setLessonContext` carries
+`canonicalRevisionId`, and `activeSession` compares it strictly -- including
+null, so an unresolved revision does not match a session that has one. The
+browser only learns the loaded revision when `loadScoreViews` resolves
+`scoreView.revisionId` (the value the evaluate request carries, hence the
+session's own pin), so `applySessionArtifacts` pins the lesson with no revision
+and `loadSession` completes the pin afterwards and renders again. The window in
+between fails closed.
+
+`GuidedSessionController.recordDisposition` and `recordExecution` now read
+`activeSession` too, so the pin holds whichever entry point is used rather than
+only through `app.js`'s handlers.
+
 ### Verification (local, Python 3.11, matching CI)
 
 ```text
-Node tests                    477 passed  (400 at stage7_base + 77 new)
+Node tests                    483 passed  (400 at stage7_base + 83 new)
   web/mvp1/tests/*.test.js
 full pytest                   2784 passed, 3 skipped, 2 failed
 coverage                      95.61%  (floor 95%)

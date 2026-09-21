@@ -14,7 +14,9 @@
  */
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { createFetch, failWith, installBrowserGlobals, waitFor } from "./browser_harness.js";
 
@@ -189,6 +191,35 @@ async function performAttempt() {
   await el("btnStopAttempt").fire("click");
 }
 
+const artifact = (path) =>
+  JSON.parse(readFileSync(fileURLToPath(new URL(`../${path}`, import.meta.url)), "utf-8"));
+
+/**
+ * Serve one lesson's score at a different canonical revision.
+ *
+ * All three files have to agree or the score coordinator refuses the lesson
+ * outright, which would prove nothing about pinning.
+ */
+function serveRevision(demoId, revisionId) {
+  const revision = { ...artifact(`projections/${demoId}/canonical_revision.json`) };
+  revision.revision_id = revisionId;
+  net.route(`GET projections/${demoId}/canonical_revision.json`, revision);
+  for (const kind of ["tab", "notation"]) {
+    const envelope = artifact(`projections/${demoId}/${kind}.json`);
+    net.route(`GET projections/${demoId}/${kind}.json`, {
+      ...envelope,
+      canonical_revision_id: revisionId,
+      payload: { ...envelope.payload, canonical_revision_id: revisionId },
+    });
+  }
+}
+
+function serveOriginalRevision(demoId) {
+  for (const name of ["canonical_revision", "tab", "notation"]) {
+    net.unroute(`GET projections/${demoId}/${name}.json`);
+  }
+}
+
 async function switchLessonTo(demoId) {
   el("demoSelect").value = demoId;
   await el("demoSelect").fire("change", { target: el("demoSelect") });
@@ -326,4 +357,52 @@ test("once the transition succeeds the old session retires and the next lesson s
 test.after(() => {
   app.scheduler.stop();
   env.restore();
+});
+
+test("the same lesson at another canonical revision is not the session's lesson", async () => {
+  const session = app.guidedSessions.session;
+  // The pin under test has to be a real revision, or this proves nothing.
+  assert.match(session.canonical_revision_id, /^rev-[0-9a-f]+$/);
+  assert.equal(app.guidedSessions.activeSession, session);
+  assert.equal(el("btnAcceptGuidance").disabled, false);
+  const recorded = JSON.stringify(session);
+  const guidedPosts = () =>
+    net.calls.filter(
+      (call) => call.method === "POST" && call.path.startsWith("/api/education/guided-sessions"),
+    ).length;
+  const postsBefore = guidedPosts();
+
+  // The lesson is re-cut: same assignment, same content, new revision.
+  serveRevision(LESSON_B, "rev-0000000000000000second0cut");
+  await switchLessonTo(LESSON_B);
+
+  assert.equal(app.state.playback.content_id, LESSON_B);
+  assert.equal(JSON.stringify(app.guidedSessions.session), recorded);
+  assert.equal(app.guidedSessions.activeSession, null);
+  assert.equal(el("btnAcceptGuidance").disabled, true);
+  assert.equal(el("btnDeclineGuidance").disabled, true);
+  assert.equal(el("btnApplyPrimary").hidden, true);
+  assert.equal(el("btnApplyPrimary").disabled, true);
+  assert.equal(el("guidedSessionHistory").dataset.attemptCount, "0");
+
+  // Pressing them anyway records nothing: the guard is the session, not the
+  // disabled attribute.
+  await el("btnAcceptGuidance").fire("click");
+  await el("btnDeclineGuidance").fire("click");
+  await el("btnApplyPrimary").fire("click");
+  assert.equal(guidedPosts(), postsBefore);
+  assert.equal(appendCalls().length, 0);
+  assert.equal(JSON.stringify(app.guidedSessions.session), recorded);
+});
+
+test("restoring the lesson's own revision hands the preserved session back", async () => {
+  const recorded = JSON.stringify(app.guidedSessions.session);
+  serveOriginalRevision(LESSON_B);
+  await switchLessonTo(LESSON_B);
+
+  assert.equal(app.guidedSessions.activeSession, app.guidedSessions.session);
+  assert.equal(JSON.stringify(app.guidedSessions.session), recorded);
+  assert.equal(el("btnAcceptGuidance").disabled, false);
+  assert.equal(el("guidedSessionHistory").dataset.attemptCount, "1");
+  assert.equal(appendCalls().length, 0);
 });
