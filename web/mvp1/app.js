@@ -20,6 +20,7 @@ import {
   applyDispositionControls,
   canRecordDisposition,
   createGuidanceDispositionHandler,
+  currentAttempt,
 } from "./guided_disposition.js";
 import { createGuidedApplyHandler } from "./guided-action-executor.js";
 import { focusRangeFromEvaluation, renderResultsPanel } from "./results.js";
@@ -52,6 +53,7 @@ const state = {
   stage: "lesson",
   lastEvaluation: null,
   executionDiagnostics: null,
+  progressionDiagnostics: null,
 };
 
 const transport = new Transport();
@@ -97,13 +99,13 @@ const guidedSessions = new GuidedSessionController({
 });
 const recordGuidanceDisposition = createGuidanceDispositionHandler({
   guidedSessionApi: guidedSessions.api,
-  getSessionId: () => guidedSessions.session?.session_id ?? null,
+  getSessionId: () => guidedSessions.activeSession?.session_id ?? null,
   onResolved: (_disposition, session) => {
     guidedSessions.session = session;
   },
 });
 const applyAcceptedRecommendation = createGuidedApplyHandler({
-  getSession: () => guidedSessions.session,
+  getSession: () => guidedSessions.activeSession,
   setSession: (session) => {
     guidedSessions.session = session;
   },
@@ -323,6 +325,15 @@ function setStage(stage) {
   // Status is always visible.
 }
 
+/** Options every results render shares: where history mounts, and why it may
+ * be showing one attempt fewer than the learner just played. */
+function resultsRenderOptions() {
+  return {
+    historyContainer: $("guidedSessionHistory"),
+    appendError: state.progressionDiagnostics,
+  };
+}
+
 function syncDispositionUi() {
   applyDispositionControls(
     {
@@ -331,15 +342,16 @@ function syncDispositionUi() {
       apply: $("btnApplyPrimary"),
       status: $("resultsStatus"),
     },
-    guidedSessions.session,
+    guidedSessions.activeSession,
     state.executionDiagnostics,
   );
   if (state.lastEvaluation) {
     renderResultsPanel(
       $("resultsPanel"),
       state.lastEvaluation,
-      guidedSessions.session,
+      guidedSessions.activeSession,
       state.executionDiagnostics,
+      resultsRenderOptions(),
     );
   }
 }
@@ -478,6 +490,10 @@ function applySessionArtifacts(payload, playback, practice) {
     assignmentId: playback.assignment_id,
     contentId: playback.content_id,
   });
+  guidedSessions.setLessonContext({
+    assignmentId: playback.assignment_id,
+    contentId: playback.content_id,
+  });
   educationApi
     .beginLesson({
       assignment_id: playback.assignment_id,
@@ -488,8 +504,11 @@ function applySessionArtifacts(payload, playback, practice) {
     });
   state.lastEvaluation = null;
   state.executionDiagnostics = null;
-  guidedSessions.reset();
-  renderResultsPanel($("resultsPanel"), null);
+  state.progressionDiagnostics = null;
+  // The guided session is not cleared here. loadSession has already asked the
+  // service to transition it; if that failed, the record stays and the lesson
+  // pin above keeps it from acting on this lesson.
+  renderResultsPanel($("resultsPanel"), null, null, null, resultsRenderOptions());
   syncDispositionUi();
   renderer.setFocusRange(null);
   clearError();
@@ -610,7 +629,33 @@ function sessionPathsForDemo(demoId) {
 
 async function loadSession(paths) {
   const artifacts = await Promise.all(paths.map((path) => loadJson(path)));
+  // A lesson switch ends an open guided session through the Stage 4 transition
+  // route -- the service decides what TRANSITIONED means, not this code. The
+  // request goes first so the old session is terminal before the new lesson
+  // exists. A failure is reported after the lesson loads, because the load
+  // itself writes the status line.
+  const [, playback] = artifacts;
+  let transitionError = null;
+  try {
+    await guidedSessions.transitionForLessonChange({
+      nextAssignmentId: playback?.assignment_id,
+      nextContentId: playback?.content_id,
+    });
+  } catch (error) {
+    transitionError = error;
+  }
   applySessionArtifacts(...artifacts);
+  if (transitionError) {
+    state.progressionDiagnostics = {
+      phase: "transition",
+      status: "FAILED",
+      error: transitionError.message || String(transitionError),
+    };
+    const message =
+      transitionError.message || "Guided session could not be transitioned";
+    $("statusLine").textContent = message;
+    $("resultsStatus").textContent = message;
+  }
   // The demo id comes from the payload the exporter stamped, not from a
   // parameter. It was a parameter first, and the lesson-change handler forgot to
   // pass it -- so switching lessons left the score views unloaded while every
@@ -807,23 +852,36 @@ $("btnStopAttempt").addEventListener("click", async () => {
     });
     state.lastEvaluation = evaluation;
     state.executionDiagnostics = null;
+    state.progressionDiagnostics = null;
     try {
       await guidedSessions.syncFromEvaluation({
         evaluation: evaluation.evaluation,
         guidance: evaluation.guidance,
       });
     } catch (sessionError) {
-      guidedSessions.reset();
-      $("resultsStatus").textContent =
-        sessionError.message || "Guided session could not be created";
+      // A rejected append must not cost the learner the attempts the server
+      // already holds. Only a failed first creation leaves nothing to keep.
+      if (sessionError.sessionPreserved === false) guidedSessions.reset();
+      state.progressionDiagnostics = {
+        phase: sessionError.phase || "append",
+        status: "FAILED",
+        error: sessionError.message || String(sessionError),
+      };
     }
     renderResultsPanel(
       $("resultsPanel"),
       evaluation,
-      guidedSessions.session,
+      guidedSessions.activeSession,
       state.executionDiagnostics,
+      resultsRenderOptions(),
     );
     syncDispositionUi();
+    if (state.progressionDiagnostics) {
+      // Said last, because the disposition controls own this line and would
+      // otherwise report the previous attempt's state as if nothing failed.
+      $("resultsStatus").textContent =
+        state.progressionDiagnostics.error || "Guided attempt was not recorded";
+    }
     presentTeachingGuidance({
       coordinator: scoreView,
       renderer,
@@ -843,7 +901,7 @@ $("btnStopAttempt").addEventListener("click", async () => {
 });
 $("btnFakeMidi").addEventListener("click", () => midiInput.emitFakeScale());
 async function recordLearnerDisposition(disposition) {
-  if (!canRecordDisposition(guidedSessions.session)) return;
+  if (!canRecordDisposition(guidedSessions.activeSession)) return;
   try {
     await recordGuidanceDisposition(disposition);
     syncDispositionUi();
@@ -999,15 +1057,24 @@ window.__masDiagnostics = {
     tabDigest: scoreView.tabDigest,
     notationDigest: scoreView.notationDigest,
     canonicalRevisionId: scoreView.revisionId,
-    guidedSessionId: guidedSessions.session?.session_id ?? null,
+    guidedSessionId: guidedSessions.activeSession?.session_id ?? null,
+    guidedSessionStatus: guidedSessions.activeSession?.status ?? null,
+    guidedAttemptCount: guidedSessions.activeSession?.attempts?.length ?? 0,
+    currentAttemptIndex:
+      guidedSessions.activeSession?.current_attempt_index ?? null,
+    currentAttemptId: currentAttempt(guidedSessions.activeSession)?.attempt_id ?? null,
+    guidedAttemptIds: (guidedSessions.activeSession?.attempts ?? []).map(
+      (attempt) => attempt.attempt_id,
+    ),
+    transitionedSessionId: guidedSessions.terminalSession?.session_id ?? null,
+    transitionedSessionStatus: guidedSessions.terminalSession?.status ?? null,
+    lastProgressionPhase: state.progressionDiagnostics?.phase ?? null,
+    lastAppendStatus: state.progressionDiagnostics?.status ?? null,
+    lastAppendError: state.progressionDiagnostics?.error ?? null,
     actionDisposition:
-      guidedSessions.session?.attempts?.[
-        guidedSessions.session.current_attempt_index ?? 0
-      ]?.action?.action_disposition ?? null,
+      currentAttempt(guidedSessions.activeSession)?.action?.action_disposition ?? null,
     executionStatus:
-      guidedSessions.session?.attempts?.[
-        guidedSessions.session.current_attempt_index ?? 0
-      ]?.action?.execution_status ?? null,
+      currentAttempt(guidedSessions.activeSession)?.action?.execution_status ?? null,
     executionRequestedAction: state.executionDiagnostics?.requestedAction ?? null,
     executionRuntimeStatus: state.executionDiagnostics?.runtimeStatus ?? null,
     executionEvidenceStatus: state.executionDiagnostics?.evidenceStatus ?? null,
