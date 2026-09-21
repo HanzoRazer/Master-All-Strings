@@ -36,6 +36,13 @@ function evaluationPayload() {
   };
 }
 
+/** Render the panel and its history together, as the app does. */
+function renderGuidedHistoryVia(root, history, session) {
+  renderResultsPanel(root, evaluationPayload(), session, null, {
+    historyContainer: history,
+  });
+}
+
 test("results keep recommendation separate from accepted disposition", () => {
   const root = stubElement();
   renderResultsPanel(root, evaluationPayload(), {
@@ -150,4 +157,67 @@ test("declined results do not claim the action was applied", () => {
     ],
   });
   assert.match(root.children[0].innerHTML, /Declined\. The recommendation was not applied/);
+});
+
+test("the results panel mounts the guided history beside the evaluation", () => {
+  const root = stubElement();
+  const history = stubElement();
+  renderGuidedHistoryVia(root, history, {
+    session_id: "session-results",
+    status: "AWAITING_ACTION",
+    current_attempt_index: 1,
+    attempts: [
+      {
+        attempt_id: "attempt-0",
+        action: {
+          recommended_action: { action_type: "slow_down" },
+          action_disposition: "ACCEPTED",
+          execution_status: "SUCCEEDED",
+          executed_action: { action_type: "slow_down" },
+        },
+      },
+      {
+        attempt_id: "attempt-1",
+        action: {
+          recommended_action: { action_type: "repeat" },
+          action_disposition: "PENDING",
+          execution_status: "NOT_REQUESTED",
+        },
+      },
+    ],
+  });
+  assert.equal(history.dataset.attemptCount, "2");
+  assert.equal(history.dataset.sessionId, "session-results");
+  const list = history.children.find((node) => node.className === "guided-history");
+  assert.equal(list.children.length, 2);
+  assert.equal(list.children[0].dataset.current, "false");
+  assert.equal(list.children[1].dataset.current, "true");
+});
+
+test("a lesson with no evaluation clears the guided history with it", () => {
+  const root = stubElement();
+  const history = stubElement();
+  renderGuidedHistoryVia(root, history, {
+    session_id: "session-results",
+    status: "AWAITING_ACTION",
+    current_attempt_index: 0,
+    attempts: [{ attempt_id: "attempt-0", action: {} }],
+  });
+  assert.equal(history.dataset.attemptCount, "1");
+  // The results panel returns early for a missing evaluation; the history must
+  // still be cleared, or the previous lesson's attempts stay on screen.
+  renderResultsPanel(root, null, null, null, { historyContainer: history });
+  assert.equal(history.dataset.attemptCount, "0");
+  assert.equal(history.dataset.sessionId, undefined);
+  assert.equal(root.textContent, "No practice evaluation yet.");
+});
+
+test("an unrecorded attempt is surfaced through the results render", () => {
+  const root = stubElement();
+  const history = stubElement();
+  renderResultsPanel(root, evaluationPayload(), null, null, {
+    historyContainer: history,
+    appendError: { phase: "append", status: "FAILED", error: "append rejected" },
+  });
+  assert.equal(history.dataset.appendStatus, "FAILED");
 });
