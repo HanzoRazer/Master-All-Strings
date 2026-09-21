@@ -495,10 +495,42 @@ Browser diagnostics gained `guidedSessionStatus`, `guidedAttemptCount`,
 `transitionedSessionId`, `transitionedSessionStatus`, `lastProgressionPhase`,
 `lastAppendStatus`, and `lastAppendError`. They are observational.
 
+### Whole-page coverage of the lesson-switch failure
+
+`tests/guided_lesson_switch_browser.test.js` boots `app.js` itself against
+`tests/browser_harness.js` -- minted DOM elements, the repository's own lesson
+artifacts off disk, and a routed `fetch` -- and drives the page through its own
+controls with the deterministic `?fakeMidi=1` input: Arm, Start, perform, Stop,
+Accept, then the lesson picker.
+
+It covers the path no module-level test can see, where the preserved session and
+what the page shows can disagree:
+
+```text
+attempt on lesson A  → session AWAITING_ACTION, Accept → ACCEPTED/PENDING
+lesson switch to B   → transition POST fails
+                       session preserved, byte-identical, still pinned to A
+                       activeSession null; Accept/Decline/Apply inert
+                       history empty for B and carries the failure notice
+                       zero /attempts requests
+attempt on B         → refused at the pin; no append, no create, A untouched
+return to A          → the preserved session is the learner's again, and the
+                       history shows its attempt because the controls act on it
+switch to B (ok)     → A → TRANSITIONED; B's first attempt creates its own
+```
+
+Two fixes came out of writing it. The lesson picker overwrites the status line
+with `Loaded <lesson>` as soon as `loadSession` returns, so the transition
+failure is rendered into the results panel and not left to that line alone. And
+`applySessionArtifacts` renders history from `activeSession` rather than from
+nothing, so a lesson whose session is still open -- a reload, or a return after
+a failed transition -- does not show an empty history while its Apply control
+is live.
+
 ### Verification (local, Python 3.11, matching CI)
 
 ```text
-Node tests                    471 passed  (400 at stage7_base + 71 new)
+Node tests                    477 passed  (400 at stage7_base + 77 new)
   web/mvp1/tests/*.test.js
 full pytest                   2784 passed, 3 skipped, 2 failed
 coverage                      95.61%  (floor 95%)

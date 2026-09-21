@@ -508,7 +508,19 @@ function applySessionArtifacts(payload, playback, practice) {
   // The guided session is not cleared here. loadSession has already asked the
   // service to transition it; if that failed, the record stays and the lesson
   // pin above keeps it from acting on this lesson.
-  renderResultsPanel($("resultsPanel"), null, null, null, resultsRenderOptions());
+  //
+  // The history renders from the active session rather than from nothing: a
+  // session that still belongs to the lesson being loaded -- a reload, or a
+  // return to a lesson whose transition never went through -- has attempts the
+  // controls can act on, and the panel has to agree with the controls about
+  // whether they exist.
+  renderResultsPanel(
+    $("resultsPanel"),
+    null,
+    guidedSessions.activeSession,
+    null,
+    resultsRenderOptions(),
+  );
   syncDispositionUi();
   renderer.setFocusRange(null);
   clearError();
@@ -651,6 +663,17 @@ async function loadSession(paths) {
       status: "FAILED",
       error: transitionError.message || String(transitionError),
     };
+    // Render again so the failure reaches the results panel. The status line is
+    // not enough on its own: the lesson picker overwrites it with "Loaded ..."
+    // the moment this returns, and the guided session would be left stale with
+    // nothing on screen saying so.
+    renderResultsPanel(
+      $("resultsPanel"),
+      state.lastEvaluation,
+      guidedSessions.activeSession,
+      state.executionDiagnostics,
+      resultsRenderOptions(),
+    );
     const message =
       transitionError.message || "Guided session could not be transitioned";
     $("statusLine").textContent = message;
