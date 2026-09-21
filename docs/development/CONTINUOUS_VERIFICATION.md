@@ -23,6 +23,15 @@ in the pull-request checks interface. The workflow fails if any gate fails.
 | mypy strict | `mypy` | Strict-mode type checking over `src`. Strictness is enabled in `[tool.mypy]`, so no CLI flag is passed. Tests are not in scope. |
 | pytest with coverage | `pytest --cov --cov-report=term-missing` | The full suite — including golden-vector and schema validation, which run inside pytest — and a repository-wide coverage floor. |
 
+### Proposed, not yet a gate
+
+`python scripts/check_in_flight.py` reconciles `docs/development/IN_FLIGHT.md`
+against the open pull requests and the branches on `origin`. It is not in the
+workflow: `.github/workflows/verify.yml` is a deferred-hygiene path frozen by
+DO-012A, and `scripts/verify_do012a_publication.py` enforces that mechanically.
+Adding the step needs an owner ruling, so for now agents run it themselves
+before pushing.
+
 ## Coverage policy
 
 The floor is **95%**, repository-wide, defined once in `pyproject.toml`:

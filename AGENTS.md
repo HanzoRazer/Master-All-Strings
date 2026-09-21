@@ -76,15 +76,28 @@ cut from unmerged work it drops that work without saying so.
 
 ## Before you start
 
-Check whether an open pull request already touches the surface you are about
-to change:
+Read `docs/development/IN_FLIGHT.md`. It is the register of what every agent is
+working on right now — you cannot see Cursor's conversation and Cursor cannot
+see yours, so that file is the only thing you both read. Then confirm it against
+the repository, because it is only as current as the last person who edited it:
 
 ```bash
+git fetch origin
 gh pr list --state open --json number,title,headRefName,files
 ```
 
-If one does, say so and stop rather than implementing the same order twice.
-Nothing will catch this for you.
+If a register row or an open pull request already covers the surface you are
+about to change, say so and stop rather than implementing the same order twice.
+
+Add your own row in the **first commit on your branch**, before you push, and
+set its state to `green` when the work is finished and the gates pass. Delete
+the row when the pull request merges. `python scripts/check_in_flight.py`
+reconciles the register against the open pull requests and the branches on
+`origin`. Run it before you push. It is not a CI gate: the workflow is a
+deferred-hygiene path frozen by DO-012A, so wiring it in needs an owner ruling.
+
+A register cannot stop two agents colliding. It can only make the collision
+visible before the second one starts.
 
 ## One dev order per branch
 
