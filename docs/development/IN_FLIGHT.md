@@ -12,9 +12,9 @@ row is deleted when the pull request merges.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| In-flight register | docs/in-flight-register | Claude | #33 | 286d5aa | in review | 2026-09-21 |
+| DO-015 Stage 8 | cursor/do015-adversarial-authority-s8a1 | Cursor | — | f4322bf | in flight | 2026-09-21 |
 
-`main` is at `286d5aa` (DO-015 Stage 7, PR #32). DO-015 Stage 8 has not started.
+`main` is at `f4322bf` (PR #33). DO-015 Stage 7 remains merged at `286d5aa`. Stage 8 is adversarial verification only.
 
 ### How to use it
 
