@@ -589,7 +589,133 @@ protected surfaces vs stage7_base_sha    no diff
   web/mvp1/guided-action-executor.js
 ```
 
-Stage 8 has not started.
+## Stage 8 adversarial authority
+
+Stage 8 branches from current `main`, which already contains the Stage 7 merge.
+It adds adversarial verification only. No product file changed. No defect was
+found, so there is no corrective SHA. Stage 9 has not started. Merge, tag, and
+release are not authorized.
+
+```text
+stage7_product_sha = 4eaf71b66d9e8f19c46e002636186b44701855b0
+stage7_merge_sha   = 286d5aa439831ea44ff6e198a8518a45f076b513
+stage8_base_sha    = f4322bf741e52448a7cd36da370dffb9c9efa02d
+Stage 8 branch      = cursor/do015-adversarial-authority-s8a1
+```
+
+`286d5aa` is an ancestor of `stage8_base_sha`. The in-flight register's stale
+PR #33 row was removed in the first commit on this branch.
+
+### Coverage crosswalk
+
+`EXISTING` names the Stage 4–7 test that already locks the cell. `NEW` names
+the Stage 8 test. Nothing in this matrix is `DEFECT`.
+
+| Cell | Result |
+| --- | --- |
+| A1 revision mismatch | EXISTING — `guided_progression.test.js` :: a session from another revision of the same lesson is not actionable |
+| A2 unresolved revision | EXISTING — `guided_progression.test.js` :: an unresolved revision leaves a recorded session inert until it agrees |
+| A3 revision restored | EXISTING — `guided_progression.test.js` :: the preserved session becomes actionable again at its own revision |
+| A4 assignment mismatch | NEW — `guided_authority_adversarial.test.js` :: assignment mismatch alone leaves the session inert |
+| A5 content mismatch | NEW — `guided_authority_adversarial.test.js` :: content mismatch alone leaves the session inert |
+| A6 all three mismatch | NEW — `guided_authority_adversarial.test.js` :: all three pins disagreeing still cannot append or act |
+| B1–B2 accept/decline before pin | NEW — `guided_authority_adversarial.test.js` :: a direct disposition handler cannot bypass an inactive session |
+| B3 double accept | EXISTING — `test_guided_session_api_do015.py` :: test_double_disposition_is_409_and_does_not_mutate |
+| B4 accept then decline | EXISTING — `guided_disposition.test.js` :: a resolved disposition cannot be recorded again |
+| B5 decline then accept | EXISTING — `test_guided_session_service_do015.py` :: test_second_disposition_is_rejected |
+| B6 historical attempt actuation | NEW — `test_guided_session_adversarial_do015.py` :: test_disposition_does_not_rewrite_the_historical_attempt |
+| C1 apply before accept | EXISTING — `guided_apply.test.js` :: Apply is a no-op before acceptance |
+| C2 apply after decline | EXISTING — `guided_apply.test.js` :: declined actions cannot apply |
+| C3 double apply | EXISTING — `guided_apply.test.js` :: a second Apply after final execution does not run runtime or POST; NEW — `guided_authority_adversarial.test.js` :: overlapping Apply calls actuate runtime once |
+| C4 wrong executed action | EXISTING — `test_guided_session_service_do015.py` :: test_executed_action_cannot_hide_a_different_action_type; NEW — `test_guided_session_api_do015.py` :: test_wrong_executed_action_is_409_and_does_not_mutate |
+| C5 unsupported misuse | EXISTING — `test_guided_session_service_do015.py` :: test_continue_unsupported_is_rejected and test_supported_keep_open_actions_reject_unsupported |
+| C6 legitimate unsupported | EXISTING — `guided_action_executor.test.js` :: VIEW_ONE_STRING / ENABLE_ZONE_VIEW are UNSUPPORTED and do not mutate runtime |
+| D1 evidence before runtime | EXISTING — `guided_apply.test.js` :: runtime mutation precedes SUCCEEDED evidence POST. No production hook was added; the executor posts only after `execute` returns |
+| D2 runtime failure | EXISTING — `guided_apply.test.js` :: runtime failure posts FAILED and never SUCCEEDED |
+| D3 runtime success, evidence failure | EXISTING — `guided_apply.test.js` :: runtime success with evidence write failure is reported honestly |
+| D4 no automatic retry | EXISTING — same test; the second Apply does not call the runtime seam again |
+| E1 append while AWAITING_ACTION | EXISTING — `guided_progression.test.js` :: AWAITING_ACTION does not append |
+| E2 append after CLOSED | EXISTING — `test_guided_session_service_do015.py` :: test_append_rejects_awaiting_action_closed_and_transitioned |
+| E3 append after TRANSITIONED | EXISTING — same test |
+| E4 duplicate attempt id | EXISTING — `test_guided_session_api_do015.py` :: test_duplicate_attempt_and_performance_ids_are_409 |
+| E5 duplicate performance id | EXISTING — same test |
+| E6–E8 wrong assignment, content, revision | EXISTING — `test_append_rejects_wrong_assignment_content_and_revision`; NEW — `test_append_rejects_all_three_pins_together_without_mutation` |
+| E9 evaluation/guidance mismatch | NEW — `test_append_rejects_evidence_chain_disagreements_without_mutation` and `test_append_rejects_mismatched_guidance_evidence_without_mutation` |
+| E10 evaluation digest mismatch | NEW — the same append-time evidence-chain test |
+| F1 failed transition, new lesson | EXISTING — `guided_lesson_switch_browser.test.js` :: a lesson switch whose transition fails keeps the session and stands the page down |
+| F2 direct Accept despite disabled control | NEW — `guided_authority_adversarial.test.js` :: a direct disposition handler cannot bypass an inactive session |
+| F3 direct Apply despite hidden control | NEW — `guided_authority_adversarial.test.js` :: a failed transition's preserved session ignores direct learner calls |
+| F4 new lesson performance, stale session | EXISTING — `guided_lesson_switch_browser.test.js` :: the new lesson's attempt is refused rather than recorded on the old session |
+| F5 return to matching lesson | EXISTING — `guided_lesson_switch_browser.test.js` :: returning to the lesson it belongs to hands the preserved session back |
+| G1–G4 DOM / fake current marker | NEW — `guided_authority_adversarial.test.js` :: history DOM tampering does not rewrite the session |
+| G5 malformed historical entry | NEW — `guided_authority_adversarial.test.js` :: a malformed historical attempt renders without becoming actionable |
+| H1 malformed payload | EXISTING — `test_malformed_disposition_is_400` and `test_malformed_and_incomplete_requests_are_400` |
+| H2 unknown session | EXISTING — `test_unknown_session_is_404` |
+| H3 illegal transition | EXISTING — `test_execution_before_acceptance_is_409` |
+| H4 session A, evidence of session B | NEW — `test_path_session_wins_over_a_forged_body_session_id` |
+| H5 replay disposition | EXISTING — `test_double_disposition_is_409_and_does_not_mutate` |
+| H6 replay execution | NEW — `test_replayed_execution_is_409_and_does_not_mutate` |
+| H7 replay append | EXISTING — `test_duplicate_attempt_and_performance_ids_are_409` |
+| H8 conflict leaves the stored session unchanged | EXISTING on the Stage 4 conflict tests; NEW cases above assert `to_dict` equality after 409 |
+| I1 tampered historical digest | EXISTING — `test_guided_session_contract_do015.py` :: test_digest_changes_when_attempt_content_changes |
+| I2 provenance exclusion | EXISTING — `test_digest_ignores_provenance` |
+| I3 semantic action changes digest | EXISTING — `test_digest_changes_when_attempt_content_changes` |
+| I4 fixture integrity | EXISTING — `python scripts/build_guided_session_fixtures.py --check` |
+| J authority imports | EXISTING — `guided_session_history.test.js` :: the history renderer reaches no runtime; NEW — `guided_authority_adversarial.test.js` :: stage 6 and stage 7 presentation modules do not take each other's authority |
+| aborted session | NEW — `test_aborted_session_rejects_append_and_disposition` |
+| client-tampered recommendation | NEW — `guided_authority_adversarial.test.js` :: the server session replaces a locally tampered recommendation |
+| cross-revision page | EXISTING — `guided_lesson_switch_browser.test.js` :: the same lesson at another canonical revision is not the session's lesson |
+
+No whole-page adversarial file was added. The Stage 7 lesson-switch browser
+suite already boots `app.js` for stale lesson and stale revision. The new
+cells are controller, renderer, service, or HTTP tests.
+
+A replay that returns 409 with the stored session unchanged is the fail-closed
+result. Stage 8 does not require a second 200.
+
+### Verification (local, Python 3.11.9)
+
+```text
+Node tests                    493 passed  (483 at the Stage 7 record + 10 new)
+  web/mvp1/tests/*.test.js
+full pytest                   2820 passed, 3 skipped, 2 failed
+coverage                      95.61%  (floor 95%)
+generator --check             PASS
+ruff check src tests          PASS
+mypy (strict, src)            PASS (161 source files)
+defects found                 none
+product corrections           none
+```
+
+The two failures were re-run on a clean worktree of `f4322bf`, with no Stage 8
+files present. Both failed the same way they fail on this branch:
+
+```text
+test_mvp1_lineage_script_passes
+  the lineage script prints → and the shelled-out python3 encodes cp1252
+test_checked_in_bundle_correlates_all_authoritative_semantic_events
+  zone semantic artifact sha256 mismatch on the Windows CRLF checkout
+```
+
+Linux CI remains the authoritative witness for those two. Everything Stage 8
+added is locally green.
+
+```text
+protected surfaces vs stage8_base_sha    no diff
+  src/master_all_strings/education/guided_session.py
+  src/master_all_strings/education/guided_session_service.py
+  src/master_all_strings/education/session_history.py
+  src/master_all_strings/education/guidance.py
+  src/master_all_strings/mvp/guided_session_api.py
+  resources/education/examples/guided_sessions/**
+  governance/engine_architecture_v1.json
+  web/mvp1/transport.js
+  web/mvp1/teaching-timeline.js
+  web/mvp1/practice_actions.js
+  web/mvp1/guided-action-executor.js
+```
+
+Stage 9 has not started.
 
 ## Session status (minimal)
 
