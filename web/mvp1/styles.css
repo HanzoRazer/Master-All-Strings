@@ -718,3 +718,52 @@ input[type="number"] {
 .execution-status[data-execution="UNSUPPORTED"] {
   color: var(--muted);
 }
+
+/* Guided attempt history. Current and historical attempts are distinguished by
+   a border, a weight, and the word "Current" -- never by colour alone. */
+.guided-history-panel {
+  margin-top: 0.75rem;
+}
+
+.guided-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.guided-attempt {
+  border-left: 3px solid var(--muted);
+  padding: 0.35rem 0 0.35rem 0.6rem;
+}
+
+.guided-attempt.current {
+  border-left-color: var(--accent);
+}
+
+.guided-attempt-label {
+  margin: 0;
+  font-weight: 600;
+}
+
+.guided-attempt-recommendation,
+.guided-attempt-disposition,
+.guided-attempt-execution {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.guided-attempt[data-execution="SUCCEEDED"] .guided-attempt-execution {
+  color: var(--accent);
+}
+
+.guided-attempt[data-execution="FAILED"] .guided-attempt-execution {
+  color: var(--danger);
+}
+
+.guided-history-error {
+  margin: 0.5rem 0 0;
+  color: var(--danger);
+}

@@ -1,5 +1,7 @@
 /** Results panel helpers for Educational PracticeEvaluationResultV1. */
 
+import { renderGuidedSessionHistory } from "./guided-session-history.js";
+
 export function guidedEventIdsFromGuidance(guidance) {
   const ids = [];
   const seen = new Set();
@@ -48,7 +50,15 @@ export function renderResultsPanel(
   payload,
   guidedSession = null,
   executionDiagnostics = null,
+  { historyContainer = null, appendError = null } = {},
 ) {
+  // History first, and outside the early return: a lesson with no evaluation
+  // yet has no attempts to show either, and the stale list must go.
+  renderGuidedSessionHistory({
+    session: guidedSession,
+    container: historyContainer,
+    appendError,
+  });
   if (!root) return;
   root.replaceChildren();
   if (!payload?.evaluation) {

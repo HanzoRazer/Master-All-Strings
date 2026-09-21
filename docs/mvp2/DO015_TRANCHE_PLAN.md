@@ -414,6 +414,183 @@ protected surfaces vs main    unchanged except Stage 6 browser execution wiring
 
 Stage 7 attempt-history UI is not authorized on this branch.
 
+## Stage 7 attempt progression and session history
+
+PR #31 merged Stage 6. Stage 7 branches from `main`, not from the Stage 6
+feature branch.
+
+```text
+stage6_merge_sha        = d7b71a9a65494655426c4f3d1ea38297fbc42baf
+stage7_base_sha         = d7b71a9a65494655426c4f3d1ea38297fbc42baf
+Stage 7 branch          = cursor/do015-guided-attempt-history-cc01
+```
+
+`git merge-base HEAD origin/main` equalled `origin/main` at branch creation:
+Stage 7 was cut from the tip, which is the Stage 6 merge commit itself.
+
+### The append seam already existed
+
+Stage 7 did not build one. `GuidedSessionController.syncFromEvaluation()`
+(`web/mvp1/guided_disposition.js`) has owned create-vs-append since Stage 4, and
+`app.js` has called it from the normal post-performance path since then:
+
+```text
+Arm / Start / Perform            (unchanged)
+      ↓
+educationApi.evaluate(...)       (unchanged, called once)
+      ↓
+syncFromEvaluation({evaluation, guidance})
+      ├── no session        → POST /api/education/guided-sessions
+      └── AWAITING_ATTEMPT  → POST /api/education/guided-sessions/{id}/attempts
+      ↓
+server-returned GuidedPracticeSessionV1 replaces the local one
+```
+
+Attempt ids stay caller-owned and opaque: `crypto.randomUUID()` via the
+controller's `newId`, never the array index or `attempts.length`. No second
+orchestrator, evaluator pass, rate policy, passage policy, or tick converter
+was added.
+
+### What Stage 7 changed
+
+```text
+append failure        prior server-returned session is preserved and the
+                      attempt is reported as unrecorded; only a failed first
+                      creation clears anything (GuidedProgressionError carries
+                      phase + sessionPreserved)
+
+lesson switch         LocalGuidedSessionApi.transition() →
+                      POST /api/education/guided-sessions/{id}/transition
+                      old session → TRANSITIONED by the Stage 2 service
+                      failure keeps the old session; it is never discarded
+                      new lesson gets no session until its first evaluated
+                      attempt
+
+lesson pin            controller.session is the record;
+                      controller.activeSession is what may drive controls,
+                      and is null when the record belongs to another lesson --
+                      assignment, content AND canonical revision, the same
+                      three pins the append path enforces
+                      an unresolved revision (null) does not match a session
+                      that carries one: the context completes only when
+                      loadScoreViews resolves scoreView.revisionId, which is
+                      the value an evaluation pins a session to
+
+identity pin          evidence whose assignment_id / content_id /
+                      canonical_revision_id disagrees with the session is
+                      refused, never re-pinned
+
+history               web/mvp1/guided-session-history.js renders
+                      session.attempts[] into #guidedSessionHistory, mounted
+                      by results.js
+```
+
+`current_attempt_index` -- not `attempts.at(-1)` -- identifies the current
+attempt; lifecycle state decides whether it is actionable, so a `CLOSED` or
+`TRANSITIONED` session is read-only throughout. Prior attempts render
+read-only and are byte-identical before and after later appends.
+
+The history renderer imports only the read-only session predicates from
+`guided_disposition.js`. It reaches no Transport seam, no evaluator, no
+guidance builder, and not `PracticeSessionHistory`, which remains the
+Educational Engine's evaluator input and is a different thing from this
+history. A source guard in `tests/guided_session_history.test.js` holds that.
+
+Browser diagnostics gained `guidedSessionStatus`, `guidedAttemptCount`,
+`currentAttemptId`, `currentAttemptIndex`, `guidedAttemptIds`,
+`transitionedSessionId`, `transitionedSessionStatus`, `lastProgressionPhase`,
+`lastAppendStatus`, and `lastAppendError`. They are observational.
+
+### Whole-page coverage of the lesson-switch failure
+
+`tests/guided_lesson_switch_browser.test.js` boots `app.js` itself against
+`tests/browser_harness.js` -- minted DOM elements, the repository's own lesson
+artifacts off disk, and a routed `fetch` -- and drives the page through its own
+controls with the deterministic `?fakeMidi=1` input: Arm, Start, perform, Stop,
+Accept, then the lesson picker.
+
+It covers the path no module-level test can see, where the preserved session and
+what the page shows can disagree:
+
+```text
+attempt on lesson A  → session AWAITING_ACTION, Accept → ACCEPTED/PENDING
+lesson switch to B   → transition POST fails
+                       session preserved, byte-identical, still pinned to A
+                       activeSession null; Accept/Decline/Apply inert
+                       history empty for B and carries the failure notice
+                       zero /attempts requests
+attempt on B         → refused at the pin; no append, no create, A untouched
+return to A          → the preserved session is the learner's again, and the
+                       history shows its attempt because the controls act on it
+switch to B (ok)     → A → TRANSITIONED; B's first attempt creates its own
+```
+
+Two fixes came out of writing it. The lesson picker overwrites the status line
+with `Loaded <lesson>` as soon as `loadSession` returns, so the transition
+failure is rendered into the results panel and not left to that line alone. And
+`applySessionArtifacts` renders history from `activeSession` rather than from
+nothing, so a lesson whose session is still open -- a reload, or a return after
+a failed transition -- does not show an empty history while its Apply control
+is live.
+
+### Revision pinning
+
+Review of `0a9e5ab` found `activeSession` pinned on assignment and content
+only, while the append path pinned all three. The same lesson re-cut at a new
+canonical revision therefore left the old session actionable: the append would
+be refused later, correctly, but the controls should never have been live.
+
+Both now pin the same three fields. `setLessonContext` carries
+`canonicalRevisionId`, and `activeSession` compares it strictly -- including
+null, so an unresolved revision does not match a session that has one. The
+browser only learns the loaded revision when `loadScoreViews` resolves
+`scoreView.revisionId` (the value the evaluate request carries, hence the
+session's own pin), so `applySessionArtifacts` pins the lesson with no revision
+and `loadSession` completes the pin afterwards and renders again. The window in
+between fails closed.
+
+`GuidedSessionController.recordDisposition` and `recordExecution` now read
+`activeSession` too, so the pin holds whichever entry point is used rather than
+only through `app.js`'s handlers.
+
+### Verification (local, Python 3.11, matching CI)
+
+```text
+Node tests                    483 passed  (400 at stage7_base + 83 new)
+  web/mvp1/tests/*.test.js
+full pytest                   2784 passed, 3 skipped, 2 failed
+coverage                      95.61%  (floor 95%)
+generator --check             PASS
+ruff check src tests          PASS
+mypy (strict, src)            PASS (161 source files)
+```
+
+The two failures are pre-existing and environmental, not Stage 7's: both fail
+identically on `d7b71a9` in a worktree with no Stage 7 code. They are
+`tests/mvp/test_mvp1_publication_utils.py::test_mvp1_lineage_script_passes`
+(the lineage script prints `→` and the shelled-out `python3` on this
+Windows host encodes cp1252) and
+`tests/integrations/test_do008_end_to_end.py::test_checked_in_bundle_correlates_all_authoritative_semantic_events`
+(a checked-in bundle artifact's sha256 over a CRLF working copy). Linux CI runs
+both.
+
+```text
+protected surfaces vs stage7_base_sha    no diff
+  src/master_all_strings/education/guided_session.py
+  src/master_all_strings/education/guided_session_service.py
+  src/master_all_strings/education/session_history.py
+  src/master_all_strings/education/guidance.py
+  src/master_all_strings/mvp/guided_session_api.py
+  resources/education/examples/guided_sessions/**
+  governance/engine_architecture_v1.json
+  web/mvp1/transport.js
+  web/mvp1/teaching-timeline.js
+  web/mvp1/practice_actions.js
+  web/mvp1/guided-action-executor.js
+```
+
+Stage 8 has not started.
+
 ## Session status (minimal)
 
 `ACTIVE`, `AWAITING_ACTION`, `AWAITING_ATTEMPT`, `CLOSED`, `TRANSITIONED`,
