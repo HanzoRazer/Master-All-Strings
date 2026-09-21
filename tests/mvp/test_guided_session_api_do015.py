@@ -784,3 +784,105 @@ def test_existing_education_evaluate_route_is_unchanged() -> None:
     finally:
         server.shutdown()
         thread.join(timeout=2)
+
+
+def test_replayed_execution_is_409_and_does_not_mutate() -> None:
+    api = LocalGuidedPracticeSessionApi()
+    _create(api, "replay-exec")
+    _accept(api, "replay-exec")
+    path = f"{GUIDED_SESSION_API_PREFIX}/session-do015-replay-exec/execution"
+    status, _ = api.handle_http("POST", path, {"execution_status": "SUCCEEDED"})
+    assert status == 200
+    before = to_dict(api.get("session-do015-replay-exec"))
+    status, payload = api.handle_http("POST", path, {"execution_status": "SUCCEEDED"})
+    assert status == 409
+    assert "error" in payload
+    assert to_dict(api.get("session-do015-replay-exec")) == before
+
+
+def test_wrong_executed_action_is_409_and_does_not_mutate() -> None:
+    api = LocalGuidedPracticeSessionApi()
+    _create(api, "wrong-action")
+    _accept(api, "wrong-action")
+    before = to_dict(api.get("session-do015-wrong-action"))
+    status, payload = api.handle_http(
+        "POST",
+        f"{GUIDED_SESSION_API_PREFIX}/session-do015-wrong-action/execution",
+        {
+            "execution_status": "SUCCEEDED",
+            "executed_action": to_dict(_generator()._repeat()),
+        },
+    )
+    assert status == 409, payload
+    assert to_dict(api.get("session-do015-wrong-action")) == before
+    assert before["attempts"][0]["action"]["execution_status"] == "PENDING"
+
+
+def test_append_rejects_mismatched_guidance_evidence_without_mutation() -> None:
+    api = LocalGuidedPracticeSessionApi()
+    _create(api, "cross-evidence")
+    status, _ = api.handle_http(
+        "POST",
+        f"{GUIDED_SESSION_API_PREFIX}/session-do015-cross-evidence/disposition",
+        {"disposition": "DECLINED"},
+    )
+    assert status == 200
+    before = to_dict(api.get("session-do015-cross-evidence"))
+    body = _append_body("cross-evidence", _generator()._repeat(), 1)
+    other = _generator()._evaluation(
+        _generator()._repeat(),
+        performance_session_id=_generator()._performance_session_id("cross-evidence", 2),
+    )
+    body["guidance"] = to_dict(_generator()._guidance(other))
+    status, payload = api.handle_http(
+        "POST",
+        f"{GUIDED_SESSION_API_PREFIX}/session-do015-cross-evidence/attempts",
+        body,
+    )
+    assert status == 409, payload
+    assert to_dict(api.get("session-do015-cross-evidence")) == before
+
+
+def test_append_rejects_all_three_pins_together_without_mutation() -> None:
+    api = LocalGuidedPracticeSessionApi()
+    _create(api, "all-pins")
+    api.handle_http(
+        "POST",
+        f"{GUIDED_SESSION_API_PREFIX}/session-do015-all-pins/disposition",
+        {"disposition": "DECLINED"},
+    )
+    before = to_dict(api.get("session-do015-all-pins"))
+    body = _append_body("all-pins", _generator()._repeat(), 1)
+    body["evaluation"]["assignment_id"] = "assignment-do015-other"
+    body["evaluation"]["content_id"] = "content-do015-other"
+    body["guidance"]["canonical_revision_id"] = "revision-do015-other"
+    status, _ = api.handle_http(
+        "POST",
+        f"{GUIDED_SESSION_API_PREFIX}/session-do015-all-pins/attempts",
+        body,
+    )
+    assert status == 409
+    assert to_dict(api.get("session-do015-all-pins")) == before
+
+
+def test_path_session_wins_over_a_forged_body_session_id() -> None:
+    api = LocalGuidedPracticeSessionApi()
+    _create(api, "victim")
+    _create(api, "bystander")
+    api.handle_http(
+        "POST",
+        f"{GUIDED_SESSION_API_PREFIX}/session-do015-victim/disposition",
+        {"disposition": "DECLINED"},
+    )
+    bystander_before = to_dict(api.get("session-do015-bystander"))
+    body = _append_body("victim", _generator()._repeat(), 1)
+    body["session_id"] = "session-do015-bystander"
+    status, payload = api.handle_http(
+        "POST",
+        f"{GUIDED_SESSION_API_PREFIX}/session-do015-victim/attempts",
+        body,
+    )
+    assert status == 200, payload
+    assert payload["session_id"] == "session-do015-victim"
+    assert len(payload["attempts"]) == 2
+    assert to_dict(api.get("session-do015-bystander")) == bystander_before
