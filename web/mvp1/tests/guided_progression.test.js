@@ -565,3 +565,31 @@ test("progression touches no Transport seam", async () => {
   assert.equal(transport.playbackRate, rate);
   assert.equal(transport.loop, null);
 });
+
+test("the lesson-change path transitions the session instead of discarding it", () => {
+  const app = readFileSync(repoUrl("../app.js"), "utf-8");
+  const code = app.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  assert.match(code, /guidedSessions\.transitionForLessonChange\(/);
+  // The only surviving reset is the one for a creation that never happened.
+  const resets = code.match(/guidedSessions\.reset\(\)/g) || [];
+  assert.equal(resets.length, 1);
+  const guardedReset =
+    /sessionError\.sessionPreserved === false\) guidedSessions\.reset\(\)/;
+  assert.match(code, guardedReset);
+  // Learner controls read the session that belongs to the loaded lesson.
+  assert.match(code, /getSession: \(\) => guidedSessions\.activeSession/);
+  assert.match(code, /canRecordDisposition\(guidedSessions\.activeSession\)/);
+});
+
+test("the browser keeps no lifecycle rules of its own", () => {
+  const app = readFileSync(repoUrl("../app.js"), "utf-8");
+  const disposition = readFileSync(repoUrl("../guided_disposition.js"), "utf-8");
+  for (const source of [app, disposition]) {
+    const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    // Status is read, never assigned: AWAITING_ATTEMPT and CLOSED are the
+    // service's to decide and arrive in its response.
+    assert.doesNotMatch(code, /\.status\s*=\s*["'](AWAITING_|CLOSED|TRANSITIONED|ACTIVE)/);
+    assert.doesNotMatch(code, /attempts\.push\(/);
+    assert.doesNotMatch(code, /current_attempt_index\s*=[^=]/);
+  }
+});
