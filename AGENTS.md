@@ -93,8 +93,8 @@ Add your own row in the **first commit on your branch**, before you push, and
 set its state to `green` when the work is finished and the gates pass. Delete
 the row when the pull request merges. `python scripts/check_in_flight.py`
 reconciles the register against the open pull requests and the branches on
-`origin`; it runs in CI too, so a register that disagrees with the repository
-fails the build instead of quietly rotting.
+`origin`. Run it before you push. It is not a CI gate: the workflow is a
+deferred-hygiene path frozen by DO-012A, so wiring it in needs an owner ruling.
 
 A register cannot stop two agents colliding. It can only make the collision
 visible before the second one starts.
@@ -124,7 +124,7 @@ rebase, see above.
 ## Verifying locally
 
 CI runs these on **Python 3.11** (`.github/workflows/verify.yml`). Run the same
-ones, in this order — the workflow keeps them as separate steps so a failure is
+four, in this order — the workflow keeps them as separate steps so a failure is
 attributable to one gate rather than to "the build".
 
 ```bash
@@ -132,7 +132,6 @@ pip install -e ".[dev]"          # pytest, pytest-cov, ruff, mypy, jsonschema
 ruff check src tests
 mypy                             # no arguments: see below
 pytest --cov --cov-report=term-missing
-python scripts/check_in_flight.py
 ```
 
 `mypy` and `pytest` take no targets on purpose. `[tool.mypy]` in `pyproject.toml`

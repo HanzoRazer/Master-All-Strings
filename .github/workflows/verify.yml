@@ -14,9 +14,6 @@ on:
 # no pull-request mutation, no package publishing.
 permissions:
   contents: read
-  # Read-only, and only so the in-flight register can be reconciled against the
-  # open pull requests. Still no write of any kind.
-  pull-requests: read
 
 # Supersede in-flight runs for the same ref so a new push cancels a stale run.
 concurrency:
@@ -65,12 +62,3 @@ jobs:
       # is not duplicated here.
       - name: pytest with coverage
         run: pytest --cov --cov-report=term-missing
-
-      # docs/development/IN_FLIGHT.md is what one agent reads to find out what
-      # another is already working on. A register that disagrees with the
-      # repository is worse than none, so the disagreement fails here rather
-      # than misleading the next agent.
-      - name: in-flight register
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python scripts/check_in_flight.py

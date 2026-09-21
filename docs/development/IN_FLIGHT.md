@@ -45,9 +45,10 @@ Update `State` when it changes — particularly to `green`, which is what says
 the branch is finished and safe to merge. Delete the row when the PR merges.
 
 Run `python scripts/check_in_flight.py` before pushing. It reconciles this file
-against the open pull requests and the branches on `origin`, and it also runs in
-CI, so a register that disagrees with the repository fails the build rather than
-quietly rotting.
+against the open pull requests and the branches on `origin` and reports where
+they disagree. It is not a CI gate yet — the workflow is a deferred-hygiene path
+frozen by DO-012A — so for now the register stays honest because agents check
+it, not because the build does.
 
 ## Before you start
 
