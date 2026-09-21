@@ -12,7 +12,7 @@ row is deleted when the pull request merges.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| In-flight register | docs/in-flight-register | Claude | — | 286d5aa | in flight | 2026-09-21 |
+| In-flight register | docs/in-flight-register | Claude | #33 | 286d5aa | in review | 2026-09-21 |
 
 `main` is at `286d5aa` (DO-015 Stage 7, PR #32). DO-015 Stage 8 has not started.
 
