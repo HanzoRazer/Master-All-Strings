@@ -198,8 +198,8 @@ def test_any_other_status_is_refused(
 
 
 def test_a_moved_mvp1_tag_is_refused(verifier: ModuleType, evidence: dict[str, Any]) -> None:
-    evidence["tags"]["mvp1"]["observed_sha"] = "1" * 40
-    problems, verdict = verifier.verify_tag_state(evidence, ["mvp-1"], ["mvp-1"])
+    recorded = evidence["tags"]["mvp1"]["sha"]
+    problems, verdict = verifier.verify_tag_state(["mvp-1"], ["mvp-1"], recorded, "1" * 40)
     assert problems and "but the record says" in problems[0]
     assert verdict == "PASS"
 
@@ -208,17 +208,17 @@ def test_a_moved_mvp1_tag_is_refused(verifier: ModuleType, evidence: dict[str, A
 def test_an_unauthorized_mvp2_tag_stops_the_stage(
     verifier: ModuleType, evidence: dict[str, Any], tag: str
 ) -> None:
-    problems, _ = verifier.verify_tag_state(evidence, ["mvp-1", tag], [])
+    problems, _ = verifier.verify_tag_state(["mvp-1", tag], [])
     assert problems and "stop and report" in problems[0]
     # Local or remote, either is enough to stop.
-    problems, _ = verifier.verify_tag_state(evidence, ["mvp-1"], [tag])
+    problems, _ = verifier.verify_tag_state(["mvp-1"], [tag])
     assert problems
 
 
 def test_unreachable_remote_tags_are_neither_pass_nor_fail(
     verifier: ModuleType, evidence: dict[str, Any]
 ) -> None:
-    problems, verdict = verifier.verify_tag_state(evidence, ["mvp-1"], None)
+    problems, verdict = verifier.verify_tag_state(["mvp-1"], None)
     assert problems == ()
     assert verdict == "NOT_AVAILABLE"
 

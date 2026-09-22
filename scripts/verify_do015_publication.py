@@ -158,9 +158,10 @@ def verify_publication_status(evidence: dict[str, Any]) -> tuple[str, ...]:
 
 
 def verify_tag_state(
-    evidence: dict[str, Any],
-    local_tags: Sequence[str],
-    remote_tags: Sequence[str] | None,
+    local: Sequence[str],
+    remote: Sequence[str] | None,
+    expected_mvp1: str = "",
+    observed_mvp1: str = "",
 ) -> tuple[tuple[str, ...], str]:
     """No MVP 2 tag, and `mvp-1` still where the record says.
 
@@ -169,19 +170,16 @@ def verify_tag_state(
     """
 
     problems: list[str] = []
-    seen = list(local_tags) + list(remote_tags or [])
-    forbidden = sorted({tag for tag in seen if tag.startswith(FORBIDDEN_TAG_PREFIXES)})
+    forbidden = sorted(
+        {tag for tag in [*local, *(remote or [])] if tag.startswith(FORBIDDEN_TAG_PREFIXES)}
+    )
     if forbidden:
         # Reported, never removed: an unexpected release tag is somebody's
         # decision to explain, not this script's to undo.
         problems.append(f"tags claiming MVP 2 exist: {', '.join(forbidden)} -- stop and report")
-    recorded = evidence.get("tags", {}).get("mvp1", {})
-    expected = str(recorded.get("sha", ""))
-    actual = str(recorded.get("observed_sha", "") or "")
-    if expected and actual and expected != actual:
-        problems.append(f"mvp-1 is {actual[:7]}, but the record says {expected[:7]}")
-    verdict = "NOT_AVAILABLE" if remote_tags is None else "PASS"
-    return tuple(problems), verdict
+    if expected_mvp1 and observed_mvp1 and expected_mvp1 != observed_mvp1:
+        problems.append(f"mvp-1 is {observed_mvp1[:7]}, but the record says {expected_mvp1[:7]}")
+    return tuple(problems), "NOT_AVAILABLE" if remote is None else "PASS"
 
 
 def _git(*args: str) -> str | None:
@@ -210,20 +208,20 @@ def changed_paths(base: str, head: str) -> tuple[str, ...]:
     return tuple(sorted(line.strip() for line in (out or "").splitlines() if line.strip()))
 
 
-def local_tags() -> tuple[str, ...]:
-    return tuple((_git("tag", "-l") or "").split())
+def tags_here_and_on_origin() -> tuple[tuple[str, ...], tuple[str, ...] | None]:
+    """Local tags, and origin's -- None when origin could not be asked."""
 
-
-def remote_tags() -> tuple[str, ...] | None:
+    local = tuple((_git("tag", "-l") or "").split())
     out = _git("ls-remote", "--tags", "origin")
     if out is None:
-        return None
-    names = []
-    for line in out.splitlines():
-        _, _, ref = line.partition("\t")
-        if ref.startswith("refs/tags/"):
-            names.append(ref[len("refs/tags/") :].removesuffix("^{}"))
-    return tuple(sorted(set(names)))
+        return local, None
+    refs = (ref for _, _, ref in (line.partition("\t") for line in out.splitlines()))
+    remote = {
+        ref[len("refs/tags/") :].removesuffix("^{}")
+        for ref in refs
+        if ref.startswith("refs/tags/")
+    }
+    return local, tuple(sorted(remote))
 
 
 def tag_sha(tag: str) -> str:
@@ -261,7 +259,6 @@ def _script(command: list[str]) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Verify the DO-015 publication candidate")
     parser.add_argument("--evidence", type=Path, default=PUBLICATION)
-    parser.add_argument("--report", type=Path, default=REPORT)
     parser.add_argument("--head", default="HEAD")
     parser.add_argument(
         "--offline", action="store_true", help="skip the checks that need git or Stage 9's tools"
@@ -280,10 +277,7 @@ def main(argv: list[str] | None = None) -> int:
     checks.append(("required publication fields", missing_fields(evidence)))
     checks.append(("publication status", verify_publication_status(evidence)))
     checks.append(
-        (
-            "publication report exists",
-            () if args.report.exists() else (f"{args.report.name} does not exist",),
-        )
+        ("publication report exists", () if REPORT.exists() else (f"{REPORT.name} is missing",))
     )
 
     if args.offline:
@@ -305,13 +299,13 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
 
-        recorded = dict(evidence.get("tags", {}).get("mvp1", {}))
-        recorded["observed_sha"] = tag_sha(str(recorded.get("tag", "mvp-1")))
-        seen = dict(evidence)
-        seen["tags"] = {**evidence.get("tags", {}), "mvp1": recorded}
-        remote = remote_tags()
-        tag_problems, verdict = verify_tag_state(seen, local_tags(), remote)
-        checks.append(("tags", tag_problems))
+        recorded = evidence.get("tags", {}).get("mvp1", {})
+        name = str(recorded.get("tag", "mvp-1"))
+        local, remote = tags_here_and_on_origin()
+        problems_found, verdict = verify_tag_state(
+            local, remote, str(recorded.get("sha", "")), tag_sha(name)
+        )
+        checks.append(("tags", problems_found))
         if verdict == "NOT_AVAILABLE":
             notes.append("remote tags could not be listed: remote_tag_verdict = NOT_AVAILABLE")
 
