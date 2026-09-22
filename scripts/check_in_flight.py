@@ -57,9 +57,15 @@ class Row:
 
 
 def _ascii(text: str) -> str:
-    """Fold to ASCII so a finding can always be printed."""
+    """Fold to ASCII so a finding can always be printed.
 
-    return text.replace("\r\n", "\n")
+    The register is written with em dashes and the paths in failures are
+    whatever the filesystem hands over. A checker that raises
+    UnicodeEncodeError instead of reporting is not a checker, and this
+    repository already has a script failing in CI for exactly that.
+    """
+
+    return text.replace("—", "-").encode("ascii", "replace").decode("ascii")
 
 
 def _cells(line: str) -> list[str]:
@@ -269,7 +275,43 @@ def register_at(ref: str) -> str | None:
     return _run(["git", "show", f"{ref}:docs/development/IN_FLIGHT.md"])
 
 
-def is_cleanup_branch(current: str | None) -> bool:
+def _removed_rows_are_stale(
+    before: list[Row],
+    removed: set[str],
+    open_prs: dict[str, int] | None,
+    remote_branches: set[str] | None,
+) -> bool:
+    """True when every row this branch deleted had already finished.
+
+    Fails closed. If the open pull requests could not be listed there is no way
+    to know whether a row was live, and guessing would hand out the exemption
+    on exactly the occasion it should be refused.
+    """
+
+    if open_prs is None:
+        return False
+    open_numbers = set(open_prs.values())
+    for row in before:
+        if row.branch not in removed:
+            continue
+        if row.branch in open_prs:
+            return False
+        number = row.pr_number
+        if number is not None:
+            if number in open_numbers:
+                return False
+            continue
+        # No pull request was ever named, so the branch itself is the evidence.
+        if remote_branches is None or row.branch in remote_branches:
+            return False
+    return True
+
+
+def is_cleanup_branch(
+    current: str | None,
+    open_prs: dict[str, int] | None = None,
+    remote_branches: set[str] | None = None,
+) -> bool:
     """True when this branch only removes rows from the register.
 
     A row cannot be deleted by the pull request it describes: the merge lands
@@ -293,6 +335,13 @@ def is_cleanup_branch(current: str | None) -> bool:
     byte-for-byte what the branch has. Anything else -- a word of prose, a
     column, a stray line -- and this is ordinary work that announces itself
     like everything else.
+
+    And the rows removed must already be stale. The exemption exists for
+    clearing rows whose work has landed; used on a live row it would let one
+    branch delete another's announcement and skip making its own, which is
+    worse than the problem it solves. A row is stale when its pull request is
+    no longer open, or -- for a row that never named one -- when its branch is
+    gone from `origin`. Not being able to tell is not the same as stale.
     """
 
     if current is None:
@@ -313,6 +362,8 @@ def is_cleanup_branch(current: str | None) -> bool:
     now = {row.branch: replace(row, line_number=0) for row in after}
     removed = set(was) - set(now)
     if not removed or set(now) - set(was):
+        return False
+    if not _removed_rows_are_stale(before, removed, open_prs, remote_branches):
         return False
 
     dropped_lines = {row.line_number for row in before if row.branch in removed}
@@ -355,7 +406,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if not REGISTER.exists():
-        print(f"FAIL  {REGISTER} does not exist")
+        print(_ascii(f"FAIL  {REGISTER} does not exist"))
         return 1
 
     rows, problems = parse_register(REGISTER.read_text(encoding="utf-8"))
@@ -372,18 +423,21 @@ def main(argv: list[str] | None = None) -> int:
         if branches is None:
             skipped.append("could not list branches on origin")
         current = current_branch()
-        problems += reconcile(rows, prs, branches, current, is_cleanup_branch(current))
+        cleanup = is_cleanup_branch(current, prs, branches)
+        problems += reconcile(rows, prs, branches, current, cleanup)
 
     for note in skipped:
         print(_ascii(f"note  {note}"))
     if problems:
         for problem in problems:
             print(_ascii(f"FAIL  {problem}"))
-        print(f"\nin-flight register: {len(problems)} problem(s)")
+        print(_ascii(f"\nin-flight register: {len(problems)} problem(s)"))
         return 1
 
     count = len(rows)
-    print(f"in-flight register: OK ({count} branch{'' if count == 1 else 'es'} in flight)")
+    print(
+        _ascii(f"in-flight register: OK ({count} branch{'' if count == 1 else 'es'} in flight)")
+    )
     return 0
 
 

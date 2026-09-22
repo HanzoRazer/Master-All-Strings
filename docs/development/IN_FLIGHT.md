@@ -63,7 +63,14 @@ a paragraph, rename a column, drop the separator, leave a row the parser
 cannot read — each of those is a register change, and a register change is the
 one thing this file exists to announce. The branch that introduced this rule
 carries a row for that reason: it rewrote these paragraphs, so it was never a
-cleanup. Clear a
+cleanup.
+
+And the rows being removed must already be **stale**: their pull request
+closed or merged, or — for a row that never named one — their branch gone from
+`origin`. The exemption is for clearing work that has landed. Pointed at a live
+row it would let one branch delete another's announcement and skip making its
+own, which is worse than the problem it solves. Not being able to tell is not
+the same as stale, so an unreachable GitHub refuses rather than assumes. Clear a
 merged row either in the first commit of the next branch, which is the usual
 way, or in a cleanup branch of its own.
 
