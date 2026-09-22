@@ -775,6 +775,48 @@ run.
 Stage 10 has not started. Merge, tag, release and publication are not
 authorized by this tranche.
 
+## Stage 10 publication closeout
+
+Publication metadata only. No product file changes, and no tag or release.
+
+| Field | Value |
+| --- | --- |
+| Certified product | `3fcf618b655c3f51b020d11a0bb3f96571da08d7` |
+| Stage 9 head | `eba01a1b232ac31ef5433a80e7f5572c439111c0` |
+| Stage 9 merge (PR #35) | `102b7959ac6a99c924baada89ce3b04d779c209d` |
+| Stage 10 base | `fd2c490e58ac1a46cb184ac04fe8b910b659080d` |
+| Stage 10 branch | `cursor/do015-publication-closeout-cc03` |
+| Publication baseline | the Stage 10 merge commit, recorded by whatever comes next |
+
+Stage 9's record above says Stage 10 has not started. It stood when it was
+written and is left as written; this section is that stage.
+
+### What lies between certification and this base
+
+Five pull requests merged after the Stage 9 certification. None of them is a
+DO-015 product change:
+
+| PR | Merge | What it changed |
+| --- | --- | --- |
+| #36 | `775e3f1` | In-flight register tooling |
+| #37 | `8c93fc8` | In-flight register prose |
+| #38 | `fcd837b` | Register row cleanup |
+| #39 | `d6c870a` | Register row cleanup |
+| #40 | `fd2c490` | The register check fails only on what it can fix |
+
+The claim Stage 10 exists to prove is that the protected product surface --
+`src/master_all_strings/**`, `web/mvp1` outside its tests, `resources/**`,
+`governance/**` -- is byte-for-byte unchanged between the certified product and
+this base. `scripts/verify_do015_publication.py` measures it on every run
+rather than trusting this table.
+
+### What this stage does not claim
+
+MVP 2 is not released, not tagged, and not complete. `mvp-1` remains the only
+tag in the repository. The publication status stays `READY_FOR_PUBLICATION`
+until the owner merges; the merge is the publication event, and nothing flips a
+status afterwards.
+
 ## Session status (minimal)
 
 `ACTIVE`, `AWAITING_ACTION`, `AWAITING_ATTEMPT`, `CLOSED`, `TRANSITIONED`,
