@@ -12,7 +12,7 @@ row is deleted when the pull request merges.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| Register checker: UTF-8 and scope | docs/clear-register-row-37 | Claude | — | 8c93fc8 | in flight | 2026-09-22 |
+| Register checker: UTF-8 and scope | docs/clear-register-row-37 | Claude | #38 | 8c93fc8 | in review | 2026-09-22 |
 
 An empty table means nothing is in flight.
 
