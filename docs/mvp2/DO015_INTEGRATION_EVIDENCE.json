@@ -324,5 +324,13 @@
     "MVP 2 complete",
     "tagged",
     "production release"
-  ]
+  ],
+  "linux_ci": {
+    "workflow": ".github/workflows/verify.yml",
+    "platform": "ubuntu-latest, Python 3.11",
+    "run_id": 35678618715,
+    "head": "d801c00",
+    "conclusion": "success",
+    "note": "Authoritative for the two Windows-only failures recorded above; runs no Node step."
+  }
 }
