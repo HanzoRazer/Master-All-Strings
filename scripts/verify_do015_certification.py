@@ -438,6 +438,20 @@ def run_checks(
     return checks
 
 
+def evidence_freeze_sha() -> str | None:
+    """The commit the evidence was frozen at: the last one to change it.
+
+    The boundary is a claim about a finished range, not about the future. Read
+    against HEAD it would police every later commit in the repository
+    forever -- an unrelated branch touching an unrelated script would fail a
+    DO-015 certification, which says nothing true about either. Defining the
+    freeze as the last commit that changed the record keeps the claim the size
+    it actually is.
+    """
+
+    return _git(["log", "-1", "--format=%H", "--", "docs/mvp2/DO015_INTEGRATION_EVIDENCE.json"])
+
+
 def changed_paths(certified: str, head: str) -> list[str] | None:
     out = _git(["diff", "--name-only", f"{certified}..{head}"])
     if out is None:
@@ -461,16 +475,18 @@ def main(argv: list[str] | None = None) -> int:
 
     head = None if args.offline else _git(["rev-parse", "HEAD"])
     changed = None
+    freeze = None
     if not args.offline:
+        freeze = evidence_freeze_sha() or head
         certified = str(evidence.get("lineage", {}).get("certified_product_sha", ""))
-        if _SHA.match(certified) and head:
-            changed = changed_paths(certified, head)
+        if _SHA.match(certified) and freeze:
+            changed = changed_paths(certified, freeze)
 
     after_ci = None
-    if not args.offline and head:
+    if not args.offline and freeze:
         content_sha = str(evidence.get("linux_ci", {}).get("certified_content_sha", ""))
         if _SHA.match(content_sha):
-            after_ci = changed_paths(content_sha, head)
+            after_ci = changed_paths(content_sha, freeze)
     checks = run_checks(evidence, REPO_ROOT, changed, head, after_ci)
     failures = 0
     for label, found in checks:
