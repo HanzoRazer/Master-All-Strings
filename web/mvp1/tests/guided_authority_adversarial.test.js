@@ -293,7 +293,12 @@ test("overlapping Apply calls actuate runtime once", async () => {
   assert.equal(posts, 1);
 });
 
-test("history DOM tampering does not rewrite the session", () => {
+test("a tampered history DOM cannot redirect the controls onto a finished attempt", async () => {
+  // The old version of this only reasserted that a JavaScript object does not
+  // change when unrelated DOM is edited, which nothing could have made false.
+  // What has to hold is that the *authority path* ignores the DOM: after the
+  // markup is rewritten to claim the finished attempt is current, Accept and
+  // Apply must still act on the attempt the session says is current.
   const recorded = session({
     attempts: [
       attempt(0, {
@@ -301,7 +306,7 @@ test("history DOM tampering does not rewrite the session", () => {
         execution_status: "SUCCEEDED",
         executed_action: { action_type: "slow_down", target_rate: 0.75 },
       }),
-      attempt(1),
+      attempt(1, { recommended_action: { action_type: "repeat" } }),
     ],
   });
   const before = JSON.stringify(recorded);
@@ -311,15 +316,63 @@ test("history DOM tampering does not rewrite the session", () => {
     renderGuidedSessionHistory({ session: recorded, container });
     const list = container.children.find((node) => node.className === "guided-history");
     const [historical, current] = list.children;
+
+    // Forge the presentation: the finished attempt claims to be current and
+    // actionable, the real current attempt claims to be neither, and the
+    // rendered order is reversed.
     historical.dataset.current = "true";
     historical.dataset.actionable = "true";
+    historical.dataset.execution = "PENDING";
     current.dataset.current = "false";
+    current.dataset.actionable = "false";
     list.children.reverse();
-    historical.listeners?.click?.forEach((fn) => fn());
+
+    // Authority path 1: the disposition handler. It reads the session, so the
+    // request must carry the session id and resolve against attempt 1.
+    const api = recordingApi();
+    const controller = controllerOn(api, recorded);
+    const accept = createGuidanceDispositionHandler({
+      guidedSessionApi: api,
+      getSessionId: () => controller.activeSession?.session_id ?? null,
+      onResolved: (_disposition, next) => {
+        controller.session = next;
+      },
+    });
+    await accept("ACCEPTED");
+    assert.deepEqual(api.ops(), ["disposition"]);
+    assert.equal(api.calls[0].sessionId, "session-do015-adversarial");
+
+    // Authority path 2: Apply. The executed action must be attempt 1's
+    // recommendation -- the forged row's slow_down must not be what runs.
+    const runtime = [];
+    const apply = createGuidedApplyHandler({
+      getSession: () => session({
+        attempts: [
+          recorded.attempts[0],
+          attempt(1, {
+            recommended_action: { action_type: "repeat" },
+            action_disposition: "ACCEPTED",
+            execution_status: "PENDING",
+          }),
+        ],
+      }),
+      execute: ({ action }) => {
+        runtime.push(action.action_type);
+        return { status: "SUCCEEDED", executedAction: action, error: null };
+      },
+      recordExecution: (sessionId, status, executedAction) =>
+        api.recordExecution(sessionId, status, executedAction),
+    });
+    await apply();
+    assert.deepEqual(runtime, ["repeat"]);
+    const execution = api.calls.find((call) => call.op === "execution");
+    assert.equal(execution.executedAction.action_type, "repeat");
+    assert.notEqual(execution.executedAction.action_type, "slow_down");
+
+    // And the finished attempt is untouched throughout.
     assert.equal(JSON.stringify(recorded), before);
     assert.equal(recorded.current_attempt_index, 1);
-    assert.equal(recorded.attempts[0].attempt_id, "attempt-0");
-    assert.equal(recorded.attempts[1].action.action_disposition, "PENDING");
+    assert.equal(recorded.attempts[0].action.execution_status, "SUCCEEDED");
   } finally {
     restore();
   }
@@ -360,4 +413,66 @@ test("stage 6 and stage 7 presentation modules do not take each other's authorit
     executor.match(/from "\.\/[^"]+"/g)?.length,
     1,
   );
+});
+
+test("no public history export can make a malformed historical row actionable", async () => {
+  // The history module is presentation-only today, so there is no interaction
+  // API to attack. Locking the surface is what keeps that true: adding an
+  // export fails here, and whoever adds it has to show the guarantee below
+  // still holds through it.
+  const history = await import("../guided-session-history.js");
+  assert.deepEqual(Object.keys(history).sort(), [
+    "formatGuidedAttemptNumber",
+    "getCurrentGuidedAttemptRow",
+    "guidedAttemptRows",
+    "isHistoricalGuidedAttempt",
+    "renderGuidedSessionHistory",
+  ]);
+
+  const recorded = session({
+    attempts: [
+      { attempt_id: "broken", action: null },
+      attempt(1, { action_disposition: "ACCEPTED", execution_status: "PENDING" }),
+    ],
+    current_attempt_index: 1,
+  });
+  const before = JSON.stringify(recorded);
+
+  // Every export, against the malformed row: none reports it actionable, none
+  // reports it current, and none writes to the session.
+  assert.equal(history.isHistoricalGuidedAttempt(recorded, "broken"), true);
+  const rows = history.guidedAttemptRows(recorded);
+  assert.equal(rows[0].actionable, false);
+  assert.equal(rows[0].isCurrent, false);
+  assert.equal(rows[0].disposition, null);
+  assert.equal(rows[0].execution, null);
+  assert.equal(history.getCurrentGuidedAttemptRow(recorded).attemptId, "attempt-1");
+  assert.equal(history.formatGuidedAttemptNumber(0), "Attempt 1");
+
+  const restore = withStubDocument();
+  try {
+    const container = stubElement();
+    history.renderGuidedSessionHistory({ session: recorded, container });
+    const list = container.children.find((node) => node.className === "guided-history");
+    assert.equal(list.children[0].dataset.actionable, "false");
+    // Mutating the row a renderer produced changes nothing about the answer:
+    // ask again and it is still not actionable.
+    list.children[0].dataset.actionable = "true";
+    assert.equal(history.guidedAttemptRows(recorded)[0].actionable, false);
+  } finally {
+    restore();
+  }
+  assert.equal(JSON.stringify(recorded), before);
+});
+
+test("the history module exports nothing that could act on a session", () => {
+  const source = readFileSync(repoUrl("../guided-session-history.js"), "utf-8");
+  const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  // A future interaction API would arrive as one of these. None is here, and
+  // this is the line that has to be argued with before one is.
+  assert.doesNotMatch(code, /addEventListener|onclick|dispatchEvent/);
+  assert.doesNotMatch(code, /async function|await |fetch\(/);
+  assert.doesNotMatch(code, /session\.[\w.]+\s*=[^=]|attempts\[[^\]]*\]\s*=[^=]/);
+  const exported = code.match(/^export (?:function|const|class) (\w+)/gm) || [];
+  assert.equal(exported.length, 5, exported.join(", "));
 });
