@@ -93,7 +93,13 @@ def test_a_stage9_merge_that_is_not_an_ancestor_is_refused(
     verifier: ModuleType, evidence: dict[str, Any], certification: dict[str, Any]
 ) -> None:
     problems = verifier.verify_lineage(evidence, certification, lambda candidate, _: False)
-    assert any("Stage 9 merge" in item and "not an ancestor" in item for item in problems)
+    # Asserted on the message's own shape: "... is not an ancestor of the Stage 9
+    # merge" also contains both words, and a looser assertion passed when the
+    # ancestry check was removed entirely.
+    merge = evidence["lineage"]["stage9_merge_sha"][:7]
+    certified = evidence["lineage"]["certified_product_sha"][:7]
+    assert f"Stage 9 merge {merge} is not an ancestor of HEAD" in problems
+    assert f"certified product {certified} is not an ancestor of HEAD" in problems
 
 
 def test_a_certified_product_outside_its_own_certification_is_refused(
@@ -103,7 +109,10 @@ def test_a_certified_product_outside_its_own_certification_is_refused(
     problems = verifier.verify_lineage(
         evidence, certification, lambda _candidate, descendant: descendant != merge
     )
-    assert any("not an ancestor of the Stage 9 merge" in item for item in problems)
+    certified = evidence["lineage"]["certified_product_sha"][:7]
+    assert f"certified product {certified} is not an ancestor of the Stage 9 merge" in " ".join(
+        problems
+    )
 
 
 @pytest.mark.parametrize(
