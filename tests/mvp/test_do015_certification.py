@@ -309,6 +309,10 @@ def test_the_ci_record_is_present_and_well_formed() -> None:
     assert verify._SHA.match(str(ci["certified_content_sha"]))
     assert str(ci["semantics"]).strip()
     assert ci["conclusion"] == "success"
+    # No placeholder. Leaving the seal at zero would let an unsealed record
+    # sit in the repository looking finished, which is the loophole the split
+    # between this suite and the CLI could otherwise open.
+    assert isinstance(ci["run_id"], int) and ci["run_id"] > 0
 
 
 def _ci_record(**overrides: object) -> dict[str, Any]:
@@ -367,3 +371,53 @@ def test_evidence_metadata_after_the_named_run_is_fine() -> None:
 
 def test_an_ungatherable_diff_is_skipped_not_invented() -> None:
     assert verify.check_ci_record(_ci_record(), None) == []
+
+
+def _real_run(**overrides: object) -> dict[str, Any]:
+    run = {
+        "databaseId": 123456,
+        "headSha": "c" * 40,
+        "conclusion": "success",
+        "status": "completed",
+        "workflowName": "verify",
+    }
+    run.update(overrides)
+    return run
+
+
+def test_a_run_that_matches_the_seal_passes() -> None:
+    assert verify.check_ci_run_is_real(_ci_record(), _real_run()) == []
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        ("databaseId", 999, "and got 999"),
+        ("status", "in_progress", "has not finished"),
+        ("conclusion", "failure", "not success"),
+        ("conclusion", None, "not success"),
+        ("headSha", "d" * 40, "but the record seals"),
+        ("workflowName", "codeql", "not verify"),
+    ],
+)
+def test_a_run_that_does_not_match_the_seal_is_refused(
+    field: str, value: object, expected: str
+) -> None:
+    # The seal is only evidence if it can be wrong. A record can claim any run
+    # id and any conclusion; this is what makes the claim checkable.
+    problems = verify.check_ci_run_is_real(_ci_record(), _real_run(**{field: value}))
+    assert any(expected in problem for problem in problems), problems
+
+
+def test_a_run_for_another_commit_is_the_loophole_this_closes() -> None:
+    # Sealing a green run from some earlier commit would otherwise let a red
+    # head wear a green badge.
+    problems = verify.check_ci_run_is_real(
+        _ci_record(certified_content_sha="a" * 40), _real_run(headSha="b" * 40)
+    )
+    assert any("but the record seals" in problem for problem in problems)
+
+
+def test_github_being_unreachable_is_skipped_not_assumed() -> None:
+    problems = verify.check_ci_run_is_real(_ci_record(), None)
+    assert problems == ["SKIPPED: GitHub could not be asked about the run"]

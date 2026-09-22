@@ -120,18 +120,25 @@ Two boundaries were additionally witnessed end to end through the page:
   content pins **unchanged**, because a transition marks a record terminal
   rather than moving it to the new lesson.
 
+  Both halves of that contract are asserted. Preservation alone would still
+  pass if the service dropped the destination entirely, leaving a session
+  terminal for no stated reason, so the provenance is checked too:
+  `transition_reason`, `next_assignment_id` and `next_content_id` are the
+  lesson that was asked for, recorded as provenance rather than as the
+  session's pins.
+
 ## Results
 
 ```text
-targeted DO-015 pytest     491 passed
-full pytest                2968 passed, 3 skipped, 2 failed *
+targeted DO-015 pytest     501 passed
+full pytest                2978 passed, 3 skipped, 2 failed *
 coverage                   95.63%  (floor 95%)
 Node                       505 passed, 0 failed      (Windows; no Linux CI)
 ruff check src tests       PASS
 mypy (strict)              PASS, 161 source files
 fixture --check            PASS
 check_in_flight.py         PASS
-certification verifier     PASS
+certification verifier     OK (9 of 9)
 ```
 
 \* The two failures are Windows-only environment artifacts that reproduce on the
@@ -192,6 +199,20 @@ Four things carry the certification, and they are not equal:
 Where any two disagree, the earlier one wins. The report is written for a
 reader; the JSON is written for a checker; the artifacts are written by the
 product; the suites *are* the product.
+
+### The seal is checked, not declared
+
+The record names a CI run, and a record can name any run it likes. So the
+verifier asks GitHub: the run must exist, have finished, have concluded
+success, have run under `verify`, and have run **on the very commit the record
+seals**. Without that last one a green run from some earlier commit could put a
+badge on a red head.
+
+The one claim CI cannot make is this one — a run id does not exist until after
+the commit has run — so it belongs to the CLI. The suite still refuses an
+unsealed record, so a placeholder cannot sit in the repository looking
+finished. Running `python scripts/verify_do015_certification.py` is what closes
+the loop, and it is why the report asks a reviewer to run it.
 
 ### The verifier is a maintenance contract
 

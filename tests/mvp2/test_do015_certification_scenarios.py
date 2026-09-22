@@ -311,6 +311,9 @@ def drive_certified_session() -> dict[str, Any]:
             "status_after": transitioned["status"],
             "attempts_unchanged": json.dumps(transitioned["attempts"], sort_keys=True)
             == before_transition,
+            # Both halves of the contract: the record was not repinned, and
+            # the destination it was asked for was written down.
+            "provenance": dict(transitioned.get("provenance") or ()),
             "session_digest": transitioned["session_digest"],
             "session_digest_recomputed": compute_session_digest(stored_switch),
         },
@@ -367,3 +370,22 @@ def test_a_transition_does_not_repin_the_session_to_the_new_lesson() -> None:
     assert transition["session_pins_after"]["content_id"] == SECOND_LESSON
     assert transition["requested_next_lesson"]["content_id"] == LESSON
     assert transition["requested_next_lesson"] != transition["session_pins_after"]
+
+
+def test_the_transition_records_where_it_was_asked_to_go() -> None:
+    """Preservation is only half of it.
+
+    Asserting that the old pins survive proves the record was not moved. It
+    would still pass if the service dropped the destination entirely, and then
+    the session would be terminal for no stated reason. The provenance is the
+    other half of the contract.
+    """
+
+    transition = drive_certified_session()["lesson_transition"]
+    provenance = transition["provenance"]
+    requested = transition["requested_next_lesson"]
+    assert provenance["transition_reason"] == "lesson_content_change"
+    assert provenance["next_assignment_id"] == requested["assignment_id"]
+    assert provenance["next_content_id"] == requested["content_id"]
+    # And the destination is recorded as provenance, not as the session's pins.
+    assert provenance["next_content_id"] != transition["session_pins_after"]["content_id"]

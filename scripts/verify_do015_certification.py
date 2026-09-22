@@ -116,6 +116,16 @@ def _git(args: list[str]) -> str | None:
     return result.stdout.strip() if result.returncode == 0 else None
 
 
+def _run_gh(args: list[str]) -> str | None:
+    try:
+        result = subprocess.run(
+            ["gh", *args], cwd=REPO_ROOT, capture_output=True, text=True, timeout=60
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
 def load_evidence(path: Path) -> tuple[dict[str, Any] | None, list[str]]:
     if not path.exists():
         try:
@@ -308,6 +318,63 @@ def check_ci_record(evidence: dict[str, Any], after_ci: list[str] | None) -> lis
     return problems
 
 
+def fetch_ci_run(run_id: int) -> dict[str, Any] | None:
+    """Ask GitHub about the run the record names, or None if it cannot."""
+
+    out = _run_gh(
+        [
+            "run",
+            "view",
+            str(run_id),
+            "--json",
+            "databaseId,headSha,conclusion,status,workflowName",
+        ]
+    )
+    if out is None:
+        return None
+    try:
+        loaded = json.loads(out)
+    except json.JSONDecodeError:
+        return None
+    return loaded if isinstance(loaded, dict) else None
+
+
+def check_ci_run_is_real(evidence: dict[str, Any], run: dict[str, Any] | None) -> list[str]:
+    """Confirm the seal against the run itself, not against its own say-so.
+
+    A record can claim any run id and any conclusion. This is the difference
+    between the seal being evidence and being an assertion: the run must
+    exist, have finished, have succeeded, and have run on the very commit the
+    record certifies.
+    """
+
+    ci = evidence.get("linux_ci")
+    if not isinstance(ci, dict):
+        return ["linux_ci must be an object"]
+    if run is None:
+        return ["SKIPPED: GitHub could not be asked about the run"]
+    problems = []
+    if run.get("databaseId") != ci.get("run_id"):
+        problems.append(
+            f"asked GitHub for run {ci.get('run_id')} and got {run.get('databaseId')}"
+        )
+    if run.get("status") != "completed":
+        problems.append(f"run {ci.get('run_id')} has not finished: {run.get('status')!r}")
+    if run.get("conclusion") != "success":
+        problems.append(
+            f"run {ci.get('run_id')} concluded {run.get('conclusion')!r}, not success"
+        )
+    head = str(run.get("headSha", ""))
+    sealed = str(ci.get("certified_content_sha", ""))
+    if head != sealed:
+        problems.append(
+            f"run {ci.get('run_id')} ran on {head[:12]}, but the record seals {sealed[:12]}"
+        )
+    if run.get("workflowName") != "verify":
+        problems.append(f"run {ci.get('run_id')} is {run.get('workflowName')!r}, not verify")
+    return problems
+
+
 def check_witnesses(evidence: dict[str, Any]) -> list[str]:
     """The reproducible witness is mandatory; the visual one may be absent."""
 
@@ -360,6 +427,9 @@ def run_checks(
         checks.append(
             ("the named CI run covers the certified content", check_ci_record(evidence, after_ci))
         )
+        run_id = evidence.get("linux_ci", {}).get("run_id")
+        run = fetch_ci_run(int(run_id)) if isinstance(run_id, int) and run_id > 0 else None
+        checks.append(("GitHub agrees the named run is green", check_ci_run_is_real(evidence, run)))
     boundary = "no production diff after the certified sha"
     if changed is None:
         checks.append((boundary, ["SKIPPED: git diff unavailable"]))

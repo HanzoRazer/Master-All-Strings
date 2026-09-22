@@ -742,15 +742,15 @@ read back by `scripts/verify_do015_certification.py`. The human synthesis is
 `DO015_CERTIFICATION_REPORT.md`.
 
 ```text
-targeted DO-015 pytest     491 passed
-full pytest                2968 passed, 3 skipped, 2 failed (Windows-only)
+targeted DO-015 pytest     501 passed
+full pytest                2978 passed, 3 skipped, 2 failed (Windows-only)
 coverage                   95.63%  (floor 95%)
 Node                       505 passed, 0 failed (Windows; linux_ci_coverage NOT_PRESENT)
 ruff check src tests       PASS
 mypy (strict)              PASS, 161 source files
 fixture --check            PASS
 check_in_flight.py         PASS
-certification verifier     OK (8 of 8)
+certification verifier     OK (9 of 9)
 ```
 
 The certified session: SLOW_DOWN accepted and applied to rate 0.75, then

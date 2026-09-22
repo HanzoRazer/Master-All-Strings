@@ -36,7 +36,7 @@
     "authoritative_ci": "GitHub Actions verify.yml, ubuntu-latest, Python 3.11"
   },
   "targeted_tests": {
-    "passed": 491,
+    "passed": 501,
     "skipped": 0,
     "failed": 0,
     "command": "pytest tests/education tests/mvp/test_guided_session_api_do015.py tests/mvp/test_do015_certification.py tests/mvp2",
@@ -50,7 +50,7 @@
     ]
   },
   "full_tests": {
-    "passed": 2968,
+    "passed": 2978,
     "skipped": 3,
     "failed": 2,
     "command": "pytest --cov --cov-report=term-missing",
@@ -249,6 +249,15 @@
       "status_before": "AWAITING_ACTION",
       "status_after": "TRANSITIONED",
       "attempts_unchanged": true,
+      "provenance": {
+        "next_assignment_id": "demo-ascending-scale",
+        "next_content_id": "ascending_scale",
+        "policy_version": "guided-practice-session-v1",
+        "producer": "GuidedPracticeSessionV1/v1",
+        "schema_version": "1.0.0",
+        "source": "education.guided_session_service",
+        "transition_reason": "lesson_content_change"
+      },
       "session_digest": "sha256:112d51cacd38295889d3279ab4619d974e617299fcb4e01316427bbf17e32e80",
       "session_digest_recomputed": "sha256:112d51cacd38295889d3279ab4619d974e617299fcb4e01316427bbf17e32e80"
     },

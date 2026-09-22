@@ -51,8 +51,8 @@ LINEAGE = {
 #: record below. Nothing here can be derived from the tree, so re-running and
 #: updating this block is what re-certifying means.
 MEASUREMENTS: dict[str, Any] = {
-    "targeted": {"passed": 491, "skipped": 0, "failed": 0},
-    "full": {"passed": 2968, "skipped": 3, "failed": 2},
+    "targeted": {"passed": 501, "skipped": 0, "failed": 0},
+    "full": {"passed": 2978, "skipped": 3, "failed": 2},
     "coverage_percent": 95.63,
     "node": {"passed": 505, "failed": 0},
     "mypy_source_files": 161,

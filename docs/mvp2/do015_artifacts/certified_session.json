@@ -252,6 +252,15 @@
     "status_before": "AWAITING_ACTION",
     "status_after": "TRANSITIONED",
     "attempts_unchanged": true,
+    "provenance": {
+      "next_assignment_id": "demo-ascending-scale",
+      "next_content_id": "ascending_scale",
+      "policy_version": "guided-practice-session-v1",
+      "producer": "GuidedPracticeSessionV1/v1",
+      "schema_version": "1.0.0",
+      "source": "education.guided_session_service",
+      "transition_reason": "lesson_content_change"
+    },
     "session_digest": "sha256:112d51cacd38295889d3279ab4619d974e617299fcb4e01316427bbf17e32e80",
     "session_digest_recomputed": "sha256:112d51cacd38295889d3279ab4619d974e617299fcb4e01316427bbf17e32e80"
   }
