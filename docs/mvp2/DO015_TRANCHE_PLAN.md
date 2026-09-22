@@ -716,7 +716,33 @@ protected surfaces vs stage8_base_sha    no diff
   web/mvp1/guided-action-executor.js
 ```
 
-Stage 9 has not started.
+## Stage 9 full MAS certification
+
+Stage 9 certifies the completed DO-015 stack as one system and freezes the
+evidence. It adds no product capability, and the verifier enforces that: no
+file outside `docs/**`, `tests/**` and `scripts/verify_do015_certification.py`
+may differ between the certified product and the evidence freeze.
+
+```text
+stage8_product_sha    = a29afb5e6972c5dfbf2266dee7a0ec47597c1d98
+stage8_merge_sha      = 3fcf618b655c3f51b020d11a0bb3f96571da08d7
+stage9_base_sha       = 3fcf618b655c3f51b020d11a0bb3f96571da08d7
+certified_product_sha = 3fcf618b655c3f51b020d11a0bb3f96571da08d7
+Stage 9 branch        = cursor/do015-full-certification-cc02
+```
+
+`3fcf618` is the PR #34 merge commit and the tip of `main` at branch creation,
+so the certified product baseline and the Stage 9 base are the same commit.
+The Stage 8 product head is `a29afb5`, not the `f671a73` an earlier draft of
+the order carried: two review-fix commits landed on the Stage 8 branch before
+it merged.
+
+Certification results are recorded in `DO015_INTEGRATION_EVIDENCE.json` and
+read back by `scripts/verify_do015_certification.py`. The human synthesis is
+`DO015_CERTIFICATION_REPORT.md`.
+
+Stage 10 has not started. Merge, tag, release and publication are not
+authorized by this tranche.
 
 ## Session status (minimal)
 
