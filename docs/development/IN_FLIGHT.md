@@ -12,7 +12,7 @@ row is deleted when the pull request merges.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| DO-015 Stage 8 | cursor/do015-adversarial-authority-s8a1 | Cursor, Claude | #34 | f4322bf | in review | 2026-09-21 |
+| DO-015 Stage 8 | cursor/do015-adversarial-authority-s8a1 | Cursor, Claude | #34 | f4322bf | green | 2026-09-21 |
 
 `main` is at `f4322bf` (PR #33). DO-015 Stage 7 remains merged at `286d5aa`. Stage 8 is adversarial verification only.
 
