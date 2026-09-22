@@ -22,7 +22,7 @@ import json
 import re
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -272,8 +272,14 @@ def is_cleanup_branch(current: str | None) -> bool:
     branch, which needs a row, which goes stale in turn.
 
     The way out is to notice what a cleanup branch is. If a branch removes
-    rows and adds none, it is not work anyone else could collide with, and
-    demanding it announce itself is what makes the recursion.
+    rows and touches nothing else, it is not work anyone else could collide
+    with, and demanding it announce itself is what makes the recursion.
+
+    "Touches nothing else" has to mean the rows as well as the set of them.
+    Comparing branch names alone would let a branch delete a stale row and
+    quietly change another row's agent, state or pull request on the way past,
+    and that is ordinary register work wearing a cleanup's clothes. Line
+    numbers are excluded, because removing a row moves every row below it.
     """
 
     if current is None:
@@ -284,11 +290,17 @@ def is_cleanup_branch(current: str | None) -> bool:
     ours = REGISTER.read_text(encoding="utf-8") if REGISTER.exists() else ""
     before, _ = parse_register(theirs)
     after, _ = parse_register(ours)
-    before_branches = {row.branch for row in before}
-    after_branches = {row.branch for row in after}
-    removed = before_branches - after_branches
-    added = after_branches - before_branches
-    return bool(removed) and not added
+    # Position is the one field a deletion is allowed to move.
+    unpositioned = {row.branch: replace(row, line_number=0) for row in before}
+    theirs_now = {row.branch: replace(row, line_number=0) for row in after}
+    removed = set(unpositioned) - set(theirs_now)
+    added = set(theirs_now) - set(unpositioned)
+    if not removed or added:
+        return False
+    return all(
+        unpositioned[branch] == theirs_now[branch]
+        for branch in set(unpositioned) & set(theirs_now)
+    )
 
 
 def current_branch() -> str | None:

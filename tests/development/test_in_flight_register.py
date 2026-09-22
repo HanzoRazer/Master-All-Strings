@@ -247,20 +247,83 @@ def test_the_exemption_is_only_for_the_branch_doing_the_clearing() -> None:
     assert any("PR #37 is open on someone/else" in item for item in problems)
 
 
-def test_a_branch_that_adds_a_row_is_not_a_cleanup() -> None:
-    # Removing one row while adding another is ordinary work wearing a
-    # cleanup's clothes, and it still has to announce itself.
+def _is_cleanup(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, before: str, after: str
+) -> bool:
+    """Run the real predicate against fixture registers, never live git state."""
+
+    register = tmp_path / "IN_FLIGHT.md"
+    register.write_text(after, encoding="utf-8")
+    monkeypatch.setattr(check, "REGISTER", register)
+    monkeypatch.setattr(
+        check, "register_at", lambda ref: before if ref == "origin/main" else None
+    )
+    return check.is_cleanup_branch("docs/clear-merged-register-row")
+
+
+def test_removing_rows_without_other_edits_is_a_cleanup(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    assert _is_cleanup(monkeypatch, tmp_path, HEADER + ROW, HEADER)
+
+
+def test_removing_a_row_and_adding_a_row_is_not_a_cleanup(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     before = HEADER + ROW
     after = HEADER + ROW.replace("cursor/do015-next-ab12", "cursor/something-new")
-    removed = {r.branch for r in check.parse_register(before)[0]} - {
-        r.branch for r in check.parse_register(after)[0]
-    }
-    added = {r.branch for r in check.parse_register(after)[0]} - {
-        r.branch for r in check.parse_register(before)[0]
-    }
-    assert removed and added, "this fixture must both remove and add"
-    # is_cleanup_branch requires removals and no additions.
-    assert not (bool(removed) and not added)
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_removing_a_row_and_editing_a_retained_row_is_not_a_cleanup(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # The bypass a branch-name comparison misses: clear a stale row and change
+    # someone else's state on the way past, and the exemption would have let
+    # the whole thing through unannounced.
+    retained = ROW.replace("cursor/do015-next-ab12", "cursor/retained-row")
+    before = HEADER + ROW + retained
+    after = HEADER + retained.replace("in flight", "blocked")
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_a_retained_row_may_move_down_the_table(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Position is the one thing a deletion is allowed to change.
+    retained = ROW.replace("cursor/do015-next-ab12", "cursor/retained-row")
+    before = HEADER + ROW + retained
+    after = HEADER + retained
+    assert _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_editing_rows_without_removing_one_is_not_a_cleanup(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    before = HEADER + ROW
+    after = HEADER + ROW.replace("in flight", "green")
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_needs_a_branch_name(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    register = tmp_path / "IN_FLIGHT.md"
+    register.write_text(HEADER, encoding="utf-8")
+    monkeypatch.setattr(check, "REGISTER", register)
+    monkeypatch.setattr(check, "register_at", lambda _ref: HEADER + ROW)
+    assert not check.is_cleanup_branch(None)
+
+
+def test_cleanup_cannot_be_decided_without_origin_main(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Unreadable is not the same as unchanged: refuse rather than assume.
+    register = tmp_path / "IN_FLIGHT.md"
+    register.write_text(HEADER, encoding="utf-8")
+    monkeypatch.setattr(check, "REGISTER", register)
+    monkeypatch.setattr(check, "register_at", lambda _ref: None)
+    assert not check.is_cleanup_branch("docs/clear-merged-register-row")
 
 
 def test_the_register_can_be_read_from_another_ref() -> None:
