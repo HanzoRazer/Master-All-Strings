@@ -5,13 +5,14 @@ repository — Cursor, Codex, Claude — and none of them can see each other's
 conversations. This file is the only place they can all read to find out what is
 already being worked on.
 
-It is not a plan and not a history. A branch appears when work starts and the
-row is deleted when the pull request merges.
+It is not a plan and not a history. A row appears when work starts, and once its
+pull request merges the next branch clears it.
 
 ## In flight
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
+| Checker fails only on what you can fix | fix/in-flight-fail-only-what-you-can-fix | Claude | — | d6c870a | in flight | 2026-09-22 |
 
 An empty table means nothing is in flight.
 
@@ -42,43 +43,36 @@ Add your row in the **first commit on the branch**, before you push:
 
 Update `State` when it changes — particularly to `green`, which is what says
 the branch is finished and safe to merge. Fill in `PR` as soon as the pull
-request exists: a row that still says `—` while a pull request is open is drift
-like any other. Delete the row when the PR merges.
+request exists.
 
-That last step cannot happen inside the pull request it describes: the merge
-lands after the final commit, so a row outlives its own branch and the register
-on `main` goes stale until someone clears it. Clearing it takes a branch, and a
-branch would need a row, which would go stale in turn.
+### When a row is finished
 
-So a branch that only **removes** rows needs no row of its own. The checker
-works that out exactly: it takes this file as `origin/main` has it, deletes
-precisely the rows the branch dropped, and requires the result to be what the
-branch actually has, character for character apart from line endings.
+A row cannot be deleted by the pull request it describes: the merge lands after
+the last commit, so every row outlives its branch. That is expected, not drift.
 
-Nothing else qualifies. Change a retained row's state on the way past, reword
-a paragraph, rename a column, drop the separator, leave a row the parser
-cannot read — each of those is a register change, and a register change is the
-one thing this file exists to announce. A branch that edits these paragraphs
-is changing the rules, so it announces itself like any other work; only the
-branches that do nothing but remove finished rows go unannounced.
+**Clear finished rows in the first commit of your next branch** — any row whose
+pull request has closed or merged, or which never named one and whose branch is
+gone from `origin`. Nobody opens a pull request just to clear a row.
 
-Nothing above this line names a branch, a pull request or a commit on purpose.
-Prose that did would go stale every time something merged, and fixing it would
-make every cleanup a rule change -- which is how clearing one row turned into
-four pull requests once already.
+### What fails, and what is only a note
 
-A cleanup also changes **nothing but this file**. Deleting a finished row is
-not cover for editing code or other documents, and a branch that does both has
-work to announce like any other.
+The checker fails only on what can be fixed from where it is run:
 
-And the rows being removed must already be **stale**: their pull request
-closed or merged, or — for a row that never named one — their branch gone from
-`origin`. The exemption is for clearing work that has landed. Pointed at a live
-row it would let one branch delete another's announcement and skip making its
-own, which is worse than the problem it solves. Not being able to tell is not
-the same as stale, so an unreachable GitHub refuses rather than assumes. Clear a
-merged row either in the first commit of the next branch, which is the usual
-way, or in a cleanup branch of its own.
+| Finding | On your branch | On `main` or a detached head |
+| --- | --- | --- |
+| The register is malformed | fails | fails |
+| A finished row | fails — clear it | note |
+| Your own pull request has no row, or your row is wrong | fails | — |
+| Another open pull request has no row here | note | note |
+| Another row is wrong | note | note |
+
+A finished row fails on a working branch because clearing it is that branch's
+job; from `main` it is true, and nobody's to fix there. Another open pull
+request having no row in *your* copy is the register working, not failing: each
+branch carries only its own row until it merges.
+
+Nothing in this section names a branch, a pull request or a commit, on purpose.
+Prose that did would go stale every time something merged.
 
 Run `python scripts/check_in_flight.py` before pushing. It reconciles this file
 against the open pull requests and the branches on `origin` and reports where
