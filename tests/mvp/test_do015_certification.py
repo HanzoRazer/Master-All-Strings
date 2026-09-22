@@ -211,6 +211,7 @@ def test_a_product_file_changed_after_the_certified_sha_fails(path: str) -> None
         "tests/mvp/test_do015_certification.py",
         "web/mvp1/tests/guided_authority_adversarial.test.js",
         "scripts/verify_do015_certification.py",
+        "scripts/build_do015_certification_evidence.py",
     ],
 )
 def test_an_evidence_only_diff_passes(path: str) -> None:

@@ -74,8 +74,17 @@ REQUIRED_LINEAGE: tuple[str, ...] = (
 
 #: Only certification surfaces may move after the certified product commit.
 #: Test code counts: the verifier's own tests are certification tooling.
+#:
+#: Two named scripts, not scripts/ as a prefix. The generator earns its place
+#: because a freeze that cannot be rebuilt is not reproducible; anything else
+#: under scripts/ is product tooling and stays frozen.
 ALLOWED_PREFIXES: tuple[str, ...] = ("docs/", "tests/", "web/mvp1/tests/")
-ALLOWED_EXACT: frozenset[str] = frozenset({"scripts/verify_do015_certification.py"})
+ALLOWED_EXACT: frozenset[str] = frozenset(
+    {
+        "scripts/verify_do015_certification.py",
+        "scripts/build_do015_certification_evidence.py",
+    }
+)
 
 _SHA = re.compile(r"^[0-9a-f]{40}$")
 
