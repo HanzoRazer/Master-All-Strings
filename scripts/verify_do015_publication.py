@@ -112,7 +112,12 @@ def verify_lineage(
             f"but Stage 9 certified {certified_by_stage9 or '(none)'}"
         )
     merge = str(lineage.get("stage9_merge_sha", ""))
-    for sha, what in ((certified, "certified product"), (merge, "Stage 9 merge")):
+    base = str(lineage.get("stage10_base_sha", ""))
+    for sha, what in (
+        (certified, "certified product"),
+        (merge, "Stage 9 merge"),
+        (base, "Stage 10 base"),
+    ):
         if not sha:
             continue
         if not is_ancestor(sha, head):
@@ -122,7 +127,41 @@ def verify_lineage(
             f"certified product {certified[:7]} is not an ancestor of the "
             f"Stage 9 merge {merge[:7]}"
         )
+    # Publishing from a base that predates the certification would publish
+    # something the evidence does not describe.
+    if merge and base and not is_ancestor(merge, base):
+        problems.append(
+            f"Stage 10 base {base[:7]} does not contain the Stage 9 merge {merge[:7]}"
+        )
     return tuple(problems)
+
+
+def verify_branch_point(
+    recorded_base: str, branch_point: str | None, head_sha: str | None
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """The recorded base must *be* the commit this branch was cut from.
+
+    Ancestry alone is too weak: every commit back to the certification is an
+    ancestor of this branch, so a base naming any of them would pass while
+    misstating what was published from where. Returns (problems, notes).
+    """
+
+    if not branch_point or not head_sha:
+        return (), ("branch point unknown: stage10_base_sha could not be enforced",)
+    if branch_point == head_sha:
+        # This history already contains origin/main's tip -- the branch has
+        # merged, or main has not moved past it. There is no branch point left
+        # to compare, and a verdict here would be invented.
+        return (), ("branch point is HEAD: stage10_base_sha not enforced from here",)
+    if recorded_base != branch_point:
+        return (
+            (
+                f"stage10_base_sha is {recorded_base[:7]}, but this branch was cut "
+                f"from {branch_point[:7]}",
+            ),
+            (),
+        )
+    return (), ()
 
 
 def protected_product_changes(changed: Iterable[str]) -> tuple[str, ...]:
@@ -201,6 +240,13 @@ def _git(*args: str) -> str | None:
 
 def is_ancestor(candidate: str, descendant: str) -> bool:
     return _git("merge-base", "--is-ancestor", candidate, descendant) is not None
+
+
+def branch_point(head: str = "HEAD", against: str = "origin/main") -> str | None:
+    """The commit this branch was cut from, or None when it cannot be found."""
+
+    out = _git("merge-base", head, against)
+    return out.strip() if out and out.strip() else None
 
 
 def changed_paths(base: str, head: str) -> tuple[str, ...]:
@@ -288,6 +334,14 @@ def main(argv: list[str] | None = None) -> int:
         checks.append(
             ("lineage", verify_lineage(evidence, certification or {}, is_ancestor, args.head))
         )
+
+        base_problems, base_notes = verify_branch_point(
+            str(evidence.get("lineage", {}).get("stage10_base_sha", "")),
+            branch_point(args.head),
+            (_git("rev-parse", args.head) or "").strip() or None,
+        )
+        checks.append(("stage10_base_sha is the branch point", base_problems))
+        notes.extend(base_notes)
 
         certified = str(evidence.get("lineage", {}).get("certified_product_sha", ""))
         if certified:

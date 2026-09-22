@@ -51,6 +51,15 @@ and trying makes every commit demand one more. The verifier measures the
 product surface from the certified product to `HEAD` at run time, so the record
 never needs to name the commit it lives in.
 
+### The base is checked, not just recorded
+
+`stage10_base_sha` is compared against the branch point — `git merge-base HEAD
+origin/main` — rather than checked for presence or ancestry. Every commit back
+to the certification is an ancestor of this branch, so an ancestry test alone
+would accept a base that misstates where publication was prepared from. Once
+this branch merges there is no branch point left to compare, and the run says
+the field was not enforced rather than inventing a verdict.
+
 ## What is being published
 
 The certified DO-015 capability, unchanged, integrated into `main`:
@@ -94,15 +103,15 @@ not the evidence.
 
 | Gate | Result |
 | --- | --- |
-| Publication verifier | OK (8 of 8) |
+| Publication verifier | OK (9 of 9) |
 | Stage 9 certification verifier | OK (9 of 9) |
 | Stage 9 evidence generator `--check` | OK |
 | Protected product surface | 0 changed files since `3fcf618` |
-| Publication verifier tests | 40 passed |
+| Publication verifier tests | 47 passed |
 | DO-015 targeted tests (Python) | 311 passed |
 | Node suite | 505 passed, 0 failed |
 | Reproducible browser witness | PASS |
-| Full pytest | 3062 passed, 3 skipped, 2 failed |
+| Full pytest | 3069 passed, 3 skipped, 2 failed |
 | Coverage | 95.63% (floor 95%) |
 | Ruff | PASS |
 | Strict mypy | PASS |

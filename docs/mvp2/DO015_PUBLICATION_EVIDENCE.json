@@ -73,7 +73,7 @@
   "verification": {
     "publication_verifier": {
       "result": "OK",
-      "checks": "8 of 8"
+      "checks": "9 of 9"
     },
     "certification_verifier": {
       "result": "OK",
@@ -87,7 +87,7 @@
       "range": "3fcf618..HEAD"
     },
     "publication_verifier_tests": {
-      "passed": 40,
+      "passed": 47,
       "path": "tests/mvp/test_do015_publication.py"
     },
     "do015_targeted_python": {
@@ -99,7 +99,7 @@
       "command": "node --test tests/*.test.js (web/mvp1)"
     },
     "full_pytest": {
-      "passed": 3062,
+      "passed": 3069,
       "skipped": 3,
       "failed": 2,
       "failed_are": "the two known Windows-only environment artifacts; Linux CI is authoritative"
@@ -122,7 +122,8 @@
     "tags": {
       "mvp1": "unchanged",
       "mvp2": "none local, none on origin"
-    }
+    },
+    "stage10_base_enforcement": "stage10_base_sha is checked against the branch point (git merge-base HEAD origin/main), not merely for presence or ancestry: every commit back to the certification is an ancestor, so ancestry alone would accept a base that misstates where publication was prepared from. Where no branch point can be determined -- once this merges, origin/main contains it -- the run says the field was not enforced rather than inventing a verdict."
   },
   "tags": {
     "mvp1": {

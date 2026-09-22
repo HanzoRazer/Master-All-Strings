@@ -115,6 +115,70 @@ def test_a_certified_product_outside_its_own_certification_is_refused(
     )
 
 
+def test_a_base_that_is_an_ancestor_but_not_the_branch_point_is_refused(
+    verifier: ModuleType, evidence: dict[str, Any]
+) -> None:
+    # The failure ancestry alone cannot catch: every commit back to the
+    # certification is an ancestor of this branch, so a base naming one of
+    # them passes every ancestry check while misstating what was published
+    # from where. Only the branch point itself settles it.
+    merge = evidence["lineage"]["stage9_merge_sha"]
+    base = evidence["lineage"]["stage10_base_sha"]
+    problems, notes = verifier.verify_branch_point(merge, base, "f" * 40)
+    assert problems and f"stage10_base_sha is {merge[:7]}" in problems[0]
+    assert f"cut from {base[:7]}" in problems[0]
+    assert notes == ()
+
+
+def test_the_recorded_base_matching_the_branch_point_passes(
+    verifier: ModuleType, evidence: dict[str, Any]
+) -> None:
+    base = evidence["lineage"]["stage10_base_sha"]
+    assert verifier.verify_branch_point(base, base, "f" * 40) == ((), ())
+
+
+@pytest.mark.parametrize(
+    ("point", "head", "expected"),
+    [
+        (None, "f" * 40, "branch point unknown"),
+        ("f" * 40, None, "branch point unknown"),
+        ("f" * 40, "f" * 40, "branch point is HEAD"),
+    ],
+)
+def test_an_undeterminable_branch_point_is_a_note_not_a_verdict(
+    verifier: ModuleType, point: str | None, head: str | None, expected: str
+) -> None:
+    # Once this branch merges, origin/main contains it and there is no branch
+    # point left to compare. Inventing a verdict there is how a check starts
+    # lying; the run says it could not enforce the field instead.
+    problems, notes = verifier.verify_branch_point("0" * 40, point, head)
+    assert problems == ()
+    assert notes and expected in notes[0]
+
+
+def test_a_base_outside_this_history_is_refused(
+    verifier: ModuleType, evidence: dict[str, Any], certification: dict[str, Any]
+) -> None:
+    base = evidence["lineage"]["stage10_base_sha"]
+    problems = verifier.verify_lineage(
+        evidence, certification, lambda candidate, _: candidate != base
+    )
+    assert f"Stage 10 base {base[:7]} is not an ancestor of HEAD" in problems
+
+
+def test_a_base_that_predates_the_certification_is_refused(
+    verifier: ModuleType, evidence: dict[str, Any], certification: dict[str, Any]
+) -> None:
+    merge = evidence["lineage"]["stage9_merge_sha"]
+    base = evidence["lineage"]["stage10_base_sha"]
+    problems = verifier.verify_lineage(
+        evidence,
+        certification,
+        lambda candidate, descendant: not (candidate == merge and descendant == base),
+    )
+    assert any(f"does not contain the Stage 9 merge {merge[:7]}" in item for item in problems)
+
+
 @pytest.mark.parametrize(
     "path",
     [
