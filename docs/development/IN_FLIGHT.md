@@ -63,13 +63,19 @@ The checker fails only on what can be fixed from where it is run:
 | The register is malformed | fails | fails |
 | A finished row | fails — clear it | note |
 | Your own pull request has no row, or your row is wrong | fails | — |
+| Your branch has more than one open pull request | fails | — |
 | Another open pull request has no row here | note | note |
-| Another row is wrong | note | note |
+| Another row is wrong, or another branch has two pull requests | note | note |
+| A pull request from a fork | note | note |
 
 A finished row fails on a working branch because clearing it is that branch's
 job; from `main` it is true, and nobody's to fix there. Another open pull
 request having no row in *your* copy is the register working, not failing: each
 branch carries only its own row until it merges.
+
+A branch carries one order into `main`, so it has one open pull request, and
+one row names it. A fork's pull request has no branch on `origin` and so no
+row; it is noted, never matched to a branch here that shares its name.
 
 Nothing in this section names a branch, a pull request or a commit, on purpose.
 Prose that did would go stale every time something merged.
@@ -87,7 +93,7 @@ be as current as the last person who edited it:
 
 ```bash
 git fetch origin
-gh pr list --state open --json number,title,headRefName,files
+gh pr list --state open --limit 500 --json number,title,headRefName,files
 ```
 
 If someone else's row already covers the surface you were about to change, say

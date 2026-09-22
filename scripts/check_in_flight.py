@@ -41,6 +41,12 @@ REGISTER = ROOT / "docs" / "development" / "IN_FLIGHT.md"
 #: AGENTS.md already fixes the name -- every branch is cut from ``main``.
 DEFAULT_BRANCH = "main"
 
+#: gh lists 30 pull requests unless told otherwise, and says nothing about the
+#: rest. A register checked against the first 30 is unchecked from the 31st, so
+#: ask for more than this repository will ever have open -- and if even that
+#: many come back, report the list as unavailable rather than check a part of it.
+PR_LIMIT = 500
+
 COLUMNS = ("Order", "Branch", "Agent", "PR", "Base", "State", "Updated")
 STATES = ("in flight", "in review", "green", "blocked")
 UNSET = {"—", "-", ""}
@@ -67,6 +73,26 @@ class Row:
     @property
     def pr_number(self) -> int | None:
         return int(self.pr[1:]) if _PR.match(self.pr) else None
+
+
+@dataclass(frozen=True)
+class PullRequest:
+    """One open pull request, as GitHub reports it."""
+
+    number: int
+    branch: str
+    #: The fork's owner when the head branch is not on origin, else None. A
+    #: fork's branch can share a name with one here and be nothing to do with it.
+    fork: str | None = None
+
+    @property
+    def head(self) -> str:
+        return f"{self.fork}:{self.branch}" if self.fork else self.branch
+
+
+def _open(numbers: list[int]) -> str:
+    listed = ", ".join(f"#{number}" for number in numbers)
+    return f"PR {listed} is open" if len(numbers) == 1 else f"PRs {listed} are open"
 
 
 def _ascii(text: str) -> str:
@@ -198,7 +224,7 @@ def on_working_branch(current: str | None) -> bool:
 
 def reconcile(
     rows: list[Row],
-    open_prs: dict[str, int] | None,
+    open_prs: list[PullRequest] | None,
     remote_branches: set[str] | None,
     current_branch: str | None = None,
 ) -> tuple[list[str], list[str]]:
@@ -220,17 +246,26 @@ def reconcile(
       their branch until it merges, so its absence from this copy is the
       register working, not failing.
 
-    ``open_prs`` maps head branch to pull-request number; either fact may be
-    None when it could not be gathered, and the checks needing it are skipped
-    rather than guessed at.
+    A branch carries one order into ``main``, so it has at most one open pull
+    request; more than one is itself a finding, owned by that branch. A pull
+    request from a fork has no branch on origin and so no row -- it is noted,
+    never matched to a branch here that happens to share its name.
+
+    Either fact may be None when it could not be gathered, and the checks
+    needing it are skipped rather than guessed at.
     """
 
     failures: list[str] = []
     notes: list[str] = []
     working = on_working_branch(current_branch)
     listed = {row.branch for row in rows}
-    open_numbers = set(open_prs.values()) if open_prs is not None else None
-    head_of = {number: branch for branch, number in (open_prs or {}).items()}
+    prs = sorted(open_prs or [], key=lambda pr: pr.number)
+    open_numbers = {pr.number for pr in prs} if open_prs is not None else None
+    head_of = {pr.number: pr.head for pr in prs}
+    on_branch: dict[str, list[int]] = {}
+    for pr in prs:
+        if pr.fork is None:
+            on_branch.setdefault(pr.branch, []).append(pr.number)
 
     def report(message: str, fixable_here: bool) -> None:
         (failures if fixable_here else notes).append(message)
@@ -245,18 +280,18 @@ def reconcile(
         # after its first pull request closed still names the closed number,
         # and calling that stale would say "clear it" -- delete a live row --
         # where the fix is to point it at the open one.
-        live = open_prs.get(row.branch) if open_prs is not None else None
-        if live is not None:
+        live = on_branch.get(row.branch, [])
+        if live:
             if number is None:
                 report(
-                    f"PR #{live} is open on {row.branch} but the register row "
-                    f"still has no PR ({where})",
+                    f"{_open(live)} on {row.branch} but the register row still has "
+                    f"no PR ({where})",
                     own,
                 )
-            elif number != live:
+            elif number not in live:
                 report(
-                    f"row for {row.branch} names PR #{number}, but the pull request "
-                    f"open on {row.branch} is #{live} ({where})",
+                    f"row for {row.branch} names PR #{number}, but on {row.branch} "
+                    f"{_open(live)} ({where})",
                     own,
                 )
             continue
@@ -294,25 +329,37 @@ def reconcile(
                 own,
             )
 
-    if open_prs is not None:
-        claimed = {row.pr_number for row in rows if row.pr_number is not None}
-        for branch, number in sorted(open_prs.items()):
-            if branch in listed:
-                continue
-            own_pr = working and branch == current_branch
-            if number in claimed and not own_pr:
-                # A row already claims this number under another branch, and
-                # that mismatch is reported against the row. Saying the pull
-                # request has no row as well would be false: it has the wrong one.
-                continue
-            if own_pr:
-                report(f"PR #{number} is open on this branch but has no row -- add yours", True)
-            else:
-                report(
-                    f"PR #{number} is open on {branch} with no row here -- its row "
-                    "lives on its own branch until it merges",
-                    False,
-                )
+    claimed = {row.pr_number for row in rows if row.pr_number is not None}
+    for branch, numbers in sorted(on_branch.items()):
+        own_pr = working and branch == current_branch
+        if len(numbers) > 1:
+            report(
+                f"{_open(numbers)} on {branch} -- a branch carries one order into "
+                "main, so close all but one",
+                own_pr,
+            )
+        if branch in listed:
+            continue
+        if own_pr:
+            report(f"{_open(numbers)} on this branch but has no row -- add yours", True)
+            continue
+        # A number a row already claims under another branch is reported
+        # against that row. Saying it has no row as well would be false: it
+        # has the wrong one.
+        unclaimed = [number for number in numbers if number not in claimed]
+        if unclaimed:
+            report(
+                f"{_open(unclaimed)} on {branch} with no row here -- its row "
+                "lives on its own branch until it merges",
+                False,
+            )
+    for pr in prs:
+        if pr.fork is not None and pr.number not in claimed:
+            report(
+                f"PR #{pr.number} is open from a fork ({pr.head}) -- the register "
+                "lists branches on origin, so it has no row",
+                False,
+            )
     return failures, notes
 
 
@@ -336,16 +383,30 @@ def _run(command: list[str]) -> str | None:
     return result.stdout if result.returncode == 0 else None
 
 
-def open_pull_requests() -> dict[str, int] | None:
-    """Open PRs by head branch, or None when GitHub could not be reached."""
+def open_pull_requests() -> list[PullRequest] | None:
+    """Every open PR, or None when GitHub could not list them all."""
 
-    out = _run(["gh", "pr", "list", "--state", "open", "--json", "number,headRefName"])
+    fields = "number,headRefName,isCrossRepository,headRepositoryOwner"
+    out = _run(
+        ["gh", "pr", "list", "--state", "open", "--limit", str(PR_LIMIT), "--json", fields]
+    )
     if out is None:
         return None
     try:
-        return {item["headRefName"]: int(item["number"]) for item in json.loads(out)}
-    except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+        prs = [
+            PullRequest(
+                int(item["number"]),
+                item["headRefName"],
+                # A deleted fork has no owner left to name.
+                ((item.get("headRepositoryOwner") or {}).get("login") or "unknown")
+                if item["isCrossRepository"]
+                else None,
+            )
+            for item in json.loads(out)
+        ]
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError, AttributeError):
         return None
+    return prs if len(prs) < PR_LIMIT else None
 
 
 def current_branch() -> str | None:
@@ -397,7 +458,10 @@ def main(argv: list[str] | None = None) -> int:
         prs = open_pull_requests()
         branches = remote_branches()
         if prs is None:
-            notes.append("could not list open pull requests (gh unavailable?)")
+            notes.append(
+                "could not list every open pull request (gh unavailable, or "
+                f"{PR_LIMIT} or more open)"
+            )
         if branches is None:
             notes.append("could not list branches on origin")
         failures, found = reconcile(rows, prs, branches, current_branch())

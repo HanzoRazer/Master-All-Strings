@@ -83,7 +83,7 @@ the repository, because it is only as current as the last person who edited it:
 
 ```bash
 git fetch origin
-gh pr list --state open --json number,title,headRefName,files
+gh pr list --state open --limit 500 --json number,title,headRefName,files
 ```
 
 If a register row or an open pull request already covers the surface you are

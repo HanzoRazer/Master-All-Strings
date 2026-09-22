@@ -65,13 +65,21 @@ def rows_of(text: str) -> list:
     return rows
 
 
+def prs(open_prs: dict[str, int] | list | None) -> list | None:
+    """Open pull requests, from ``{branch: number}`` where one per branch will do."""
+
+    if isinstance(open_prs, dict):
+        return [check.PullRequest(number, branch) for branch, number in open_prs.items()]
+    return open_prs
+
+
 def run(
     text: str,
-    open_prs: dict[str, int] | None,
+    open_prs: dict[str, int] | list | None,
     remote: set[str] | None,
     current: str | None,
 ) -> tuple[list[str], list[str]]:
-    return check.reconcile(rows_of(text), open_prs, remote, current)
+    return check.reconcile(rows_of(text), prs(open_prs), remote, current)
 
 
 # --- parsing and validation: the file's own shape, wrong everywhere -----------
@@ -263,7 +271,7 @@ def test_your_reused_branch_is_told_to_repoint_its_row_not_clear_it() -> None:
     # row is wrong, not finished: deleting it would leave live work unlisted.
     failures, notes = run(HEADER + MY_ROW, {MINE: 42}, {MINE}, MINE)
     assert len(failures) == 1
-    assert "names PR #41" in failures[0] and "is #42" in failures[0]
+    assert "names PR #41" in failures[0] and "PR #42 is open" in failures[0]
     assert "clear it" not in failures[0]
     assert notes == []
 
@@ -272,7 +280,7 @@ def test_a_reused_branchs_row_is_a_note_from_main() -> None:
     failures, notes = run(HEADER + MY_ROW, {MINE: 42}, {MINE}, "main")
     assert failures == []
     assert len(notes) == 1
-    assert "is #42" in notes[0] and "clears it" not in notes[0]
+    assert "PR #42 is open" in notes[0] and "clears it" not in notes[0]
 
 
 def test_a_working_branch_is_never_told_to_clear_another_live_row() -> None:
@@ -281,7 +289,7 @@ def test_a_working_branch_is_never_told_to_clear_another_live_row() -> None:
     failures, notes = run(HEADER + ROW, {THEIRS: 43}, {THEIRS}, MINE)
     assert failures == []
     assert len(notes) == 1
-    assert "is #43" in notes[0] and "clear" not in notes[0]
+    assert "PR #43 is open" in notes[0] and "clear" not in notes[0]
 
 
 def test_another_open_pull_request_without_a_row_here_is_a_note() -> None:
@@ -340,6 +348,129 @@ def test_without_branches_a_closed_pull_request_still_decides_staleness() -> Non
     assert failures and "no longer open" in failures[0]
 
 
+# --- one branch, one pull request; forks are not branches here ----------------
+
+
+def test_your_branch_with_two_open_pull_requests_fails_once() -> None:
+    # Every open pull request is seen, not the last one per branch. The row
+    # names one of them, so the only finding is the second pull request.
+    two = [check.PullRequest(41, MINE), check.PullRequest(44, MINE)]
+    failures, notes = run(HEADER + MY_ROW, two, {MINE}, MINE)
+    assert failures == [
+        "PRs #41, #44 are open on fix/mine -- a branch carries one order into main, "
+        "so close all but one"
+    ]
+    assert notes == []
+
+
+def test_another_branch_with_two_open_pull_requests_is_a_note() -> None:
+    two = [check.PullRequest(44, THEIRS), check.PullRequest(40, THEIRS)]
+    failures, notes = run(HEADER + ROW, two, {THEIRS}, MINE)
+    assert failures == []
+    assert notes == [
+        "PRs #40, #44 are open on cursor/do015-next-ab12 -- a branch carries one "
+        "order into main, so close all but one"
+    ]
+
+
+def test_a_row_naming_neither_open_pull_request_on_its_branch_is_wrong() -> None:
+    two = [check.PullRequest(42, MINE), check.PullRequest(43, MINE)]
+    failures, _ = run(HEADER + MY_ROW, two, {MINE}, MINE)
+    assert "row for fix/mine names PR #41, but on fix/mine PRs #42, #43 are open" in failures[0]
+    assert len(failures) == 2  # the wrong row, and the second pull request
+
+
+def test_every_unrecorded_pull_request_on_a_branch_is_named() -> None:
+    two = [check.PullRequest(45, THEIRS), check.PullRequest(46, THEIRS)]
+    _, notes = run(HEADER, two, {THEIRS}, MINE)
+    assert any("PRs #45, #46 are open on cursor/do015-next-ab12 with no row" in n for n in notes)
+
+
+def test_a_fork_sharing_your_branch_name_is_not_your_pull_request() -> None:
+    fork = [check.PullRequest(50, MINE, fork="stranger")]
+    failures, notes = run(HEADER + MY_NO_PR_ROW, fork, {MINE}, MINE)
+    assert failures == []
+    assert notes == [
+        "PR #50 is open from a fork (stranger:fix/mine) -- the register lists "
+        "branches on origin, so it has no row"
+    ]
+
+
+def test_a_row_naming_a_fork_pull_request_is_a_mismatch() -> None:
+    fork = [check.PullRequest(41, MINE, fork="stranger")]
+    failures, notes = run(HEADER + MY_ROW, fork, {MINE}, MINE)
+    assert failures == ["register puts PR #41 on fix/mine, but it is open on stranger:fix/mine "
+                        "(IN_FLIGHT.md:5)"]
+    assert notes == []
+
+
+def _gh(monkeypatch: pytest.MonkeyPatch, items: list[dict]) -> list[list[str]]:
+    import json
+
+    calls: list[list[str]] = []
+
+    def fake(command: list[str]) -> str:
+        calls.append(command)
+        return json.dumps(items)
+
+    monkeypatch.setattr(check, "_run", fake)
+    return calls
+
+
+def test_open_pull_requests_keeps_every_pull_request_and_marks_forks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    here = {"login": "HanzoRazer"}
+    calls = _gh(
+        monkeypatch,
+        [
+            {"number": 41, "headRefName": MINE, "isCrossRepository": False,
+             "headRepositoryOwner": here},
+            {"number": 44, "headRefName": MINE, "isCrossRepository": False,
+             "headRepositoryOwner": here},
+            {"number": 50, "headRefName": MINE, "isCrossRepository": True,
+             "headRepositoryOwner": {"login": "stranger"}},
+            {"number": 51, "headRefName": "main", "isCrossRepository": True,
+             "headRepositoryOwner": None},
+        ],
+    )  # fmt: skip
+    assert check.open_pull_requests() == [
+        check.PullRequest(41, MINE),
+        check.PullRequest(44, MINE),
+        check.PullRequest(50, MINE, fork="stranger"),
+        check.PullRequest(51, "main", fork="unknown"),
+    ]
+    command = calls[0]
+    assert command[command.index("--limit") + 1] == str(check.PR_LIMIT)
+
+
+def test_a_list_that_may_be_cut_short_is_not_checked(monkeypatch: pytest.MonkeyPatch) -> None:
+    # gh stops at --limit without saying so. Checking a partial list would
+    # miss the rest in silence, so a full page counts as no answer.
+    item = {"number": 1, "headRefName": "b", "isCrossRepository": False,
+            "headRepositoryOwner": None}  # fmt: skip
+    _gh(monkeypatch, [dict(item, number=n) for n in range(check.PR_LIMIT)])
+    assert check.open_pull_requests() is None
+    _gh(monkeypatch, [dict(item, number=n) for n in range(check.PR_LIMIT - 1)])
+    assert len(check.open_pull_requests() or []) == check.PR_LIMIT - 1
+
+
+UNREADABLE = [
+    "not json",
+    '[{"number": 1}]',
+    '[{"number": "x", "headRefName": "b", "isCrossRepository": false}]',
+    None,
+]
+
+
+@pytest.mark.parametrize("out", UNREADABLE)
+def test_an_unreadable_answer_from_github_is_no_answer(
+    monkeypatch: pytest.MonkeyPatch, out: str | None
+) -> None:
+    monkeypatch.setattr(check, "_run", lambda command: out)
+    assert check.open_pull_requests() is None
+
+
 # --- the whole command ----------------------------------------------------------
 
 
@@ -347,14 +478,14 @@ def _world(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     register: str,
-    open_prs: dict[str, int] | None,
+    open_prs: dict[str, int] | list | None,
     remote: set[str] | None,
     current: str | None,
 ) -> None:
     path = tmp_path / "IN_FLIGHT.md"
     path.write_text(register, encoding="utf-8")
     monkeypatch.setattr(check, "REGISTER", path)
-    monkeypatch.setattr(check, "open_pull_requests", lambda: open_prs)
+    monkeypatch.setattr(check, "open_pull_requests", lambda: prs(open_prs))
     monkeypatch.setattr(check, "remote_branches", lambda: remote)
     monkeypatch.setattr(check, "current_branch", lambda: current)
 
@@ -407,7 +538,7 @@ def test_unreachable_facts_are_noted_not_failed(
     _world(monkeypatch, tmp_path, HEADER + ROW, None, None, MINE)
     assert check.main([]) == 0
     printed = capsys.readouterr().out
-    assert "could not list open pull requests" in printed
+    assert "could not list every open pull request" in printed
     assert "could not list branches on origin" in printed
 
 
