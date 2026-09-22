@@ -91,11 +91,13 @@ about to change, say so and stop rather than implementing the same order twice.
 
 Add your own row in the **first commit on your branch**, before you push, and
 set its state to `green` when the work is finished and the gates pass. In that
-same first commit, clear any finished rows: a pull request cannot delete its
-own row, so each branch clears the ones left by the branches before it, and
-nobody opens a pull request just to do that. `python scripts/check_in_flight.py`
-reconciles the register against the open pull requests and the branches on
-`origin`, and fails only on what your branch can fix. Run it before you push. It is not a CI gate: the workflow is a
+same first commit, clear any rows already finished: a pull request cannot
+delete its own row, so every branch outlives its own. Rows that finish while
+you work are cleared in the next commit you are making anyway — whichever
+branch is in flight clears them, and nobody opens a pull request just to do
+that. `python scripts/check_in_flight.py` reconciles the register against the
+open pull requests and the branches on `origin`, and fails only on what your
+branch can fix. Run it before you push. It is not a CI gate: the workflow is a
 deferred-hygiene path frozen by DO-012A, so wiring it in needs an owner ruling.
 
 A register cannot stop two agents colliding. It can only make the collision

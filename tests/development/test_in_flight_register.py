@@ -197,6 +197,17 @@ def test_a_merged_row_fails_on_a_working_branch() -> None:
     assert notes == []
 
 
+@pytest.mark.parametrize("current", [MINE, "cursor/anything", "docs/something-else"])
+def test_whichever_branch_is_in_flight_is_the_one_told_to_clear(current: str) -> None:
+    # No branch is nominated and none waits for another: any branch in flight
+    # can clear the row in a commit it is making anyway, so each is told to.
+    # A branch designated by the register would be one more thing to keep true.
+    failures, _ = run(HEADER + ROW, {}, {THEIRS}, current)
+    assert len(failures) == 1
+    assert "clear it in this branch" in failures[0]
+    assert "in the commit you are making anyway" in failures[0]
+
+
 @pytest.mark.parametrize("current", ["main", None])
 def test_a_merged_row_is_only_a_note_where_nothing_can_be_committed(
     current: str | None,
@@ -208,7 +219,7 @@ def test_a_merged_row_is_only_a_note_where_nothing_can_be_committed(
     failures, notes = run(HEADER + ROW, {}, {THEIRS}, current)
     assert failures == []
     assert len(notes) == 1
-    assert "the next branch clears it" in notes[0]
+    assert "the next branch in flight clears it" in notes[0]
 
 
 def test_a_merged_row_is_stale_even_while_its_branch_survives() -> None:

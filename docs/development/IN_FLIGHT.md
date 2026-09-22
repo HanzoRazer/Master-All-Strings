@@ -50,9 +50,22 @@ request exists.
 A row cannot be deleted by the pull request it describes: the merge lands after
 the last commit, so every row outlives its branch. That is expected, not drift.
 
-**Clear finished rows in the first commit of your next branch** — any row whose
-pull request has closed or merged, or which never named one and whose branch is
-gone from `origin`. Nobody opens a pull request just to clear a row.
+**Any branch in flight clears a finished row** — any row whose pull request has
+closed or merged, or which never named one and whose branch is gone from
+`origin`.
+
+- Rows already finished when you start: clear them in your **first commit**,
+  with your own row.
+- Rows that finish while you work: clear them in the **next commit you make
+  anyway**. The check will name them.
+
+Whoever is in flight when a row finishes clears it. That is why the check fails
+on every working branch and not on some designated one: no branch is nominated,
+none waits for another, and none opens a pull request just to clear a row. Two
+branches clearing the same row delete the same line, which merges cleanly.
+
+If nothing is in flight, the row waits. It is a note on `main`, and the next
+branch to start clears it.
 
 ### What fails, and what is only a note
 

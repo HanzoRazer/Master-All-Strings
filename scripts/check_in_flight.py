@@ -237,8 +237,9 @@ def reconcile(
       it names no pull request or a different one, it is wrong, and that is a
       finding about whoever owns the branch;
     * a stale row -- its pull request no longer open, or, for a row that never
-      named one and only then, its branch gone from origin -- fails on a
-      working branch,
+      named one and only then, its branch gone from origin -- fails on every
+      working branch, because any of them can clear it and none needs a pull
+      request of its own to do it,
       whose first commit is where stale rows get cleared, and is a note
       everywhere else;
     * a finding about this branch's own row or pull request fails on this
@@ -321,9 +322,18 @@ def reconcile(
             why = "names a branch no longer on origin"
         if stale:
             if working:
-                report(f"row for {row.branch} {why} ({where}) -- clear it in this branch", True)
+                report(
+                    f"row for {row.branch} {why} ({where}) -- clear it in this "
+                    "branch: whichever is in flight when it finishes, in the "
+                    "commit you are making anyway",
+                    True,
+                )
             else:
-                report(f"row for {row.branch} {why} ({where}) -- the next branch clears it", False)
+                report(
+                    f"row for {row.branch} {why} ({where}) -- the next branch in "
+                    "flight clears it",
+                    False,
+                )
             continue
 
         # Not stale, and no pull request open on its own branch: the only way
