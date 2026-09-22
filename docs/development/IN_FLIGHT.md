@@ -12,7 +12,7 @@ row is deleted when the pull request merges.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| Register prose | docs/register-prose-is-permanent | Claude | — | 775e3f1 | in flight | 2026-09-22 |
+| Register prose | docs/register-prose-is-permanent | Claude | #37 | 775e3f1 | in review | 2026-09-22 |
 
 An empty table means nothing is in flight.
 
