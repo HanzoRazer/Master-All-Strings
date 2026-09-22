@@ -123,8 +123,8 @@ Two boundaries were additionally witnessed end to end through the page:
 ## Results
 
 ```text
-targeted DO-015 pytest     472 passed
-full pytest                2949 passed, 3 skipped, 2 failed *
+targeted DO-015 pytest     491 passed
+full pytest                2968 passed, 3 skipped, 2 failed *
 coverage                   95.63%  (floor 95%)
 Node                       505 passed, 0 failed      (Windows; no Linux CI)
 ruff check src tests       PASS

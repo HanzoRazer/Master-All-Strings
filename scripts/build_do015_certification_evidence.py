@@ -51,8 +51,8 @@ LINEAGE = {
 #: record below. Nothing here can be derived from the tree, so re-running and
 #: updating this block is what re-certifying means.
 MEASUREMENTS: dict[str, Any] = {
-    "targeted": {"passed": 484, "skipped": 0, "failed": 0},
-    "full": {"passed": 2961, "skipped": 3, "failed": 2},
+    "targeted": {"passed": 491, "skipped": 0, "failed": 0},
+    "full": {"passed": 2968, "skipped": 3, "failed": 2},
     "coverage_percent": 95.63,
     "node": {"passed": 505, "failed": 0},
     "mypy_source_files": 161,
@@ -63,7 +63,7 @@ MEASUREMENTS: dict[str, Any] = {
         # needs a commit, which moves the head, which never converges. The
         # verifier proves this sha is behind HEAD and that every commit after
         # it touches only evidence and register metadata.
-        "certified_content_sha": "0000000000000000000000000000000000000000",
+        "certified_content_sha": "4887a2df2d49060c314fb08ad6ed4b53325c03b7",
         "run_id": 0,
         "conclusion": "success",
     },

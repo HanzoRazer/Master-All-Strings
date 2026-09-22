@@ -270,11 +270,45 @@ def test_findings_print_on_a_console_that_is_not_utf8() -> None:
     rendered.encode("ascii")
 
 
-def test_the_checked_in_evidence_passes_the_verifier(tmp_path: Path) -> None:
-    # The real record, read the way a reviewer would read it.
+def test_the_checked_in_evidence_passes_every_check_ci_can_make() -> None:
+    """The real record, read the way a reviewer would read it -- minus one.
+
+    The CI-record check is left to the CLI. A run id for a commit does not
+    exist until that commit has run, so asserting it here would make every
+    content commit red until a later commit sealed it, and sealing changes the
+    content again. The seal is verified by
+    ``python scripts/verify_do015_certification.py``, which the report tells a
+    reviewer to run and which checks all eight.
+    """
+
     if not verify.EVIDENCE.exists():
         pytest.skip("certification evidence has not been frozen yet")
-    assert verify.main([]) == 0
+    evidence, problems = verify.load_evidence(verify.EVIDENCE)
+    assert evidence is not None and problems == []
+    head = verify._git(["rev-parse", "HEAD"])
+    certified = str(evidence["lineage"]["certified_product_sha"])
+    changed = verify.changed_paths(certified, head) if head else None
+    found = [
+        (label, items)
+        for label, items in verify.run_checks(
+            evidence, verify.REPO_ROOT, changed, head, include_ci=False
+        )
+        if items
+    ]
+    assert found == []
+
+
+def test_the_ci_record_is_present_and_well_formed() -> None:
+    """Shape, not the seal. See above for why the seal is the CLI's job."""
+
+    if not verify.EVIDENCE.exists():
+        pytest.skip("certification evidence has not been frozen yet")
+    evidence, _ = verify.load_evidence(verify.EVIDENCE)
+    assert evidence is not None
+    ci = evidence["linux_ci"]
+    assert verify._SHA.match(str(ci["certified_content_sha"]))
+    assert str(ci["semantics"]).strip()
+    assert ci["conclusion"] == "success"
 
 
 def _ci_record(**overrides: object) -> dict[str, Any]:

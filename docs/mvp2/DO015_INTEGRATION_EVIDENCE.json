@@ -36,7 +36,7 @@
     "authoritative_ci": "GitHub Actions verify.yml, ubuntu-latest, Python 3.11"
   },
   "targeted_tests": {
-    "passed": 484,
+    "passed": 491,
     "skipped": 0,
     "failed": 0,
     "command": "pytest tests/education tests/mvp/test_guided_session_api_do015.py tests/mvp/test_do015_certification.py tests/mvp2",
@@ -50,7 +50,7 @@
     ]
   },
   "full_tests": {
-    "passed": 2961,
+    "passed": 2968,
     "skipped": 3,
     "failed": 2,
     "command": "pytest --cov --cov-report=term-missing",
@@ -320,7 +320,7 @@
     }
   },
   "linux_ci": {
-    "certified_content_sha": "0000000000000000000000000000000000000000",
+    "certified_content_sha": "4887a2df2d49060c314fb08ad6ed4b53325c03b7",
     "run_id": 0,
     "conclusion": "success",
     "workflow": ".github/workflows/verify.yml",

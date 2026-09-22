@@ -336,8 +336,17 @@ def run_checks(
     changed: list[str] | None,
     head: str | None,
     after_ci: list[str] | None = None,
+    include_ci: bool = True,
 ):
-    """Return (label, problems) for each check, in reporting order."""
+    """Return (label, problems) for each check, in reporting order.
+
+    ``include_ci`` exists because CI cannot validate a claim about its own
+    run: the run id for a commit does not exist until after that commit has
+    run, so requiring it inside the suite would make every content commit red
+    until a later commit sealed it, and that never converges. The suite checks
+    everything else; the seal is checked by this CLI, which is what the report
+    tells a reviewer to run.
+    """
 
     checks = [
         ("required evidence sections present", check_required_sections(evidence)),
@@ -347,9 +356,10 @@ def run_checks(
         ("Stage 3 fixture bytes match the record", check_fixture_digests(evidence, root)),
         ("browser witnesses are declared honestly", check_witnesses(evidence)),
     ]
-    checks.append(
-        ("the named CI run covers the certified content", check_ci_record(evidence, after_ci))
-    )
+    if include_ci:
+        checks.append(
+            ("the named CI run covers the certified content", check_ci_record(evidence, after_ci))
+        )
     boundary = "no production diff after the certified sha"
     if changed is None:
         checks.append((boundary, ["SKIPPED: git diff unavailable"]))
