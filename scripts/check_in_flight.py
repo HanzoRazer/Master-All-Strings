@@ -7,8 +7,15 @@ what is already being worked on. This reads
 ``docs/development/IN_FLIGHT.md`` and reports where it disagrees with the open
 pull requests and the branches on ``origin``.
 
-It reports; it does not edit. Exit status 0 means the register agrees with the
-repository, 1 means it does not.
+It fails only on what can be fixed from where it is run. A malformed register
+fails everywhere. A finding about this branch's own row fails on this branch.
+A row whose work has finished fails on a working branch, because clearing it
+is that branch's first job. Everything else -- another pull request's row that
+lives on its own branch, a stale row seen from ``main`` where nothing can be
+committed -- is reported as a note: true, useful, and nobody here's to fix.
+
+It reports; it does not edit. Exit status 1 means there is something to fix
+here; notes never change it.
 
 Output is ASCII only, like the other verifiers here. The register is written
 with em dashes and a check that cannot print its own findings on a legacy
@@ -22,11 +29,23 @@ import json
 import re
 import subprocess
 import sys
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTER = ROOT / "docs" / "development" / "IN_FLIGHT.md"
+
+#: The branch nothing is committed to directly. Seen from here, drift in the
+#: register is somebody's next branch's job, not a failure. Named, not asked of
+#: git: ``origin/HEAD`` is unset in a clone made with ``git remote add``, and
+#: AGENTS.md already fixes the name -- every branch is cut from ``main``.
+DEFAULT_BRANCH = "main"
+
+#: gh lists 30 pull requests unless told otherwise, and says nothing about the
+#: rest. A register checked against the first 30 is unchecked from the 31st, so
+#: ask for more than this repository will ever have open -- and if even that
+#: many come back, report the list as unavailable rather than check a part of it.
+PR_LIMIT = 500
 
 COLUMNS = ("Order", "Branch", "Agent", "PR", "Base", "State", "Updated")
 STATES = ("in flight", "in review", "green", "blocked")
@@ -54,6 +73,26 @@ class Row:
     @property
     def pr_number(self) -> int | None:
         return int(self.pr[1:]) if _PR.match(self.pr) else None
+
+
+@dataclass(frozen=True)
+class PullRequest:
+    """One open pull request, as GitHub reports it."""
+
+    number: int
+    branch: str
+    #: The fork's owner when the head branch is not on origin, else None. A
+    #: fork's branch can share a name with one here and be nothing to do with it.
+    fork: str | None = None
+
+    @property
+    def head(self) -> str:
+        return f"{self.fork}:{self.branch}" if self.fork else self.branch
+
+
+def _open(numbers: list[int]) -> str:
+    listed = ", ".join(f"#{number}" for number in numbers)
+    return f"PR {listed} is open" if len(numbers) == 1 else f"PRs {listed} are open"
 
 
 def _ascii(text: str) -> str:
@@ -129,7 +168,8 @@ def parse_register(text: str) -> tuple[list[Row], list[str]]:
                 f"(IN_FLIGHT.md:{offset})"
             )
             continue
-        rows.append(Row(*cells, line_number=offset))
+        order, branch, agent, pr, base, state, updated = cells
+        rows.append(Row(order, branch, agent, pr, base, state, updated, offset))
     return rows, problems
 
 
@@ -171,82 +211,181 @@ def validate_rows(rows: list[Row]) -> list[str]:
     return problems
 
 
-def reconcile(
-    rows: list[Row],
-    open_prs: dict[str, int] | None,
-    remote_branches: set[str] | None,
-    current_branch: str | None = None,
-    cleanup: bool = False,
-) -> list[str]:
-    """Compare the register with what the repository actually has.
+def on_working_branch(current: str | None) -> bool:
+    """True on a branch someone can commit a fix to.
 
-    ``open_prs`` maps head branch to pull-request number; either argument may be
-    None when that fact could not be gathered, in which case those checks are
-    skipped rather than guessed at.
-
-    ``current_branch`` is exempt from having to exist on ``origin``: the row is
-    written in the first commit of a branch, which is before it is pushed, and a
-    check that fails in the moment you are told to run it teaches people to stop
-    running it.
+    ``main`` takes no direct commits, and a detached head -- CI, or somebody
+    inspecting an old commit -- has no branch at all. From either, drift in the
+    register is real but belongs to whichever branch comes next.
     """
 
-    problems: list[str] = []
+    return current is not None and current != DEFAULT_BRANCH
+
+
+def reconcile(
+    rows: list[Row],
+    open_prs: list[PullRequest] | None,
+    remote_branches: set[str] | None,
+    current_branch: str | None = None,
+) -> tuple[list[str], list[str]]:
+    """Compare the register with the repository. Returns (failures, notes).
+
+    The split is the whole design. Each finding fails only when it can be
+    fixed from here, and is a note otherwise:
+
+    * a row whose branch has an open pull request is live, never stale; if
+      it names no pull request or a different one, it is wrong, and that is a
+      finding about whoever owns the branch;
+    * a stale row -- its pull request no longer open, or, for a row that never
+      named one and only then, its branch gone from origin -- fails on every
+      working branch, because any of them can clear it and none needs a pull
+      request of its own to do it,
+      whose first commit is where stale rows get cleared, and is a note
+      everywhere else;
+    * a finding about this branch's own row or pull request fails on this
+      branch;
+    * a finding about anyone else's live work is a note. Their row lives on
+      their branch until it merges, so its absence from this copy is the
+      register working, not failing.
+
+    A branch carries one order into ``main``, so it has at most one open pull
+    request; more than one is itself a finding, owned by that branch. A pull
+    request from a fork has no branch on origin and so no row -- it is noted,
+    never matched to a branch here that happens to share its name.
+
+    Either fact may be None when it could not be gathered, and the checks
+    needing it are skipped rather than guessed at.
+    """
+
+    failures: list[str] = []
+    notes: list[str] = []
+    working = on_working_branch(current_branch)
     listed = {row.branch for row in rows}
+    prs = sorted(open_prs or [], key=lambda pr: pr.number)
+    open_numbers = {pr.number for pr in prs} if open_prs is not None else None
+    head_of = {pr.number: pr.head for pr in prs}
+    on_branch: dict[str, list[int]] = {}
+    for pr in prs:
+        if pr.fork is None:
+            on_branch.setdefault(pr.branch, []).append(pr.number)
 
-    if remote_branches is not None:
-        for row in rows:
-            if row.branch == current_branch:
-                continue
-            if row.branch not in remote_branches:
-                problems.append(
-                    f"register lists {row.branch}, which is not on origin "
-                    f"(IN_FLIGHT.md:{row.line_number}) -- delete the row if it merged"
-                )
+    def report(message: str, fixable_here: bool) -> None:
+        (failures if fixable_here else notes).append(message)
 
-    if open_prs is not None:
-        for branch, number in sorted(open_prs.items()):
-            if branch not in listed:
-                if cleanup and branch == current_branch:
-                    # A branch that only removes rows is not work to collide
-                    # with, and requiring it to add one would just leave the
-                    # next person another row to clear.
-                    continue
-                problems.append(
-                    f"PR #{number} is open on {branch} but has no row in the register"
-                )
-        # A number on its own proves nothing: the register's promise is which
-        # *branch* is in flight, so the number has to belong to that branch.
-        head_of = {number: branch for branch, number in open_prs.items()}
-        for row in rows:
-            where = f"IN_FLIGHT.md:{row.line_number}"
-            number = row.pr_number
+    for row in rows:
+        where = f"IN_FLIGHT.md:{row.line_number}"
+        own = working and row.branch == current_branch
+        number = row.pr_number
+
+        # A branch with an open pull request is live, whatever its row says, so
+        # the row is wrong rather than finished. Asked first: a branch reused
+        # after its first pull request closed still names the closed number,
+        # and calling that stale would say "clear it" -- delete a live row --
+        # where the fix is to point it at the open one.
+        live = on_branch.get(row.branch, [])
+        if live:
             if number is None:
-                if row.branch in open_prs:
-                    problems.append(
-                        f"PR #{open_prs[row.branch]} is open on {row.branch} but the "
-                        f"register row still has no PR ({where})"
-                    )
+                report(
+                    f"{_open(live)} on {row.branch} but the register row still has "
+                    f"no PR ({where})",
+                    own,
+                )
+            elif number not in live:
+                report(
+                    f"row for {row.branch} names PR #{number}, but on {row.branch} "
+                    f"{_open(live)} ({where})",
+                    own,
+                )
+            continue
+
+        # Stale: the work this row announces has finished. A row that names a
+        # pull request is judged by that pull request and nothing else. With
+        # no answer from GitHub there is no verdict: a branch gone from origin
+        # cannot tell a merged row from a live one, and "clear it" on that
+        # guess deletes the register's record of work still in flight -- the
+        # failure this file exists to prevent, caused by the check meant to
+        # prevent it. The branch decides only for a row that named no pull
+        # request. This branch's own row is never stale for being unpushed:
+        # the row is written in the first commit, before there is anything to
+        # push.
+        if number is not None:
+            if open_numbers is None:
                 continue
-            head = head_of.get(number)
-            if head is None:
-                problems.append(
-                    f"register names PR #{number}, which is not open "
-                    f"({where}) -- delete the row if it merged"
+            stale = number not in open_numbers
+            why = f"names PR #{number}, which is no longer open"
+        else:
+            stale = (
+                remote_branches is not None
+                and row.branch not in remote_branches
+                and row.branch != current_branch
+            )
+            why = "names a branch no longer on origin"
+        if stale:
+            if working:
+                report(
+                    f"row for {row.branch} {why} ({where}) -- clear it in this "
+                    "branch: whichever is in flight when it finishes, in the "
+                    "commit you are making anyway",
+                    True,
                 )
-            elif head != row.branch:
-                problems.append(
-                    f"register puts PR #{number} on {row.branch}, but it is open on "
-                    f"{head} ({where})"
+            else:
+                report(
+                    f"row for {row.branch} {why} ({where}) -- the next branch in "
+                    "flight clears it",
+                    False,
                 )
-    return problems
+            continue
+
+        # Not stale, and no pull request open on its own branch: the only way
+        # left for the number to be open is on someone else's branch, which
+        # makes the row a lie that reads as true.
+        head = head_of.get(number) if number is not None else None
+        if head is not None:
+            report(
+                f"register puts PR #{number} on {row.branch}, but it is open on "
+                f"{head} ({where})",
+                own,
+            )
+
+    claimed = {row.pr_number for row in rows if row.pr_number is not None}
+    for branch, numbers in sorted(on_branch.items()):
+        own_pr = working and branch == current_branch
+        if len(numbers) > 1:
+            report(
+                f"{_open(numbers)} on {branch} -- a branch carries one order into "
+                "main, so close all but one",
+                own_pr,
+            )
+        if branch in listed:
+            continue
+        if own_pr:
+            report(f"{_open(numbers)} on this branch but has no row -- add yours", True)
+            continue
+        # A number a row already claims under another branch is reported
+        # against that row. Saying it has no row as well would be false: it
+        # has the wrong one.
+        unclaimed = [number for number in numbers if number not in claimed]
+        if unclaimed:
+            report(
+                f"{_open(unclaimed)} on {branch} with no row here -- its row "
+                "lives on its own branch until it merges",
+                False,
+            )
+    for pr in prs:
+        if pr.fork is not None and pr.number not in claimed:
+            report(
+                f"PR #{pr.number} is open from a fork ({pr.head}) -- the register "
+                "lists branches on origin, so it has no row",
+                False,
+            )
+    return failures, notes
 
 
 def _run(command: list[str]) -> str | None:
     try:
         # Decode as UTF-8, not the locale. On Windows the locale is a codepage,
-        # the register is full of em dashes, and `git show` handed each one
-        # back as three characters of mojibake -- so the cleanup comparison
-        # could never match there, while Linux CI, defaulting to UTF-8, passed.
+        # and git and gh speak UTF-8: branch names and anything else they hand
+        # back would otherwise arrive as mojibake there while Linux passes.
         result = subprocess.run(
             command,
             cwd=ROOT,
@@ -262,152 +401,30 @@ def _run(command: list[str]) -> str | None:
     return result.stdout if result.returncode == 0 else None
 
 
-def open_pull_requests() -> dict[str, int] | None:
-    """Open PRs by head branch, or None when GitHub could not be reached."""
+def open_pull_requests() -> list[PullRequest] | None:
+    """Every open PR, or None when GitHub could not list them all."""
 
-    out = _run(["gh", "pr", "list", "--state", "open", "--json", "number,headRefName"])
+    fields = "number,headRefName,isCrossRepository,headRepositoryOwner"
+    out = _run(
+        ["gh", "pr", "list", "--state", "open", "--limit", str(PR_LIMIT), "--json", fields]
+    )
     if out is None:
         return None
     try:
-        return {item["headRefName"]: int(item["number"]) for item in json.loads(out)}
-    except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+        prs = [
+            PullRequest(
+                int(item["number"]),
+                item["headRefName"],
+                # A deleted fork has no owner left to name.
+                ((item.get("headRepositoryOwner") or {}).get("login") or "unknown")
+                if item["isCrossRepository"]
+                else None,
+            )
+            for item in json.loads(out)
+        ]
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError, AttributeError):
         return None
-
-
-def _normalise(text: str) -> str:
-    """Line endings only. A CRLF checkout is not a register change."""
-
-    return text.replace("\r\n", "\n")
-
-
-REGISTER_PATH = "docs/development/IN_FLIGHT.md"
-
-
-def changed_files() -> set[str] | None:
-    """Every path this branch differs from origin/main in, committed or not.
-
-    Compared with the working tree rather than HEAD, because the checker is
-    run before the push and an unstaged change is still a change.
-    """
-
-    out = _run(["git", "diff", "--name-only", "origin/main"])
-    if out is None:
-        return None
-    return {line.strip() for line in out.splitlines() if line.strip()}
-
-
-def register_at(ref: str) -> str | None:
-    """The register as some other ref has it, or None if it cannot be read."""
-
-    return _run(["git", "show", f"{ref}:docs/development/IN_FLIGHT.md"])
-
-
-def _removed_rows_are_stale(
-    before: list[Row],
-    removed: set[str],
-    open_prs: dict[str, int] | None,
-    remote_branches: set[str] | None,
-) -> bool:
-    """True when every row this branch deleted had already finished.
-
-    Fails closed. If the open pull requests could not be listed there is no way
-    to know whether a row was live, and guessing would hand out the exemption
-    on exactly the occasion it should be refused.
-    """
-
-    if open_prs is None:
-        return False
-    open_numbers = set(open_prs.values())
-    for row in before:
-        if row.branch not in removed:
-            continue
-        if row.branch in open_prs:
-            return False
-        number = row.pr_number
-        if number is not None:
-            if number in open_numbers:
-                return False
-            continue
-        # No pull request was ever named, so the branch itself is the evidence.
-        if remote_branches is None or row.branch in remote_branches:
-            return False
-    return True
-
-
-def is_cleanup_branch(
-    current: str | None,
-    open_prs: dict[str, int] | None = None,
-    remote_branches: set[str] | None = None,
-) -> bool:
-    """True when this branch only removes rows from the register.
-
-    A row cannot be deleted by the pull request it describes: the merge lands
-    after the last commit, so the row outlives its own branch and the register
-    on main goes stale. Someone then has to clear it, and that someone needs a
-    branch, which needs a row, which goes stale in turn.
-
-    The way out is to notice what a cleanup branch is. If a branch removes
-    rows and touches nothing else, it is not work anyone else could collide
-    with, and demanding it announce itself is what makes the recursion.
-
-    "Touches nothing else" has to mean the whole file. Comparing branch names
-    would let a branch change a retained row's state on the way past;
-    comparing parsed rows would still let it rewrite the prose, the heading,
-    the column names or the separator, or leave malformed content the parser
-    skips. All of those are register changes, and a register change is the one
-    thing this file exists to announce.
-
-    So the test is exact: take the register as `origin/main` has it, delete
-    precisely the rows this branch dropped, and require the result to be
-    byte-for-byte what the branch has. Anything else -- a word of prose, a
-    column, a stray line -- and this is ordinary work that announces itself
-    like everything else.
-
-    It must also change nothing outside the register. Deleting a stale row is
-    not cover for editing code, and a branch that does both has work to
-    announce like any other.
-
-    And the rows removed must already be stale. The exemption exists for
-    clearing rows whose work has landed; used on a live row it would let one
-    branch delete another's announcement and skip making its own, which is
-    worse than the problem it solves. A row is stale when its pull request is
-    no longer open, or -- for a row that never named one -- when its branch is
-    gone from `origin`. Not being able to tell is not the same as stale.
-    """
-
-    if current is None:
-        return False
-    # The exemption is from announcing *register* work. A branch that deletes
-    # a stale row and changes anything else is doing other work, and other
-    # work announces itself.
-    if changed_files() != {REGISTER_PATH}:
-        return False
-    theirs = register_at("origin/main")
-    if theirs is None:
-        return False
-    ours = REGISTER.read_text(encoding="utf-8") if REGISTER.exists() else ""
-    before, before_problems = parse_register(theirs)
-    after, after_problems = parse_register(ours)
-    if before_problems or after_problems:
-        # A register nobody can parse is not a register anybody can be
-        # exempted for tidying.
-        return False
-
-    # Position is the one field a deletion is allowed to move.
-    was = {row.branch: replace(row, line_number=0) for row in before}
-    now = {row.branch: replace(row, line_number=0) for row in after}
-    removed = set(was) - set(now)
-    if not removed or set(now) - set(was):
-        return False
-    if not _removed_rows_are_stale(before, removed, open_prs, remote_branches):
-        return False
-
-    dropped_lines = {row.line_number for row in before if row.branch in removed}
-    lines = _normalise(theirs).split("\n")
-    expected = "\n".join(
-        line for number, line in enumerate(lines, start=1) if number not in dropped_lines
-    )
-    return expected == _normalise(ours)
+    return prs if len(prs) < PR_LIMIT else None
 
 
 def current_branch() -> str | None:
@@ -419,7 +436,11 @@ def current_branch() -> str | None:
 
 
 def remote_branches() -> set[str] | None:
-    """Branch names on origin, or None when the remote could not be listed."""
+    """Branch names on origin, or None when the remote could not be listed.
+
+    An empty set is an answer -- origin has no branches -- not a failure to get
+    one, and is returned as such.
+    """
 
     out = _run(["git", "ls-remote", "--heads", "origin"])
     if out is None:
@@ -429,7 +450,7 @@ def remote_branches() -> set[str] | None:
         _, _, ref = line.partition("\t")
         if ref.startswith("refs/heads/"):
             names.add(ref[len("refs/heads/") :])
-    return names or None
+    return names
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -448,21 +469,24 @@ def main(argv: list[str] | None = None) -> int:
     rows, problems = parse_register(REGISTER.read_text(encoding="utf-8"))
     problems += validate_rows(rows)
 
-    skipped: list[str] = []
+    notes: list[str] = []
     if args.offline:
-        skipped.append("offline: git and GitHub were not consulted")
+        notes.append("offline: git and GitHub were not consulted")
     else:
         prs = open_pull_requests()
         branches = remote_branches()
         if prs is None:
-            skipped.append("could not list open pull requests (gh unavailable?)")
+            notes.append(
+                "could not list every open pull request (gh unavailable, or "
+                f"{PR_LIMIT} or more open)"
+            )
         if branches is None:
-            skipped.append("could not list branches on origin")
-        current = current_branch()
-        cleanup = is_cleanup_branch(current, prs, branches)
-        problems += reconcile(rows, prs, branches, current, cleanup)
+            notes.append("could not list branches on origin")
+        failures, found = reconcile(rows, prs, branches, current_branch())
+        problems += failures
+        notes += found
 
-    for note in skipped:
+    for note in notes:
         print(_ascii(f"note  {note}"))
     if problems:
         for problem in problems:
@@ -470,10 +494,9 @@ def main(argv: list[str] | None = None) -> int:
         print(_ascii(f"\nin-flight register: {len(problems)} problem(s)"))
         return 1
 
-    count = len(rows)
-    print(
-        _ascii(f"in-flight register: OK ({count} branch{'' if count == 1 else 'es'} in flight)")
-    )
+    rows_word = "row" if len(rows) == 1 else "rows"
+    notes_word = "note" if len(notes) == 1 else "notes"
+    print(_ascii(f"in-flight register: OK ({len(rows)} {rows_word}, {len(notes)} {notes_word})"))
     return 0
 
 
