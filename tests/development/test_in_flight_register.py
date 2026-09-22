@@ -337,9 +337,16 @@ def test_nothing_is_claimed_when_github_and_origin_are_unreachable() -> None:
     assert run(HEADER + ROW, None, None, MINE) == ([], [])
 
 
-def test_without_pull_requests_the_branch_still_decides_staleness() -> None:
-    # No answer about #40, but its branch is known to be gone.
-    failures, _ = run(HEADER + ROW, None, set(), MINE)
+def test_without_pull_requests_a_numbered_row_gets_no_verdict() -> None:
+    # A branch gone from origin cannot tell a merged row from a live one, and
+    # ordering it cleared on that guess would delete a record of live work --
+    # on degraded data, by the check meant to protect the register.
+    assert run(HEADER + ROW, None, set(), MINE) == ([], [])
+
+
+def test_without_pull_requests_an_unnumbered_row_is_still_judged_by_its_branch() -> None:
+    # Nothing else can speak for a row that never named a pull request.
+    failures, _ = run(HEADER + NO_PR_ROW, None, set(), MINE)
     assert failures and "no longer on origin" in failures[0]
 
 

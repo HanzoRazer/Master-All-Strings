@@ -237,7 +237,8 @@ def reconcile(
       it names no pull request or a different one, it is wrong, and that is a
       finding about whoever owns the branch;
     * a stale row -- its pull request no longer open, or, for a row that never
-      named one, its branch gone from origin -- fails on a working branch,
+      named one and only then, its branch gone from origin -- fails on a
+      working branch,
       whose first commit is where stale rows get cleared, and is a note
       everywhere else;
     * a finding about this branch's own row or pull request fails on this
@@ -296,12 +297,19 @@ def reconcile(
                 )
             continue
 
-        # Stale: the work this row announces has finished. A known pull
-        # request is the better evidence -- GitHub keeps merged branches -- so
-        # the branch only decides when there is no number, or no answer about
-        # it. This branch's own row is never stale for being unpushed: the row
-        # is written in the first commit, before there is anything to push.
-        if number is not None and open_numbers is not None:
+        # Stale: the work this row announces has finished. A row that names a
+        # pull request is judged by that pull request and nothing else. With
+        # no answer from GitHub there is no verdict: a branch gone from origin
+        # cannot tell a merged row from a live one, and "clear it" on that
+        # guess deletes the register's record of work still in flight -- the
+        # failure this file exists to prevent, caused by the check meant to
+        # prevent it. The branch decides only for a row that named no pull
+        # request. This branch's own row is never stale for being unpushed:
+        # the row is written in the first commit, before there is anything to
+        # push.
+        if number is not None:
+            if open_numbers is None:
+                continue
             stale = number not in open_numbers
             why = f"names PR #{number}, which is no longer open"
         else:
