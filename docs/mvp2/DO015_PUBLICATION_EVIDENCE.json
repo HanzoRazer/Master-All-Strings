@@ -1,0 +1,157 @@
+{
+  "do": "DO-015",
+  "publication_stage": 10,
+  "title": "Mainline publication candidate",
+  "status": "READY_FOR_PUBLICATION",
+  "verified_by": "scripts/verify_do015_publication.py",
+  "source_of_truth": "The repository. Every sha here is re-derived by the verifier from git; this file records which ones matter, not what is true.",
+  "lineage": {
+    "repository": "HanzoRazer/Master-All-Strings",
+    "certified_product_sha": "3fcf618b655c3f51b020d11a0bb3f96571da08d7",
+    "stage9_head_sha": "eba01a1b232ac31ef5433a80e7f5572c439111c0",
+    "stage9_merge_sha": "102b7959ac6a99c924baada89ce3b04d779c209d",
+    "stage9_pr": 35,
+    "stage10_base_sha": "fd2c490e58ac1a46cb184ac04fe8b910b659080d",
+    "stage10_branch": "cursor/do015-publication-closeout-cc03",
+    "do015_publication_baseline_sha": null,
+    "baseline_rule": "The Stage 10 merge commit is the publication baseline. It cannot be known from inside the branch that becomes it, so it is null here and recorded by whatever Dev Order comes next. Nothing flips a status afterwards."
+  },
+  "certification": {
+    "stage": 9,
+    "report": "docs/mvp2/DO015_CERTIFICATION_REPORT.md",
+    "evidence": "docs/mvp2/DO015_INTEGRATION_EVIDENCE.json",
+    "verifier": "scripts/verify_do015_certification.py",
+    "generator": "scripts/build_do015_certification_evidence.py",
+    "unchanged_by_stage10": true,
+    "delegation": "Publication does not re-derive certification. The verifier runs Stage 9's verifier and generator --check and reports what they say."
+  },
+  "product_surface": {
+    "protected": [
+      "src/master_all_strings/**",
+      "web/mvp1/** (excluding tests)",
+      "resources/**",
+      "governance/**"
+    ],
+    "excluded": [
+      "web/mvp1/tests/**"
+    ],
+    "changes_since_certified_product": [],
+    "measured": "git diff --name-only 3fcf618..HEAD"
+  },
+  "intervening_changes": [
+    {
+      "pr": 36,
+      "merge": "775e3f1",
+      "kind": "repository hygiene",
+      "what": "register tooling"
+    },
+    {
+      "pr": 37,
+      "merge": "8c93fc8",
+      "kind": "repository hygiene",
+      "what": "register prose"
+    },
+    {
+      "pr": 38,
+      "merge": "fcd837b",
+      "kind": "repository hygiene",
+      "what": "register row cleared"
+    },
+    {
+      "pr": 39,
+      "merge": "d6c870a",
+      "kind": "repository hygiene",
+      "what": "register row cleared"
+    },
+    {
+      "pr": 40,
+      "merge": "fd2c490",
+      "kind": "repository hygiene",
+      "what": "register check fails only on what it can fix"
+    }
+  ],
+  "verification": {
+    "publication_verifier": {
+      "result": "OK",
+      "checks": "8 of 8"
+    },
+    "certification_verifier": {
+      "result": "OK",
+      "checks": "9 of 9"
+    },
+    "certification_evidence_check": {
+      "result": "OK"
+    },
+    "protected_product_surface": {
+      "changed_files": 0,
+      "range": "3fcf618..HEAD"
+    },
+    "publication_verifier_tests": {
+      "passed": 40,
+      "path": "tests/mvp/test_do015_publication.py"
+    },
+    "do015_targeted_python": {
+      "passed": 311
+    },
+    "node": {
+      "passed": 505,
+      "failed": 0,
+      "command": "node --test tests/*.test.js (web/mvp1)"
+    },
+    "full_pytest": {
+      "passed": 3062,
+      "skipped": 3,
+      "failed": 2,
+      "failed_are": "the two known Windows-only environment artifacts; Linux CI is authoritative"
+    },
+    "coverage": {
+      "total_percent": 95.63,
+      "floor_percent": 95.0,
+      "result": "PASS"
+    },
+    "ruff": "PASS",
+    "mypy": "PASS (strict)",
+    "fixtures_check": "OK",
+    "in_flight": "OK",
+    "browser_reproducible": {
+      "status": "PASS",
+      "runner": "node web/mvp1/tests/do015_certification_capture.mjs",
+      "note": "Re-run and compared against the Stage 9 artifact: identical apart from freshly generated session and attempt UUIDs. Final status, digests and canonical revision match. The artifact was restored; Stage 9's evidence is unchanged by this stage."
+    },
+    "browser_visual": "NOT_AVAILABLE (carried forward from Stage 9, unrepaired)",
+    "tags": {
+      "mvp1": "unchanged",
+      "mvp2": "none local, none on origin"
+    }
+  },
+  "tags": {
+    "mvp1": {
+      "tag": "mvp-1",
+      "sha": "ac38819b23ed9d85b651755e7612f42d7d528ddc"
+    },
+    "forbidden_prefixes": [
+      "mvp-2",
+      "v2."
+    ],
+    "remote_tag_verdict": "PASS",
+    "policy": "An unexpected MVP 2 tag stops the stage and is reported, never removed."
+  },
+  "known_limitations": [
+    "DOM rendering is not certified: no connected browser was available, so there is no visual witness and no screenshots.",
+    "Node has no Linux CI coverage; the Node suite is certified on Windows only.",
+    "The reproducible browser witness mirrors the Stage 2 lifecycle in JavaScript. Lifecycle truth, transition truth and the session digest are certified separately through the real Stage 4 API.",
+    "VIEW_ONE_STRING and ENABLE_ZONE_VIEW have no natural browser witness and remain covered by unit and Stage 8 tests."
+  ],
+  "deferred_work": [
+    "Stage 8 crosswalk verifier checks citation shape, not semantic target meaning.",
+    "Line-number citations are fragile; symbol-based path::name references are preferred future hardening.",
+    "Adversarial tests import private helpers from another test module; future test-maintenance coupling.",
+    "Neither check_in_flight.py nor verify_do015_certification.py is a CI gate: verify.yml is a deferred-hygiene path frozen by DO-012A and unfreezing it needs an owner ruling."
+  ],
+  "not_claimed": [
+    "MVP 2 is not released, not tagged and not complete.",
+    "Publication has not happened: the owner's merge is the publication event.",
+    "No learner-facing behaviour changed in this stage.",
+    "DOM rendering remains uncertified; the Stage 9 limitations carry forward unrepaired."
+  ]
+}
