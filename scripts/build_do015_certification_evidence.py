@@ -63,8 +63,8 @@ MEASUREMENTS: dict[str, Any] = {
         # needs a commit, which moves the head, which never converges. The
         # verifier proves this sha is behind HEAD and that every commit after
         # it touches only evidence and register metadata.
-        "certified_content_sha": "4887a2df2d49060c314fb08ad6ed4b53325c03b7",
-        "run_id": 0,
+        "certified_content_sha": "d998abeccef8bd426f3ab197bb7f8ddd539dfc86",
+        "run_id": 35681683986,
         "conclusion": "success",
     },
 }
