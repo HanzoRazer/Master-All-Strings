@@ -260,7 +260,7 @@ def open_pull_requests() -> dict[str, int] | None:
 def register_at(ref: str) -> str | None:
     """The register as some other ref has it, or None if it cannot be read."""
 
-    return _run(["show", f"{ref}:docs/development/IN_FLIGHT.md"])
+    return _run(["git", "show", f"{ref}:docs/development/IN_FLIGHT.md"])
 
 
 def is_cleanup_branch(current: str | None) -> bool:

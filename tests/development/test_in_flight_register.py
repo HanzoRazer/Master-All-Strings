@@ -261,3 +261,12 @@ def test_a_branch_that_adds_a_row_is_not_a_cleanup() -> None:
     assert removed and added, "this fixture must both remove and add"
     # is_cleanup_branch requires removals and no additions.
     assert not (bool(removed) and not added)
+
+
+def test_the_register_can_be_read_from_another_ref() -> None:
+    # is_cleanup_branch is worthless if this silently returns None: the branch
+    # then looks like ordinary work and the recursion comes back. It did,
+    # because the helper takes a whole command and "git" was missing from it.
+    assert check.register_at("HEAD") is not None
+    assert "## In flight" in check.register_at("HEAD")
+    assert check.register_at("refs/heads/no-such-branch-here") is None
