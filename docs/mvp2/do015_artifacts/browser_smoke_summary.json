@@ -1,0 +1,242 @@
+{
+  "witness": "reproducible (in-repo browser harness driving web/mvp1/app.js)",
+  "proves": [
+    "application orchestration",
+    "real UI event path",
+    "deterministic guided flow"
+  ],
+  "does_not_prove": [
+    "DOM rendering",
+    "visual presentation"
+  ],
+  "scenario_source": "docs/mvp2/do015_artifacts/certification_scenarios.json",
+  "node_version": "v24.11.0",
+  "platform": "win32",
+  "lesson": "ascending_scale",
+  "legs_served": [
+    "attempt_0_slow_down",
+    "attempt_1_isolate",
+    "attempt_2_continue",
+    "lesson_switch_witness"
+  ],
+  "session_id": "4d457a28-2b8e-4a8a-93da-cef0cc2fbe6e",
+  "final_status": "CLOSED",
+  "attempt_ids": [
+    "d794d018-fbca-4279-a125-37906aa511bf",
+    "8e1d94ef-30d9-4ebe-b61e-fda98dc603b5",
+    "76aa86db-0d4a-467b-aaf6-e23cb9771bec"
+  ],
+  "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+  "steps": [
+    {
+      "label": "attempt_0_slow_down:evaluated",
+      "session_status": "AWAITING_ACTION",
+      "attempt_count": 1,
+      "current_attempt_index": 0,
+      "recommended_action": "slow_down",
+      "action_disposition": "PENDING",
+      "execution_status": "NOT_REQUESTED",
+      "history_rendered": 1,
+      "accept_enabled": true,
+      "apply_enabled": false,
+      "transport_rate": 1,
+      "transport_loop": null
+    },
+    {
+      "label": "attempt_0_slow_down:accepted",
+      "session_status": "AWAITING_ACTION",
+      "attempt_count": 1,
+      "current_attempt_index": 0,
+      "recommended_action": "slow_down",
+      "action_disposition": "ACCEPTED",
+      "execution_status": "PENDING",
+      "history_rendered": 1,
+      "accept_enabled": false,
+      "apply_enabled": true,
+      "transport_rate": 1,
+      "transport_loop": null,
+      "transport_untouched_by_accept": true
+    },
+    {
+      "label": "attempt_0_slow_down:applied",
+      "session_status": "AWAITING_ATTEMPT",
+      "attempt_count": 1,
+      "current_attempt_index": 0,
+      "recommended_action": "slow_down",
+      "action_disposition": "ACCEPTED",
+      "execution_status": "SUCCEEDED",
+      "history_rendered": 1,
+      "accept_enabled": false,
+      "apply_enabled": false,
+      "transport_rate": 0.75,
+      "transport_loop": null
+    },
+    {
+      "label": "attempt_1_isolate:evaluated",
+      "session_status": "AWAITING_ACTION",
+      "attempt_count": 2,
+      "current_attempt_index": 1,
+      "recommended_action": "isolate_passage",
+      "action_disposition": "PENDING",
+      "execution_status": "NOT_REQUESTED",
+      "history_rendered": 2,
+      "accept_enabled": true,
+      "apply_enabled": false,
+      "transport_rate": 0.75,
+      "transport_loop": null
+    },
+    {
+      "label": "attempt_1_isolate:accepted",
+      "session_status": "AWAITING_ACTION",
+      "attempt_count": 2,
+      "current_attempt_index": 1,
+      "recommended_action": "isolate_passage",
+      "action_disposition": "ACCEPTED",
+      "execution_status": "PENDING",
+      "history_rendered": 2,
+      "accept_enabled": false,
+      "apply_enabled": true,
+      "transport_rate": 0.75,
+      "transport_loop": null,
+      "transport_untouched_by_accept": true
+    },
+    {
+      "label": "attempt_1_isolate:applied",
+      "session_status": "AWAITING_ATTEMPT",
+      "attempt_count": 2,
+      "current_attempt_index": 1,
+      "recommended_action": "isolate_passage",
+      "action_disposition": "ACCEPTED",
+      "execution_status": "SUCCEEDED",
+      "history_rendered": 2,
+      "accept_enabled": false,
+      "apply_enabled": false,
+      "transport_rate": 0.75,
+      "transport_loop": {
+        "start": 0,
+        "end": 1.8
+      }
+    },
+    {
+      "label": "attempt_2_continue:evaluated",
+      "session_status": "AWAITING_ACTION",
+      "attempt_count": 3,
+      "current_attempt_index": 2,
+      "recommended_action": "continue",
+      "action_disposition": "PENDING",
+      "execution_status": "NOT_REQUESTED",
+      "history_rendered": 3,
+      "accept_enabled": true,
+      "apply_enabled": false,
+      "transport_rate": 0.75,
+      "transport_loop": {
+        "start": 0,
+        "end": 1.8
+      }
+    },
+    {
+      "label": "attempt_2_continue:accepted",
+      "session_status": "AWAITING_ACTION",
+      "attempt_count": 3,
+      "current_attempt_index": 2,
+      "recommended_action": "continue",
+      "action_disposition": "ACCEPTED",
+      "execution_status": "PENDING",
+      "history_rendered": 3,
+      "accept_enabled": false,
+      "apply_enabled": true,
+      "transport_rate": 0.75,
+      "transport_loop": {
+        "start": 0,
+        "end": 1.8
+      },
+      "transport_untouched_by_accept": true
+    },
+    {
+      "label": "attempt_2_continue:applied",
+      "session_status": "CLOSED",
+      "attempt_count": 3,
+      "current_attempt_index": 2,
+      "recommended_action": "continue",
+      "action_disposition": "ACCEPTED",
+      "execution_status": "SUCCEEDED",
+      "history_rendered": 3,
+      "accept_enabled": false,
+      "apply_enabled": false,
+      "transport_rate": 0.75,
+      "transport_loop": {
+        "start": 0,
+        "end": 1.8
+      }
+    }
+  ],
+  "attempt_0_immutable": [
+    {
+      "after_attempt": 1,
+      "attempt_0_unchanged": true
+    },
+    {
+      "after_attempt": 2,
+      "attempt_0_unchanged": true
+    }
+  ],
+  "identity_chain": [
+    {
+      "attempt_index": 0,
+      "attempt_id": "d794d018-fbca-4279-a125-37906aa511bf",
+      "performance_session_id": "performance-do015-certification-attempt_0_slow_down",
+      "matches_guidance_performance": true,
+      "evaluation_digest": "sha256:53b8e74c06d5b26677f15481e9ac0c87e6d246b083e12feddbcfe39f5ca2afb9",
+      "matches_evaluation_digest": true,
+      "guidance_digest": "sha256:1c140e1313d4fdfe6bea9d9d2421e949cbbfa12e6514f74837ff7570e0bb4bf7",
+      "matches_guidance_digest": true,
+      "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+      "recommended_action": "slow_down",
+      "action_disposition": "ACCEPTED",
+      "execution_status": "SUCCEEDED"
+    },
+    {
+      "attempt_index": 1,
+      "attempt_id": "8e1d94ef-30d9-4ebe-b61e-fda98dc603b5",
+      "performance_session_id": "performance-do015-certification-attempt_1_isolate",
+      "matches_guidance_performance": true,
+      "evaluation_digest": "sha256:53e894267458be303faa11eba692783f180be5f6c5287704dd15801e781aed72",
+      "matches_evaluation_digest": true,
+      "guidance_digest": "sha256:1d597ad715e38e53a048f35e46d8fec7a0d9b41b22ba9d49028eb1607611ec22",
+      "matches_guidance_digest": true,
+      "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+      "recommended_action": "isolate_passage",
+      "action_disposition": "ACCEPTED",
+      "execution_status": "SUCCEEDED"
+    },
+    {
+      "attempt_index": 2,
+      "attempt_id": "76aa86db-0d4a-467b-aaf6-e23cb9771bec",
+      "performance_session_id": "performance-do015-certification-attempt_2_continue",
+      "matches_guidance_performance": true,
+      "evaluation_digest": "sha256:35e30defaf4eb7121ebc43c793c537d518138cfc5531e0b76418624851ef5d8e",
+      "matches_evaluation_digest": true,
+      "guidance_digest": "sha256:1853c03b96bfb55ccab911bc6e69cfac01000a98ca146beafae470b4151b38fd",
+      "matches_guidance_digest": true,
+      "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+      "recommended_action": "continue",
+      "action_disposition": "ACCEPTED",
+      "execution_status": "SUCCEEDED"
+    }
+  ],
+  "revision_fail_closed": {
+    "session_preserved": true,
+    "active_session": null,
+    "accept_enabled": false,
+    "apply_enabled": false,
+    "history_rendered": 0
+  },
+  "lesson_transition": {
+    "previous_session_id": "7c7d3ba9-fa51-43b3-9ab0-5ef35f06a8ce",
+    "previous_session_status": "TRANSITIONED",
+    "new_lesson_session": null,
+    "history_rendered": 0
+  },
+  "console_errors": [],
+  "unrouted_or_disk_requests": 30
+}

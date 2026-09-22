@@ -716,7 +716,64 @@ protected surfaces vs stage8_base_sha    no diff
   web/mvp1/guided-action-executor.js
 ```
 
-Stage 9 has not started.
+## Stage 9 full MAS certification
+
+Stage 9 certifies the completed DO-015 stack as one system and freezes the
+evidence. It adds no product capability, and the verifier enforces that: no
+file outside `docs/**`, `tests/**` and `scripts/verify_do015_certification.py`
+may differ between the certified product and the evidence freeze.
+
+```text
+stage8_product_sha    = a29afb5e6972c5dfbf2266dee7a0ec47597c1d98
+stage8_merge_sha      = 3fcf618b655c3f51b020d11a0bb3f96571da08d7
+stage9_base_sha       = 3fcf618b655c3f51b020d11a0bb3f96571da08d7
+certified_product_sha = 3fcf618b655c3f51b020d11a0bb3f96571da08d7
+Stage 9 branch        = cursor/do015-full-certification-cc02
+```
+
+`3fcf618` is the PR #34 merge commit and the tip of `main` at branch creation,
+so the certified product baseline and the Stage 9 base are the same commit.
+The Stage 8 product head is `a29afb5`, not the `f671a73` an earlier draft of
+the order carried: two review-fix commits landed on the Stage 8 branch before
+it merged.
+
+Certification results are recorded in `DO015_INTEGRATION_EVIDENCE.json` and
+read back by `scripts/verify_do015_certification.py`. The human synthesis is
+`DO015_CERTIFICATION_REPORT.md`.
+
+```text
+targeted DO-015 pytest     501 passed
+full pytest                2978 passed, 3 skipped, 2 failed (Windows-only)
+coverage                   95.63%  (floor 95%)
+Node                       505 passed, 0 failed (Windows; linux_ci_coverage NOT_PRESENT)
+ruff check src tests       PASS
+mypy (strict)              PASS, 161 source files
+fixture --check            PASS
+check_in_flight.py         PASS
+certification verifier     OK (9 of 9)
+```
+
+The certified session: SLOW_DOWN accepted and applied to rate 0.75, then
+ISOLATE_PASSAGE accepted and applied to a loop, then CONTINUE accepted and
+applied to CLOSED -- three attempts, one canonical revision, three distinct
+performance identities, prior attempts immutable once no longer current, and a
+session digest that recomputes to what the service returned.
+
+Two witnesses with different claims. The reproducible one boots the real
+`app.js` through the in-repo harness and certifies orchestration and the UI
+event path; it does not certify rendering. The authoritative one drives the
+same legs through the real Stage 4 API and certifies lifecycle truth and the
+digest. The visual witness is `NOT_AVAILABLE`: no connected browser existed in
+the certification environment, so DOM rendering is not certified by this
+tranche and no screenshots exist.
+
+`CONTINUE` is unreachable from a bundled lesson by fake MIDI, so closure used a
+controlled lifecycle certification scenario: synthetic performance evidence,
+real evaluator, real recommendation, regenerated and compared on every test
+run.
+
+Stage 10 has not started. Merge, tag, release and publication are not
+authorized by this tranche.
 
 ## Session status (minimal)
 

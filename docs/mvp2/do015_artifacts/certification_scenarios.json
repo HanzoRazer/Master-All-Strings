@@ -1,0 +1,2265 @@
+{
+  "scenario": "controlled lifecycle certification scenario",
+  "note": "Synthetic performance evidence against a bundled lesson: each expected note played, shifted by a fixed offset. Every recommendation below is the real evaluator's answer to that evidence. None is hand-authored, and none is a natural fake-MIDI outcome -- the fake emitter plays notes this lesson does not contain, so it can never reach CONTINUE.",
+  "lessons": [
+    "ascending_scale",
+    "descending_scale"
+  ],
+  "legs": {
+    "attempt_0_slow_down": {
+      "leg": "attempt_0_slow_down",
+      "lesson": "ascending_scale",
+      "pattern": "alternating",
+      "offsets_seconds": [
+        0.25,
+        0.0,
+        0.25,
+        0.0,
+        0.25,
+        0.0,
+        0.25,
+        0.0
+      ],
+      "request": {
+        "assignment_id": "demo-ascending-scale",
+        "content_id": "ascending_scale",
+        "performance_session_id": "performance-do015-certification-attempt_0_slow_down",
+        "current_rate": 1.0,
+        "timeline": {
+          "ticks_per_quarter": 480,
+          "total_ticks": 3840,
+          "total_seconds": 4.8,
+          "seconds_per_screen": 4.0,
+          "play_line_fraction": 0.22
+        },
+        "tempo_changes": [
+          {
+            "tick": 0,
+            "tempo_bpm": 100.0,
+            "microseconds_per_quarter": 600000
+          }
+        ],
+        "expected_notes": [
+          {
+            "event_id": "ev-1",
+            "midi_note": 64,
+            "onset_tick": 0,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-2",
+            "midi_note": 66,
+            "onset_tick": 480,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-3",
+            "midi_note": 67,
+            "onset_tick": 960,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-4",
+            "midi_note": 69,
+            "onset_tick": 1440,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-5",
+            "midi_note": 71,
+            "onset_tick": 1920,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-6",
+            "midi_note": 73,
+            "onset_tick": 2400,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-7",
+            "midi_note": 75,
+            "onset_tick": 2880,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-8",
+            "midi_note": 76,
+            "onset_tick": 3360,
+            "duration_ticks": 480,
+            "velocity": 80
+          }
+        ],
+        "observed_events": [
+          {
+            "observed_event_id": "obs-1",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-1",
+            "note_off_event_id": "off-1",
+            "midi_note": 64,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 250000000,
+            "note_off_time_ns": 850000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 0.25
+          },
+          {
+            "observed_event_id": "obs-2",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-2",
+            "note_off_event_id": "off-2",
+            "midi_note": 66,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 600000000,
+            "note_off_time_ns": 1200000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 0.6
+          },
+          {
+            "observed_event_id": "obs-3",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-3",
+            "note_off_event_id": "off-3",
+            "midi_note": 67,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 1450000000,
+            "note_off_time_ns": 2049999999,
+            "duration_ns": 599999999,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 1.45
+          },
+          {
+            "observed_event_id": "obs-4",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-4",
+            "note_off_event_id": "off-4",
+            "midi_note": 69,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 1799999999,
+            "note_off_time_ns": 2400000000,
+            "duration_ns": 600000001,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 1.7999999999999998
+          },
+          {
+            "observed_event_id": "obs-5",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-5",
+            "note_off_event_id": "off-5",
+            "midi_note": 71,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 2650000000,
+            "note_off_time_ns": 3250000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 2.65
+          },
+          {
+            "observed_event_id": "obs-6",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-6",
+            "note_off_event_id": "off-6",
+            "midi_note": 73,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 3000000000,
+            "note_off_time_ns": 3599999999,
+            "duration_ns": 599999999,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 3.0
+          },
+          {
+            "observed_event_id": "obs-7",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-7",
+            "note_off_event_id": "off-7",
+            "midi_note": 75,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 3849999999,
+            "note_off_time_ns": 4450000000,
+            "duration_ns": 600000001,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 3.8499999999999996
+          },
+          {
+            "observed_event_id": "obs-8",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-8",
+            "note_off_event_id": "off-8",
+            "midi_note": 76,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 4200000000,
+            "note_off_time_ns": 4800000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 4.2
+          }
+        ],
+        "repetition_count": 1,
+        "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332"
+      },
+      "response": {
+        "evaluation": {
+          "schema_version": "1.0.0",
+          "assignment_id": "demo-ascending-scale",
+          "content_id": "ascending_scale",
+          "performance_session_id": "performance-do015-certification-attempt_0_slow_down",
+          "evaluation_policy_id": "mvp-do010-v1",
+          "evaluation_policy_version": "1.0.0",
+          "findings": [
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0001",
+              "finding_type": "late_entry",
+              "severity": "significant",
+              "evidence_refs": [
+                "aligned:ev-1@0:obs-1"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-1"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 0,
+              "focus_end_tick": 0,
+              "observed_value": 250.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0002",
+              "finding_type": "late_entry",
+              "severity": "significant",
+              "evidence_refs": [
+                "aligned:ev-3@0:obs-3"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-3"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 960,
+              "focus_end_tick": 960,
+              "observed_value": 250.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0003",
+              "finding_type": "late_entry",
+              "severity": "significant",
+              "evidence_refs": [
+                "aligned:ev-5@0:obs-5"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-5"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 1920,
+              "focus_end_tick": 1920,
+              "observed_value": 250.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0004",
+              "finding_type": "late_entry",
+              "severity": "significant",
+              "evidence_refs": [
+                "aligned:ev-7@0:obs-7"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-7"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 2880,
+              "focus_end_tick": 2880,
+              "observed_value": 250.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            }
+          ],
+          "summary": {
+            "schema_version": "1.0.0",
+            "performance_session_id": "performance-do015-certification-attempt_0_slow_down",
+            "expected_event_count": 8,
+            "observed_event_count": 8,
+            "matched_count": 8,
+            "missing_count": 0,
+            "extra_count": 0,
+            "pitch_finding_count": 0,
+            "timing_finding_count": 4,
+            "actionable_finding_count": 4,
+            "repetition_count": 1,
+            "focus_ranges": [],
+            "primary_action": {
+              "schema_version": "1.0.0",
+              "action_type": "slow_down",
+              "reason_finding_ids": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004"
+              ],
+              "message_key": "action.slow_down",
+              "target_rate": 0.75,
+              "focus_start_tick": null,
+              "focus_end_tick": null,
+              "teaching_aid": null
+            },
+            "secondary_actions": [
+              {
+                "schema_version": "1.0.0",
+                "action_type": "repeat",
+                "reason_finding_ids": [
+                  "timing-late-0001",
+                  "timing-late-0002",
+                  "timing-late-0003",
+                  "timing-late-0004"
+                ],
+                "message_key": "action.repeat",
+                "target_rate": null,
+                "focus_start_tick": null,
+                "focus_end_tick": null,
+                "teaching_aid": null
+              }
+            ]
+          },
+          "primary_next_action": {
+            "schema_version": "1.0.0",
+            "action_type": "slow_down",
+            "reason_finding_ids": [
+              "timing-late-0001",
+              "timing-late-0002",
+              "timing-late-0003",
+              "timing-late-0004"
+            ],
+            "message_key": "action.slow_down",
+            "target_rate": 0.75,
+            "focus_start_tick": null,
+            "focus_end_tick": null,
+            "teaching_aid": null
+          },
+          "secondary_actions": [
+            {
+              "schema_version": "1.0.0",
+              "action_type": "repeat",
+              "reason_finding_ids": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004"
+              ],
+              "message_key": "action.repeat",
+              "target_rate": null,
+              "focus_start_tick": null,
+              "focus_end_tick": null,
+              "teaching_aid": null
+            }
+          ],
+          "provenance": {
+            "alignment_session": "performance-do015-certification-attempt_0_slow_down",
+            "producer": "PracticeEvaluator/v1"
+          },
+          "evaluation_digest": "sha256:53b8e74c06d5b26677f15481e9ac0c87e6d246b083e12feddbcfe39f5ca2afb9"
+        },
+        "messages": {
+          "finding.late_entry": "This note entered later than the lesson timing.",
+          "action.slow_down": "Practice slower at a supported rate.",
+          "action.repeat": "Repeat the passage."
+        },
+        "guidance": {
+          "schema_version": "1.0.0",
+          "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+          "performance_session_id": "performance-do015-certification-attempt_0_slow_down",
+          "evaluation_digest": "sha256:53b8e74c06d5b26677f15481e9ac0c87e6d246b083e12feddbcfe39f5ca2afb9",
+          "policy_version": "teaching-guidance-v1",
+          "items": [
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0001",
+              "finding_type": "late_entry",
+              "severity": "significant",
+              "evidence_refs": [
+                "aligned:ev-1@0:obs-1"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-1",
+              "observed_value": 250.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0002",
+              "finding_type": "late_entry",
+              "severity": "significant",
+              "evidence_refs": [
+                "aligned:ev-3@0:obs-3"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-3",
+              "observed_value": 250.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0003",
+              "finding_type": "late_entry",
+              "severity": "significant",
+              "evidence_refs": [
+                "aligned:ev-5@0:obs-5"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-5",
+              "observed_value": 250.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0004",
+              "finding_type": "late_entry",
+              "severity": "significant",
+              "evidence_refs": [
+                "aligned:ev-7@0:obs-7"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-7",
+              "observed_value": 250.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            }
+          ],
+          "next_action": {
+            "schema_version": "1.0.0",
+            "action_type": "slow_down",
+            "reason_finding_ids": [
+              "timing-late-0001",
+              "timing-late-0002",
+              "timing-late-0003",
+              "timing-late-0004"
+            ],
+            "message_key": "action.slow_down",
+            "target_rate": 0.75,
+            "focus_start_tick": null,
+            "focus_end_tick": null,
+            "teaching_aid": null
+          },
+          "guidance_digest": "sha256:1c140e1313d4fdfe6bea9d9d2421e949cbbfa12e6514f74837ff7570e0bb4bf7",
+          "provenance": {
+            "evaluation_digest": "sha256:53b8e74c06d5b26677f15481e9ac0c87e6d246b083e12feddbcfe39f5ca2afb9",
+            "producer": "TeachingGuidanceProjectionV1/v1"
+          }
+        },
+        "hardware_status": {
+          "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+          "audio_output": "UNVERIFIED_AUDIO_OUTPUT"
+        }
+      }
+    },
+    "attempt_1_isolate": {
+      "leg": "attempt_1_isolate",
+      "lesson": "ascending_scale",
+      "pattern": "uniform",
+      "offsets_seconds": [
+        0.14,
+        0.14,
+        0.14,
+        0.14,
+        0.14,
+        0.14,
+        0.14,
+        0.14
+      ],
+      "request": {
+        "assignment_id": "demo-ascending-scale",
+        "content_id": "ascending_scale",
+        "performance_session_id": "performance-do015-certification-attempt_1_isolate",
+        "current_rate": 1.0,
+        "timeline": {
+          "ticks_per_quarter": 480,
+          "total_ticks": 3840,
+          "total_seconds": 4.8,
+          "seconds_per_screen": 4.0,
+          "play_line_fraction": 0.22
+        },
+        "tempo_changes": [
+          {
+            "tick": 0,
+            "tempo_bpm": 100.0,
+            "microseconds_per_quarter": 600000
+          }
+        ],
+        "expected_notes": [
+          {
+            "event_id": "ev-1",
+            "midi_note": 64,
+            "onset_tick": 0,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-2",
+            "midi_note": 66,
+            "onset_tick": 480,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-3",
+            "midi_note": 67,
+            "onset_tick": 960,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-4",
+            "midi_note": 69,
+            "onset_tick": 1440,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-5",
+            "midi_note": 71,
+            "onset_tick": 1920,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-6",
+            "midi_note": 73,
+            "onset_tick": 2400,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-7",
+            "midi_note": 75,
+            "onset_tick": 2880,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-8",
+            "midi_note": 76,
+            "onset_tick": 3360,
+            "duration_ticks": 480,
+            "velocity": 80
+          }
+        ],
+        "observed_events": [
+          {
+            "observed_event_id": "obs-1",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-1",
+            "note_off_event_id": "off-1",
+            "midi_note": 64,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 140000000,
+            "note_off_time_ns": 740000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 0.14
+          },
+          {
+            "observed_event_id": "obs-2",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-2",
+            "note_off_event_id": "off-2",
+            "midi_note": 66,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 740000000,
+            "note_off_time_ns": 1339999999,
+            "duration_ns": 599999999,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 0.74
+          },
+          {
+            "observed_event_id": "obs-3",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-3",
+            "note_off_event_id": "off-3",
+            "midi_note": 67,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 1339999999,
+            "note_off_time_ns": 1940000000,
+            "duration_ns": 600000001,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 1.3399999999999999
+          },
+          {
+            "observed_event_id": "obs-4",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-4",
+            "note_off_event_id": "off-4",
+            "midi_note": 69,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 1940000000,
+            "note_off_time_ns": 2540000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 1.94
+          },
+          {
+            "observed_event_id": "obs-5",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-5",
+            "note_off_event_id": "off-5",
+            "midi_note": 71,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 2540000000,
+            "note_off_time_ns": 3140000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 2.54
+          },
+          {
+            "observed_event_id": "obs-6",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-6",
+            "note_off_event_id": "off-6",
+            "midi_note": 73,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 3140000000,
+            "note_off_time_ns": 3740000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 3.14
+          },
+          {
+            "observed_event_id": "obs-7",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-7",
+            "note_off_event_id": "off-7",
+            "midi_note": 75,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 3740000000,
+            "note_off_time_ns": 4340000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 3.7399999999999998
+          },
+          {
+            "observed_event_id": "obs-8",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-8",
+            "note_off_event_id": "off-8",
+            "midi_note": 76,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 4340000000,
+            "note_off_time_ns": 4939999999,
+            "duration_ns": 599999999,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 4.34
+          }
+        ],
+        "repetition_count": 1,
+        "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332"
+      },
+      "response": {
+        "evaluation": {
+          "schema_version": "1.0.0",
+          "assignment_id": "demo-ascending-scale",
+          "content_id": "ascending_scale",
+          "performance_session_id": "performance-do015-certification-attempt_1_isolate",
+          "evaluation_policy_id": "mvp-do010-v1",
+          "evaluation_policy_version": "1.0.0",
+          "findings": [
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0001",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-1@0:obs-1"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-1"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 0,
+              "focus_end_tick": 0,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0002",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-2@0:obs-2"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-2"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 480,
+              "focus_end_tick": 480,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0003",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-3@0:obs-3"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-3"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 960,
+              "focus_end_tick": 960,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0004",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-4@0:obs-4"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-4"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 1440,
+              "focus_end_tick": 1440,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0005",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-5@0:obs-5"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-5"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 1920,
+              "focus_end_tick": 1920,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0006",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-6@0:obs-6"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-6"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 2400,
+              "focus_end_tick": 2400,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0007",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-7@0:obs-7"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-7"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 2880,
+              "focus_end_tick": 2880,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0008",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-8@0:obs-8"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-8"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 3360,
+              "focus_end_tick": 3360,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "focus-concentrated-0001",
+              "finding_type": "findings_concentrated",
+              "severity": "significant",
+              "evidence_refs": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004"
+              ],
+              "message_key": "finding.findings_concentrated",
+              "expected_event_refs": [],
+              "repetition_index": null,
+              "focus_start_tick": 0,
+              "focus_end_tick": 1440,
+              "observed_value": null,
+              "threshold_value": null,
+              "metadata": {}
+            }
+          ],
+          "summary": {
+            "schema_version": "1.0.0",
+            "performance_session_id": "performance-do015-certification-attempt_1_isolate",
+            "expected_event_count": 8,
+            "observed_event_count": 8,
+            "matched_count": 8,
+            "missing_count": 0,
+            "extra_count": 0,
+            "pitch_finding_count": 0,
+            "timing_finding_count": 8,
+            "actionable_finding_count": 9,
+            "repetition_count": 1,
+            "focus_ranges": [
+              {
+                "start_tick": 0,
+                "end_tick": 1440,
+                "finding_ids": [
+                  "timing-late-0001",
+                  "timing-late-0002",
+                  "timing-late-0003",
+                  "timing-late-0004"
+                ]
+              },
+              {
+                "start_tick": 1440,
+                "end_tick": 2880,
+                "finding_ids": [
+                  "timing-late-0005",
+                  "timing-late-0006",
+                  "timing-late-0007"
+                ]
+              }
+            ],
+            "primary_action": {
+              "schema_version": "1.0.0",
+              "action_type": "isolate_passage",
+              "reason_finding_ids": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004"
+              ],
+              "message_key": "action.isolate_passage",
+              "target_rate": null,
+              "focus_start_tick": 0,
+              "focus_end_tick": 1440,
+              "teaching_aid": null
+            },
+            "secondary_actions": [
+              {
+                "schema_version": "1.0.0",
+                "action_type": "repeat",
+                "reason_finding_ids": [
+                  "timing-late-0001",
+                  "timing-late-0002",
+                  "timing-late-0003",
+                  "timing-late-0004",
+                  "timing-late-0005",
+                  "timing-late-0006",
+                  "timing-late-0007",
+                  "timing-late-0008",
+                  "focus-concentrated-0001"
+                ],
+                "message_key": "action.repeat",
+                "target_rate": null,
+                "focus_start_tick": null,
+                "focus_end_tick": null,
+                "teaching_aid": null
+              },
+              {
+                "schema_version": "1.0.0",
+                "action_type": "slow_down",
+                "reason_finding_ids": [
+                  "timing-late-0001",
+                  "timing-late-0002",
+                  "timing-late-0003",
+                  "timing-late-0004",
+                  "timing-late-0005",
+                  "timing-late-0006",
+                  "timing-late-0007",
+                  "timing-late-0008"
+                ],
+                "message_key": "action.slow_down",
+                "target_rate": 0.75,
+                "focus_start_tick": null,
+                "focus_end_tick": null,
+                "teaching_aid": null
+              }
+            ]
+          },
+          "primary_next_action": {
+            "schema_version": "1.0.0",
+            "action_type": "isolate_passage",
+            "reason_finding_ids": [
+              "timing-late-0001",
+              "timing-late-0002",
+              "timing-late-0003",
+              "timing-late-0004"
+            ],
+            "message_key": "action.isolate_passage",
+            "target_rate": null,
+            "focus_start_tick": 0,
+            "focus_end_tick": 1440,
+            "teaching_aid": null
+          },
+          "secondary_actions": [
+            {
+              "schema_version": "1.0.0",
+              "action_type": "repeat",
+              "reason_finding_ids": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004",
+                "timing-late-0005",
+                "timing-late-0006",
+                "timing-late-0007",
+                "timing-late-0008",
+                "focus-concentrated-0001"
+              ],
+              "message_key": "action.repeat",
+              "target_rate": null,
+              "focus_start_tick": null,
+              "focus_end_tick": null,
+              "teaching_aid": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "action_type": "slow_down",
+              "reason_finding_ids": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004",
+                "timing-late-0005",
+                "timing-late-0006",
+                "timing-late-0007",
+                "timing-late-0008"
+              ],
+              "message_key": "action.slow_down",
+              "target_rate": 0.75,
+              "focus_start_tick": null,
+              "focus_end_tick": null,
+              "teaching_aid": null
+            }
+          ],
+          "provenance": {
+            "alignment_session": "performance-do015-certification-attempt_1_isolate",
+            "producer": "PracticeEvaluator/v1"
+          },
+          "evaluation_digest": "sha256:53e894267458be303faa11eba692783f180be5f6c5287704dd15801e781aed72"
+        },
+        "messages": {
+          "finding.late_entry": "This note entered later than the lesson timing.",
+          "finding.findings_concentrated": "Findings are concentrated in one passage.",
+          "action.isolate_passage": "Isolate the passage that needs focus.",
+          "action.repeat": "Repeat the passage.",
+          "action.slow_down": "Practice slower at a supported rate."
+        },
+        "guidance": {
+          "schema_version": "1.0.0",
+          "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+          "performance_session_id": "performance-do015-certification-attempt_1_isolate",
+          "evaluation_digest": "sha256:53e894267458be303faa11eba692783f180be5f6c5287704dd15801e781aed72",
+          "policy_version": "teaching-guidance-v1",
+          "items": [
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "focus-concentrated-0001",
+              "finding_type": "findings_concentrated",
+              "severity": "significant",
+              "evidence_refs": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004"
+              ],
+              "message_key": "finding.findings_concentrated",
+              "canonical_event_id": null,
+              "observed_value": null,
+              "threshold_value": null,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0001",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-1@0:obs-1"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-1",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0002",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-2@0:obs-2"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-2",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0003",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-3@0:obs-3"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-3",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0004",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-4@0:obs-4"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-4",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0005",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-5@0:obs-5"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-5",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0006",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-6@0:obs-6"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-6",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0007",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-7@0:obs-7"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-7",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0008",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-8@0:obs-8"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-8",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            }
+          ],
+          "next_action": {
+            "schema_version": "1.0.0",
+            "action_type": "isolate_passage",
+            "reason_finding_ids": [
+              "timing-late-0001",
+              "timing-late-0002",
+              "timing-late-0003",
+              "timing-late-0004"
+            ],
+            "message_key": "action.isolate_passage",
+            "target_rate": null,
+            "focus_start_tick": 0,
+            "focus_end_tick": 1440,
+            "teaching_aid": null
+          },
+          "guidance_digest": "sha256:1d597ad715e38e53a048f35e46d8fec7a0d9b41b22ba9d49028eb1607611ec22",
+          "provenance": {
+            "evaluation_digest": "sha256:53e894267458be303faa11eba692783f180be5f6c5287704dd15801e781aed72",
+            "producer": "TeachingGuidanceProjectionV1/v1"
+          }
+        },
+        "hardware_status": {
+          "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+          "audio_output": "UNVERIFIED_AUDIO_OUTPUT"
+        }
+      }
+    },
+    "attempt_2_continue": {
+      "leg": "attempt_2_continue",
+      "lesson": "ascending_scale",
+      "pattern": "clean",
+      "offsets_seconds": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "request": {
+        "assignment_id": "demo-ascending-scale",
+        "content_id": "ascending_scale",
+        "performance_session_id": "performance-do015-certification-attempt_2_continue",
+        "current_rate": 1.0,
+        "timeline": {
+          "ticks_per_quarter": 480,
+          "total_ticks": 3840,
+          "total_seconds": 4.8,
+          "seconds_per_screen": 4.0,
+          "play_line_fraction": 0.22
+        },
+        "tempo_changes": [
+          {
+            "tick": 0,
+            "tempo_bpm": 100.0,
+            "microseconds_per_quarter": 600000
+          }
+        ],
+        "expected_notes": [
+          {
+            "event_id": "ev-1",
+            "midi_note": 64,
+            "onset_tick": 0,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-2",
+            "midi_note": 66,
+            "onset_tick": 480,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-3",
+            "midi_note": 67,
+            "onset_tick": 960,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-4",
+            "midi_note": 69,
+            "onset_tick": 1440,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-5",
+            "midi_note": 71,
+            "onset_tick": 1920,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-6",
+            "midi_note": 73,
+            "onset_tick": 2400,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-7",
+            "midi_note": 75,
+            "onset_tick": 2880,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-8",
+            "midi_note": 76,
+            "onset_tick": 3360,
+            "duration_ticks": 480,
+            "velocity": 80
+          }
+        ],
+        "observed_events": [
+          {
+            "observed_event_id": "obs-1",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-1",
+            "note_off_event_id": "off-1",
+            "midi_note": 64,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 0,
+            "note_off_time_ns": 600000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 0.0
+          },
+          {
+            "observed_event_id": "obs-2",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-2",
+            "note_off_event_id": "off-2",
+            "midi_note": 66,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 600000000,
+            "note_off_time_ns": 1200000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 0.6
+          },
+          {
+            "observed_event_id": "obs-3",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-3",
+            "note_off_event_id": "off-3",
+            "midi_note": 67,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 1200000000,
+            "note_off_time_ns": 1799999999,
+            "duration_ns": 599999999,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 1.2
+          },
+          {
+            "observed_event_id": "obs-4",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-4",
+            "note_off_event_id": "off-4",
+            "midi_note": 69,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 1799999999,
+            "note_off_time_ns": 2400000000,
+            "duration_ns": 600000001,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 1.7999999999999998
+          },
+          {
+            "observed_event_id": "obs-5",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-5",
+            "note_off_event_id": "off-5",
+            "midi_note": 71,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 2400000000,
+            "note_off_time_ns": 3000000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 2.4
+          },
+          {
+            "observed_event_id": "obs-6",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-6",
+            "note_off_event_id": "off-6",
+            "midi_note": 73,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 3000000000,
+            "note_off_time_ns": 3599999999,
+            "duration_ns": 599999999,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 3.0
+          },
+          {
+            "observed_event_id": "obs-7",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-7",
+            "note_off_event_id": "off-7",
+            "midi_note": 75,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 3599999999,
+            "note_off_time_ns": 4200000000,
+            "duration_ns": 600000001,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 3.5999999999999996
+          },
+          {
+            "observed_event_id": "obs-8",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-8",
+            "note_off_event_id": "off-8",
+            "midi_note": 76,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 4200000000,
+            "note_off_time_ns": 4800000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 4.2
+          }
+        ],
+        "repetition_count": 1,
+        "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332"
+      },
+      "response": {
+        "evaluation": {
+          "schema_version": "1.0.0",
+          "assignment_id": "demo-ascending-scale",
+          "content_id": "ascending_scale",
+          "performance_session_id": "performance-do015-certification-attempt_2_continue",
+          "evaluation_policy_id": "mvp-do010-v1",
+          "evaluation_policy_version": "1.0.0",
+          "findings": [],
+          "summary": {
+            "schema_version": "1.0.0",
+            "performance_session_id": "performance-do015-certification-attempt_2_continue",
+            "expected_event_count": 8,
+            "observed_event_count": 8,
+            "matched_count": 8,
+            "missing_count": 0,
+            "extra_count": 0,
+            "pitch_finding_count": 0,
+            "timing_finding_count": 0,
+            "actionable_finding_count": 0,
+            "repetition_count": 0,
+            "focus_ranges": [],
+            "primary_action": {
+              "schema_version": "1.0.0",
+              "action_type": "continue",
+              "reason_finding_ids": [],
+              "message_key": "action.continue",
+              "target_rate": null,
+              "focus_start_tick": null,
+              "focus_end_tick": null,
+              "teaching_aid": null
+            },
+            "secondary_actions": []
+          },
+          "primary_next_action": {
+            "schema_version": "1.0.0",
+            "action_type": "continue",
+            "reason_finding_ids": [],
+            "message_key": "action.continue",
+            "target_rate": null,
+            "focus_start_tick": null,
+            "focus_end_tick": null,
+            "teaching_aid": null
+          },
+          "secondary_actions": [],
+          "provenance": {
+            "alignment_session": "performance-do015-certification-attempt_2_continue",
+            "producer": "PracticeEvaluator/v1"
+          },
+          "evaluation_digest": "sha256:35e30defaf4eb7121ebc43c793c537d518138cfc5531e0b76418624851ef5d8e"
+        },
+        "messages": {
+          "action.continue": "Continue \u2014 no immediate repetition required under this policy."
+        },
+        "guidance": {
+          "schema_version": "1.0.0",
+          "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+          "performance_session_id": "performance-do015-certification-attempt_2_continue",
+          "evaluation_digest": "sha256:35e30defaf4eb7121ebc43c793c537d518138cfc5531e0b76418624851ef5d8e",
+          "policy_version": "teaching-guidance-v1",
+          "items": [],
+          "next_action": {
+            "schema_version": "1.0.0",
+            "action_type": "continue",
+            "reason_finding_ids": [],
+            "message_key": "action.continue",
+            "target_rate": null,
+            "focus_start_tick": null,
+            "focus_end_tick": null,
+            "teaching_aid": null
+          },
+          "guidance_digest": "sha256:1853c03b96bfb55ccab911bc6e69cfac01000a98ca146beafae470b4151b38fd",
+          "provenance": {
+            "evaluation_digest": "sha256:35e30defaf4eb7121ebc43c793c537d518138cfc5531e0b76418624851ef5d8e",
+            "producer": "TeachingGuidanceProjectionV1/v1"
+          }
+        },
+        "hardware_status": {
+          "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+          "audio_output": "UNVERIFIED_AUDIO_OUTPUT"
+        }
+      }
+    },
+    "lesson_switch_witness": {
+      "leg": "lesson_switch_witness",
+      "lesson": "descending_scale",
+      "pattern": "uniform",
+      "offsets_seconds": [
+        0.14,
+        0.14,
+        0.14,
+        0.14,
+        0.14,
+        0.14,
+        0.14,
+        0.14
+      ],
+      "request": {
+        "assignment_id": "demo-descending-scale",
+        "content_id": "descending_scale",
+        "performance_session_id": "performance-do015-certification-lesson_switch_witness",
+        "current_rate": 1.0,
+        "timeline": {
+          "ticks_per_quarter": 480,
+          "total_ticks": 3840,
+          "total_seconds": 4.8,
+          "seconds_per_screen": 4.0,
+          "play_line_fraction": 0.22
+        },
+        "tempo_changes": [
+          {
+            "tick": 0,
+            "tempo_bpm": 100.0,
+            "microseconds_per_quarter": 600000
+          }
+        ],
+        "expected_notes": [
+          {
+            "event_id": "ev-1",
+            "midi_note": 76,
+            "onset_tick": 0,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-2",
+            "midi_note": 75,
+            "onset_tick": 480,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-3",
+            "midi_note": 73,
+            "onset_tick": 960,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-4",
+            "midi_note": 71,
+            "onset_tick": 1440,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-5",
+            "midi_note": 69,
+            "onset_tick": 1920,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-6",
+            "midi_note": 67,
+            "onset_tick": 2400,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-7",
+            "midi_note": 66,
+            "onset_tick": 2880,
+            "duration_ticks": 480,
+            "velocity": 80
+          },
+          {
+            "event_id": "ev-8",
+            "midi_note": 64,
+            "onset_tick": 3360,
+            "duration_ticks": 480,
+            "velocity": 80
+          }
+        ],
+        "observed_events": [
+          {
+            "observed_event_id": "obs-1",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-1",
+            "note_off_event_id": "off-1",
+            "midi_note": 76,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 140000000,
+            "note_off_time_ns": 740000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 0.14
+          },
+          {
+            "observed_event_id": "obs-2",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-2",
+            "note_off_event_id": "off-2",
+            "midi_note": 75,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 740000000,
+            "note_off_time_ns": 1339999999,
+            "duration_ns": 599999999,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 0.74
+          },
+          {
+            "observed_event_id": "obs-3",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-3",
+            "note_off_event_id": "off-3",
+            "midi_note": 73,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 1339999999,
+            "note_off_time_ns": 1940000000,
+            "duration_ns": 600000001,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 1.3399999999999999
+          },
+          {
+            "observed_event_id": "obs-4",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-4",
+            "note_off_event_id": "off-4",
+            "midi_note": 71,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 1940000000,
+            "note_off_time_ns": 2540000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 1.94
+          },
+          {
+            "observed_event_id": "obs-5",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-5",
+            "note_off_event_id": "off-5",
+            "midi_note": 69,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 2540000000,
+            "note_off_time_ns": 3140000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 2.54
+          },
+          {
+            "observed_event_id": "obs-6",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-6",
+            "note_off_event_id": "off-6",
+            "midi_note": 67,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 3140000000,
+            "note_off_time_ns": 3740000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 3.14
+          },
+          {
+            "observed_event_id": "obs-7",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-7",
+            "note_off_event_id": "off-7",
+            "midi_note": 66,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 3740000000,
+            "note_off_time_ns": 4340000000,
+            "duration_ns": 600000000,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 3.7399999999999998
+          },
+          {
+            "observed_event_id": "obs-8",
+            "capture_id": "capture-do015-certification",
+            "note_on_event_id": "on-8",
+            "note_off_event_id": "off-8",
+            "midi_note": 64,
+            "velocity": 80,
+            "channel": 0,
+            "source_device": "do015-certification-clean-performance",
+            "note_on_time_ns": 4340000000,
+            "note_off_time_ns": 4939999999,
+            "duration_ns": 599999999,
+            "status": "complete",
+            "repetition_index": 0,
+            "practice_onset_seconds": 4.34
+          }
+        ],
+        "repetition_count": 1,
+        "canonical_revision_id": "rev-16bc98c2d96b53da107f3690"
+      },
+      "response": {
+        "evaluation": {
+          "schema_version": "1.0.0",
+          "assignment_id": "demo-descending-scale",
+          "content_id": "descending_scale",
+          "performance_session_id": "performance-do015-certification-lesson_switch_witness",
+          "evaluation_policy_id": "mvp-do010-v1",
+          "evaluation_policy_version": "1.0.0",
+          "findings": [
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0001",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-1@0:obs-1"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-1"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 0,
+              "focus_end_tick": 0,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0002",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-2@0:obs-2"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-2"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 480,
+              "focus_end_tick": 480,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0003",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-3@0:obs-3"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-3"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 960,
+              "focus_end_tick": 960,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0004",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-4@0:obs-4"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-4"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 1440,
+              "focus_end_tick": 1440,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0005",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-5@0:obs-5"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-5"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 1920,
+              "focus_end_tick": 1920,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0006",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-6@0:obs-6"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-6"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 2400,
+              "focus_end_tick": 2400,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0007",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-7@0:obs-7"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-7"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 2880,
+              "focus_end_tick": 2880,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0008",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-8@0:obs-8"
+              ],
+              "message_key": "finding.late_entry",
+              "expected_event_refs": [
+                "ev-8"
+              ],
+              "repetition_index": 0,
+              "focus_start_tick": 3360,
+              "focus_end_tick": 3360,
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "metadata": {}
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "focus-concentrated-0001",
+              "finding_type": "findings_concentrated",
+              "severity": "significant",
+              "evidence_refs": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004"
+              ],
+              "message_key": "finding.findings_concentrated",
+              "expected_event_refs": [],
+              "repetition_index": null,
+              "focus_start_tick": 0,
+              "focus_end_tick": 1440,
+              "observed_value": null,
+              "threshold_value": null,
+              "metadata": {}
+            }
+          ],
+          "summary": {
+            "schema_version": "1.0.0",
+            "performance_session_id": "performance-do015-certification-lesson_switch_witness",
+            "expected_event_count": 8,
+            "observed_event_count": 8,
+            "matched_count": 8,
+            "missing_count": 0,
+            "extra_count": 0,
+            "pitch_finding_count": 0,
+            "timing_finding_count": 8,
+            "actionable_finding_count": 9,
+            "repetition_count": 1,
+            "focus_ranges": [
+              {
+                "start_tick": 0,
+                "end_tick": 1440,
+                "finding_ids": [
+                  "timing-late-0001",
+                  "timing-late-0002",
+                  "timing-late-0003",
+                  "timing-late-0004"
+                ]
+              },
+              {
+                "start_tick": 1440,
+                "end_tick": 2880,
+                "finding_ids": [
+                  "timing-late-0005",
+                  "timing-late-0006",
+                  "timing-late-0007"
+                ]
+              }
+            ],
+            "primary_action": {
+              "schema_version": "1.0.0",
+              "action_type": "isolate_passage",
+              "reason_finding_ids": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004"
+              ],
+              "message_key": "action.isolate_passage",
+              "target_rate": null,
+              "focus_start_tick": 0,
+              "focus_end_tick": 1440,
+              "teaching_aid": null
+            },
+            "secondary_actions": [
+              {
+                "schema_version": "1.0.0",
+                "action_type": "repeat",
+                "reason_finding_ids": [
+                  "timing-late-0001",
+                  "timing-late-0002",
+                  "timing-late-0003",
+                  "timing-late-0004",
+                  "timing-late-0005",
+                  "timing-late-0006",
+                  "timing-late-0007",
+                  "timing-late-0008",
+                  "focus-concentrated-0001"
+                ],
+                "message_key": "action.repeat",
+                "target_rate": null,
+                "focus_start_tick": null,
+                "focus_end_tick": null,
+                "teaching_aid": null
+              },
+              {
+                "schema_version": "1.0.0",
+                "action_type": "slow_down",
+                "reason_finding_ids": [
+                  "timing-late-0001",
+                  "timing-late-0002",
+                  "timing-late-0003",
+                  "timing-late-0004",
+                  "timing-late-0005",
+                  "timing-late-0006",
+                  "timing-late-0007",
+                  "timing-late-0008"
+                ],
+                "message_key": "action.slow_down",
+                "target_rate": 0.75,
+                "focus_start_tick": null,
+                "focus_end_tick": null,
+                "teaching_aid": null
+              }
+            ]
+          },
+          "primary_next_action": {
+            "schema_version": "1.0.0",
+            "action_type": "isolate_passage",
+            "reason_finding_ids": [
+              "timing-late-0001",
+              "timing-late-0002",
+              "timing-late-0003",
+              "timing-late-0004"
+            ],
+            "message_key": "action.isolate_passage",
+            "target_rate": null,
+            "focus_start_tick": 0,
+            "focus_end_tick": 1440,
+            "teaching_aid": null
+          },
+          "secondary_actions": [
+            {
+              "schema_version": "1.0.0",
+              "action_type": "repeat",
+              "reason_finding_ids": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004",
+                "timing-late-0005",
+                "timing-late-0006",
+                "timing-late-0007",
+                "timing-late-0008",
+                "focus-concentrated-0001"
+              ],
+              "message_key": "action.repeat",
+              "target_rate": null,
+              "focus_start_tick": null,
+              "focus_end_tick": null,
+              "teaching_aid": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "action_type": "slow_down",
+              "reason_finding_ids": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004",
+                "timing-late-0005",
+                "timing-late-0006",
+                "timing-late-0007",
+                "timing-late-0008"
+              ],
+              "message_key": "action.slow_down",
+              "target_rate": 0.75,
+              "focus_start_tick": null,
+              "focus_end_tick": null,
+              "teaching_aid": null
+            }
+          ],
+          "provenance": {
+            "alignment_session": "performance-do015-certification-lesson_switch_witness",
+            "producer": "PracticeEvaluator/v1"
+          },
+          "evaluation_digest": "sha256:c540f91ac5230d50c6f022ea7f747e21b77de803036c1c47bafac4817d4b9843"
+        },
+        "messages": {
+          "finding.late_entry": "This note entered later than the lesson timing.",
+          "finding.findings_concentrated": "Findings are concentrated in one passage.",
+          "action.isolate_passage": "Isolate the passage that needs focus.",
+          "action.repeat": "Repeat the passage.",
+          "action.slow_down": "Practice slower at a supported rate."
+        },
+        "guidance": {
+          "schema_version": "1.0.0",
+          "canonical_revision_id": "rev-16bc98c2d96b53da107f3690",
+          "performance_session_id": "performance-do015-certification-lesson_switch_witness",
+          "evaluation_digest": "sha256:c540f91ac5230d50c6f022ea7f747e21b77de803036c1c47bafac4817d4b9843",
+          "policy_version": "teaching-guidance-v1",
+          "items": [
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "focus-concentrated-0001",
+              "finding_type": "findings_concentrated",
+              "severity": "significant",
+              "evidence_refs": [
+                "timing-late-0001",
+                "timing-late-0002",
+                "timing-late-0003",
+                "timing-late-0004"
+              ],
+              "message_key": "finding.findings_concentrated",
+              "canonical_event_id": null,
+              "observed_value": null,
+              "threshold_value": null,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0001",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-1@0:obs-1"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-1",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0002",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-2@0:obs-2"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-2",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0003",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-3@0:obs-3"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-3",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0004",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-4@0:obs-4"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-4",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0005",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-5@0:obs-5"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-5",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0006",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-6@0:obs-6"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-6",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0007",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-7@0:obs-7"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-7",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            },
+            {
+              "schema_version": "1.0.0",
+              "finding_id": "timing-late-0008",
+              "finding_type": "late_entry",
+              "severity": "focus",
+              "evidence_refs": [
+                "aligned:ev-8@0:obs-8"
+              ],
+              "message_key": "finding.late_entry",
+              "canonical_event_id": "ev-8",
+              "observed_value": 140.0,
+              "threshold_value": 100.0,
+              "zone_context": null
+            }
+          ],
+          "next_action": {
+            "schema_version": "1.0.0",
+            "action_type": "isolate_passage",
+            "reason_finding_ids": [
+              "timing-late-0001",
+              "timing-late-0002",
+              "timing-late-0003",
+              "timing-late-0004"
+            ],
+            "message_key": "action.isolate_passage",
+            "target_rate": null,
+            "focus_start_tick": 0,
+            "focus_end_tick": 1440,
+            "teaching_aid": null
+          },
+          "guidance_digest": "sha256:efdcd69266abff7b63a037964acfcf939c2a80506d88c654c6719d6bb6a847a8",
+          "provenance": {
+            "evaluation_digest": "sha256:c540f91ac5230d50c6f022ea7f747e21b77de803036c1c47bafac4817d4b9843",
+            "producer": "TeachingGuidanceProjectionV1/v1"
+          }
+        },
+        "hardware_status": {
+          "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+          "audio_output": "UNVERIFIED_AUDIO_OUTPUT"
+        }
+      }
+    }
+  }
+}
