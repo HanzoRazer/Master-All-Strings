@@ -192,3 +192,100 @@ def test_continue_carries_no_mastery_language() -> None:
     text = json.dumps(build_scenario()).lower()
     for forbidden in ("mastered", "perfect", "course complete", "lesson passed"):
         assert forbidden not in text
+
+
+def drive_certified_session() -> dict[str, Any]:
+    """Run the certified flow through the real Stage 4 API and Stage 2 service.
+
+    The browser witness mirrors the lifecycle in JavaScript, which is enough to
+    certify orchestration but cannot speak for the session digest: only the
+    contract computes that. So the same three legs are driven here through the
+    product's own API, and what it returns is the authoritative record.
+    """
+
+    from master_all_strings.education.guided_session import (
+        compute_session_digest,
+        serialize_guided_practice_session,
+    )
+    from master_all_strings.mvp.guided_session_api import LocalGuidedPracticeSessionApi
+
+    scenario = build_scenario()
+    legs = [scenario["legs"][name] for name, lesson, _, _ in LEGS if lesson == LESSON]
+    api = LocalGuidedPracticeSessionApi()
+    session_id = "session-do015-certification"
+    transcript: list[dict[str, Any]] = []
+
+    def call(method: str, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        status, body = api.handle_http(method, path, payload)
+        transcript.append({"method": method, "path": path, "status": status})
+        assert status in (200, 201), (path, status, body)
+        return body
+
+    base = "/api/education/guided-sessions"
+    frozen_attempts: list[str] = []
+    for index, leg in enumerate(legs):
+        evidence = {
+            "evaluation": leg["response"]["evaluation"],
+            "guidance": leg["response"]["guidance"],
+            "attempt_id": f"attempt-do015-certification-{index}",
+        }
+        if index == 0:
+            session = call("POST", base, {"session_id": session_id, **evidence})
+        else:
+            session = call("POST", f"{base}/{session_id}/attempts", evidence)
+            # Everything before the current attempt must be byte-identical.
+            for position, recorded in enumerate(frozen_attempts):
+                assert json.dumps(session["attempts"][position], sort_keys=True) == recorded
+        session = call("POST", f"{base}/{session_id}/disposition", {"disposition": "ACCEPTED"})
+        executed = session["attempts"][index]["action"]["recommended_action"]
+        session = call(
+            "POST",
+            f"{base}/{session_id}/execution",
+            {"execution_status": "SUCCEEDED", "executed_action": executed},
+        )
+        frozen_attempts.append(json.dumps(session["attempts"][index], sort_keys=True))
+
+    final = call("GET", f"{base}/{session_id}", {})
+    stored = api.store.get(session_id)
+    assert stored is not None
+    return {
+        "witness": "authoritative (real Stage 4 API over the Stage 2 service)",
+        "proves": ["lifecycle truth", "session digest", "attempt immutability"],
+        "transcript": transcript,
+        "session": final,
+        "session_digest_recomputed": compute_session_digest(stored),
+        "serialized_bytes_sha256": __import__("hashlib")
+        .sha256(serialize_guided_practice_session(stored).encode("utf-8"))
+        .hexdigest(),
+    }
+
+
+def test_the_real_service_closes_the_certified_flow() -> None:
+    driven = drive_certified_session()
+    session = driven["session"]
+    assert session["status"] == "CLOSED"
+    assert len(session["attempts"]) == 3
+    actions = [
+        attempt["action"]["recommended_action"]["action_type"]
+        for attempt in session["attempts"]
+    ]
+    assert actions == ["slow_down", "isolate_passage", "continue"]
+    assert all(
+        attempt["action"]["execution_status"] == "SUCCEEDED" for attempt in session["attempts"]
+    )
+
+
+def test_the_session_digest_is_the_contract_s_own() -> None:
+    driven = drive_certified_session()
+    assert driven["session"]["session_digest"] == driven["session_digest_recomputed"]
+    assert driven["session_digest_recomputed"].startswith("sha256:")
+
+
+def test_the_certified_session_keeps_one_identity_chain() -> None:
+    session = drive_certified_session()["session"]
+    revisions = {attempt["canonical_revision_id"] for attempt in session["attempts"]}
+    assert len(revisions) == 1
+    performances = [attempt["performance_session_id"] for attempt in session["attempts"]]
+    assert len(set(performances)) == 3
+    attempt_ids = [attempt["attempt_id"] for attempt in session["attempts"]]
+    assert len(set(attempt_ids)) == 3
