@@ -222,3 +222,339 @@ def test_findings_print_on_a_console_that_is_not_utf8() -> None:
         rendered = check._ascii(f"FAIL  {problem}")
         rendered.encode("cp437")  # raises if a finding is unprintable
         rendered.encode("ascii")
+
+
+def test_a_branch_that_only_removes_rows_needs_none_of_its_own() -> None:
+    # The recursion this closes: a row cannot be deleted by the pull request
+    # it describes, so clearing it needs a branch, which would need a row,
+    # which would go stale in turn.
+    rows, _ = check.parse_register(HEADER)
+    open_prs = {"docs/clear-merged-register-row": 36}
+    remote = {"docs/clear-merged-register-row"}
+    noisy = check.reconcile(rows, open_prs, remote, "docs/clear-merged-register-row")
+    assert any("has no row in the register" in item for item in noisy)
+    quiet = check.reconcile(
+        rows, open_prs, remote, "docs/clear-merged-register-row", cleanup=True
+    )
+    assert quiet == []
+
+
+def test_the_exemption_is_only_for_the_branch_doing_the_clearing() -> None:
+    rows, _ = check.parse_register(HEADER)
+    problems = check.reconcile(
+        rows, {"someone/else": 37}, {"someone/else"}, "docs/clear-merged-register-row", True
+    )
+    assert any("PR #37 is open on someone/else" in item for item in problems)
+
+
+def _is_cleanup(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    before: str,
+    after: str,
+    open_prs: dict[str, int] | None = None,
+    remote_branches: set[str] | None = None,
+) -> bool:
+    """Run the real predicate against fixture registers, never live git state.
+
+    The default world is one where the removed row has finished: no open pull
+    requests, and its branch gone from origin.
+    """
+
+    register = tmp_path / "IN_FLIGHT.md"
+    register.write_text(after, encoding="utf-8")
+    monkeypatch.setattr(check, "REGISTER", register)
+    monkeypatch.setattr(
+        check, "register_at", lambda ref: before if ref == "origin/main" else None
+    )
+    return check.is_cleanup_branch(
+        "docs/clear-merged-register-row",
+        {} if open_prs is None else open_prs,
+        set() if remote_branches is None else remote_branches,
+    )
+
+
+def test_removing_rows_without_other_edits_is_a_cleanup(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    assert _is_cleanup(monkeypatch, tmp_path, HEADER + ROW, HEADER)
+
+
+def test_removing_a_row_and_adding_a_row_is_not_a_cleanup(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    before = HEADER + ROW
+    after = HEADER + ROW.replace("cursor/do015-next-ab12", "cursor/something-new")
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_removing_a_row_and_editing_a_retained_row_is_not_a_cleanup(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # The bypass a branch-name comparison misses: clear a stale row and change
+    # someone else's state on the way past, and the exemption would have let
+    # the whole thing through unannounced.
+    retained = ROW.replace("cursor/do015-next-ab12", "cursor/retained-row")
+    before = HEADER + ROW + retained
+    after = HEADER + retained.replace("in flight", "blocked")
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_a_retained_row_may_move_down_the_table(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Position is the one thing a deletion is allowed to change.
+    retained = ROW.replace("cursor/do015-next-ab12", "cursor/retained-row")
+    before = HEADER + ROW + retained
+    after = HEADER + retained
+    assert _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_editing_rows_without_removing_one_is_not_a_cleanup(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    before = HEADER + ROW
+    after = HEADER + ROW.replace("in flight", "green")
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_needs_a_branch_name(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    register = tmp_path / "IN_FLIGHT.md"
+    register.write_text(HEADER, encoding="utf-8")
+    monkeypatch.setattr(check, "REGISTER", register)
+    monkeypatch.setattr(check, "register_at", lambda _ref: HEADER + ROW)
+    assert not check.is_cleanup_branch(None)
+
+
+def test_cleanup_cannot_be_decided_without_origin_main(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Unreadable is not the same as unchanged: refuse rather than assume.
+    register = tmp_path / "IN_FLIGHT.md"
+    register.write_text(HEADER, encoding="utf-8")
+    monkeypatch.setattr(check, "REGISTER", register)
+    monkeypatch.setattr(check, "register_at", lambda _ref: None)
+    assert not check.is_cleanup_branch("docs/clear-merged-register-row")
+
+
+def test_the_register_can_be_read_from_another_ref() -> None:
+    # is_cleanup_branch is worthless if this silently returns None: the branch
+    # then looks like ordinary work and the recursion comes back. It did,
+    # because the helper takes a whole command and "git" was missing from it.
+    assert check.register_at("HEAD") is not None
+    assert "## In flight" in check.register_at("HEAD")
+    assert check.register_at("refs/heads/no-such-branch-here") is None
+
+
+def test_cleanup_cannot_reword_the_register(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Prose is policy here. Rewriting it while deleting a row is a register
+    # change, and a register change is the thing this file announces.
+    before = "Rows are cleared when they merge.\n\n" + HEADER + ROW
+    after = "Rows are cleared whenever, honestly.\n\n" + HEADER
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_cannot_rename_a_column(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    before = HEADER + ROW
+    after = HEADER.replace("| Agent |", "| Who |")
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_cannot_drop_the_separator(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    before = HEADER + ROW
+    after = HEADER.replace("| --- | --- | --- | --- | --- | --- | --- |\n", "")
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_cannot_leave_content_the_parser_skips(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # A malformed row is a parse problem, and a register nobody can parse is
+    # not a register anybody can be exempted for tidying.
+    before = HEADER + ROW
+    after = HEADER + "| too | few | columns |\n"
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_cannot_start_from_a_register_that_will_not_parse(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    before = HEADER.replace("| Agent |", "| Who |") + ROW
+    after = HEADER.replace("| Agent |", "| Who |")
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_cannot_append_anything_after_the_table(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    before = HEADER + ROW
+    after = HEADER + "\nA note nobody asked for.\n"
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_a_line_ending_difference_is_not_a_register_change(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # A CRLF checkout must not cost a branch its exemption. Only the side that
+    # bypasses the file can carry CRLF in a test: reading a file normalises it
+    # anyway, which is why the comparison normalises what git hands back too.
+    before = (HEADER + ROW).replace("\n", "\r\n")
+    after = HEADER
+    assert _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_normalising_touches_line_endings_and_nothing_else() -> None:
+    assert check._normalise("a\r\nb\n") == "a\nb\n"
+    assert check._normalise("| a | b |\n") == "| a | b |\n"
+
+
+def test_cleanup_is_refused_on_a_register_that_was_already_broken(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The case the document comparison alone cannot see.
+
+    Here the branch really does remove exactly one row and change nothing
+    else, so deriving the expected document says yes. But the register it is
+    tidying carries a row nobody can parse, and both sides carry it equally,
+    so the difference is invisible. Handing out an exemption on a file that
+    does not parse is how a broken register stays broken and unannounced.
+    """
+
+    malformed = "| too | few | columns |\n"
+    before = HEADER + ROW + malformed
+    after = HEADER + malformed
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_a_cleanup_may_not_remove_a_row_whose_work_is_live(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The exemption is for rows that have finished, not for any row at all.
+
+    Used on live work it would let one branch delete another's announcement
+    and skip making its own, which is worse than the problem it solves.
+    """
+
+    assert not _is_cleanup(
+        monkeypatch,
+        tmp_path,
+        HEADER + ROW,
+        HEADER,
+        open_prs={"cursor/do015-next-ab12": 40},
+        remote_branches={"cursor/do015-next-ab12"},
+    )
+
+
+def test_a_row_is_live_if_its_number_is_open_under_another_branch(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # The row claims PR #40 and #40 is open, even if the branch name has
+    # drifted. Still live, still not this branch's to clear.
+    assert not _is_cleanup(
+        monkeypatch,
+        tmp_path,
+        HEADER + ROW,
+        HEADER,
+        open_prs={"someone/renamed": 40},
+        remote_branches=set(),
+    )
+
+
+def test_a_row_with_no_pull_request_is_live_while_its_branch_exists(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Nothing was ever announced to GitHub, so the branch is the only evidence
+    # of whether the work is going on.
+    assert not _is_cleanup(
+        monkeypatch,
+        tmp_path,
+        HEADER + NO_PR_ROW,
+        HEADER,
+        open_prs={},
+        remote_branches={"cursor/do015-next-ab12"},
+    )
+
+
+def test_a_row_with_no_pull_request_and_no_branch_is_stale(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    assert _is_cleanup(
+        monkeypatch, tmp_path, HEADER + NO_PR_ROW, HEADER, open_prs={}, remote_branches=set()
+    )
+
+
+def test_a_merged_row_is_stale_even_if_its_branch_survives(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # GitHub keeps merged branches unless told otherwise; the pull request is
+    # what says the work finished.
+    assert _is_cleanup(
+        monkeypatch,
+        tmp_path,
+        HEADER + ROW,
+        HEADER,
+        open_prs={},
+        remote_branches={"cursor/do015-next-ab12"},
+    )
+
+
+def test_staleness_cannot_be_assumed_when_github_is_unreachable(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Not being able to tell is not the same as stale, and this predicate
+    # hands out an exemption.
+    register = tmp_path / "IN_FLIGHT.md"
+    register.write_text(HEADER, encoding="utf-8")
+    monkeypatch.setattr(check, "REGISTER", register)
+    monkeypatch.setattr(check, "register_at", lambda _ref: HEADER + ROW)
+    assert not check.is_cleanup_branch("docs/clear-merged-register-row", None, set())
+
+
+def test_a_row_with_no_pull_request_needs_the_branch_list(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    register = tmp_path / "IN_FLIGHT.md"
+    register.write_text(HEADER, encoding="utf-8")
+    monkeypatch.setattr(check, "REGISTER", register)
+    monkeypatch.setattr(check, "register_at", lambda _ref: HEADER + NO_PR_ROW)
+    assert not check.is_cleanup_branch("docs/clear-merged-register-row", {}, None)
+
+
+def test_every_line_the_checker_prints_is_ascii(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The module says its output is ASCII only, so no print may bypass it.
+
+    The failure path interpolates a path the filesystem handed over, and the
+    register itself is written with em dashes. Either can carry a character a
+    legacy console cannot encode, and a checker that crashes instead of
+    reporting is not a checker.
+    """
+
+    missing = tmp_path / "IN_FLIGHT—missing.md"
+    monkeypatch.setattr(check, "REGISTER", missing)
+    assert check.main(["--offline"]) == 1
+    printed = capsys.readouterr().out
+    assert "missing" in printed
+    printed.encode("ascii")
+    printed.encode("cp437")
+
+
+def test_findings_carrying_an_em_dash_still_print(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    register = tmp_path / "IN_FLIGHT.md"
+    register.write_text(HEADER + ROW.replace("2026-09-21", "—"), encoding="utf-8")
+    monkeypatch.setattr(check, "REGISTER", register)
+    assert check.main(["--offline"]) == 1
+    printed = capsys.readouterr().out
+    printed.encode("ascii")
+    printed.encode("cp437")

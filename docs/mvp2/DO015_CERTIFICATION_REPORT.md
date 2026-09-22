@@ -28,7 +28,14 @@ below unverifiable, so the actual head is recorded.
 `certified_product_sha` equals `stage9_base_sha` because Stage 9 changes no
 product file. That is not a claim, it is a check: the verifier enumerates the
 diff from the certified commit and fails on anything outside `docs/`, `tests/`,
-`web/mvp1/tests/` and `scripts/verify_do015_certification.py`.
+`web/mvp1/tests/` and the two named certification scripts.
+
+That diff ends at the **evidence freeze** — the last commit that changed the
+record — not at whatever `HEAD` happens to be. A certification is a claim about
+a finished range. Measured against `HEAD` it would fail on every later commit
+anywhere in the repository that touched a non-allowlisted path, which says
+nothing true about the certification or about that commit. The freeze is
+derived, not declared: `git log -1 -- DO015_INTEGRATION_EVIDENCE.json`.
 
 ## The capability
 

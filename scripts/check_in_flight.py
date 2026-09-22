@@ -22,7 +22,7 @@ import json
 import re
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -57,7 +57,13 @@ class Row:
 
 
 def _ascii(text: str) -> str:
-    """Fold to ASCII so a finding can always be printed."""
+    """Fold to ASCII so a finding can always be printed.
+
+    The register is written with em dashes and the paths in failures are
+    whatever the filesystem hands over. A checker that raises
+    UnicodeEncodeError instead of reporting is not a checker, and this
+    repository already has a script failing in CI for exactly that.
+    """
 
     return text.replace("—", "-").encode("ascii", "replace").decode("ascii")
 
@@ -170,6 +176,7 @@ def reconcile(
     open_prs: dict[str, int] | None,
     remote_branches: set[str] | None,
     current_branch: str | None = None,
+    cleanup: bool = False,
 ) -> list[str]:
     """Compare the register with what the repository actually has.
 
@@ -199,6 +206,11 @@ def reconcile(
     if open_prs is not None:
         for branch, number in sorted(open_prs.items()):
             if branch not in listed:
+                if cleanup and branch == current_branch:
+                    # A branch that only removes rows is not work to collide
+                    # with, and requiring it to add one would just leave the
+                    # next person another row to clear.
+                    continue
                 problems.append(
                     f"PR #{number} is open on {branch} but has no row in the register"
                 )
@@ -251,6 +263,117 @@ def open_pull_requests() -> dict[str, int] | None:
         return None
 
 
+def _normalise(text: str) -> str:
+    """Line endings only. A CRLF checkout is not a register change."""
+
+    return text.replace("\r\n", "\n")
+
+
+def register_at(ref: str) -> str | None:
+    """The register as some other ref has it, or None if it cannot be read."""
+
+    return _run(["git", "show", f"{ref}:docs/development/IN_FLIGHT.md"])
+
+
+def _removed_rows_are_stale(
+    before: list[Row],
+    removed: set[str],
+    open_prs: dict[str, int] | None,
+    remote_branches: set[str] | None,
+) -> bool:
+    """True when every row this branch deleted had already finished.
+
+    Fails closed. If the open pull requests could not be listed there is no way
+    to know whether a row was live, and guessing would hand out the exemption
+    on exactly the occasion it should be refused.
+    """
+
+    if open_prs is None:
+        return False
+    open_numbers = set(open_prs.values())
+    for row in before:
+        if row.branch not in removed:
+            continue
+        if row.branch in open_prs:
+            return False
+        number = row.pr_number
+        if number is not None:
+            if number in open_numbers:
+                return False
+            continue
+        # No pull request was ever named, so the branch itself is the evidence.
+        if remote_branches is None or row.branch in remote_branches:
+            return False
+    return True
+
+
+def is_cleanup_branch(
+    current: str | None,
+    open_prs: dict[str, int] | None = None,
+    remote_branches: set[str] | None = None,
+) -> bool:
+    """True when this branch only removes rows from the register.
+
+    A row cannot be deleted by the pull request it describes: the merge lands
+    after the last commit, so the row outlives its own branch and the register
+    on main goes stale. Someone then has to clear it, and that someone needs a
+    branch, which needs a row, which goes stale in turn.
+
+    The way out is to notice what a cleanup branch is. If a branch removes
+    rows and touches nothing else, it is not work anyone else could collide
+    with, and demanding it announce itself is what makes the recursion.
+
+    "Touches nothing else" has to mean the whole file. Comparing branch names
+    would let a branch change a retained row's state on the way past;
+    comparing parsed rows would still let it rewrite the prose, the heading,
+    the column names or the separator, or leave malformed content the parser
+    skips. All of those are register changes, and a register change is the one
+    thing this file exists to announce.
+
+    So the test is exact: take the register as `origin/main` has it, delete
+    precisely the rows this branch dropped, and require the result to be
+    byte-for-byte what the branch has. Anything else -- a word of prose, a
+    column, a stray line -- and this is ordinary work that announces itself
+    like everything else.
+
+    And the rows removed must already be stale. The exemption exists for
+    clearing rows whose work has landed; used on a live row it would let one
+    branch delete another's announcement and skip making its own, which is
+    worse than the problem it solves. A row is stale when its pull request is
+    no longer open, or -- for a row that never named one -- when its branch is
+    gone from `origin`. Not being able to tell is not the same as stale.
+    """
+
+    if current is None:
+        return False
+    theirs = register_at("origin/main")
+    if theirs is None:
+        return False
+    ours = REGISTER.read_text(encoding="utf-8") if REGISTER.exists() else ""
+    before, before_problems = parse_register(theirs)
+    after, after_problems = parse_register(ours)
+    if before_problems or after_problems:
+        # A register nobody can parse is not a register anybody can be
+        # exempted for tidying.
+        return False
+
+    # Position is the one field a deletion is allowed to move.
+    was = {row.branch: replace(row, line_number=0) for row in before}
+    now = {row.branch: replace(row, line_number=0) for row in after}
+    removed = set(was) - set(now)
+    if not removed or set(now) - set(was):
+        return False
+    if not _removed_rows_are_stale(before, removed, open_prs, remote_branches):
+        return False
+
+    dropped_lines = {row.line_number for row in before if row.branch in removed}
+    lines = _normalise(theirs).split("\n")
+    expected = "\n".join(
+        line for number, line in enumerate(lines, start=1) if number not in dropped_lines
+    )
+    return expected == _normalise(ours)
+
+
 def current_branch() -> str | None:
     """The checked-out branch, or None on a detached head or outside git."""
 
@@ -283,7 +406,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if not REGISTER.exists():
-        print(f"FAIL  {REGISTER} does not exist")
+        print(_ascii(f"FAIL  {REGISTER} does not exist"))
         return 1
 
     rows, problems = parse_register(REGISTER.read_text(encoding="utf-8"))
@@ -299,18 +422,22 @@ def main(argv: list[str] | None = None) -> int:
             skipped.append("could not list open pull requests (gh unavailable?)")
         if branches is None:
             skipped.append("could not list branches on origin")
-        problems += reconcile(rows, prs, branches, current_branch())
+        current = current_branch()
+        cleanup = is_cleanup_branch(current, prs, branches)
+        problems += reconcile(rows, prs, branches, current, cleanup)
 
     for note in skipped:
         print(_ascii(f"note  {note}"))
     if problems:
         for problem in problems:
             print(_ascii(f"FAIL  {problem}"))
-        print(f"\nin-flight register: {len(problems)} problem(s)")
+        print(_ascii(f"\nin-flight register: {len(problems)} problem(s)"))
         return 1
 
     count = len(rows)
-    print(f"in-flight register: OK ({count} branch{'' if count == 1 else 'es'} in flight)")
+    print(
+        _ascii(f"in-flight register: OK ({count} branch{'' if count == 1 else 'es'} in flight)")
+    )
     return 0
 
 

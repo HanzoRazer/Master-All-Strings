@@ -12,9 +12,11 @@ row is deleted when the pull request merges.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| DO-015 Stage 9 | cursor/do015-full-certification-cc02 | Claude | #35 | 3fcf618 | green | 2026-09-22 |
+| Register cleanup rule | docs/clear-merged-register-row | Claude | #36 | 102b795 | in review | 2026-09-22 |
 
-`main` is at `3fcf618` (DO-015 Stage 8, PR #34). Stage 9 is certification and evidence only: no product change is expected on this branch.
+`main` is at `102b795` (DO-015 Stage 9, PR #35). This branch has a row because
+it changes the register's own rules as well as clearing a merged row, and that
+is not a cleanup -- see below.
 
 ### How to use it
 
@@ -45,6 +47,32 @@ Update `State` when it changes — particularly to `green`, which is what says
 the branch is finished and safe to merge. Fill in `PR` as soon as the pull
 request exists: a row that still says `—` while a pull request is open is drift
 like any other. Delete the row when the PR merges.
+
+That last step cannot happen inside the pull request it describes: the merge
+lands after the final commit, so a row outlives its own branch and the register
+on `main` goes stale until someone clears it. Clearing it takes a branch, and a
+branch would need a row, which would go stale in turn.
+
+So a branch that only **removes** rows needs no row of its own. The checker
+works that out exactly: it takes this file as `origin/main` has it, deletes
+precisely the rows the branch dropped, and requires the result to be what the
+branch actually has, character for character apart from line endings.
+
+Nothing else qualifies. Change a retained row's state on the way past, reword
+a paragraph, rename a column, drop the separator, leave a row the parser
+cannot read — each of those is a register change, and a register change is the
+one thing this file exists to announce. The branch that introduced this rule
+carries a row for that reason: it rewrote these paragraphs, so it was never a
+cleanup.
+
+And the rows being removed must already be **stale**: their pull request
+closed or merged, or — for a row that never named one — their branch gone from
+`origin`. The exemption is for clearing work that has landed. Pointed at a live
+row it would let one branch delete another's announcement and skip making its
+own, which is worse than the problem it solves. Not being able to tell is not
+the same as stale, so an unreachable GitHub refuses rather than assumes. Clear a
+merged row either in the first commit of the next branch, which is the usual
+way, or in a cleanup branch of its own.
 
 Run `python scripts/check_in_flight.py` before pushing. It reconciles this file
 against the open pull requests and the branches on `origin` and reports where

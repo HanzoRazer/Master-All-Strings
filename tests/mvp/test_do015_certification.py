@@ -286,8 +286,11 @@ def test_the_checked_in_evidence_passes_every_check_ci_can_make() -> None:
     evidence, problems = verify.load_evidence(verify.EVIDENCE)
     assert evidence is not None and problems == []
     head = verify._git(["rev-parse", "HEAD"])
+    # Measured to the freeze, not to HEAD: the certification is a claim about a
+    # finished range, and later work on other branches is not part of it.
+    freeze = verify.evidence_freeze_sha() or head
     certified = str(evidence["lineage"]["certified_product_sha"])
-    changed = verify.changed_paths(certified, head) if head else None
+    changed = verify.changed_paths(certified, freeze) if freeze else None
     found = [
         (label, items)
         for label, items in verify.run_checks(
@@ -421,3 +424,25 @@ def test_a_run_for_another_commit_is_the_loophole_this_closes() -> None:
 def test_github_being_unreachable_is_skipped_not_assumed() -> None:
     problems = verify.check_ci_run_is_real(_ci_record(), None)
     assert problems == ["SKIPPED: GitHub could not be asked about the run"]
+
+
+def test_the_freeze_is_a_finished_range_not_an_open_one() -> None:
+    """The boundary must not police the future.
+
+    Measured against HEAD, a DO-015 certification would fail on any later
+    commit anywhere in the repository that touched a non-allowlisted path --
+    an unrelated branch, an unrelated script, forever. That says nothing true
+    about the certification or about the branch. The freeze is the last commit
+    that changed the record, and the claim ends there.
+    """
+
+    freeze = verify.evidence_freeze_sha()
+    assert freeze is not None and verify._SHA.match(freeze)
+    head = verify._git(["rev-parse", "HEAD"])
+    assert head is not None
+    # The freeze is behind HEAD, and work after it is nobody's certification.
+    assert verify._git(["merge-base", "--is-ancestor", freeze, head]) is not None
+    evidence, _ = verify.load_evidence(verify.EVIDENCE)
+    assert evidence is not None
+    certified = str(evidence["lineage"]["certified_product_sha"])
+    assert verify.check_production_diff(verify.changed_paths(certified, freeze) or []) == []
