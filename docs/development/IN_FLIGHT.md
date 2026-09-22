@@ -12,8 +12,11 @@ row is deleted when the pull request merges.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
+| Register cleanup rule | docs/clear-merged-register-row | Claude | #36 | 102b795 | in review | 2026-09-22 |
 
-Nothing is in flight. `main` is at `102b795` (DO-015 Stage 9, PR #35).
+`main` is at `102b795` (DO-015 Stage 9, PR #35). This branch has a row because
+it changes the register's own rules as well as clearing a merged row, and that
+is not a cleanup -- see below.
 
 ### How to use it
 
@@ -51,10 +54,16 @@ on `main` goes stale until someone clears it. Clearing it takes a branch, and a
 branch would need a row, which would go stale in turn.
 
 So a branch that only **removes** rows needs no row of its own. The checker
-works that out by comparing this file against `origin/main`: rows removed,
-none added, and every row that stays identical apart from its position. Change
-a retained row's agent or state on the way past and it is ordinary register
-work again, which has to announce itself like anything else. Clear a
+works that out exactly: it takes this file as `origin/main` has it, deletes
+precisely the rows the branch dropped, and requires the result to be what the
+branch actually has, character for character apart from line endings.
+
+Nothing else qualifies. Change a retained row's state on the way past, reword
+a paragraph, rename a column, drop the separator, leave a row the parser
+cannot read — each of those is a register change, and a register change is the
+one thing this file exists to announce. The branch that introduced this rule
+carries a row for that reason: it rewrote these paragraphs, so it was never a
+cleanup. Clear a
 merged row either in the first commit of the next branch, which is the usual
 way, or in a cleanup branch of its own.
 

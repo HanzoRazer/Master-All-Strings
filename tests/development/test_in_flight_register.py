@@ -333,3 +333,89 @@ def test_the_register_can_be_read_from_another_ref() -> None:
     assert check.register_at("HEAD") is not None
     assert "## In flight" in check.register_at("HEAD")
     assert check.register_at("refs/heads/no-such-branch-here") is None
+
+
+def test_cleanup_cannot_reword_the_register(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Prose is policy here. Rewriting it while deleting a row is a register
+    # change, and a register change is the thing this file announces.
+    before = "Rows are cleared when they merge.\n\n" + HEADER + ROW
+    after = "Rows are cleared whenever, honestly.\n\n" + HEADER
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_cannot_rename_a_column(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    before = HEADER + ROW
+    after = HEADER.replace("| Agent |", "| Who |")
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_cannot_drop_the_separator(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    before = HEADER + ROW
+    after = HEADER.replace("| --- | --- | --- | --- | --- | --- | --- |\n", "")
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_cannot_leave_content_the_parser_skips(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # A malformed row is a parse problem, and a register nobody can parse is
+    # not a register anybody can be exempted for tidying.
+    before = HEADER + ROW
+    after = HEADER + "| too | few | columns |\n"
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_cannot_start_from_a_register_that_will_not_parse(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    before = HEADER.replace("| Agent |", "| Who |") + ROW
+    after = HEADER.replace("| Agent |", "| Who |")
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_cleanup_cannot_append_anything_after_the_table(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    before = HEADER + ROW
+    after = HEADER + "\nA note nobody asked for.\n"
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_a_line_ending_difference_is_not_a_register_change(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # A CRLF checkout must not cost a branch its exemption. Only the side that
+    # bypasses the file can carry CRLF in a test: reading a file normalises it
+    # anyway, which is why the comparison normalises what git hands back too.
+    before = (HEADER + ROW).replace("\n", "\r\n")
+    after = HEADER
+    assert _is_cleanup(monkeypatch, tmp_path, before, after)
+
+
+def test_normalising_touches_line_endings_and_nothing_else() -> None:
+    assert check._normalise("a\r\nb\n") == "a\nb\n"
+    assert check._normalise("| a | b |\n") == "| a | b |\n"
+
+
+def test_cleanup_is_refused_on_a_register_that_was_already_broken(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The case the document comparison alone cannot see.
+
+    Here the branch really does remove exactly one row and change nothing
+    else, so deriving the expected document says yes. But the register it is
+    tidying carries a row nobody can parse, and both sides carry it equally,
+    so the difference is invisible. Handing out an exemption on a file that
+    does not parse is how a broken register stays broken and unannounced.
+    """
+
+    malformed = "| too | few | columns |\n"
+    before = HEADER + ROW + malformed
+    after = HEADER + malformed
+    assert not _is_cleanup(monkeypatch, tmp_path, before, after)

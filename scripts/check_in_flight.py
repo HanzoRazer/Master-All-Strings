@@ -59,7 +59,7 @@ class Row:
 def _ascii(text: str) -> str:
     """Fold to ASCII so a finding can always be printed."""
 
-    return text.replace("—", "-").encode("ascii", "replace").decode("ascii")
+    return text.replace("\r\n", "\n")
 
 
 def _cells(line: str) -> list[str]:
@@ -257,6 +257,12 @@ def open_pull_requests() -> dict[str, int] | None:
         return None
 
 
+def _normalise(text: str) -> str:
+    """Line endings only. A CRLF checkout is not a register change."""
+
+    return text.replace("\r\n", "\n")
+
+
 def register_at(ref: str) -> str | None:
     """The register as some other ref has it, or None if it cannot be read."""
 
@@ -275,11 +281,18 @@ def is_cleanup_branch(current: str | None) -> bool:
     rows and touches nothing else, it is not work anyone else could collide
     with, and demanding it announce itself is what makes the recursion.
 
-    "Touches nothing else" has to mean the rows as well as the set of them.
-    Comparing branch names alone would let a branch delete a stale row and
-    quietly change another row's agent, state or pull request on the way past,
-    and that is ordinary register work wearing a cleanup's clothes. Line
-    numbers are excluded, because removing a row moves every row below it.
+    "Touches nothing else" has to mean the whole file. Comparing branch names
+    would let a branch change a retained row's state on the way past;
+    comparing parsed rows would still let it rewrite the prose, the heading,
+    the column names or the separator, or leave malformed content the parser
+    skips. All of those are register changes, and a register change is the one
+    thing this file exists to announce.
+
+    So the test is exact: take the register as `origin/main` has it, delete
+    precisely the rows this branch dropped, and require the result to be
+    byte-for-byte what the branch has. Anything else -- a word of prose, a
+    column, a stray line -- and this is ordinary work that announces itself
+    like everything else.
     """
 
     if current is None:
@@ -288,19 +301,26 @@ def is_cleanup_branch(current: str | None) -> bool:
     if theirs is None:
         return False
     ours = REGISTER.read_text(encoding="utf-8") if REGISTER.exists() else ""
-    before, _ = parse_register(theirs)
-    after, _ = parse_register(ours)
-    # Position is the one field a deletion is allowed to move.
-    unpositioned = {row.branch: replace(row, line_number=0) for row in before}
-    theirs_now = {row.branch: replace(row, line_number=0) for row in after}
-    removed = set(unpositioned) - set(theirs_now)
-    added = set(theirs_now) - set(unpositioned)
-    if not removed or added:
+    before, before_problems = parse_register(theirs)
+    after, after_problems = parse_register(ours)
+    if before_problems or after_problems:
+        # A register nobody can parse is not a register anybody can be
+        # exempted for tidying.
         return False
-    return all(
-        unpositioned[branch] == theirs_now[branch]
-        for branch in set(unpositioned) & set(theirs_now)
+
+    # Position is the one field a deletion is allowed to move.
+    was = {row.branch: replace(row, line_number=0) for row in before}
+    now = {row.branch: replace(row, line_number=0) for row in after}
+    removed = set(was) - set(now)
+    if not removed or set(now) - set(was):
+        return False
+
+    dropped_lines = {row.line_number for row in before if row.branch in removed}
+    lines = _normalise(theirs).split("\n")
+    expected = "\n".join(
+        line for number, line in enumerate(lines, start=1) if number not in dropped_lines
     )
+    return expected == _normalise(ours)
 
 
 def current_branch() -> str | None:
