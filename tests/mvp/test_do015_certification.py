@@ -274,3 +274,61 @@ def test_the_checked_in_evidence_passes_the_verifier(tmp_path: Path) -> None:
     if not verify.EVIDENCE.exists():
         pytest.skip("certification evidence has not been frozen yet")
     assert verify.main([]) == 0
+
+
+def _ci_record(**overrides: object) -> dict[str, Any]:
+    record = {
+        "workflow": ".github/workflows/verify.yml",
+        "certified_content_sha": "c" * 40,
+        "run_id": 123456,
+        "conclusion": "success",
+        "semantics": "the green run for the last commit that changed content",
+    }
+    record.update(overrides)
+    return {"linux_ci": record}
+
+
+def test_a_complete_ci_record_passes() -> None:
+    assert verify.check_ci_record(_ci_record(), []) == []
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        ("certified_content_sha", "HEAD", "not a full sha"),
+        ("run_id", 0, "id of a real run"),
+        ("run_id", "35678827161", "id of a real run"),
+        ("conclusion", "failure", "must be success"),
+        ("semantics", "", "must say what the named run covers"),
+    ],
+)
+def test_a_broken_ci_record_is_refused(field: str, value: object, expected: str) -> None:
+    problems = verify.check_ci_record(_ci_record(**{field: value}), [])
+    assert any(expected in problem for problem in problems), problems
+
+
+def test_product_work_after_the_named_run_is_refused() -> None:
+    # The claim the record makes is that everything after the named run is the
+    # paperwork of recording it. A test or a script is not paperwork.
+    for path in [
+        "src/master_all_strings/education/guided_session.py",
+        "tests/mvp2/test_do015_certification_scenarios.py",
+        "scripts/verify_do015_certification.py",
+        "web/mvp1/app.js",
+    ]:
+        problems = verify.check_ci_record(_ci_record(), [path])
+        assert any("not evidence or register metadata" in item for item in problems), path
+
+
+def test_evidence_metadata_after_the_named_run_is_fine() -> None:
+    allowed = [
+        "docs/mvp2/DO015_INTEGRATION_EVIDENCE.json",
+        "docs/mvp2/DO015_CERTIFICATION_REPORT.md",
+        "docs/mvp2/DO015_TRANCHE_PLAN.md",
+        "docs/development/IN_FLIGHT.md",
+    ]
+    assert verify.check_ci_record(_ci_record(), allowed) == []
+
+
+def test_an_ungatherable_diff_is_skipped_not_invented() -> None:
+    assert verify.check_ci_record(_ci_record(), None) == []

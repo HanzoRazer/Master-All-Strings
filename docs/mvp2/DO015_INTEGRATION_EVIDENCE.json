@@ -2,7 +2,23 @@
   "do": "DO-015",
   "stage": 9,
   "title": "Full MAS certification and evidence freeze",
+  "built_by": "scripts/build_do015_certification_evidence.py",
   "verified_by": "scripts/verify_do015_certification.py",
+  "source_of_truth": {
+    "order": [
+      "the suites and the capture script: executable, and the only things that can be wrong in a way that matters",
+      "the captured artifacts under do015_artifacts/: regenerated and compared by those suites",
+      "DO015_INTEGRATION_EVIDENCE.json: this record, assembled by the generator and checked by the verifier",
+      "DO015_CERTIFICATION_REPORT.md: prose, and the weakest of the four"
+    ],
+    "rule": "Where any two disagree the earlier one wins. The report is written for a reader, the JSON for a checker, the artifacts by the product, and the suites are the product.",
+    "reproduce": [
+      "python scripts/build_do015_certification_evidence.py --check",
+      "python scripts/verify_do015_certification.py",
+      "pytest tests/mvp2/test_do015_certification_scenarios.py",
+      "node web/mvp1/tests/do015_certification_capture.mjs"
+    ]
+  },
   "lineage": {
     "repository": "HanzoRazer/Master-All-Strings",
     "stage7_merge_sha": "286d5aa439831ea44ff6e198a8518a45f076b513",
@@ -20,10 +36,10 @@
     "authoritative_ci": "GitHub Actions verify.yml, ubuntu-latest, Python 3.11"
   },
   "targeted_tests": {
-    "command": "pytest tests/education tests/mvp/test_guided_session_api_do015.py tests/mvp/test_do015_certification.py tests/mvp2",
-    "passed": 472,
+    "passed": 484,
     "skipped": 0,
     "failed": 0,
+    "command": "pytest tests/education tests/mvp/test_guided_session_api_do015.py tests/mvp/test_do015_certification.py tests/mvp2",
     "covers": [
       "Stage 1 contract",
       "Stage 2 service",
@@ -34,17 +50,16 @@
     ]
   },
   "full_tests": {
-    "command": "pytest --cov --cov-report=term-missing",
-    "passed": 2949,
+    "passed": 2961,
     "skipped": 3,
     "failed": 2,
-    "failed_are": "the two known Windows-only environment artifacts recorded below",
-    "note": "Measured after the evidence was frozen. The counts moved by one against the pre-freeze run because the verifier check of the checked-in evidence stops skipping once that evidence exists."
+    "command": "pytest --cov --cov-report=term-missing",
+    "failed_are": "the two known Windows-only environment artifacts recorded below"
   },
   "node": {
-    "command": "node --test tests/*.test.js (web/mvp1)",
     "passed": 505,
     "failed": 0,
+    "command": "node --test tests/*.test.js (web/mvp1)",
     "version": "v24.11.0",
     "platform": "Windows",
     "linux_ci_coverage": "NOT_PRESENT",
@@ -74,6 +89,7 @@
     "drift_check": "PASS",
     "command": "python scripts/build_guided_session_fixtures.py --check",
     "digest_method": "sha256 of the file with CRLF normalised to LF",
+    "note": "A digest over raw working-copy bytes is a property of the checkout rather than of the content, and the first CI run of this certification failed for exactly that reason.",
     "digests": {
       "continue_accepted_closed.json": "ce7cb3a10997fe9aab0cfc621b2407b19b228800fef7f10bbefc7302460397ab",
       "continue_declined.json": "8c847df20af2bc0ce8b2da2820ef06dd75f28240d7b86a340390d53cafce9c4d",
@@ -85,8 +101,7 @@
       "slow_down_declined.json": "f54da4e2a4fec87a6107982eff9ab768dc60359b225a2e40bea2b02784fe3004",
       "three_attempt_progression.json": "6c955b2adb15b09b84d5c269428a3ff64873e47190d5ea81a4f822937a2cf969",
       "view_one_string_unsupported.json": "ebc5153d4d8e16785d3e99d03e3790794db694336fe16c29e03a6c52624120d1"
-    },
-    "note": "Digests normalise CRLF to LF. A digest over raw working-copy bytes is a property of the checkout rather than of the content, and the first CI run of this certification failed for exactly that reason."
+    }
   },
   "in_flight": {
     "command": "python scripts/check_in_flight.py",
@@ -97,7 +112,7 @@
     "status": "PASS",
     "witness": "reproducible (in-repo browser harness driving web/mvp1/app.js)",
     "runner": "node web/mvp1/tests/do015_certification_capture.mjs",
-    "asserted_by": "web/mvp1/tests/do015_certification.test.js (10 tests)",
+    "asserted_by": "web/mvp1/tests/do015_certification.test.js",
     "proves": [
       "application orchestration",
       "real UI event path",
@@ -217,9 +232,33 @@
   },
   "lesson_transition": {
     "result": "PASS",
-    "previous_session_status": "TRANSITIONED",
-    "new_lesson_session": null,
-    "history_rendered_on_new_lesson": 0
+    "authoritative_witness": {
+      "session_id": "session-do015-certification-transition",
+      "requested_next_lesson": {
+        "assignment_id": "demo-ascending-scale",
+        "content_id": "ascending_scale"
+      },
+      "session_pins_before": {
+        "assignment_id": "demo-descending-scale",
+        "content_id": "descending_scale"
+      },
+      "session_pins_after": {
+        "assignment_id": "demo-descending-scale",
+        "content_id": "descending_scale"
+      },
+      "status_before": "AWAITING_ACTION",
+      "status_after": "TRANSITIONED",
+      "attempts_unchanged": true,
+      "session_digest": "sha256:112d51cacd38295889d3279ab4619d974e617299fcb4e01316427bbf17e32e80",
+      "session_digest_recomputed": "sha256:112d51cacd38295889d3279ab4619d974e617299fcb4e01316427bbf17e32e80"
+    },
+    "browser_witness": {
+      "proves": "the page asks for a transition and stands the old session down",
+      "does_not_prove": "what a transition is: that is the Stage 2 service's answer, and the browser witness reaches it through a JavaScript mirror",
+      "previous_session_status": "TRANSITIONED",
+      "new_lesson_session": null,
+      "history_rendered_on_new_lesson": 0
+    }
   },
   "revision_fail_closed": {
     "result": "PASS",
@@ -230,14 +269,14 @@
     "history_rendered": 0
   },
   "stage8_adversarial": {
+    "node_tests": 12,
+    "python_tests": 70,
     "result": "PASS",
     "suites": [
       "web/mvp1/tests/guided_authority_adversarial.test.js",
       "tests/education/test_guided_session_adversarial_do015.py",
       "tests/mvp2/test_do015_crosswalk_citations.py"
     ],
-    "node_tests": 12,
-    "python_tests": 70,
     "note": "Re-run, not reimplemented. The Stage 8 crosswalk in DO015_TRANCHE_PLAN.md maps each authority cell to a test at path:line."
   },
   "controlled_scenarios": {
@@ -280,6 +319,15 @@
       ]
     }
   },
+  "linux_ci": {
+    "certified_content_sha": "0000000000000000000000000000000000000000",
+    "run_id": 0,
+    "conclusion": "success",
+    "workflow": ".github/workflows/verify.yml",
+    "platform": "ubuntu-latest, Python 3.11",
+    "semantics": "The run named here is the green run for the last commit that changed certification content, not for the pull-request head. Naming the head needs a commit, which moves the head: that never converges. The verifier proves certified_content_sha is behind HEAD and that every commit after it touches only evidence and register metadata. The head's own run is a live review gate, not something this static record chases.",
+    "note": "Authoritative for the Windows-only failures above; runs no Node step."
+  },
   "artifacts": [
     "docs/mvp2/DO015_CERTIFICATION_REPORT.md",
     "docs/mvp2/do015_artifacts/browser_smoke_summary.json",
@@ -308,15 +356,15 @@
   ],
   "known_limitations": [
     "DOM rendering is not certified: no connected browser was available, so there is no visual witness and no screenshots.",
-    "Node has no Linux CI coverage; the 505 Node tests are certified on Windows only.",
-    "The reproducible browser witness mirrors the Stage 2 lifecycle in JavaScript; lifecycle truth and the session digest are certified separately through the real Stage 4 API.",
+    "Node has no Linux CI coverage; the Node suite is certified on Windows only.",
+    "The reproducible browser witness mirrors the Stage 2 lifecycle in JavaScript. Lifecycle truth, transition truth and the session digest are certified separately through the real Stage 4 API.",
     "VIEW_ONE_STRING and ENABLE_ZONE_VIEW have no natural browser witness and remain covered by unit and Stage 8 tests."
   ],
   "deferred_work": [
     "Stage 8 crosswalk verifier checks citation shape, not semantic target meaning.",
     "Line-number citations are fragile; symbol-based path::name references are preferred future hardening.",
     "Adversarial tests import private helpers from another test module; future test-maintenance coupling.",
-    "check_in_flight.py is not a CI gate: verify.yml is a deferred-hygiene path frozen by DO-012A and unfreezing it needs an owner ruling."
+    "Neither check_in_flight.py nor verify_do015_certification.py is a CI gate: verify.yml is a deferred-hygiene path frozen by DO-012A and unfreezing it needs an owner ruling."
   ],
   "not_claimed": [
     "published",
@@ -324,13 +372,5 @@
     "MVP 2 complete",
     "tagged",
     "production release"
-  ],
-  "linux_ci": {
-    "workflow": ".github/workflows/verify.yml",
-    "platform": "ubuntu-latest, Python 3.11",
-    "run_id": 35678618715,
-    "head": "d801c00",
-    "conclusion": "success",
-    "note": "Authoritative for the two Windows-only failures recorded above; runs no Node step."
-  }
+  ]
 }

@@ -60,11 +60,19 @@ artifact in `do015_artifacts/` cannot drift from what the suite proves.
 
 **Authoritative lifecycle — `tests/mvp2/test_do015_certification_scenarios.py`.**
 The browser witness mirrors the Stage 2 lifecycle in JavaScript, which is enough
-for orchestration and not enough for the session digest — only the contract
-computes that, and a mirror quoting its own placeholder would be quoting itself.
-So the same three legs are driven through the real Stage 4 API over the Stage 2
-service. The session closed with three attempts and a digest that recomputes to
-what the service returned.
+for orchestration and not enough for anything the service decides — only the
+contract computes the digest, and a mirror quoting its own placeholder would be
+quoting itself. So the same legs are driven through the real Stage 4 API over
+the Stage 2 service. The session closed with three attempts and a digest that
+recomputes to what the service returned, and a fourth session was transitioned
+through the same route.
+
+The division of labour is the point, and the claims are kept apart:
+
+```text
+JS mirror witness       page orchestration, UI event sequencing
+Python service witness  lifecycle truth, transition truth, digest truth
+```
 
 **Visual — not available.** No connected Chrome extension existed in this
 environment, so there are no screenshots and **DOM rendering is not certified by
@@ -105,8 +113,12 @@ Two boundaries were additionally witnessed end to end through the page:
 - **A re-cut canonical revision.** Same assignment, same content, new revision:
   the recorded session is preserved, `activeSession` is null, Accept, Decline
   and Apply are all inert, and the history region renders nothing.
-- **A lesson switch.** The open session became `TRANSITIONED` through the
-  service, and the next lesson started with no session at all.
+- **A lesson switch.** Two witnesses, deliberately separated. Through the page:
+  the open session is stood down and the next lesson starts with no session at
+  all. Through the real Stage 4 API: an open session becomes `TRANSITIONED`,
+  its attempts unchanged, its digest recomputing — and its own assignment and
+  content pins **unchanged**, because a transition marks a record terminal
+  rather than moving it to the new lesson.
 
 ## Results
 
@@ -141,6 +153,35 @@ Fixed by normalising CRLF to LF before hashing, and the evidence records the
 method alongside the digests so nobody has to guess later. The defect was in
 the certification tooling, not the product; no product file changed.
 
+## How to read this, and in what order
+
+Four things carry the certification, and they are not equal:
+
+| | Source of truth | Why it ranks here |
+| --- | --- | --- |
+| 1 | the suites and the capture script | executable; the only things that can be wrong in a way that matters |
+| 2 | the artifacts under `do015_artifacts/` | written by the product, regenerated and compared by those suites |
+| 3 | `DO015_INTEGRATION_EVIDENCE.json` | assembled by a committed generator, checked by the verifier |
+| 4 | this report | prose, and the weakest of the four |
+
+Where any two disagree, the earlier one wins. The report is written for a
+reader; the JSON is written for a checker; the artifacts are written by the
+product; the suites *are* the product.
+
+### The verifier is a maintenance contract
+
+`verify_do015_certification.py` is deliberately strict, and strictness has a
+cost: it hard-codes the required sections, the frozen predecessor SHAs, and the
+allowlist of paths that may move after the certified commit. When the
+repository changes shape, that script has to be updated with it.
+
+That is the intended bargain, not an oversight. A check that quietly tolerates
+a renamed section is not evidence of anything. Treat it as a contract with two
+obligations: if a certification surface moves, update `ALLOWED_PREFIXES`; if
+the record grows or loses a section, update `REQUIRED_SECTIONS` and say why in
+the tranche plan. Its own tests are negative cases, so breaking it usually
+fails loudly rather than silently.
+
 ## Known limitations
 
 - **DOM rendering is not certified.** No visual witness was available.
@@ -171,7 +212,19 @@ Carried forward, none of them a correctness defect:
 > separate publication decision?
 
 Yes, with the rendering gap named above. Every number here is reproducible from
-this checkout: run the suites, run the capture, run the verifier.
+this checkout:
+
+```text
+python scripts/build_do015_certification_evidence.py --check
+python scripts/verify_do015_certification.py
+pytest tests/mvp2/test_do015_certification_scenarios.py
+node web/mvp1/tests/do015_certification_capture.mjs
+```
+
+The first of those is what makes the claim true of this record and not only of
+the numbers in it. The evidence JSON is built by a committed generator, so a
+reviewer can rebuild it rather than take its assembly on trust; `--check` fails
+if the committed record is not what the generator produces.
 
 Merge, tag, release and publication remain separate decisions and none of them
 has been made.

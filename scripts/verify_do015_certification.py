@@ -258,6 +258,47 @@ def check_production_diff(changed: list[str]) -> list[str]:
     return problems
 
 
+#: After the CI run named in the record, only the record's own metadata may
+#: move. Narrower than the product boundary on purpose: these are the commits
+#: that exist *because* the run happened.
+METADATA_PREFIXES: tuple[str, ...] = ("docs/mvp2/", "docs/development/")
+
+
+def check_ci_record(evidence: dict[str, Any], after_ci: list[str] | None) -> list[str]:
+    """The named CI run must be for real content, with only metadata after it.
+
+    A frozen record cannot name the run for its own head: writing the run id
+    takes a commit, which makes a new head, which needs a new run. So the
+    record names the last commit that changed certification *content*, and the
+    claim it has to support is this -- everything after that commit is the
+    paperwork of recording it.
+    """
+
+    ci = evidence.get("linux_ci")
+    if not isinstance(ci, dict):
+        return ["linux_ci must be an object"]
+    problems = []
+    sha = str(ci.get("certified_content_sha", ""))
+    if not _SHA.match(sha):
+        problems.append(f"linux_ci.certified_content_sha is not a full sha: {sha!r}")
+    if not isinstance(ci.get("run_id"), int) or ci.get("run_id", 0) <= 0:
+        problems.append("linux_ci.run_id must be the id of a real run")
+    if ci.get("conclusion") != "success":
+        problems.append(f"linux_ci.conclusion must be success, got {ci.get('conclusion')!r}")
+    if not str(ci.get("semantics", "")).strip():
+        problems.append("linux_ci.semantics must say what the named run covers")
+    if after_ci is None:
+        return problems
+    for path in after_ci:
+        if any(path.startswith(prefix) for prefix in METADATA_PREFIXES):
+            continue
+        problems.append(
+            f"{path} changed after the certified content sha, and is not "
+            "evidence or register metadata"
+        )
+    return problems
+
+
 def check_witnesses(evidence: dict[str, Any]) -> list[str]:
     """The reproducible witness is mandatory; the visual one may be absent."""
 
@@ -280,7 +321,13 @@ def check_witnesses(evidence: dict[str, Any]) -> list[str]:
     return problems
 
 
-def run_checks(evidence: dict[str, Any], root: Path, changed: list[str] | None, head: str | None):
+def run_checks(
+    evidence: dict[str, Any],
+    root: Path,
+    changed: list[str] | None,
+    head: str | None,
+    after_ci: list[str] | None = None,
+):
     """Return (label, problems) for each check, in reporting order."""
 
     checks = [
@@ -291,6 +338,9 @@ def run_checks(evidence: dict[str, Any], root: Path, changed: list[str] | None, 
         ("Stage 3 fixture bytes match the record", check_fixture_digests(evidence, root)),
         ("browser witnesses are declared honestly", check_witnesses(evidence)),
     ]
+    checks.append(
+        ("the named CI run covers the certified content", check_ci_record(evidence, after_ci))
+    )
     boundary = "no production diff after the certified sha"
     if changed is None:
         checks.append((boundary, ["SKIPPED: git diff unavailable"]))
@@ -327,7 +377,12 @@ def main(argv: list[str] | None = None) -> int:
         if _SHA.match(certified) and head:
             changed = changed_paths(certified, head)
 
-    checks = run_checks(evidence, REPO_ROOT, changed, head)
+    after_ci = None
+    if not args.offline and head:
+        content_sha = str(evidence.get("linux_ci", {}).get("certified_content_sha", ""))
+        if _SHA.match(content_sha):
+            after_ci = changed_paths(content_sha, head)
+    checks = run_checks(evidence, REPO_ROOT, changed, head, after_ci)
     failures = 0
     for label, found in checks:
         if not found:
