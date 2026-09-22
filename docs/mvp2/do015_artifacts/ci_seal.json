@@ -1,6 +1,6 @@
 {
   "_comment": "The last commit that changed certification content, and the green Linux CI run for it. Deliberately not the pull-request head: naming the head needs a commit, which moves the head, which never converges. This file is data so that sealing a run is a metadata-only commit, which is what the record's own semantics allow after the named run.",
-  "certified_content_sha": "87880c72a8fd8f287cf7b86d2fcc0da66578eec9",
-  "run_id": 35681925658,
+  "certified_content_sha": "e691a0c5b1a301b2c24f91af3759060456383847",
+  "run_id": 35686491495,
   "conclusion": "success"
 }
