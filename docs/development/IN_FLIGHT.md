@@ -12,11 +12,9 @@ row is deleted when the pull request merges.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| Register cleanup rule | docs/clear-merged-register-row | Claude | #36 | 102b795 | in review | 2026-09-22 |
+| Register prose | docs/register-prose-is-permanent | Claude | — | 775e3f1 | in flight | 2026-09-22 |
 
-`main` is at `102b795` (DO-015 Stage 9, PR #35). This branch has a row because
-it changes the register's own rules as well as clearing a merged row, and that
-is not a cleanup -- see below.
+An empty table means nothing is in flight.
 
 ### How to use it
 
@@ -61,9 +59,14 @@ branch actually has, character for character apart from line endings.
 Nothing else qualifies. Change a retained row's state on the way past, reword
 a paragraph, rename a column, drop the separator, leave a row the parser
 cannot read — each of those is a register change, and a register change is the
-one thing this file exists to announce. The branch that introduced this rule
-carries a row for that reason: it rewrote these paragraphs, so it was never a
-cleanup.
+one thing this file exists to announce. A branch that edits these paragraphs
+is changing the rules, so it announces itself like any other work; only the
+branches that do nothing but remove finished rows go unannounced.
+
+Nothing above this line names a branch, a pull request or a commit on purpose.
+Prose that did would go stale every time something merged, and fixing it would
+make every cleanup a rule change -- which is how clearing one row turned into
+four pull requests once already.
 
 And the rows being removed must already be **stale**: their pull request
 closed or merged, or — for a row that never named one — their branch gone from
