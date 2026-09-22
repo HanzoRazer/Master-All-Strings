@@ -23,14 +23,18 @@ from master_all_strings.mvp.education_api import LocalPracticeEvaluationApi
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARTIFACT = REPO_ROOT / "docs" / "mvp2" / "do015_artifacts" / "certification_scenarios.json"
 LESSON = "ascending_scale"
+SECOND_LESSON = "descending_scale"
 
 #: Each leg of the certified flow, and how the learner is imagined to play it.
 #: The patterns were chosen so the policy reaches three different actions and
 #: the flow exercises both runtime seams -- rate and loop -- before closing.
-LEGS: tuple[tuple[str, str, str], ...] = (
-    ("attempt_0_slow_down", "alternating", "slow_down"),
-    ("attempt_1_isolate", "uniform", "isolate_passage"),
-    ("attempt_2_continue", "clean", "continue"),
+LEGS: tuple[tuple[str, str, str, str], ...] = (
+    ("attempt_0_slow_down", LESSON, "alternating", "slow_down"),
+    ("attempt_1_isolate", LESSON, "uniform", "isolate_passage"),
+    ("attempt_2_continue", LESSON, "clean", "continue"),
+    # A fourth lesson's own evidence, so the lesson-switch witness transitions
+    # a real session rather than one wearing another lesson's identity.
+    ("lesson_switch_witness", SECOND_LESSON, "uniform", "isolate_passage"),
 )
 
 
@@ -55,12 +59,12 @@ def _load(path: str) -> dict[str, Any]:
     return json.loads((REPO_ROOT / path).read_text(encoding="utf-8"))
 
 
-def build_leg(name: str, pattern: str) -> dict[str, Any]:
+def build_leg(name: str, lesson: str, pattern: str) -> dict[str, Any]:
     """One performance of the bundled lesson, through the real evaluator."""
 
-    projection = _load(f"web/mvp1/projections/{LESSON}.json")["projection"]
-    playback = _load(f"web/mvp1/playback/{LESSON}.json")
-    revision = _load(f"web/mvp1/projections/{LESSON}/canonical_revision.json")
+    projection = _load(f"web/mvp1/projections/{lesson}.json")["projection"]
+    playback = _load(f"web/mvp1/playback/{lesson}.json")
+    revision = _load(f"web/mvp1/projections/{lesson}/canonical_revision.json")
     notes = projection["notes"]
     offsets = _offsets(pattern, len(notes))
 
@@ -111,6 +115,7 @@ def build_leg(name: str, pattern: str) -> dict[str, Any]:
     response = LocalPracticeEvaluationApi().handle("evaluate", request)
     return {
         "leg": name,
+        "lesson": lesson,
         "pattern": pattern,
         "offsets_seconds": offsets,
         "request": request,
@@ -131,8 +136,10 @@ def build_scenario() -> dict[str, Any]:
             "fake-MIDI outcome -- the fake emitter plays notes this lesson "
             "does not contain, so it can never reach CONTINUE."
         ),
-        "lesson": LESSON,
-        "legs": {name: build_leg(name, pattern) for name, pattern, _ in LEGS},
+        "lessons": [LESSON, SECOND_LESSON],
+        "legs": {
+            name: build_leg(name, lesson, pattern) for name, lesson, pattern, _ in LEGS
+        },
     }
 
 
@@ -152,7 +159,7 @@ def test_each_leg_is_the_action_the_policy_chose() -> None:
     # performances differently, the certification record is stale and this is
     # where that shows.
     legs = build_scenario()["legs"]
-    for name, _pattern, expected in LEGS:
+    for name, _lesson, _pattern, expected in LEGS:
         evaluation = legs[name]["response"]["evaluation"]
         assert evaluation["primary_next_action"]["action_type"] == expected, name
         assert legs[name]["response"]["guidance"]["next_action"]["action_type"] == expected
