@@ -12,7 +12,7 @@ row is deleted when the pull request merges.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| Register prose | docs/register-prose-is-permanent | Claude | #37 | 775e3f1 | in review | 2026-09-22 |
+| Register checker: UTF-8 and scope | docs/clear-register-row-37 | Claude | #38 | 8c93fc8 | in review | 2026-09-22 |
 
 An empty table means nothing is in flight.
 
@@ -67,6 +67,10 @@ Nothing above this line names a branch, a pull request or a commit on purpose.
 Prose that did would go stale every time something merged, and fixing it would
 make every cleanup a rule change -- which is how clearing one row turned into
 four pull requests once already.
+
+A cleanup also changes **nothing but this file**. Deleting a finished row is
+not cover for editing code or other documents, and a branch that does both has
+work to announce like any other.
 
 And the rows being removed must already be **stale**: their pull request
 closed or merged, or — for a row that never named one — their branch gone from
