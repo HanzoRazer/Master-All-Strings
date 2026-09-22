@@ -248,15 +248,72 @@ def drive_certified_session() -> dict[str, Any]:
     final = call("GET", f"{base}/{session_id}", {})
     stored = api.store.get(session_id)
     assert stored is not None
+
+    # A lesson switch, through the same real API. The browser witness mirrors
+    # the lifecycle in JavaScript, so it can show the page asking for a
+    # transition but cannot be the authority for what a transition *is*. The
+    # closed session above cannot transition -- terminal sessions refuse -- so
+    # the witness uses the second lesson's own evidence.
+    switch_leg = scenario["legs"]["lesson_switch_witness"]
+    switch_id = "session-do015-certification-transition"
+    open_session = call(
+        "POST",
+        base,
+        {
+            "session_id": switch_id,
+            "attempt_id": "attempt-do015-certification-transition-0",
+            "evaluation": switch_leg["response"]["evaluation"],
+            "guidance": switch_leg["response"]["guidance"],
+        },
+    )
+    before_transition = json.dumps(open_session["attempts"], sort_keys=True)
+    requested_next = {
+        "assignment_id": _load(f"web/mvp1/playback/{LESSON}.json")["assignment_id"],
+        "content_id": LESSON,
+    }
+    transitioned = call(
+        "POST",
+        f"{base}/{switch_id}/transition",
+        {
+            "next_assignment_id": requested_next["assignment_id"],
+            "next_content_id": requested_next["content_id"],
+        },
+    )
+    stored_switch = api.store.get(switch_id)
+    assert stored_switch is not None
+
     return {
         "witness": "authoritative (real Stage 4 API over the Stage 2 service)",
-        "proves": ["lifecycle truth", "session digest", "attempt immutability"],
+        "proves": [
+            "lifecycle truth",
+            "session digest",
+            "attempt immutability",
+            "lesson transition",
+        ],
         "transcript": transcript,
         "session": final,
         "session_digest_recomputed": compute_session_digest(stored),
         "serialized_bytes_sha256": __import__("hashlib")
         .sha256(serialize_guided_practice_session(stored).encode("utf-8"))
         .hexdigest(),
+        "lesson_transition": {
+            "session_id": switch_id,
+            "requested_next_lesson": requested_next,
+            "session_pins_before": {
+                "assignment_id": open_session["assignment_id"],
+                "content_id": open_session["content_id"],
+            },
+            "session_pins_after": {
+                "assignment_id": transitioned["assignment_id"],
+                "content_id": transitioned["content_id"],
+            },
+            "status_before": open_session["status"],
+            "status_after": transitioned["status"],
+            "attempts_unchanged": json.dumps(transitioned["attempts"], sort_keys=True)
+            == before_transition,
+            "session_digest": transitioned["session_digest"],
+            "session_digest_recomputed": compute_session_digest(stored_switch),
+        },
     }
 
 
@@ -289,3 +346,24 @@ def test_the_certified_session_keeps_one_identity_chain() -> None:
     assert len(set(performances)) == 3
     attempt_ids = [attempt["attempt_id"] for attempt in session["attempts"]]
     assert len(set(attempt_ids)) == 3
+
+
+def test_the_real_service_transitions_a_lesson_switch() -> None:
+    # The claim the browser witness cannot make: what a transition *is* is the
+    # Stage 2 service's answer, reached here through the real Stage 4 route.
+    transition = drive_certified_session()["lesson_transition"]
+    assert transition["status_before"] == "AWAITING_ACTION"
+    assert transition["status_after"] == "TRANSITIONED"
+    assert transition["attempts_unchanged"] is True
+    assert transition["session_digest"] == transition["session_digest_recomputed"]
+
+
+def test_a_transition_does_not_repin_the_session_to_the_new_lesson() -> None:
+    # TRANSITIONED marks a record terminal; it does not move it. The session
+    # keeps the lesson it was recorded against, and the lesson being switched
+    # to gets nothing until it has an evaluated attempt of its own.
+    transition = drive_certified_session()["lesson_transition"]
+    assert transition["session_pins_before"] == transition["session_pins_after"]
+    assert transition["session_pins_after"]["content_id"] == SECOND_LESSON
+    assert transition["requested_next_lesson"]["content_id"] == LESSON
+    assert transition["requested_next_lesson"] != transition["session_pins_after"]

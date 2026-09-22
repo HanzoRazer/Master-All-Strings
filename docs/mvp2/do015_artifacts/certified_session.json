@@ -3,7 +3,8 @@
   "proves": [
     "lifecycle truth",
     "session digest",
-    "attempt immutability"
+    "attempt immutability",
+    "lesson transition"
   ],
   "transcript": [
     {
@@ -54,6 +55,16 @@
     {
       "method": "GET",
       "path": "/api/education/guided-sessions/session-do015-certification",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/education/guided-sessions",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/education/guided-sessions/session-do015-certification-transition/transition",
       "status": 200
     }
   ],
@@ -223,5 +234,25 @@
     }
   },
   "session_digest_recomputed": "sha256:fcf751a108e40fed1e80a30024354b9dabc1252aa2c94af000261a01dd36d0f0",
-  "serialized_bytes_sha256": "30067e2401519faa5b367ced5cbb28220245e7a0a863e2f4a93b42b82ef4177d"
+  "serialized_bytes_sha256": "30067e2401519faa5b367ced5cbb28220245e7a0a863e2f4a93b42b82ef4177d",
+  "lesson_transition": {
+    "session_id": "session-do015-certification-transition",
+    "requested_next_lesson": {
+      "assignment_id": "demo-ascending-scale",
+      "content_id": "ascending_scale"
+    },
+    "session_pins_before": {
+      "assignment_id": "demo-descending-scale",
+      "content_id": "descending_scale"
+    },
+    "session_pins_after": {
+      "assignment_id": "demo-descending-scale",
+      "content_id": "descending_scale"
+    },
+    "status_before": "AWAITING_ACTION",
+    "status_after": "TRANSITIONED",
+    "attempts_unchanged": true,
+    "session_digest": "sha256:112d51cacd38295889d3279ab4619d974e617299fcb4e01316427bbf17e32e80",
+    "session_digest_recomputed": "sha256:112d51cacd38295889d3279ab4619d974e617299fcb4e01316427bbf17e32e80"
+  }
 }
