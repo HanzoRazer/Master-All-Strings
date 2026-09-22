@@ -128,6 +128,19 @@ bundle in a CRLF working copy, and a lineage script printing `→` through a
 cp1252 console. Linux CI runs both and is authoritative. Stage 9 does not
 authorize repairing them.
 
+## One defect the certification found in itself
+
+The first CI run failed on `Stage 3 fixture bytes match the record`. The
+verifier had been digesting the fixture files as they sit in the working copy,
+which on Windows means CRLF and on Linux means LF -- so the record was a
+property of the checkout rather than of the content, and it could not pass on
+both platforms at once. This repository already has a test failing for that
+exact reason, which is what made it recognisable.
+
+Fixed by normalising CRLF to LF before hashing, and the evidence records the
+method alongside the digests so nobody has to guess later. The defect was in
+the certification tooling, not the product; no product file changed.
+
 ## Known limitations
 
 - **DOM rendering is not certified.** No visual witness was available.

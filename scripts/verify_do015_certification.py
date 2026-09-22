@@ -84,6 +84,19 @@ def _ascii(text: str) -> str:
     return text.replace("—", "-").encode("ascii", "replace").decode("ascii")
 
 
+def content_digest(path: Path) -> str:
+    """sha256 of a text artifact with line endings normalised to LF.
+
+    A digest over raw working-copy bytes is a property of the checkout, not of
+    the content: the same commit hashes differently on Windows and on Linux.
+    This repository already has one test failing for that reason, and a
+    certification record that changes with the platform certifies nothing.
+    """
+
+    normalised = path.read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(normalised).hexdigest()
+
+
 def _git(args: list[str]) -> str | None:
     try:
         result = subprocess.run(
@@ -213,13 +226,15 @@ def check_fixture_digests(evidence: dict[str, Any], root: Path) -> list[str]:
     digests = fixtures.get("digests")
     if not isinstance(digests, dict) or not digests:
         return ["fixtures.digests must record each fixture's sha256"]
+    if fixtures.get("digest_method") != "sha256 of the file with CRLF normalised to LF":
+        return ["fixtures.digest_method must state how the digests were taken"]
     problems = []
     for name, recorded in sorted(digests.items()):
         path = root / "resources" / "education" / "examples" / "guided_sessions" / name
         if not path.exists():
             problems.append(f"fixture {name} is recorded but missing")
             continue
-        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        actual = content_digest(path)
         if actual != recorded:
             problems.append(
                 f"fixture {name} changed since certification "

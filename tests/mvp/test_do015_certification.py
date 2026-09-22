@@ -9,7 +9,6 @@ after the commit being certified.
 
 from __future__ import annotations
 
-import hashlib
 import importlib.util
 import sys
 from pathlib import Path
@@ -41,7 +40,7 @@ verify = _verifier()
 
 def _fixture_digests() -> dict[str, str]:
     return {
-        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+        path.name: verify.content_digest(path)
         for path in sorted(FIXTURE_DIR.glob("*.json"))
     }
 
@@ -59,7 +58,11 @@ def valid_evidence() -> dict[str, Any]:
             "certified_product_sha": "3fcf618b655c3f51b020d11a0bb3f96571da08d7",
         },
         "artifacts": ["docs/mvp2/DO015_CERTIFICATION_REPORT.md"],
-        "fixtures": {"drift_check": "PASS", "digests": _fixture_digests()},
+        "fixtures": {
+            "drift_check": "PASS",
+            "digest_method": "sha256 of the file with CRLF normalised to LF",
+            "digests": _fixture_digests(),
+        },
         "browser_reproducible": {"status": "PASS"},
         "browser_visual": {"status": "NOT_AVAILABLE", "reason": "no connected browser"},
         "stage8_adversarial": {"suites": ["web/mvp1/tests/guided_authority_adversarial.test.js"]},

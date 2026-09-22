@@ -39,7 +39,7 @@
     "skipped": 3,
     "failed": 2,
     "failed_are": "the two known Windows-only environment artifacts recorded below",
-    "note": "Measured after the evidence was frozen. The counts moved by one against the pre-freeze run because the verifier's own check of the checked-in evidence stops skipping once that evidence exists."
+    "note": "Measured after the evidence was frozen. The counts moved by one against the pre-freeze run because the verifier check of the checked-in evidence stops skipping once that evidence exists."
   },
   "node": {
     "command": "node --test tests/*.test.js (web/mvp1)",
@@ -73,18 +73,20 @@
   "fixtures": {
     "drift_check": "PASS",
     "command": "python scripts/build_guided_session_fixtures.py --check",
+    "digest_method": "sha256 of the file with CRLF normalised to LF",
     "digests": {
-      "continue_accepted_closed.json": "99d671101224b1d7e47f7a56faf0c9305f09ad9e00fd533ebd24aeaa3d4dcc65",
-      "continue_declined.json": "c9cf46744624c8cda9ba25d3e513be268844dfc6c97c4efc197842e73ac3b730",
-      "execution_failed.json": "610748e4be06ab8c6d410c8f16764eeffccf7d2c46ac09ec7aa0033a24926bd3",
-      "isolate_passage_accepted.json": "28d325831485550cdacbf731fa559b6e96898dc4b77fe539e82b3fd33b3ee7aa",
-      "lesson_transition.json": "e9595245856002df88bcc962ec2afabe41e3f43d2e6b05898d8310d90cfb6dae",
-      "repeat_accepted.json": "4262a4ff3361b44b07332f1b0a87b398b2ef5044eab4fbf72e17cbebfb329416",
-      "slow_down_accepted.json": "bd36ac7a0c15869563347597d5c6deb675e2d4b746926aa892ec816ee8e2514c",
-      "slow_down_declined.json": "5e92bb973d5a4d5279255e9d60c1709b626db3ee2feea7b9b31ee4519119900b",
-      "three_attempt_progression.json": "2781786ee0d931c869991d714e03c8fa52f741a6fb034b2fc55f73a20b091af0",
-      "view_one_string_unsupported.json": "ce4a65570f275e8691d3baf8df1b55e60684c267bffedfab22b7906061439a34"
-    }
+      "continue_accepted_closed.json": "ce7cb3a10997fe9aab0cfc621b2407b19b228800fef7f10bbefc7302460397ab",
+      "continue_declined.json": "8c847df20af2bc0ce8b2da2820ef06dd75f28240d7b86a340390d53cafce9c4d",
+      "execution_failed.json": "8495eabd1a586ff2f0f7e043d9455793411822a32433f14bb9046547864424e7",
+      "isolate_passage_accepted.json": "e7cc3313444f4fcc85f7ca32a9444337e51b9b688030b65698b765e6b2b16fab",
+      "lesson_transition.json": "b108a643537f94b570c54b2f09af40868a3cb3fc6071a86477aa6020982a3b4c",
+      "repeat_accepted.json": "084f5af2929f149f46bb2cf9f99dcacbfe50cce150f1e51e100b526c9e578209",
+      "slow_down_accepted.json": "4c0274a59ca51f94551b3e156e7776d5666e0dc06235e0821e45b6115cf8f706",
+      "slow_down_declined.json": "f54da4e2a4fec87a6107982eff9ab768dc60359b225a2e40bea2b02784fe3004",
+      "three_attempt_progression.json": "6c955b2adb15b09b84d5c269428a3ff64873e47190d5ea81a4f822937a2cf969",
+      "view_one_string_unsupported.json": "ebc5153d4d8e16785d3e99d03e3790794db694336fe16c29e03a6c52624120d1"
+    },
+    "note": "Digests normalise CRLF to LF. A digest over raw working-copy bytes is a property of the checkout rather than of the content, and the first CI run of this certification failed for exactly that reason."
   },
   "in_flight": {
     "command": "python scripts/check_in_flight.py",
