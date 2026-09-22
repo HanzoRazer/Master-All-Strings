@@ -140,7 +140,32 @@ bundle in a CRLF working copy, and a lineage script printing `→` through a
 cp1252 console. Linux CI runs both and is authoritative. Stage 9 does not
 authorize repairing them.
 
-## One defect the certification found in itself
+## Three defects the certification found in itself
+
+None was in the product. All three are recorded because a certification that
+hides its own misfires is not worth much.
+
+**The immutability witness measured the wrong thing.** The first browser
+witness reported attempt 0 as mutated. It froze the attempt before that
+attempt's own Accept and Apply, so a legitimate lifecycle read as tampering.
+Immutability is a claim about an attempt that is no longer current.
+
+**A boundary check can only see committed work, and I kept forgetting.** Three
+times a check passed with a change in the working tree and failed the moment
+it was committed: the fixture digests, a product script swept in by
+`git add -A scripts` after a stray `ruff --fix`, and the CI seal. The rule is
+simple and worth stating for the next person: **run the boundary checks after
+committing, not before.** The swept-in product change -- one unused import
+removed from `scripts/build_projection_fixtures.py` -- was reverted. It was
+almost certainly harmless, which is exactly why a rule rather than a judgement
+is what keeps it out.
+
+**The CI seal contradicted its own rule.** The record says everything after
+the named run is metadata, but the seal lived in the generator, so recording a
+run was a code change that the rule forbade. The seal is a data artifact now,
+and sealing touches `docs/mvp2` and nothing else.
+
+## One defect found in the digests
 
 The first CI run failed on `Stage 3 fixture bytes match the record`. The
 verifier had been digesting the fixture files as they sit in the working copy,
