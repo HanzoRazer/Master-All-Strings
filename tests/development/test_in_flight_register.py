@@ -258,6 +258,32 @@ def test_your_own_row_may_not_name_a_pull_request_open_elsewhere() -> None:
 # --- other people's live work: true, useful, and not this branch's to fix -------
 
 
+def test_your_reused_branch_is_told_to_repoint_its_row_not_clear_it() -> None:
+    # The branch's first pull request closed and a second is open on it. The
+    # row is wrong, not finished: deleting it would leave live work unlisted.
+    failures, notes = run(HEADER + MY_ROW, {MINE: 42}, {MINE}, MINE)
+    assert len(failures) == 1
+    assert "names PR #41" in failures[0] and "is #42" in failures[0]
+    assert "clear it" not in failures[0]
+    assert notes == []
+
+
+def test_a_reused_branchs_row_is_a_note_from_main() -> None:
+    failures, notes = run(HEADER + MY_ROW, {MINE: 42}, {MINE}, "main")
+    assert failures == []
+    assert len(notes) == 1
+    assert "is #42" in notes[0] and "clears it" not in notes[0]
+
+
+def test_a_working_branch_is_never_told_to_clear_another_live_row() -> None:
+    # Another branch's row names its closed first pull request while a second
+    # is open on it. That row is live; clearing it here would erase their work.
+    failures, notes = run(HEADER + ROW, {THEIRS: 43}, {THEIRS}, MINE)
+    assert failures == []
+    assert len(notes) == 1
+    assert "is #43" in notes[0] and "clear" not in notes[0]
+
+
 def test_another_open_pull_request_without_a_row_here_is_a_note() -> None:
     # The concurrency case the old check failed on. Every pull request's row
     # lives on its own branch until it merges, so two open at once each lack
@@ -417,6 +443,19 @@ def test_findings_and_notes_carrying_an_em_dash_still_print(
     assert "note" in printed
     printed.encode("ascii")
     printed.encode("cp437")
+
+
+def test_origin_with_no_branches_is_an_answer_not_an_outage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(check, "_run", lambda command: "")
+    assert check.remote_branches() == set()
+    monkeypatch.setattr(check, "_run", lambda command: None)
+    assert check.remote_branches() is None
+    monkeypatch.setattr(
+        check, "_run", lambda command: "abc123\trefs/heads/main\ndef456\trefs/tags/v1\n"
+    )
+    assert check.remote_branches() == {"main"}
 
 
 def test_git_output_is_decoded_as_utf8_not_the_locale() -> None:

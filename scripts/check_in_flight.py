@@ -36,7 +36,9 @@ ROOT = Path(__file__).resolve().parent.parent
 REGISTER = ROOT / "docs" / "development" / "IN_FLIGHT.md"
 
 #: The branch nothing is committed to directly. Seen from here, drift in the
-#: register is somebody's next branch's job, not a failure.
+#: register is somebody's next branch's job, not a failure. Named, not asked of
+#: git: ``origin/HEAD`` is unset in a clone made with ``git remote add``, and
+#: AGENTS.md already fixes the name -- every branch is cut from ``main``.
 DEFAULT_BRANCH = "main"
 
 COLUMNS = ("Order", "Branch", "Agent", "PR", "Base", "State", "Updated")
@@ -140,7 +142,8 @@ def parse_register(text: str) -> tuple[list[Row], list[str]]:
                 f"(IN_FLIGHT.md:{offset})"
             )
             continue
-        rows.append(Row(*cells, line_number=offset))
+        order, branch, agent, pr, base, state, updated = cells
+        rows.append(Row(order, branch, agent, pr, base, state, updated, offset))
     return rows, problems
 
 
@@ -204,6 +207,9 @@ def reconcile(
     The split is the whole design. Each finding fails only when it can be
     fixed from here, and is a note otherwise:
 
+    * a row whose branch has an open pull request is live, never stale; if
+      it names no pull request or a different one, it is wrong, and that is a
+      finding about whoever owns the branch;
     * a stale row -- its pull request no longer open, or, for a row that never
       named one, its branch gone from origin -- fails on a working branch,
       whose first commit is where stale rows get cleared, and is a note
@@ -234,6 +240,27 @@ def reconcile(
         own = working and row.branch == current_branch
         number = row.pr_number
 
+        # A branch with an open pull request is live, whatever its row says, so
+        # the row is wrong rather than finished. Asked first: a branch reused
+        # after its first pull request closed still names the closed number,
+        # and calling that stale would say "clear it" -- delete a live row --
+        # where the fix is to point it at the open one.
+        live = open_prs.get(row.branch) if open_prs is not None else None
+        if live is not None:
+            if number is None:
+                report(
+                    f"PR #{live} is open on {row.branch} but the register row "
+                    f"still has no PR ({where})",
+                    own,
+                )
+            elif number != live:
+                report(
+                    f"row for {row.branch} names PR #{number}, but the pull request "
+                    f"open on {row.branch} is #{live} ({where})",
+                    own,
+                )
+            continue
+
         # Stale: the work this row announces has finished. A known pull
         # request is the better evidence -- GitHub keeps merged branches -- so
         # the branch only decides when there is no number, or no answer about
@@ -256,22 +283,14 @@ def reconcile(
                 report(f"row for {row.branch} {why} ({where}) -- the next branch clears it", False)
             continue
 
-        if open_prs is None:
-            continue
-        if number is not None:
-            head = head_of.get(number)
-            if head is not None and head != row.branch:
-                # A number that is open on someone else's branch makes the row
-                # a lie that reads as true.
-                report(
-                    f"register puts PR #{number} on {row.branch}, but it is open on "
-                    f"{head} ({where})",
-                    own,
-                )
-        elif row.branch in open_prs:
+        # Not stale, and no pull request open on its own branch: the only way
+        # left for the number to be open is on someone else's branch, which
+        # makes the row a lie that reads as true.
+        head = head_of.get(number) if number is not None else None
+        if head is not None:
             report(
-                f"PR #{open_prs[row.branch]} is open on {row.branch} but the "
-                f"register row still has no PR ({where})",
+                f"register puts PR #{number} on {row.branch}, but it is open on "
+                f"{head} ({where})",
                 own,
             )
 
@@ -338,7 +357,11 @@ def current_branch() -> str | None:
 
 
 def remote_branches() -> set[str] | None:
-    """Branch names on origin, or None when the remote could not be listed."""
+    """Branch names on origin, or None when the remote could not be listed.
+
+    An empty set is an answer -- origin has no branches -- not a failure to get
+    one, and is returned as such.
+    """
 
     out = _run(["git", "ls-remote", "--heads", "origin"])
     if out is None:
@@ -348,7 +371,7 @@ def remote_branches() -> set[str] | None:
         _, _, ref = line.partition("\t")
         if ref.startswith("refs/heads/"):
             names.add(ref[len("refs/heads/") :])
-    return names or None
+    return names
 
 
 def main(argv: list[str] | None = None) -> int:
