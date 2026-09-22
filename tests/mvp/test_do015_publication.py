@@ -264,6 +264,7 @@ def test_any_other_status_is_refused(
 def test_a_moved_mvp1_tag_is_refused(verifier: ModuleType, evidence: dict[str, Any]) -> None:
     recorded = evidence["tags"]["mvp1"]["sha"]
     problems, verdict = verifier.verify_tag_state(["mvp-1"], ["mvp-1"], recorded, "1" * 40)
+    assert "absent" not in problems[0]
     assert problems and "but the record says" in problems[0]
     assert verdict == "PASS"
 
@@ -279,12 +280,34 @@ def test_an_unauthorized_mvp2_tag_stops_the_stage(
     assert problems
 
 
-def test_unreachable_remote_tags_are_neither_pass_nor_fail(
+def test_unreachable_remote_tags_fail_publication(
     verifier: ModuleType, evidence: dict[str, Any]
 ) -> None:
+    # The in-flight checker notes what it cannot answer, because nobody there
+    # can fix it. Publication is the opposite case: the record claims no MVP 2
+    # tag exists on origin, so an origin nobody could ask has not established
+    # it, and the claim fails rather than passing quietly.
     problems, verdict = verifier.verify_tag_state(["mvp-1"], None)
-    assert problems == ()
     assert verdict == "NOT_AVAILABLE"
+    assert problems and "could not be listed" in problems[0]
+    assert "unproven" in problems[0]
+
+
+def test_a_missing_mvp1_tag_fails_publication(
+    verifier: ModuleType, evidence: dict[str, Any]
+) -> None:
+    # "It has not moved" is not the invariant. "It exists, at this sha" is.
+    recorded = evidence["tags"]["mvp1"]["sha"]
+    problems, _ = verifier.verify_tag_state([], [], recorded, "")
+    assert problems and "absent or unresolved" in problems[0]
+    assert recorded[:7] in problems[0]
+
+
+def test_a_present_unmoved_mvp1_tag_passes(
+    verifier: ModuleType, evidence: dict[str, Any]
+) -> None:
+    recorded = evidence["tags"]["mvp1"]["sha"]
+    assert verifier.verify_tag_state(["mvp-1"], ["mvp-1"], recorded, recorded) == ((), "PASS")
 
 
 def test_a_failing_stage9_verifier_fails_publication(verifier: ModuleType) -> None:

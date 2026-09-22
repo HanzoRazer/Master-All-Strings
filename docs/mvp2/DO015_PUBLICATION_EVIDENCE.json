@@ -87,7 +87,7 @@
       "range": "3fcf618..HEAD"
     },
     "publication_verifier_tests": {
-      "passed": 47,
+      "passed": 49,
       "path": "tests/mvp/test_do015_publication.py"
     },
     "do015_targeted_python": {
@@ -99,7 +99,7 @@
       "command": "node --test tests/*.test.js (web/mvp1)"
     },
     "full_pytest": {
-      "passed": 3069,
+      "passed": 3071,
       "skipped": 3,
       "failed": 2,
       "failed_are": "the two known Windows-only environment artifacts; Linux CI is authoritative"
@@ -135,7 +135,7 @@
       "v2."
     ],
     "remote_tag_verdict": "PASS",
-    "policy": "An unexpected MVP 2 tag stops the stage and is reported, never removed."
+    "policy": "An unexpected MVP 2 tag stops the stage and is reported, never removed. Tag checks fail closed: an origin whose tags could not be listed, or an mvp-1 that is absent or unresolvable, fails publication. The claim is that no MVP 2 tag exists and mvp-1 is at a known sha; a question nobody could ask has not established it."
   },
   "known_limitations": [
     "DOM rendering is not certified: no connected browser was available, so there is no visual witness and no screenshots.",

@@ -11,8 +11,12 @@ Three claims, and nothing else:
 * **immutability** -- no protected product surface changed after the certified
   product. Repository hygiene -- docs, tests, scripts, the register -- may
   differ, and does;
-* **status** -- the record claims a candidate, not a release. No MVP 2 tag, and
-  `mvp-1` where it has always been.
+* **status** -- the record claims a candidate, not a release. No MVP 2 tag
+  here or on origin, and `mvp-1` present, at the sha it has always had.
+
+Tag checks fail closed. A claim about origin that origin could not be asked
+about is not a verified claim, and publication is where that distinction has
+teeth.
 
 Whether the certification itself still holds is Stage 9's question, and it is
 delegated to Stage 9's own tools rather than reimplemented here.
@@ -202,10 +206,15 @@ def verify_tag_state(
     expected_mvp1: str = "",
     observed_mvp1: str = "",
 ) -> tuple[tuple[str, ...], str]:
-    """No MVP 2 tag, and `mvp-1` still where the record says.
+    """No MVP 2 tag anywhere, and `mvp-1` present and where the record says.
 
-    Returns the problems and the remote verdict. Tags that cannot be listed
-    are NOT_AVAILABLE: not a pass, and not a failure either.
+    Fails closed, and that is the difference between this and the in-flight
+    checker. There, an unanswerable question is nobody's to fix and becomes a
+    note. Here the publication record *claims* no MVP 2 tag exists on origin;
+    an origin that cannot be listed has not established that claim, so the
+    claim fails rather than the check passing quietly.
+
+    Returns the problems and the remote verdict.
     """
 
     problems: list[str] = []
@@ -216,7 +225,18 @@ def verify_tag_state(
         # Reported, never removed: an unexpected release tag is somebody's
         # decision to explain, not this script's to undo.
         problems.append(f"tags claiming MVP 2 exist: {', '.join(forbidden)} -- stop and report")
-    if expected_mvp1 and observed_mvp1 and expected_mvp1 != observed_mvp1:
+    if remote is None:
+        problems.append(
+            "origin's tags could not be listed, so 'no MVP 2 tag on origin' is "
+            "unproven -- publication will not claim what it could not check"
+        )
+    if expected_mvp1 and not observed_mvp1:
+        # The invariant is that mvp-1 is at a known sha, which a deleted or
+        # unresolvable tag does not satisfy any more than a moved one does.
+        problems.append(
+            f"mvp-1 is absent or unresolved; the record says it is at {expected_mvp1[:7]}"
+        )
+    elif expected_mvp1 and expected_mvp1 != observed_mvp1:
         problems.append(f"mvp-1 is {observed_mvp1[:7]}, but the record says {expected_mvp1[:7]}")
     return tuple(problems), "NOT_AVAILABLE" if remote is None else "PASS"
 
@@ -361,7 +381,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         checks.append(("tags", problems_found))
         if verdict == "NOT_AVAILABLE":
-            notes.append("remote tags could not be listed: remote_tag_verdict = NOT_AVAILABLE")
+            notes.append("remote_tag_verdict = NOT_AVAILABLE, which fails publication")
 
         checks.append(("Stage 9 certification still passes", verify_certification_is_still_valid()))
 

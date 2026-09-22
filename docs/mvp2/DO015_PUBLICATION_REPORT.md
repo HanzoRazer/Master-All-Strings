@@ -60,6 +60,16 @@ would accept a base that misstates where publication was prepared from. Once
 this branch merges there is no branch point left to compare, and the run says
 the field was not enforced rather than inventing a verdict.
 
+### Tag checks fail closed
+
+The in-flight register's checker notes what it cannot answer, because nobody
+running it can fix an unreachable remote. Publication is the opposite case: the
+record *claims* no MVP 2 tag exists on `origin` and that `mvp-1` sits at a known
+sha. An `origin` that could not be listed, or an `mvp-1` that is absent or
+unresolvable, has not established the claim — so it fails rather than passing
+with a note. The invariant is "it exists, at this sha", not "if present, it has
+not moved".
+
 ## What is being published
 
 The certified DO-015 capability, unchanged, integrated into `main`:
@@ -107,11 +117,11 @@ not the evidence.
 | Stage 9 certification verifier | OK (9 of 9) |
 | Stage 9 evidence generator `--check` | OK |
 | Protected product surface | 0 changed files since `3fcf618` |
-| Publication verifier tests | 47 passed |
+| Publication verifier tests | 49 passed |
 | DO-015 targeted tests (Python) | 311 passed |
 | Node suite | 505 passed, 0 failed |
 | Reproducible browser witness | PASS |
-| Full pytest | 3069 passed, 3 skipped, 2 failed |
+| Full pytest | 3071 passed, 3 skipped, 2 failed |
 | Coverage | 95.63% (floor 95%) |
 | Ruff | PASS |
 | Strict mypy | PASS |
