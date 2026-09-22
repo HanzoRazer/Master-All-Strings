@@ -221,11 +221,12 @@ def check_fixture_digests(evidence: dict[str, Any], root: Path) -> list[str]:
             continue
         actual = hashlib.sha256(path.read_bytes()).hexdigest()
         if actual != recorded:
-            problems.append(f"fixture {name} changed since certification ({actual[:12]} != {str(recorded)[:12]})")
-    present = {
-        item.name
-        for item in (root / "resources" / "education" / "examples" / "guided_sessions").glob("*.json")
-    }
+            problems.append(
+                f"fixture {name} changed since certification "
+                f"({actual[:12]} != {str(recorded)[:12]})"
+            )
+    fixture_dir = root / "resources" / "education" / "examples" / "guided_sessions"
+    present = {item.name for item in fixture_dir.glob("*.json")}
     for extra in sorted(present - set(digests)):
         problems.append(f"fixture {extra} exists but is not recorded in the evidence")
     return problems
@@ -275,10 +276,11 @@ def run_checks(evidence: dict[str, Any], root: Path, changed: list[str] | None, 
         ("Stage 3 fixture bytes match the record", check_fixture_digests(evidence, root)),
         ("browser witnesses are declared honestly", check_witnesses(evidence)),
     ]
+    boundary = "no production diff after the certified sha"
     if changed is None:
-        checks.append(("no production diff after the certified sha", ["SKIPPED: git diff unavailable"]))
+        checks.append((boundary, ["SKIPPED: git diff unavailable"]))
     else:
-        checks.append(("no production diff after the certified sha", check_production_diff(changed)))
+        checks.append((boundary, check_production_diff(changed)))
     return checks
 
 
