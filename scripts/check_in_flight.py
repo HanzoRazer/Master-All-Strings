@@ -243,8 +243,19 @@ def reconcile(
 
 def _run(command: list[str]) -> str | None:
     try:
+        # Decode as UTF-8, not the locale. On Windows the locale is a codepage,
+        # the register is full of em dashes, and `git show` handed each one
+        # back as three characters of mojibake -- so the cleanup comparison
+        # could never match there, while Linux CI, defaulting to UTF-8, passed.
         result = subprocess.run(
-            command, cwd=ROOT, capture_output=True, text=True, check=False, timeout=60
+            command,
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+            timeout=60,
         )
     except (OSError, subprocess.SubprocessError):
         return None
@@ -267,6 +278,22 @@ def _normalise(text: str) -> str:
     """Line endings only. A CRLF checkout is not a register change."""
 
     return text.replace("\r\n", "\n")
+
+
+REGISTER_PATH = "docs/development/IN_FLIGHT.md"
+
+
+def changed_files() -> set[str] | None:
+    """Every path this branch differs from origin/main in, committed or not.
+
+    Compared with the working tree rather than HEAD, because the checker is
+    run before the push and an unstaged change is still a change.
+    """
+
+    out = _run(["git", "diff", "--name-only", "origin/main"])
+    if out is None:
+        return None
+    return {line.strip() for line in out.splitlines() if line.strip()}
 
 
 def register_at(ref: str) -> str | None:
@@ -336,6 +363,10 @@ def is_cleanup_branch(
     column, a stray line -- and this is ordinary work that announces itself
     like everything else.
 
+    It must also change nothing outside the register. Deleting a stale row is
+    not cover for editing code, and a branch that does both has work to
+    announce like any other.
+
     And the rows removed must already be stale. The exemption exists for
     clearing rows whose work has landed; used on a live row it would let one
     branch delete another's announcement and skip making its own, which is
@@ -345,6 +376,11 @@ def is_cleanup_branch(
     """
 
     if current is None:
+        return False
+    # The exemption is from announcing *register* work. A branch that deletes
+    # a stale row and changes anything else is doing other work, and other
+    # work announces itself.
+    if changed_files() != {REGISTER_PATH}:
         return False
     theirs = register_at("origin/main")
     if theirs is None:

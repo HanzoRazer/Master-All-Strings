@@ -247,6 +247,19 @@ def test_the_exemption_is_only_for_the_branch_doing_the_clearing() -> None:
     assert any("PR #37 is open on someone/else" in item for item in problems)
 
 
+@pytest.fixture(autouse=True)
+def only_the_register_changed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Default every test to a branch that touched nothing but the register.
+
+    Without this the cleanup tests would ask real git what changed, and on any
+    branch that changed more than the register the new scope guard would make
+    them return False for a reason they were never written to test -- passing
+    vacuously. The scope tests below override it on purpose.
+    """
+
+    monkeypatch.setattr(check, "changed_files", lambda: {check.REGISTER_PATH})
+
+
 def _is_cleanup(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -558,3 +571,44 @@ def test_findings_carrying_an_em_dash_still_print(
     printed = capsys.readouterr().out
     printed.encode("ascii")
     printed.encode("cp437")
+
+
+def test_a_cleanup_may_not_change_anything_but_the_register(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # Deleting a stale row is not cover for editing code. A branch that does
+    # both has work to announce like any other.
+    monkeypatch.setattr(
+        check, "changed_files", lambda: {check.REGISTER_PATH, "src/master_all_strings/x.py"}
+    )
+    assert not _is_cleanup(monkeypatch, tmp_path, HEADER + ROW, HEADER)
+
+
+def test_a_cleanup_must_actually_change_the_register(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(check, "changed_files", lambda: {"docs/other.md"})
+    assert not _is_cleanup(monkeypatch, tmp_path, HEADER + ROW, HEADER)
+
+
+def test_an_unknown_diff_refuses_the_exemption(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(check, "changed_files", lambda: None)
+    assert not _is_cleanup(monkeypatch, tmp_path, HEADER + ROW, HEADER)
+
+
+def test_git_output_is_decoded_as_utf8_not_the_locale() -> None:
+    """The regression that made the exemption dead on Windows.
+
+    `subprocess.run(text=True)` decodes with the locale, which on Windows is a
+    codepage. The register is full of em dashes, and each came back as three
+    characters of mojibake, so the cleanup comparison could never match there.
+    Linux CI defaults to UTF-8 and never saw it; the other tests here mock
+    register_at and could not have.
+    """
+
+    committed = check.register_at("HEAD")
+    assert committed is not None
+    assert "—" in committed, "the register should contain em dashes to test with"
+    assert "â€”" not in committed, "em dashes came back as mojibake"
