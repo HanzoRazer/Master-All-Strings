@@ -12,9 +12,8 @@ row is deleted when the pull request merges.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| DO-015 Stage 9 | cursor/do015-full-certification-cc02 | Claude | #35 | 3fcf618 | green | 2026-09-22 |
 
-`main` is at `3fcf618` (DO-015 Stage 8, PR #34). Stage 9 is certification and evidence only: no product change is expected on this branch.
+Nothing is in flight. `main` is at `102b795` (DO-015 Stage 9, PR #35).
 
 ### How to use it
 
@@ -45,6 +44,17 @@ Update `State` when it changes — particularly to `green`, which is what says
 the branch is finished and safe to merge. Fill in `PR` as soon as the pull
 request exists: a row that still says `—` while a pull request is open is drift
 like any other. Delete the row when the PR merges.
+
+That last step cannot happen inside the pull request it describes: the merge
+lands after the final commit, so a row outlives its own branch and the register
+on `main` goes stale until someone clears it. Clearing it takes a branch, and a
+branch would need a row, which would go stale in turn.
+
+So a branch that only **removes** rows needs no row of its own. The checker
+works that out by comparing this file against `origin/main`: rows removed and
+none added means there is no work here for anyone to collide with. Clear a
+merged row either in the first commit of the next branch, which is the usual
+way, or in a cleanup branch of its own.
 
 Run `python scripts/check_in_flight.py` before pushing. It reconciles this file
 against the open pull requests and the branches on `origin` and reports where

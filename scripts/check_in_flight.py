@@ -170,6 +170,7 @@ def reconcile(
     open_prs: dict[str, int] | None,
     remote_branches: set[str] | None,
     current_branch: str | None = None,
+    cleanup: bool = False,
 ) -> list[str]:
     """Compare the register with what the repository actually has.
 
@@ -199,6 +200,11 @@ def reconcile(
     if open_prs is not None:
         for branch, number in sorted(open_prs.items()):
             if branch not in listed:
+                if cleanup and branch == current_branch:
+                    # A branch that only removes rows is not work to collide
+                    # with, and requiring it to add one would just leave the
+                    # next person another row to clear.
+                    continue
                 problems.append(
                     f"PR #{number} is open on {branch} but has no row in the register"
                 )
@@ -251,6 +257,40 @@ def open_pull_requests() -> dict[str, int] | None:
         return None
 
 
+def register_at(ref: str) -> str | None:
+    """The register as some other ref has it, or None if it cannot be read."""
+
+    return _run(["show", f"{ref}:docs/development/IN_FLIGHT.md"])
+
+
+def is_cleanup_branch(current: str | None) -> bool:
+    """True when this branch only removes rows from the register.
+
+    A row cannot be deleted by the pull request it describes: the merge lands
+    after the last commit, so the row outlives its own branch and the register
+    on main goes stale. Someone then has to clear it, and that someone needs a
+    branch, which needs a row, which goes stale in turn.
+
+    The way out is to notice what a cleanup branch is. If a branch removes
+    rows and adds none, it is not work anyone else could collide with, and
+    demanding it announce itself is what makes the recursion.
+    """
+
+    if current is None:
+        return False
+    theirs = register_at("origin/main")
+    if theirs is None:
+        return False
+    ours = REGISTER.read_text(encoding="utf-8") if REGISTER.exists() else ""
+    before, _ = parse_register(theirs)
+    after, _ = parse_register(ours)
+    before_branches = {row.branch for row in before}
+    after_branches = {row.branch for row in after}
+    removed = before_branches - after_branches
+    added = after_branches - before_branches
+    return bool(removed) and not added
+
+
 def current_branch() -> str | None:
     """The checked-out branch, or None on a detached head or outside git."""
 
@@ -299,7 +339,8 @@ def main(argv: list[str] | None = None) -> int:
             skipped.append("could not list open pull requests (gh unavailable?)")
         if branches is None:
             skipped.append("could not list branches on origin")
-        problems += reconcile(rows, prs, branches, current_branch())
+        current = current_branch()
+        problems += reconcile(rows, prs, branches, current, is_cleanup_branch(current))
 
     for note in skipped:
         print(_ascii(f"note  {note}"))

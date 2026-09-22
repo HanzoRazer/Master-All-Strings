@@ -222,3 +222,42 @@ def test_findings_print_on_a_console_that_is_not_utf8() -> None:
         rendered = check._ascii(f"FAIL  {problem}")
         rendered.encode("cp437")  # raises if a finding is unprintable
         rendered.encode("ascii")
+
+
+def test_a_branch_that_only_removes_rows_needs_none_of_its_own() -> None:
+    # The recursion this closes: a row cannot be deleted by the pull request
+    # it describes, so clearing it needs a branch, which would need a row,
+    # which would go stale in turn.
+    rows, _ = check.parse_register(HEADER)
+    open_prs = {"docs/clear-merged-register-row": 36}
+    remote = {"docs/clear-merged-register-row"}
+    noisy = check.reconcile(rows, open_prs, remote, "docs/clear-merged-register-row")
+    assert any("has no row in the register" in item for item in noisy)
+    quiet = check.reconcile(
+        rows, open_prs, remote, "docs/clear-merged-register-row", cleanup=True
+    )
+    assert quiet == []
+
+
+def test_the_exemption_is_only_for_the_branch_doing_the_clearing() -> None:
+    rows, _ = check.parse_register(HEADER)
+    problems = check.reconcile(
+        rows, {"someone/else": 37}, {"someone/else"}, "docs/clear-merged-register-row", True
+    )
+    assert any("PR #37 is open on someone/else" in item for item in problems)
+
+
+def test_a_branch_that_adds_a_row_is_not_a_cleanup() -> None:
+    # Removing one row while adding another is ordinary work wearing a
+    # cleanup's clothes, and it still has to announce itself.
+    before = HEADER + ROW
+    after = HEADER + ROW.replace("cursor/do015-next-ab12", "cursor/something-new")
+    removed = {r.branch for r in check.parse_register(before)[0]} - {
+        r.branch for r in check.parse_register(after)[0]
+    }
+    added = {r.branch for r in check.parse_register(after)[0]} - {
+        r.branch for r in check.parse_register(before)[0]
+    }
+    assert removed and added, "this fixture must both remove and add"
+    # is_cleanup_branch requires removals and no additions.
+    assert not (bool(removed) and not added)
