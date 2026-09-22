@@ -12,7 +12,7 @@ row is deleted when the pull request merges.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| DO-015 Stage 9 | cursor/do015-full-certification-cc02 | Claude | #35 | 3fcf618 | in review | 2026-09-22 |
+| DO-015 Stage 9 | cursor/do015-full-certification-cc02 | Claude | #35 | 3fcf618 | green | 2026-09-22 |
 
 `main` is at `3fcf618` (DO-015 Stage 8, PR #34). Stage 9 is certification and evidence only: no product change is expected on this branch.
 
