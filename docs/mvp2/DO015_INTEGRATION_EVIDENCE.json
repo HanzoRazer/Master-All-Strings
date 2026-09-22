@@ -1,0 +1,325 @@
+{
+  "do": "DO-015",
+  "stage": 9,
+  "title": "Full MAS certification and evidence freeze",
+  "verified_by": "scripts/verify_do015_certification.py",
+  "lineage": {
+    "repository": "HanzoRazer/Master-All-Strings",
+    "stage7_merge_sha": "286d5aa439831ea44ff6e198a8518a45f076b513",
+    "stage8_product_sha": "a29afb5e6972c5dfbf2266dee7a0ec47597c1d98",
+    "stage8_merge_sha": "3fcf618b655c3f51b020d11a0bb3f96571da08d7",
+    "stage9_base_sha": "3fcf618b655c3f51b020d11a0bb3f96571da08d7",
+    "certified_product_sha": "3fcf618b655c3f51b020d11a0bb3f96571da08d7",
+    "stage9_branch": "cursor/do015-full-certification-cc02",
+    "note": "The Stage 8 product head is a29afb5, not the f671a73 an earlier draft of the Stage 9 order carried: two review-fix commits landed before the merge. certified_product_sha equals stage9_base_sha because Stage 9 changes no product file, and the verifier enforces that."
+  },
+  "environment": {
+    "python": "3.11.9",
+    "node": "v24.11.0",
+    "platform": "Windows-10-10.0.26100-SP0",
+    "authoritative_ci": "GitHub Actions verify.yml, ubuntu-latest, Python 3.11"
+  },
+  "targeted_tests": {
+    "command": "pytest tests/education tests/mvp/test_guided_session_api_do015.py tests/mvp/test_do015_certification.py tests/mvp2",
+    "passed": 471,
+    "skipped": 1,
+    "failed": 0,
+    "covers": [
+      "Stage 1 contract",
+      "Stage 2 service",
+      "Stage 3 fixtures",
+      "Stage 4 API",
+      "Stage 8 adversarial",
+      "Stage 9 certification"
+    ]
+  },
+  "full_tests": {
+    "command": "pytest --cov --cov-report=term-missing",
+    "passed": 2948,
+    "skipped": 4,
+    "failed": 2,
+    "failed_are": "the two known Windows-only environment artifacts recorded below"
+  },
+  "node": {
+    "command": "node --test tests/*.test.js (web/mvp1)",
+    "passed": 505,
+    "failed": 0,
+    "version": "v24.11.0",
+    "platform": "Windows",
+    "linux_ci_coverage": "NOT_PRESENT",
+    "note": "verify.yml has four Python steps and no Node step. Recorded, not repaired: the workflow is a deferred-hygiene path frozen by DO-012A."
+  },
+  "python": {
+    "version": "3.11.9",
+    "authoritative_platform": "linux (GitHub Actions)"
+  },
+  "coverage": {
+    "total_percent": 95.63,
+    "floor_percent": 95.0,
+    "source": "master_all_strings",
+    "result": "PASS"
+  },
+  "ruff": {
+    "command": "ruff check src tests",
+    "result": "PASS"
+  },
+  "mypy": {
+    "command": "mypy",
+    "result": "PASS",
+    "source_files": 161,
+    "mode": "strict"
+  },
+  "fixtures": {
+    "drift_check": "PASS",
+    "command": "python scripts/build_guided_session_fixtures.py --check",
+    "digests": {
+      "continue_accepted_closed.json": "99d671101224b1d7e47f7a56faf0c9305f09ad9e00fd533ebd24aeaa3d4dcc65",
+      "continue_declined.json": "c9cf46744624c8cda9ba25d3e513be268844dfc6c97c4efc197842e73ac3b730",
+      "execution_failed.json": "610748e4be06ab8c6d410c8f16764eeffccf7d2c46ac09ec7aa0033a24926bd3",
+      "isolate_passage_accepted.json": "28d325831485550cdacbf731fa559b6e96898dc4b77fe539e82b3fd33b3ee7aa",
+      "lesson_transition.json": "e9595245856002df88bcc962ec2afabe41e3f43d2e6b05898d8310d90cfb6dae",
+      "repeat_accepted.json": "4262a4ff3361b44b07332f1b0a87b398b2ef5044eab4fbf72e17cbebfb329416",
+      "slow_down_accepted.json": "bd36ac7a0c15869563347597d5c6deb675e2d4b746926aa892ec816ee8e2514c",
+      "slow_down_declined.json": "5e92bb973d5a4d5279255e9d60c1709b626db3ee2feea7b9b31ee4519119900b",
+      "three_attempt_progression.json": "2781786ee0d931c869991d714e03c8fa52f741a6fb034b2fc55f73a20b091af0",
+      "view_one_string_unsupported.json": "ce4a65570f275e8691d3baf8df1b55e60684c267bffedfab22b7906061439a34"
+    }
+  },
+  "in_flight": {
+    "command": "python scripts/check_in_flight.py",
+    "result": "PASS",
+    "branches_in_flight": 1
+  },
+  "browser_reproducible": {
+    "status": "PASS",
+    "witness": "reproducible (in-repo browser harness driving web/mvp1/app.js)",
+    "runner": "node web/mvp1/tests/do015_certification_capture.mjs",
+    "asserted_by": "web/mvp1/tests/do015_certification.test.js (10 tests)",
+    "proves": [
+      "application orchestration",
+      "real UI event path",
+      "deterministic guided flow"
+    ],
+    "does_not_prove": [
+      "DOM rendering",
+      "visual presentation"
+    ],
+    "session_id": "4d457a28-2b8e-4a8a-93da-cef0cc2fbe6e",
+    "final_status": "CLOSED",
+    "attempt_ids": [
+      "d794d018-fbca-4279-a125-37906aa511bf",
+      "8e1d94ef-30d9-4ebe-b61e-fda98dc603b5",
+      "76aa86db-0d4a-467b-aaf6-e23cb9771bec"
+    ],
+    "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+    "console_errors": [],
+    "summary_artifact": "docs/mvp2/do015_artifacts/browser_smoke_summary.json"
+  },
+  "browser_visual": {
+    "status": "NOT_AVAILABLE",
+    "reason": "connected real-browser control unavailable in certification environment",
+    "checked": "list_connected_browsers returned no connected Chrome extension",
+    "consequence": "no screenshots were captured; rendering is not certified here",
+    "mitigation": "the reproducible witness certifies orchestration and the UI event path; DOM rendering remains uncertified and is a known limitation"
+  },
+  "identity_chain": {
+    "result": "PASS",
+    "browser_witness": [
+      {
+        "attempt_index": 0,
+        "attempt_id": "d794d018-fbca-4279-a125-37906aa511bf",
+        "performance_session_id": "performance-do015-certification-attempt_0_slow_down",
+        "matches_guidance_performance": true,
+        "evaluation_digest": "sha256:53b8e74c06d5b26677f15481e9ac0c87e6d246b083e12feddbcfe39f5ca2afb9",
+        "matches_evaluation_digest": true,
+        "guidance_digest": "sha256:1c140e1313d4fdfe6bea9d9d2421e949cbbfa12e6514f74837ff7570e0bb4bf7",
+        "matches_guidance_digest": true,
+        "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+        "recommended_action": "slow_down",
+        "action_disposition": "ACCEPTED",
+        "execution_status": "SUCCEEDED"
+      },
+      {
+        "attempt_index": 1,
+        "attempt_id": "8e1d94ef-30d9-4ebe-b61e-fda98dc603b5",
+        "performance_session_id": "performance-do015-certification-attempt_1_isolate",
+        "matches_guidance_performance": true,
+        "evaluation_digest": "sha256:53e894267458be303faa11eba692783f180be5f6c5287704dd15801e781aed72",
+        "matches_evaluation_digest": true,
+        "guidance_digest": "sha256:1d597ad715e38e53a048f35e46d8fec7a0d9b41b22ba9d49028eb1607611ec22",
+        "matches_guidance_digest": true,
+        "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+        "recommended_action": "isolate_passage",
+        "action_disposition": "ACCEPTED",
+        "execution_status": "SUCCEEDED"
+      },
+      {
+        "attempt_index": 2,
+        "attempt_id": "76aa86db-0d4a-467b-aaf6-e23cb9771bec",
+        "performance_session_id": "performance-do015-certification-attempt_2_continue",
+        "matches_guidance_performance": true,
+        "evaluation_digest": "sha256:35e30defaf4eb7121ebc43c793c537d518138cfc5531e0b76418624851ef5d8e",
+        "matches_evaluation_digest": true,
+        "guidance_digest": "sha256:1853c03b96bfb55ccab911bc6e69cfac01000a98ca146beafae470b4151b38fd",
+        "matches_guidance_digest": true,
+        "canonical_revision_id": "rev-cc28c4e1b3a1e2ae9d130332",
+        "recommended_action": "continue",
+        "action_disposition": "ACCEPTED",
+        "execution_status": "SUCCEEDED"
+      }
+    ],
+    "authoritative_witness": {
+      "session_id": "session-do015-certification",
+      "attempt_ids": [
+        "attempt-do015-certification-0",
+        "attempt-do015-certification-1",
+        "attempt-do015-certification-2"
+      ],
+      "performance_session_ids": [
+        "performance-do015-certification-attempt_0_slow_down",
+        "performance-do015-certification-attempt_1_isolate",
+        "performance-do015-certification-attempt_2_continue"
+      ],
+      "evaluation_digests": [
+        "sha256:53b8e74c06d5b26677f15481e9ac0c87e6d246b083e12feddbcfe39f5ca2afb9",
+        "sha256:53e894267458be303faa11eba692783f180be5f6c5287704dd15801e781aed72",
+        "sha256:35e30defaf4eb7121ebc43c793c537d518138cfc5531e0b76418624851ef5d8e"
+      ],
+      "guidance_digests": [
+        "sha256:1c140e1313d4fdfe6bea9d9d2421e949cbbfa12e6514f74837ff7570e0bb4bf7",
+        "sha256:1d597ad715e38e53a048f35e46d8fec7a0d9b41b22ba9d49028eb1607611ec22",
+        "sha256:1853c03b96bfb55ccab911bc6e69cfac01000a98ca146beafae470b4151b38fd"
+      ],
+      "canonical_revision_ids": [
+        "rev-cc28c4e1b3a1e2ae9d130332"
+      ]
+    }
+  },
+  "digest_invariants": {
+    "session_digest": "sha256:fcf751a108e40fed1e80a30024354b9dabc1252aa2c94af000261a01dd36d0f0",
+    "session_digest_recomputed": "sha256:fcf751a108e40fed1e80a30024354b9dabc1252aa2c94af000261a01dd36d0f0",
+    "session_digest_matches": true,
+    "serialized_session_sha256": "30067e2401519faa5b367ced5cbb28220245e7a0a863e2f4a93b42b82ef4177d",
+    "attempt_immutability": [
+      {
+        "after_attempt": 1,
+        "attempt_0_unchanged": true
+      },
+      {
+        "after_attempt": 2,
+        "attempt_0_unchanged": true
+      }
+    ],
+    "note": "The session digest is the contract's own computation, taken from the real Stage 4 API. The browser mirror computes no digests and claims none."
+  },
+  "lesson_transition": {
+    "result": "PASS",
+    "previous_session_status": "TRANSITIONED",
+    "new_lesson_session": null,
+    "history_rendered_on_new_lesson": 0
+  },
+  "revision_fail_closed": {
+    "result": "PASS",
+    "session_preserved": true,
+    "active_session": null,
+    "accept_enabled": false,
+    "apply_enabled": false,
+    "history_rendered": 0
+  },
+  "stage8_adversarial": {
+    "result": "PASS",
+    "suites": [
+      "web/mvp1/tests/guided_authority_adversarial.test.js",
+      "tests/education/test_guided_session_adversarial_do015.py",
+      "tests/mvp2/test_do015_crosswalk_citations.py"
+    ],
+    "node_tests": 12,
+    "python_tests": 70,
+    "note": "Re-run, not reimplemented. The Stage 8 crosswalk in DO015_TRANCHE_PLAN.md maps each authority cell to a test at path:line."
+  },
+  "controlled_scenarios": {
+    "scenario": "controlled lifecycle certification scenario",
+    "artifact": "docs/mvp2/do015_artifacts/certification_scenarios.json",
+    "regenerated_by": "tests/mvp2/test_do015_certification_scenarios.py",
+    "legs": {
+      "attempt_0_slow_down": {
+        "lesson": "ascending_scale",
+        "pattern": "alternating",
+        "action": "slow_down",
+        "findings": 4
+      },
+      "attempt_1_isolate": {
+        "lesson": "ascending_scale",
+        "pattern": "uniform",
+        "action": "isolate_passage",
+        "findings": 9
+      },
+      "attempt_2_continue": {
+        "lesson": "ascending_scale",
+        "pattern": "clean",
+        "action": "continue",
+        "findings": 0
+      },
+      "lesson_switch_witness": {
+        "lesson": "descending_scale",
+        "pattern": "uniform",
+        "action": "isolate_passage",
+        "findings": 9
+      }
+    },
+    "unsupported_actions": {
+      "browser_natural_witness": "NOT_AVAILABLE",
+      "reason": "no bundled lesson produces VIEW_ONE_STRING or ENABLE_ZONE_VIEW",
+      "authoritative_test_witness": "PASS",
+      "covered_by": [
+        "web/mvp1/tests/guided_action_executor.test.js:252",
+        "web/mvp1/tests/guided_action_executor.test.js:269"
+      ]
+    }
+  },
+  "artifacts": [
+    "docs/mvp2/DO015_CERTIFICATION_REPORT.md",
+    "docs/mvp2/do015_artifacts/browser_smoke_summary.json",
+    "docs/mvp2/do015_artifacts/certification_scenarios.json",
+    "docs/mvp2/do015_artifacts/certified_session.json"
+  ],
+  "known_environment_exceptions": [
+    {
+      "test": "tests/integrations/test_do008_end_to_end.py::test_checked_in_bundle_correlates_all_authoritative_semantic_events",
+      "platform": "Windows",
+      "cause": "sha256 over a checked-in bundle artifact in a CRLF working copy",
+      "reproduced_on_base": true,
+      "authoritative_result": "PASS on Linux CI",
+      "repaired": false,
+      "why_not": "Stage 9 does not authorize Windows hygiene"
+    },
+    {
+      "test": "tests/mvp/test_mvp1_publication_utils.py::test_mvp1_lineage_script_passes",
+      "platform": "Windows",
+      "cause": "the lineage script prints U+2192 through a cp1252 console",
+      "reproduced_on_base": true,
+      "authoritative_result": "PASS on Linux CI",
+      "repaired": false,
+      "why_not": "Stage 9 does not authorize Windows hygiene"
+    }
+  ],
+  "known_limitations": [
+    "DOM rendering is not certified: no connected browser was available, so there is no visual witness and no screenshots.",
+    "Node has no Linux CI coverage; the 505 Node tests are certified on Windows only.",
+    "The reproducible browser witness mirrors the Stage 2 lifecycle in JavaScript; lifecycle truth and the session digest are certified separately through the real Stage 4 API.",
+    "VIEW_ONE_STRING and ENABLE_ZONE_VIEW have no natural browser witness and remain covered by unit and Stage 8 tests."
+  ],
+  "deferred_work": [
+    "Stage 8 crosswalk verifier checks citation shape, not semantic target meaning.",
+    "Line-number citations are fragile; symbol-based path::name references are preferred future hardening.",
+    "Adversarial tests import private helpers from another test module; future test-maintenance coupling.",
+    "check_in_flight.py is not a CI gate: verify.yml is a deferred-hygiene path frozen by DO-012A and unfreezing it needs an owner ruling."
+  ],
+  "not_claimed": [
+    "published",
+    "released",
+    "MVP 2 complete",
+    "tagged",
+    "production release"
+  ]
+}

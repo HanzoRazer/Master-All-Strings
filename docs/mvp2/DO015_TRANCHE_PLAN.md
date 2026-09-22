@@ -741,6 +741,37 @@ Certification results are recorded in `DO015_INTEGRATION_EVIDENCE.json` and
 read back by `scripts/verify_do015_certification.py`. The human synthesis is
 `DO015_CERTIFICATION_REPORT.md`.
 
+```text
+targeted DO-015 pytest     471 passed, 1 skipped
+full pytest                2948 passed, 4 skipped, 2 failed (Windows-only)
+coverage                   95.63%  (floor 95%)
+Node                       505 passed, 0 failed (Windows; linux_ci_coverage NOT_PRESENT)
+ruff check src tests       PASS
+mypy (strict)              PASS, 161 source files
+fixture --check            PASS
+check_in_flight.py         PASS
+certification verifier     OK (7 of 7)
+```
+
+The certified session: SLOW_DOWN accepted and applied to rate 0.75, then
+ISOLATE_PASSAGE accepted and applied to a loop, then CONTINUE accepted and
+applied to CLOSED -- three attempts, one canonical revision, three distinct
+performance identities, prior attempts immutable once no longer current, and a
+session digest that recomputes to what the service returned.
+
+Two witnesses with different claims. The reproducible one boots the real
+`app.js` through the in-repo harness and certifies orchestration and the UI
+event path; it does not certify rendering. The authoritative one drives the
+same legs through the real Stage 4 API and certifies lifecycle truth and the
+digest. The visual witness is `NOT_AVAILABLE`: no connected browser existed in
+the certification environment, so DOM rendering is not certified by this
+tranche and no screenshots exist.
+
+`CONTINUE` is unreachable from a bundled lesson by fake MIDI, so closure used a
+controlled lifecycle certification scenario: synthetic performance evidence,
+real evaluator, real recommendation, regenerated and compared on every test
+run.
+
 Stage 10 has not started. Merge, tag, release and publication are not
 authorized by this tranche.
 
