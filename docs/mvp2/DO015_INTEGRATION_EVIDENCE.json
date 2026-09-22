@@ -21,8 +21,8 @@
   },
   "targeted_tests": {
     "command": "pytest tests/education tests/mvp/test_guided_session_api_do015.py tests/mvp/test_do015_certification.py tests/mvp2",
-    "passed": 471,
-    "skipped": 1,
+    "passed": 472,
+    "skipped": 0,
     "failed": 0,
     "covers": [
       "Stage 1 contract",
@@ -35,10 +35,11 @@
   },
   "full_tests": {
     "command": "pytest --cov --cov-report=term-missing",
-    "passed": 2948,
-    "skipped": 4,
+    "passed": 2949,
+    "skipped": 3,
     "failed": 2,
-    "failed_are": "the two known Windows-only environment artifacts recorded below"
+    "failed_are": "the two known Windows-only environment artifacts recorded below",
+    "note": "Measured after the evidence was frozen. The counts moved by one against the pre-freeze run because the verifier's own check of the checked-in evidence stops skipping once that evidence exists."
   },
   "node": {
     "command": "node --test tests/*.test.js (web/mvp1)",

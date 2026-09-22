@@ -742,8 +742,8 @@ read back by `scripts/verify_do015_certification.py`. The human synthesis is
 `DO015_CERTIFICATION_REPORT.md`.
 
 ```text
-targeted DO-015 pytest     471 passed, 1 skipped
-full pytest                2948 passed, 4 skipped, 2 failed (Windows-only)
+targeted DO-015 pytest     472 passed
+full pytest                2949 passed, 3 skipped, 2 failed (Windows-only)
 coverage                   95.63%  (floor 95%)
 Node                       505 passed, 0 failed (Windows; linux_ci_coverage NOT_PRESENT)
 ruff check src tests       PASS
