@@ -12,7 +12,7 @@ pull request merges the next branch clears it.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| Checker fails only on what you can fix | fix/in-flight-fail-only-what-you-can-fix | Claude | #40 | d6c870a | green | 2026-09-22 |
+| DO-015 Stage 10 | cursor/do015-publication-closeout-cc03 | Claude | — | fd2c490 | in flight | 2026-09-22 |
 
 An empty table means nothing is in flight.
 
