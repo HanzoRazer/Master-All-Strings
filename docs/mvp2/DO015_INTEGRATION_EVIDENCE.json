@@ -320,6 +320,7 @@
     }
   },
   "linux_ci": {
+    "_comment": "The last commit that changed certification content, and the green Linux CI run for it. Deliberately not the pull-request head: naming the head needs a commit, which moves the head, which never converges. This file is data so that sealing a run is a metadata-only commit, which is what the record's own semantics allow after the named run.",
     "certified_content_sha": "d998abeccef8bd426f3ab197bb7f8ddd539dfc86",
     "run_id": 35681683986,
     "conclusion": "success",
@@ -332,7 +333,8 @@
     "docs/mvp2/DO015_CERTIFICATION_REPORT.md",
     "docs/mvp2/do015_artifacts/browser_smoke_summary.json",
     "docs/mvp2/do015_artifacts/certification_scenarios.json",
-    "docs/mvp2/do015_artifacts/certified_session.json"
+    "docs/mvp2/do015_artifacts/certified_session.json",
+    "docs/mvp2/do015_artifacts/ci_seal.json"
   ],
   "known_environment_exceptions": [
     {

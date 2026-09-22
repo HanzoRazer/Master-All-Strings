@@ -57,17 +57,13 @@ MEASUREMENTS: dict[str, Any] = {
     "node": {"passed": 505, "failed": 0},
     "mypy_source_files": 161,
     "stage8": {"node_tests": 12, "python_tests": 70},
-    "linux_ci": {
-        # The last commit that changed certification *content*, and the green
-        # run for it. Deliberately not the pull-request head: naming the head
-        # needs a commit, which moves the head, which never converges. The
-        # verifier proves this sha is behind HEAD and that every commit after
-        # it touches only evidence and register metadata.
-        "certified_content_sha": "d998abeccef8bd426f3ab197bb7f8ddd539dfc86",
-        "run_id": 35681683986,
-        "conclusion": "success",
-    },
 }
+
+#: The CI seal lives in a data file, not here. Sealing a run has to be a
+#: metadata-only commit -- the record's own semantics say everything after the
+#: named run is paperwork -- and editing this module would make it a code
+#: change, which the verifier rejects, correctly.
+CI_SEAL = ARTIFACTS / "ci_seal.json"
 
 
 def _verifier() -> Any:
@@ -317,7 +313,7 @@ def build() -> dict[str, Any]:
             },
         },
         "linux_ci": dict(
-            MEASUREMENTS["linux_ci"],
+            json.loads(CI_SEAL.read_text(encoding="utf-8")),
             workflow=".github/workflows/verify.yml",
             platform="ubuntu-latest, Python 3.11",
             semantics=(
@@ -336,6 +332,7 @@ def build() -> dict[str, Any]:
             "docs/mvp2/do015_artifacts/browser_smoke_summary.json",
             "docs/mvp2/do015_artifacts/certification_scenarios.json",
             "docs/mvp2/do015_artifacts/certified_session.json",
+            "docs/mvp2/do015_artifacts/ci_seal.json",
         ],
         "known_environment_exceptions": [
             {

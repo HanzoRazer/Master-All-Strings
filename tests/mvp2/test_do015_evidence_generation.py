@@ -64,6 +64,9 @@ def test_the_generator_derives_rather_than_restates() -> None:
 def test_the_measurements_are_the_only_undeclared_inputs() -> None:
     # Everything else is derived. If this list grows, the record has started
     # carrying claims nobody can reproduce.
+    # The CI seal is data, not a measurement: sealing must be a metadata-only
+    # commit, so it cannot live in this module.
+    assert generator.CI_SEAL.exists()
     assert set(generator.MEASUREMENTS) == {
         "targeted",
         "full",
@@ -71,7 +74,6 @@ def test_the_measurements_are_the_only_undeclared_inputs() -> None:
         "node",
         "mypy_source_files",
         "stage8",
-        "linux_ci",
     }
 
 
