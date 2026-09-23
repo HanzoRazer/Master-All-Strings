@@ -369,9 +369,13 @@ def test_a_deleted_frozen_artifact_is_refused(verifier: ModuleType) -> None:
     assert problems and "is missing" in problems[0]
 
 
-def test_without_a_publication_merge_nothing_is_claimed(verifier: ModuleType) -> None:
+def test_a_publication_merge_that_cannot_be_derived_fails(verifier: ModuleType) -> None:
+    # Fails closed. This check is what successor mode substitutes for the old
+    # zero-product-change rule; skipping it when the boundary cannot be found
+    # would report OK while the frozen record was protected by nothing.
     touched = {path: "c" * 40 for path in verifier.FROZEN_ARTIFACTS}
-    assert verifier.frozen_artifact_violations(touched, None, lambda *_: False) == ()
+    problems = verifier.frozen_artifact_violations(touched, None, lambda *_: False)
+    assert problems and "could not be derived" in problems[0]
 
 
 def _mode_world(
@@ -436,6 +440,17 @@ def test_a_successor_editing_the_published_record_fails(
     printed = capsys.readouterr().out
     assert "FAIL certification and publication artifacts are as published" in printed
     assert "not editable" in printed
+
+
+def test_the_command_fails_when_the_publication_merge_is_unknown(
+    monkeypatch: pytest.MonkeyPatch, verifier: ModuleType, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _mode_world(monkeypatch, verifier, record_changes=())
+    monkeypatch.setattr(verifier, "publication_baseline", lambda head="HEAD": None)
+    assert verifier.main([]) == 1
+    printed = capsys.readouterr().out
+    assert "FAIL certification and publication artifacts are as published" in printed
+    assert "could not be derived" in printed
 
 
 def test_a_publication_candidate_still_proves_what_stage_10_proved(
