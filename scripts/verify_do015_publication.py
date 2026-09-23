@@ -299,10 +299,18 @@ def frozen_artifact_violations(
     baseline sha, flipping a status to read better, refreshing a report --
     rewrites a statement about a moment that has passed, which is the one
     thing an evidence freeze exists to prevent.
+
+    Fails closed on a boundary it cannot find. In successor mode this check is
+    what replaced the zero-product-change rule, so skipping it would leave the
+    frozen record unprotected while the run still reported OK -- the strongest
+    claim this verifier makes, quietly resting on nothing.
     """
 
     if baseline is None:
-        return ()
+        return (
+            "the publication merge could not be derived, so the frozen "
+            "certification and publication record cannot be verified",
+        )
     problems = []
     for path, commit in sorted(last_touched.items()):
         if commit is None:
@@ -504,9 +512,7 @@ def main(argv: list[str] | None = None) -> int:
                     frozen_artifact_violations(last_touched, baseline, is_ancestor),
                 )
             )
-            if baseline is None:
-                notes.append("no publication merge found; frozen artifacts were not checked")
-            else:
+            if baseline is not None:
                 notes.append(f"published at {baseline[:7]}; Stage 10's branch point is history")
 
         recorded = evidence.get("tags", {}).get("mvp1", {})

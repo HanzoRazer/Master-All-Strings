@@ -12,7 +12,7 @@ pull request merges the next branch clears it.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| Publication verifier scope | fix/publication-verifier-successor-scope | Claude | #44 | 280982c | in review | 2026-09-22 |
+| Publication baseline fails closed | fix/publication-baseline-fails-closed | Claude | #45 | bed34f3 | in review | 2026-09-23 |
 
 An empty table means nothing is in flight.
 
