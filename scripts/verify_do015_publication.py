@@ -21,6 +21,16 @@ teeth.
 Whether the certification itself still holds is Stage 9's question, and it is
 delegated to Stage 9's own tools rather than reimplemented here.
 
+**Two modes, because the question changes once publication happens.** While a
+branch is writing the publication record, it is claiming *zero product change*
+and a specific branch point, and both are checked. Afterwards, on ``main`` or a
+successor branch, neither is answerable: the branch point cannot be
+reconstructed, and successor work is supposed to add product code. What
+survives publication is narrower and more durable -- the certified product is
+still an ancestor, and the certification and publication artifacts are exactly
+the bytes that were published. A verifier that kept demanding an unchanged
+``src/`` would fail every future tranche and teach people to ignore it.
+
 Output is ASCII only. Exit status 1 means the publication candidate is not
 what it says it is.
 """
@@ -31,7 +41,7 @@ import argparse
 import json
 import subprocess
 import sys
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -46,6 +56,29 @@ PROTECTED = ("src/master_all_strings/", "web/mvp1/", "resources/", "governance/"
 
 #: Browser tests live under the product tree but are not the product.
 NOT_PRODUCT = ("web/mvp1/tests/",)
+
+#: What this run can answer, decided by whether the branch is writing the
+#: publication record or living after it.
+CANDIDATE_MODE = "publication-candidate"
+SUCCESSOR_MODE = "successor"
+
+#: Written once and never rewritten. Stage 9's certification freeze and Stage
+#: 10's publication record, including the candidate status that was true when
+#: it was written.
+FROZEN_ARTIFACTS = (
+    "docs/mvp2/DO015_INTEGRATION_EVIDENCE.json",
+    "docs/mvp2/DO015_CERTIFICATION_REPORT.md",
+    "docs/mvp2/do015_artifacts",
+    "docs/mvp2/DO015_PUBLICATION_EVIDENCE.json",
+    "docs/mvp2/DO015_PUBLICATION_REPORT.md",
+)
+
+#: The publication record itself: a branch that changes these is proposing a
+#: publication, not living after one.
+PUBLICATION_RECORD = (
+    "docs/mvp2/DO015_PUBLICATION_EVIDENCE.json",
+    "docs/mvp2/DO015_PUBLICATION_REPORT.md",
+)
 
 #: The status a candidate may claim before the owner merges it.
 CANDIDATE_STATUS = "READY_FOR_PUBLICATION"
@@ -241,6 +274,48 @@ def verify_tag_state(
     return tuple(problems), "NOT_AVAILABLE" if remote is None else "PASS"
 
 
+def mode_for(publication_record_changes: Sequence[str] | None) -> str:
+    """Which question this run can answer.
+
+    A branch that touches the publication record is writing it, and must prove
+    what Stage 10 claimed. Anything else is downstream of a publication that
+    already happened. When the comparison cannot be made at all, the successor
+    mode is the honest default: it asserts less, and asserting more on a guess
+    is how a check starts lying.
+    """
+
+    return CANDIDATE_MODE if publication_record_changes else SUCCESSOR_MODE
+
+
+def frozen_artifact_violations(
+    last_touched: Mapping[str, str | None],
+    baseline: str | None,
+    is_ancestor: Callable[[str, str], bool],
+) -> tuple[str, ...]:
+    """Frozen artifacts must not have been touched after publication.
+
+    The publication merge is the boundary: every commit that touched a frozen
+    artifact has to be at or before it. An edit afterwards -- filling in a
+    baseline sha, flipping a status to read better, refreshing a report --
+    rewrites a statement about a moment that has passed, which is the one
+    thing an evidence freeze exists to prevent.
+    """
+
+    if baseline is None:
+        return ()
+    problems = []
+    for path, commit in sorted(last_touched.items()):
+        if commit is None:
+            problems.append(f"{path} is missing: it is part of the published record")
+            continue
+        if not is_ancestor(commit, baseline):
+            problems.append(
+                f"{path} was modified in {commit[:7]}, after the publication "
+                f"at {baseline[:7]}; the published record is not editable"
+            )
+    return tuple(problems)
+
+
 def _git(*args: str) -> str | None:
     try:
         result = subprocess.run(
@@ -260,6 +335,44 @@ def _git(*args: str) -> str | None:
 
 def is_ancestor(candidate: str, descendant: str) -> bool:
     return _git("merge-base", "--is-ancestor", candidate, descendant) is not None
+
+
+def changed_against(ref: str, paths: Sequence[str], head: str = "HEAD") -> tuple[str, ...] | None:
+    """Paths differing between ``ref`` and ``head``, or None if ref is unknown."""
+
+    out = _git("diff", "--name-only", f"{ref}...{head}", "--", *paths)
+    if out is None:
+        return None
+    return tuple(sorted(line.strip() for line in out.splitlines() if line.strip()))
+
+
+def publication_baseline(head: str = "HEAD") -> str | None:
+    """The merge that put the publication record on the mainline.
+
+    Derived, not recorded. The evidence deliberately carries a null baseline --
+    a commit cannot name the merge that will contain it -- so the sha is read
+    back out of first-parent history instead, where the merge is the commit
+    that introduced the file.
+    """
+
+    out = _git(
+        "log",
+        "--first-parent",
+        "--format=%H",
+        "--diff-filter=A",
+        head,
+        "--",
+        "docs/mvp2/DO015_PUBLICATION_EVIDENCE.json",
+    )
+    if out is None:
+        return None
+    commits = [line.strip() for line in out.splitlines() if line.strip()]
+    return commits[-1] if commits else None
+
+
+def last_commit_touching(path: str, head: str = "HEAD") -> str | None:
+    out = _git("log", "-1", "--format=%H", head, "--", path)
+    return out.strip() if out and out.strip() else None
 
 
 def branch_point(head: str = "HEAD", against: str = "origin/main") -> str | None:
@@ -355,23 +468,46 @@ def main(argv: list[str] | None = None) -> int:
             ("lineage", verify_lineage(evidence, certification or {}, is_ancestor, args.head))
         )
 
-        base_problems, base_notes = verify_branch_point(
-            str(evidence.get("lineage", {}).get("stage10_base_sha", "")),
-            branch_point(args.head),
-            (_git("rev-parse", args.head) or "").strip() or None,
-        )
-        checks.append(("stage10_base_sha is the branch point", base_problems))
-        notes.extend(base_notes)
+        record_changes = changed_against("origin/main", PUBLICATION_RECORD, args.head)
+        mode = mode_for(record_changes)
+        if record_changes is None:
+            notes.append("origin/main could not be read; running in successor mode")
+        notes.append(f"mode: {mode}")
 
         certified = str(evidence.get("lineage", {}).get("certified_product_sha", ""))
-        if certified:
-            changed = protected_product_changes(changed_paths(certified, args.head))
+        if mode == CANDIDATE_MODE:
+            base_problems, base_notes = verify_branch_point(
+                str(evidence.get("lineage", {}).get("stage10_base_sha", "")),
+                branch_point(args.head),
+                (_git("rev-parse", args.head) or "").strip() or None,
+            )
+            checks.append(("stage10_base_sha is the branch point", base_problems))
+            notes.extend(base_notes)
+            if certified:
+                changed = protected_product_changes(changed_paths(certified, args.head))
+                checks.append(
+                    (
+                        "protected product surface unchanged since certification",
+                        tuple(f"{path} changed after the certified product" for path in changed),
+                    )
+                )
+        else:
+            # Successor work adds product code -- that is what a successor is.
+            # What must not move is the published record of what was certified.
+            baseline = publication_baseline(args.head)
+            last_touched = {
+                path: last_commit_touching(path, args.head) for path in FROZEN_ARTIFACTS
+            }
             checks.append(
                 (
-                    "protected product surface unchanged since certification",
-                    tuple(f"{path} changed after the certified product" for path in changed),
+                    "certification and publication artifacts are as published",
+                    frozen_artifact_violations(last_touched, baseline, is_ancestor),
                 )
             )
+            if baseline is None:
+                notes.append("no publication merge found; frozen artifacts were not checked")
+            else:
+                notes.append(f"published at {baseline[:7]}; Stage 10's branch point is history")
 
         recorded = evidence.get("tags", {}).get("mvp1", {})
         name = str(recorded.get("tag", "mvp-1"))

@@ -328,6 +328,132 @@ def test_a_failing_generator_alone_fails_publication(verifier: ModuleType) -> No
     assert len(problems) == 1 and "generator" in problems[0]
 
 
+# --- two modes: what the run can actually answer -------------------------------
+
+
+def test_a_branch_writing_the_publication_record_is_a_candidate(verifier: ModuleType) -> None:
+    assert verifier.mode_for(("docs/mvp2/DO015_PUBLICATION_EVIDENCE.json",)) == (
+        verifier.CANDIDATE_MODE
+    )
+
+
+@pytest.mark.parametrize("changes", [(), None])
+def test_everything_else_is_a_successor(verifier: ModuleType, changes: object) -> None:
+    # None means origin/main could not be read. Asserting the stronger
+    # candidate rules on a guess would fail branches that are fine.
+    assert verifier.mode_for(changes) == verifier.SUCCESSOR_MODE
+
+
+def test_the_published_record_may_not_be_edited_afterwards(verifier: ModuleType) -> None:
+    baseline = "b" * 40
+    after = "c" * 40
+    touched = {path: baseline for path in verifier.FROZEN_ARTIFACTS}
+    touched["docs/mvp2/DO015_INTEGRATION_EVIDENCE.json"] = after
+    problems = verifier.frozen_artifact_violations(
+        touched, baseline, lambda commit, _base: commit != after
+    )
+    assert problems and "DO015_INTEGRATION_EVIDENCE.json" in problems[0]
+    assert "not editable" in problems[0]
+
+
+def test_the_published_record_as_published_passes(verifier: ModuleType) -> None:
+    baseline = "b" * 40
+    touched = {path: baseline for path in verifier.FROZEN_ARTIFACTS}
+    assert verifier.frozen_artifact_violations(touched, baseline, lambda *_: True) == ()
+
+
+def test_a_deleted_frozen_artifact_is_refused(verifier: ModuleType) -> None:
+    touched = {path: "b" * 40 for path in verifier.FROZEN_ARTIFACTS}
+    touched["docs/mvp2/DO015_CERTIFICATION_REPORT.md"] = None
+    problems = verifier.frozen_artifact_violations(touched, "b" * 40, lambda *_: True)
+    assert problems and "is missing" in problems[0]
+
+
+def test_without_a_publication_merge_nothing_is_claimed(verifier: ModuleType) -> None:
+    touched = {path: "c" * 40 for path in verifier.FROZEN_ARTIFACTS}
+    assert verifier.frozen_artifact_violations(touched, None, lambda *_: False) == ()
+
+
+def _mode_world(
+    monkeypatch: pytest.MonkeyPatch,
+    verifier: ModuleType,
+    *,
+    record_changes: tuple[str, ...] | None,
+) -> list[str]:
+    """Run main() against a repository whose git answers are fixed."""
+
+    asked: list[str] = []
+
+    def changed_against(ref: str, paths: object, head: str = "HEAD") -> object:
+        asked.append("changed_against")
+        return record_changes
+
+    def changed_paths(base: str, head: str) -> tuple[str, ...]:
+        asked.append("protected-surface")
+        return ("src/master_all_strings/education/__init__.py",)
+
+    def branch_point(head: str = "HEAD", against: str = "origin/main") -> str:
+        asked.append("branch-point")
+        return "f" * 40
+
+    monkeypatch.setattr(verifier, "changed_against", changed_against)
+    monkeypatch.setattr(verifier, "changed_paths", changed_paths)
+    monkeypatch.setattr(verifier, "branch_point", branch_point)
+    monkeypatch.setattr(verifier, "publication_baseline", lambda head="HEAD": "b" * 40)
+    monkeypatch.setattr(verifier, "last_commit_touching", lambda path, head="HEAD": "a" * 40)
+    monkeypatch.setattr(verifier, "is_ancestor", lambda candidate, descendant: True)
+    monkeypatch.setattr(verifier, "tags_here_and_on_origin", lambda: (("mvp-1",), ("mvp-1",)))
+    monkeypatch.setattr(verifier, "tag_sha", lambda tag: "ac38819b23ed9d85b651755e7612f42d7d528ddc")
+    monkeypatch.setattr(verifier, "verify_certification_is_still_valid", lambda run=None: ())
+    monkeypatch.setattr(verifier, "_git", lambda *args: "a" * 40)
+    return asked
+
+
+def test_a_successor_branch_may_add_product_code(
+    monkeypatch: pytest.MonkeyPatch, verifier: ModuleType, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # The failure this fix exists for: a successor tranche changing a product
+    # file was reported as breaking DO-015's publication, which would make the
+    # verifier fail every future piece of work in the repository.
+    asked = _mode_world(monkeypatch, verifier, record_changes=())
+    assert verifier.main([]) == 0
+    printed = capsys.readouterr().out
+    assert "mode: successor" in printed
+    assert "certification and publication artifacts are as published" in printed
+    assert "protected-surface" not in asked
+    assert "branch-point" not in asked
+
+
+def test_a_successor_editing_the_published_record_fails(
+    monkeypatch: pytest.MonkeyPatch, verifier: ModuleType, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Successor mode is permissive about product code and strict about the
+    # record: an evidence file touched after the publication merge fails here,
+    # which is the only thing standing between a freeze and a quiet rewrite.
+    _mode_world(monkeypatch, verifier, record_changes=())
+    monkeypatch.setattr(verifier, "is_ancestor", lambda candidate, descendant: False)
+    assert verifier.main([]) == 1
+    printed = capsys.readouterr().out
+    assert "FAIL certification and publication artifacts are as published" in printed
+    assert "not editable" in printed
+
+
+def test_a_publication_candidate_still_proves_what_stage_10_proved(
+    monkeypatch: pytest.MonkeyPatch, verifier: ModuleType, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # The candidate rules are not weakened, only scoped: on the branch writing
+    # the record, a changed product file and a wrong branch point both fail.
+    asked = _mode_world(
+        monkeypatch, verifier, record_changes=("docs/mvp2/DO015_PUBLICATION_EVIDENCE.json",)
+    )
+    assert verifier.main([]) == 1
+    printed = capsys.readouterr().out
+    assert "mode: publication-candidate" in printed
+    assert "FAIL protected product surface unchanged since certification" in printed
+    assert "FAIL stage10_base_sha is the branch point" in printed
+    assert "protected-surface" in asked and "branch-point" in asked
+
+
 # --- the command ---------------------------------------------------------------
 
 
