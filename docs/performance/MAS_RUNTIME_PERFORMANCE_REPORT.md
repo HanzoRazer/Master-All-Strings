@@ -23,20 +23,25 @@ and the duplicate scan that looked suspicious next to it is noise.
 Full numbers, including min and max and every scenario, are in
 `MAS_RUNTIME_PERFORMANCE_BASELINE.json`.
 
+> **Re-measured after DO-016 merged.** `local_server.py` is a measured
+> surface (M9), so the whole baseline was retaken on the merged tree rather
+> than carried over. The media asset branch itself is byte-identical; the
+> numbers moved within run-to-run variance and no classification changed.
+
 ## Decision table
 
 | Risk | 100 | 1,000 | 10,000 | Classification | Next action |
 | --- | ---: | ---: | ---: | --- | --- |
-| M1 Audio scheduler full scan | 0.012 ms | 0.063 ms | 0.505 ms | `MATTERS_AT_SCALE` | leave; revisit near 10k |
-| M2 Fretboard frame updates | 0.031 ms | 0.288 ms | **5.397 ms** | `MATTERS_AT_SCALE` | profile in a browser first |
-| M3 Main loop's second scan | 0.005 ms | 0.038 ms | 0.064 ms | `NOT_MATERIAL_IN_MEASURED_RANGE` | do not restructure |
-| M4 TAB/notation active scan | 0.011 ms | 0.079 ms | 0.874 ms | `MATTERS_AT_SCALE` | measure the selector first |
-| M5 Full SVG mount (notation) | 2.6 ms | 23.8 ms | **281.4 ms** | `MATTERS_AT_SCALE` | measure the parse first |
-| M6 Media catalog lookup | 0.09 ms | 2.84 ms | 26.1 ms | `MATTERS_AT_SCALE` | index when catalogs grow |
-| M7 Manifest reload | 1.0 ms | — | — | `NOT_MATERIAL_IN_MEASURED_RANGE` | leave |
-| M8 Provenance lookup | 0.004 ms | 0.138 ms | 1.088 ms | `MATTERS_AT_SCALE` | index only if queried per event |
-| M9 Media serving (100 MB, ×4) | — | — | 343 ms | `MATTERS_AT_SCALE` | stream for memory, not speed |
-| M10 Event lookup | 0.0025 ms | 0.022 ms | 0.332 ms | `NOT_MATERIAL_IN_MEASURED_RANGE` | leave |
+| M1 Audio scheduler full scan | 0.015 ms | 0.065 ms | 0.562 ms | `MATTERS_AT_SCALE` | leave; revisit near 10k |
+| M2 Fretboard frame updates | 0.027 ms | 0.248 ms | **5.526 ms** | `MATTERS_AT_SCALE` | browser profile first |
+| M3 Main loop's second scan | 0.006 ms | 0.023 ms | 0.061 ms | `NOT_MATERIAL_IN_MEASURED_RANGE` | do not restructure |
+| M4 TAB/notation active scan | 0.010 ms | 0.067 ms | 0.679 ms | `MATTERS_AT_SCALE` | measure the selector first |
+| M5 Full SVG mount (notation) | 2.5 ms | 21.3 ms | **241.7 ms** | `MATTERS_AT_SCALE` | measure the parse first |
+| M6 Media catalog lookup | 0.099 ms | 1.822 ms | 11.660 ms | `MATTERS_AT_SCALE` | index when catalogs grow |
+| M7 Manifest reload | 0.698 ms | — | — | `NOT_MATERIAL_IN_MEASURED_RANGE` | leave |
+| M8 Provenance lookup | 0.004 ms | 0.036 ms | 0.380 ms | `MATTERS_AT_SCALE` | index only if queried per event |
+| M9 Media serving (100 MB ×4) | — | — | 378 ms | `MATTERS_AT_SCALE` | stream for memory, not speed |
+| M10 Event lookup | 0.0051 ms | 0.0206 ms | 0.1838 ms | `NOT_MATERIAL_IN_MEASURED_RANGE` | leave |
 
 Figures are medians. M6 columns are media-record counts, M9 is a 100 MB file at
 four concurrent requests, M7 is the real manifest and does not scale with
@@ -44,25 +49,25 @@ lesson size.
 
 ## What the numbers changed about the review's picture
 
-**The renderer is the one that matters.** At 10,000 notes a frame costs 5.4 ms
-of JavaScript, p95 6.7 ms — a third of a 16.7 ms budget spent before the
+**The renderer is the one that matters.** At 10,000 notes a frame costs 5.5 ms
+of JavaScript, p95 6.8 ms — a third of a 16.7 ms budget spent before the
 browser styles, lays out or paints anything. Style writes are exactly one per
 note per frame (103, 1,005 and 10,006), so the claim was precisely right.
 
 **The scheduler is real but small.** Linear as described, and at 10,000 events
-it burns about 20 ms of CPU per second of playback, roughly 2% of a core, doing
+it burns about 22 ms of CPU per second of playback, roughly 2% of a core, doing
 work it has already done. Worth fixing eventually; not worth the four state
 transitions a cursor introduces today.
 
-**The duplicate scan is not a problem.** `activeEventIds()` costs 0.064 ms at
-10,000 notes — 1.2% of the frame it follows. The review reasoned from structure
+**The duplicate scan is not a problem.** `activeEventIds()` costs 0.061 ms at
+10,000 notes — 1.1% of the frame it follows. The review reasoned from structure
 ("another O(N) pass") to concern, and the measurement does not support it. This
 is the clearest case for having measured first: restructuring the loop to share
 the active set would have added coupling for a 1% gain.
 
-**Mounting a large score is a visible freeze.** 281 ms for a 10,000-event
+**Mounting a large score is a visible freeze.** 242 ms for a 10,000-event
 notation mount, before the `innerHTML` parse that follows. At 1,000 events it
-is 24 ms, which is a noticeable but acceptable lesson switch.
+is 21 ms, which is a noticeable but acceptable lesson switch.
 
 **The Python paths are latent, not live.** The catalog's O(R×M) is confirmed
 and irrelevant at the size this repository ships. Provenance lookup only
@@ -70,7 +75,7 @@ becomes expensive in the quadratic case — a query per event — and no such pa
 exists today.
 
 **Media serving is a memory question, not a speed one.** 100 MB serves in
-175 ms, and four concurrent requests sustain about 1.1 GB/s on loopback. What
+194 ms, and four concurrent requests sustain about 1.0 GB/s on loopback. What
 the measurement shows is the shape: each in-flight request holds its whole file,
 so four concurrent 100 MB requests is roughly 400 MB resident.
 
