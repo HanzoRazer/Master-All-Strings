@@ -130,7 +130,13 @@ def deserialize_delivery(text: str | bytes | dict[str, Any]) -> LessonDeliveryEn
     if isinstance(text, dict):
         return delivery_from_mapping(text)
     if isinstance(text, bytes):
-        text = text.decode("utf-8")
+        try:
+            text = text.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            # Bytes that are not UTF-8 are a malformed delivery, the same kind
+            # of failure as malformed JSON -- not an internal defect, and not
+            # something a caller further out should have to recognise.
+            raise EducationContractError(f"malformed UTF-8: {exc.reason}") from exc
     try:
         loaded = json.loads(text)
     except json.JSONDecodeError as exc:

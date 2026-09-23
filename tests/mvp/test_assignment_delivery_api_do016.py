@@ -11,8 +11,10 @@ as a bad digest, and a sender that retried has to be able to tell them apart.
 from __future__ import annotations
 
 import json
+import threading
 import urllib.error
 import urllib.request
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -189,6 +191,103 @@ def test_one_lesson_reaches_two_students_unchanged(
     _, second = server("GET", f"{LESSON_DELIVERY_API_PREFIX}/delivery-002")
     assert first["assignment"] == second["assignment"]
     assert first["recipient_ref"] != second["recipient_ref"]
+
+
+def test_two_simultaneous_deliveries_of_one_id_produce_one_winner(
+    tmp_path: Path, assignment: LessonAssignmentV1
+) -> None:
+    """The race the threading server makes real.
+
+    ``contains()`` then ``put()`` is two operations, and this server handles
+    requests on threads: both requests could pass the check before either
+    wrote, both be told 201, and one lesson silently replace the other. The
+    two payloads carry *different* assignments under one delivery_id so that
+    an overwrite is visible rather than merely possible.
+    """
+
+    (tmp_path / "index.html").write_text("<html></html>", encoding="utf-8")
+    httpd, _thread, url = serve_mvp_directory(
+        tmp_path, open_browser=False, lesson_delivery_api=LocalLessonDeliveryApi()
+    )
+    base = url.rsplit("/", 1)[0]
+    other = deserialize_lesson_assignment((EXAMPLES / "local_midi_loop.json").read_text("utf-8"))
+    payloads = {
+        "first": payload_for(assignment, "delivery-001"),
+        "second": payload_for(other, "delivery-001", recipient_ref="student-dee"),
+    }
+
+    start = threading.Barrier(len(payloads))
+    results: dict[str, tuple[int, dict[str, Any]]] = {}
+
+    def post(name: str) -> None:
+        body = json.dumps(payloads[name]).encode()
+        request = urllib.request.Request(
+            base + LESSON_DELIVERY_API_PREFIX,
+            data=body,
+            method="POST",
+            headers={"content-type": "application/json"},
+        )
+        start.wait(timeout=10)
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                results[name] = (response.status, json.loads(response.read() or b"{}"))
+        except urllib.error.HTTPError as exc:
+            results[name] = (exc.code, json.loads(exc.read() or b"{}"))
+
+    threads = [threading.Thread(target=post, args=(name,)) for name in payloads]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=30)
+
+    try:
+        statuses = Counter(status for status, _ in results.values())
+        assert statuses == Counter({201: 1, 409: 1}), results
+
+        winner = next(name for name, (status, _) in results.items() if status == 201)
+        request = urllib.request.Request(
+            base + f"{LESSON_DELIVERY_API_PREFIX}/delivery-001", method="GET"
+        )
+        with urllib.request.urlopen(request, timeout=10) as response:
+            stored = json.loads(response.read())
+        assert stored == payloads[winner]
+
+        request = urllib.request.Request(base + LESSON_DELIVERY_API_PREFIX, method="GET")
+        with urllib.request.urlopen(request, timeout=10) as response:
+            listed = json.loads(response.read())
+        assert listed["count"] == 1
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_an_unexpected_defect_is_a_500_and_says_nothing_else(
+    tmp_path: Path, assignment: LessonAssignmentV1
+) -> None:
+    # A defect in this application is not a malformed request. Answering 400
+    # would send a caller looking for a mistake in a correct payload, and the
+    # exception's text is not written for whoever is on the other end.
+    class BrokenService:
+        def receive(self, envelope: object) -> object:
+            raise RuntimeError("a database socket in a parallel universe")
+
+        def get(self, delivery_id: str) -> object:
+            raise RuntimeError("secret internal detail")
+
+        def list(self, *, recipient_ref: str | None = None) -> object:
+            raise RuntimeError("secret internal detail")
+
+    api = LocalLessonDeliveryApi(service=BrokenService())  # type: ignore[arg-type]
+    for method, path, payload in (
+        ("POST", LESSON_DELIVERY_API_PREFIX, payload_for(assignment)),
+        ("GET", LESSON_DELIVERY_API_PREFIX, {}),
+        ("GET", f"{LESSON_DELIVERY_API_PREFIX}/delivery-001", {}),
+    ):
+        status, body = api.handle_http(method, path, payload)
+        assert status == 500
+        assert body == {"error": "internal server error"}
+        assert "parallel universe" not in json.dumps(body)
+        assert "secret internal detail" not in json.dumps(body)
 
 
 def test_the_server_still_serves_its_own_pages(server: Any) -> None:

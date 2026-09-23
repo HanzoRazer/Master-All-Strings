@@ -15,6 +15,7 @@ Status codes carry the distinction the service draws:
     400  malformed, or digests that do not recompute
     409  a delivery identity already used
     404  no such delivery
+    500  a defect in this application, reported without detail
 """
 
 from __future__ import annotations
@@ -34,6 +35,7 @@ from master_all_strings.education.assignment_delivery_service import (
     LessonDeliveryService,
 )
 from master_all_strings.education.errors import EducationContractError
+from master_all_strings.lesson.errors import LessonAssignmentError
 
 __all__ = [
     "LESSON_DELIVERY_API_PREFIX",
@@ -106,8 +108,13 @@ class LocalLessonDeliveryApi:
             return 409, {"error": str(exc)}
         except LessonDeliveryNotFoundError as exc:
             return 404, {"error": str(exc)}
-        except EducationContractError as exc:
+        except (EducationContractError, LessonAssignmentError) as exc:
+            # A caller's payload was wrong, and saying how is useful to them.
             return 400, {"error": str(exc)}
-        except Exception as exc:  # pragma: no cover - defensive, lesson errors included
-            return 400, {"error": str(exc)}
+        except Exception:
+            # Ours, not theirs. Reporting it as 400 would send a caller looking
+            # for a mistake in a correct request; the detail stays out of the
+            # body, because an unexpected exception's text is not written for
+            # whoever is on the other end of a socket.
+            return 500, {"error": "internal server error"}
         return 404, {"error": f"unsupported lesson delivery request: {method} {path}"}

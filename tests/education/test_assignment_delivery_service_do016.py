@@ -178,3 +178,51 @@ def test_the_repository_is_replaceable(assignment: LessonAssignmentV1) -> None:
     assert store.get("delivery-001") is not None
     assert store.list()[0].delivery_id == "delivery-001"
     assert store.list(recipient_ref="nobody") == ()
+
+
+def test_the_store_claims_an_identity_in_one_step(
+    assignment: LessonAssignmentV1, other_assignment: LessonAssignmentV1
+) -> None:
+    # Uniqueness is decided where the write happens. Two callers cannot both
+    # be told they stored a delivery, and the first one stays.
+    store = InMemoryLessonDeliveryRepository()
+    assert store.put_if_absent(delivery(assignment)) is True
+    assert store.put_if_absent(delivery(other_assignment)) is False
+    assert store.get("delivery-001").assignment == assignment
+
+
+def test_the_repository_offers_no_unconditional_write() -> None:
+    # A caller that could write unconditionally could also lose a race it did
+    # not know it was in.
+    assert not hasattr(InMemoryLessonDeliveryRepository(), "put")
+
+
+def test_concurrent_receives_of_one_id_produce_one_delivery(
+    assignment: LessonAssignmentV1, other_assignment: LessonAssignmentV1
+) -> None:
+    import threading
+
+    service = LessonDeliveryService()
+    envelopes = [delivery(assignment), delivery(other_assignment)]
+    start = threading.Barrier(len(envelopes))
+    outcomes: list[str] = []
+    lock = threading.Lock()
+
+    def receive(envelope: LessonDeliveryEnvelopeV1) -> None:
+        start.wait(timeout=10)
+        try:
+            service.receive(envelope)
+            with lock:
+                outcomes.append("received")
+        except DuplicateDeliveryError:
+            with lock:
+                outcomes.append("duplicate")
+
+    threads = [threading.Thread(target=receive, args=(item,)) for item in envelopes]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=30)
+
+    assert sorted(outcomes) == ["duplicate", "received"]
+    assert len(service.list()) == 1

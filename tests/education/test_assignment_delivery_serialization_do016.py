@@ -139,6 +139,20 @@ def test_a_malformed_assignment_is_refused_by_the_lesson_package(
         deserialize_delivery(data)
 
 
+def test_bytes_that_are_not_utf8_are_refused_as_a_delivery(
+    envelope: LessonDeliveryEnvelopeV1,
+) -> None:
+    # Named where the decoding happens, not caught by something further out:
+    # invalid bytes are a malformed delivery, the same family of failure as
+    # malformed JSON, and a caller should be told so rather than meeting a
+    # UnicodeDecodeError from inside the boundary.
+    text = serialize_delivery(envelope).encode("utf-8")
+    with pytest.raises(EducationContractError, match="malformed UTF-8"):
+        deserialize_delivery(b"\xff\xfe" + text)
+    with pytest.raises(EducationContractError, match="malformed UTF-8"):
+        deserialize_delivery("teacher-Ángela".encode("latin-1"))
+
+
 def test_malformed_json_is_refused(envelope: LessonDeliveryEnvelopeV1) -> None:
     with pytest.raises(EducationContractError, match="malformed JSON"):
         deserialize_delivery("{not json")

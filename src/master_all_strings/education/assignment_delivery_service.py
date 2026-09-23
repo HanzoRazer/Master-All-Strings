@@ -54,18 +54,24 @@ class LessonDeliveryService:
     def receive(self, envelope: LessonDeliveryEnvelopeV1) -> LessonDeliveryEnvelopeV1:
         """Check the delivery, then store it.
 
-        Both checks happen before anything is written, so a refused delivery
+        Integrity is checked before anything is written, so a refused delivery
         leaves the inbox exactly as it was. A half-received delivery would be
         worse than a rejected one: the student would have a lesson nobody
         could vouch for.
+
+        Uniqueness is *not* checked here. Asking the store whether an identity
+        exists and then writing would leave a gap between the two, and the
+        local server is threaded: two requests carrying one delivery_id could
+        both pass and both be told 201, with one lesson quietly overwriting the
+        other. The store claims the identity and stores in one step, and this
+        method reports what it decided.
         """
 
         validate_delivery_integrity(envelope)
-        if self.repository.contains(envelope.delivery_id):
+        if not self.repository.put_if_absent(envelope):
             raise DuplicateDeliveryError(
                 f"delivery_id {envelope.delivery_id!r} has already been received"
             )
-        self.repository.put(envelope)
         return envelope
 
     def get(self, delivery_id: str) -> LessonDeliveryEnvelopeV1:

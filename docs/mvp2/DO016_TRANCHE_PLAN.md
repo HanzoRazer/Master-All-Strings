@@ -103,17 +103,17 @@ independent integrity facts rather than one blurred one.
 
 | Gate | Result |
 | --- | --- |
-| DO-016 suites (6 files) | 91 passed |
+| DO-016 suites (6 files) | 96 passed |
 | `tests/education` + `tests/lesson` | 512 passed, 2 skipped |
-| Full pytest | 3162 passed, 3 skipped, 2 failed |
-| Coverage | 95.64% (floor 95%) |
+| Full pytest | 3178 passed, 3 skipped, 2 failed |
+| Coverage | 95.65% (floor 95%) |
 | Node (`web/mvp1`) | 505 passed, 0 failed |
 | Ruff / strict mypy | PASS |
 | Guided-session fixtures `--check` | OK |
 | In-flight register | OK |
 | DO-015 certification verifier | OK (9 of 9) |
 | DO-015 evidence generator `--check` | OK |
-| DO-015 publication verifier | **2 problems — see below** |
+| DO-015 publication verifier | OK (8 of 8), successor mode |
 
 The two pytest failures are the documented Windows-only pair, unchanged by this
 tranche and green on Linux CI.
@@ -124,39 +124,39 @@ recipient filter, overwriting duplicates, storing before checking, listing
 whole lessons, a conflict reported as a bad request — are each caught by at
 least one test.
 
-### The predecessor gate does not pass, and why
+### The predecessor gate, resolved
 
-`scripts/verify_do015_publication.py` reports two problems from this branch.
-Neither is a DO-015 product change, and the tranche stopped rather than
-touching the frozen verifier.
+It did not pass when this tranche was first pushed. The publication verifier
+failed on two counts — DO-016's two authorized file modifications read as a
+changed product surface, and Stage 10's branch point cannot be re-derived from
+a later branch — and both were defects in the verifier's applicability to
+successor branches rather than evidence about DO-015.
 
-**1. The protected surface is "changed".** Measured from the certified product
-to this branch, the protected paths contain twelve entries: ten *added* by
-DO-016, and two *modified* —
+They were fixed outside this tranche, in PR #44 and its follow-up #45, and this
+branch merged the result. The verifier now runs in successor mode here and
+reports OK: the certified product is still an ancestor, and the certification
+and publication artifacts are still the bytes that were published.
 
-```text
-M src/master_all_strings/education/__init__.py     new exports
-M src/master_all_strings/mvp/local_server.py       the delivery dispatch seam
-```
+### Uniqueness is decided where the write happens
 
-Both modifications are named as authorized surfaces by the DO-016 order. No
-file belonging to the DO-015 guided-practice product is touched, and no
-certified behaviour changes: the DO-015 certification verifier and its evidence
-generator both still pass on this branch.
+Review found a race the threading local server makes real: `contains()` then
+`put()` is two operations, so two requests carrying one `delivery_id` could
+both pass the check and both be told they succeeded, with one lesson silently
+replacing the other.
 
-The verifier cannot express this. Its rule is "nothing under `src/`,
-`web/mvp1/`, `resources/` or `governance/` differs since `3fcf618`", which was
-exactly right for Stage 10, whose claim was zero product change — and which
-every later tranche that adds a line of product code must fail.
+The repository now offers `put_if_absent()` and no unconditional write at all,
+so the check and the insert are one step under its own lock, and a durable
+implementation inherits the obligation rather than re-deriving it. Two
+regression tests drive it — one through the service, one through two
+simultaneous POSTs against the real server carrying *different* lessons under
+one identity — and both fail if check and write are pulled apart.
 
-**2. `stage10_base_sha` is not the branch point.** The verifier compares the
-recorded Stage 10 base against `git merge-base HEAD origin/main`. From the
-Stage 10 branch that was the right question. From this branch it computes
-DO-016's base (`280982c`) and compares it to Stage 10's (`fd2c490`), which will
-never match again. The field is a historical fact that cannot be re-derived
-from a later branch, and the verifier should note that rather than fail.
+### Two smaller corrections from the same review
 
-Both are defects in the publication verifier's applicability to later branches,
-not evidence about DO-015. Repairing them means editing frozen publication
-tooling, which needs an owner ruling; this tranche records the finding and
-changes nothing.
+Bytes that are not UTF-8 are named where the decoding happens, as a malformed
+delivery in the same family as malformed JSON, rather than reaching a caller as
+a `UnicodeDecodeError` from inside the boundary.
+
+An unexpected exception is a `500` carrying no detail, not a `400`. A defect in
+this application is not a malformed request, and answering `400` would send a
+caller looking for a mistake in a correct payload.
