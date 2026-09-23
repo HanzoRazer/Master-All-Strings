@@ -101,4 +101,62 @@ independent integrity facts rather than one blurred one.
 
 ## Verification
 
-Filled in as the tranche proceeds.
+| Gate | Result |
+| --- | --- |
+| DO-016 suites (6 files) | 91 passed |
+| `tests/education` + `tests/lesson` | 512 passed, 2 skipped |
+| Full pytest | 3162 passed, 3 skipped, 2 failed |
+| Coverage | 95.64% (floor 95%) |
+| Node (`web/mvp1`) | 505 passed, 0 failed |
+| Ruff / strict mypy | PASS |
+| Guided-session fixtures `--check` | OK |
+| In-flight register | OK |
+| DO-015 certification verifier | OK (9 of 9) |
+| DO-015 evidence generator `--check` | OK |
+| DO-015 publication verifier | **2 problems — see below** |
+
+The two pytest failures are the documented Windows-only pair, unchanged by this
+tranche and green on Linux CI.
+
+Fifteen mutations, each breaking one delivery rule — unchecked digests, accepted
+unknown fields, an unpinned schema, an insertion-ordered inbox, an ignored
+recipient filter, overwriting duplicates, storing before checking, listing
+whole lessons, a conflict reported as a bad request — are each caught by at
+least one test.
+
+### The predecessor gate does not pass, and why
+
+`scripts/verify_do015_publication.py` reports two problems from this branch.
+Neither is a DO-015 product change, and the tranche stopped rather than
+touching the frozen verifier.
+
+**1. The protected surface is "changed".** Measured from the certified product
+to this branch, the protected paths contain twelve entries: ten *added* by
+DO-016, and two *modified* —
+
+```text
+M src/master_all_strings/education/__init__.py     new exports
+M src/master_all_strings/mvp/local_server.py       the delivery dispatch seam
+```
+
+Both modifications are named as authorized surfaces by the DO-016 order. No
+file belonging to the DO-015 guided-practice product is touched, and no
+certified behaviour changes: the DO-015 certification verifier and its evidence
+generator both still pass on this branch.
+
+The verifier cannot express this. Its rule is "nothing under `src/`,
+`web/mvp1/`, `resources/` or `governance/` differs since `3fcf618`", which was
+exactly right for Stage 10, whose claim was zero product change — and which
+every later tranche that adds a line of product code must fail.
+
+**2. `stage10_base_sha` is not the branch point.** The verifier compares the
+recorded Stage 10 base against `git merge-base HEAD origin/main`. From the
+Stage 10 branch that was the right question. From this branch it computes
+DO-016's base (`280982c`) and compares it to Stage 10's (`fd2c490`), which will
+never match again. The field is a historical fact that cannot be re-derived
+from a later branch, and the verifier should note that rather than fail.
+
+Both are defects in the publication verifier's applicability to later branches,
+not evidence about DO-015. Repairing them means editing frozen publication
+tooling, which needs an owner ruling; this tranche records the finding and
+changes nothing.
