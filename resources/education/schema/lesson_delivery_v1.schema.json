@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/education/lesson-delivery-v1.schema.json",
+  "title": "LessonDeliveryEnvelopeV1",
+  "description": "Addresses one LessonAssignmentV1 to one recipient and pins both of its digests. Addressing lives here, outside the assignment, so the same lesson can be delivered to many recipients without the artifact changing. References the frozen lesson assignment schema rather than restating it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "delivery_id",
+    "sender_ref",
+    "recipient_ref",
+    "classroom_ref",
+    "assignment_artifact_digest",
+    "assignment_behavior_digest",
+    "assignment"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "master_all_strings.lesson_delivery",
+      "description": "Versions independently of the lesson it carries."
+    },
+    "schema_version": { "const": "1.0.0" },
+    "delivery_id": {
+      "$ref": "#/$defs/opaqueRef",
+      "description": "Caller supplied. The service mints no identities."
+    },
+    "sender_ref": {
+      "$ref": "#/$defs/opaqueRef",
+      "description": "Opaque. Implies no account, identity or authorization."
+    },
+    "recipient_ref": {
+      "$ref": "#/$defs/opaqueRef",
+      "description": "Opaque. Filtering an inbox by it is selection, not authentication."
+    },
+    "classroom_ref": {
+      "anyOf": [{ "$ref": "#/$defs/opaqueRef" }, { "type": "null" }],
+      "description": "Present always, null when unset, so the shape never varies."
+    },
+    "assignment_artifact_digest": {
+      "$ref": "#/$defs/digest",
+      "description": "Did the exact serialized assignment change?"
+    },
+    "assignment_behavior_digest": {
+      "$ref": "#/$defs/digest",
+      "description": "Did the musical or instructional behaviour change? Routing edits move the artifact digest and leave this one alone."
+    },
+    "assignment": {
+      "$ref": "https://master-all-strings.dev/schema/lesson/lesson-assignment-v1.schema.json",
+      "description": "The unmodified LessonAssignmentV1, embedded structurally -- not as an encoded string."
+    }
+  },
+  "$defs": {
+    "opaqueRef": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(.*\\S)?$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}
