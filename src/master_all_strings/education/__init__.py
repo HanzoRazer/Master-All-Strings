@@ -14,9 +14,18 @@ from master_all_strings.education.assignment_delivery import (
     LessonDeliverySummaryV1,
     validate_delivery_integrity,
 )
+from master_all_strings.education.assignment_delivery_repository import (
+    InMemoryLessonDeliveryRepository,
+    LessonDeliveryRepository,
+)
 from master_all_strings.education.assignment_delivery_serialization import (
     deserialize_delivery,
     serialize_delivery,
+)
+from master_all_strings.education.assignment_delivery_service import (
+    DuplicateDeliveryError,
+    LessonDeliveryNotFoundError,
+    LessonDeliveryService,
 )
 from master_all_strings.education.contracts import (
     PracticeAttemptSummaryV1,
@@ -83,7 +92,12 @@ __all__ = [
     "MESSAGE_CATALOG_V1",
     "SESSION_POLICY_VERSION",
     "SESSION_SCHEMA_VERSION",
+    "DuplicateDeliveryError",
     "EducationContractError",
+    "InMemoryLessonDeliveryRepository",
+    "LessonDeliveryNotFoundError",
+    "LessonDeliveryRepository",
+    "LessonDeliveryService",
     "LessonDeliveryEnvelopeV1",
     "LessonDeliverySummaryV1",
     "GuidedPracticeActionDisposition",

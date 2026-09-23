@@ -1,0 +1,102 @@
+{
+  "schema_id": "master_all_strings.lesson_delivery",
+  "schema_version": "1.0.0",
+  "delivery_id": "delivery-003",
+  "sender_ref": "teacher-ana",
+  "recipient_ref": "student-eli",
+  "classroom_ref": "class-7b",
+  "assignment_artifact_digest": "sha256:a8df1de4fdee32f47728735722b0a48fb86a531556396e6e5ac0f7a6ae8da443",
+  "assignment_behavior_digest": "sha256:d8956ddf74dc4873bc2376e3cf0d98d5bf952aa809ac298094dc797c893a1ada",
+  "assignment": {
+    "schema_id": "master_all_strings.lesson_assignment",
+    "schema_version": "1.0.0",
+    "identity": {
+      "assignment_id": "teacher_smith_student_42_2026_08_10",
+      "content_id": "blues_turnaround_01",
+      "title": "Blues Turnaround",
+      "description": null
+    },
+    "musical_content": {
+      "format": "canonical_events",
+      "ticks_per_quarter": 480,
+      "events": [
+        {
+          "event_id": "ev-1",
+          "midi_note": 64,
+          "start_tick": 0,
+          "duration_ticks": 480,
+          "velocity": 80,
+          "cents_offset": 0.0,
+          "voice_id": null
+        },
+        {
+          "event_id": "ev-2",
+          "midi_note": 67,
+          "start_tick": 480,
+          "duration_ticks": 480,
+          "velocity": 80,
+          "cents_offset": 0.0,
+          "voice_id": null
+        },
+        {
+          "event_id": "ev-3",
+          "midi_note": 69,
+          "start_tick": 960,
+          "duration_ticks": 480,
+          "velocity": 80,
+          "cents_offset": 0.0,
+          "voice_id": null
+        }
+      ],
+      "tempo_changes": [
+        {
+          "tick": 0,
+          "tempo_bpm": 100.0
+        }
+      ],
+      "meter_changes": [
+        {
+          "tick": 0,
+          "numerator": 4,
+          "denominator": 4
+        }
+      ]
+    },
+    "playback": {
+      "tempo_override": null,
+      "start_tick": 0,
+      "end_tick": 1920,
+      "loop_enabled": true,
+      "count_in_bars": 1
+    },
+    "spatial_guidance": {
+      "instrument_profile_id": "guitar-standard-6",
+      "fingering_policy_id": "enumeration_v1",
+      "preferred_fret_min": null,
+      "preferred_fret_max": null,
+      "open_string_preference": "allow"
+    },
+    "teacher_overrides": [],
+    "instruction": {
+      "objective": null,
+      "repetitions": null,
+      "difficulty": null,
+      "curriculum_ref": null,
+      "teacher_note": null
+    },
+    "assessment": {
+      "enabled": false,
+      "mode": "disabled",
+      "note_accuracy_required": null,
+      "timing_tolerance_ms": null,
+      "required_successful_repetitions": null
+    },
+    "provenance": {
+      "created_by": "midi_importer",
+      "created_at_utc": "2026-08-10T12:00:00Z",
+      "source_type": "midi_import",
+      "source_name": "exercise.mid"
+    },
+    "routing": null
+  }
+}
