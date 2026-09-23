@@ -115,10 +115,11 @@ expensive failure this file exists to prevent.
 
 ## Branches on `origin` that are not in flight
 
-Sixteen merged branches were deleted on 2026-09-22 (PRs #10, #17, #19, #21,
-#22, #24, #29, #31, #32, #33, #34, #35, #36, #37, #38, #39, and the two DO-015
-Stage 10 branches). What is left survives for a reason, and none of it is work
-in progress. `git branch -r --no-merged origin/main` still shows some of them,
+Nineteen branches were deleted on 2026-09-22: sixteen whose pull requests had
+merged (PRs #10, #17, #19, #21, #22, #24, #29, #31, #32, #33, #34, #35, #36,
+#37, #38, #39, and the two DO-015 Stage 10 branches), and three label branches
+whose tips were already in `main`. What is left survives for a reason, and none
+of it is work in progress. `git branch -r --no-merged origin/main` still shows some of them,
 which is what makes them look live.
 
 | Branch | Last commit | Why it is still there |
@@ -127,13 +128,16 @@ which is what makes them look live.
 | `agent/curriculum-smart-notation-roadmap` | 2026-07-22 | No PR; never proposed. Its tip is not in `main`. |
 | `recovery/mvp1-squash-merge` | 2026-08-16 | Recovery branch from the MVP 1 squash merge; no PR. Its tip is not in `main`. |
 | `release/mvp-1` | 2026-08-17 | The MVP 1 release branch (PR #18). Kept deliberately. Note it is `042b5d5`, not the `mvp-1` tag's `ac38819`. |
-| `evidence/do-008-frozen` | 2026-08-11 | A label on a frozen evidence commit; no PR. Its tip is in `main`, so the branch costs nothing and names something. |
-| `evidence/do-009-local-snapshot` | 2026-08-12 | As above. |
-| `feat/do-010-mvp-completion` | 2026-08-16 | Tip is in `main`; no PR ever opened. Deletable whenever the owner wants the label gone. |
 
-The last four hold nothing that is not already in `main`: deleting them loses a
-name, not a commit. The first three would lose commits that exist nowhere else,
-so they stay until an owner says otherwise.
+`release/mvp-1` holds nothing that is not already in `main` and is kept on
+purpose. The three above it would lose commits that exist nowhere else, so they
+stay until an owner says otherwise.
+
+The deleted label branches -- `evidence/do-008-frozen`,
+`evidence/do-009-local-snapshot` and `feat/do-010-mvp-completion` -- pointed at
+commits that are still in `main`. Deleting them lost a name, not a commit:
+`f901821`, `92f0f80` and `ba9f8e9` are reachable from `main` as they always
+were.
 
 ### Before deleting a merged branch
 
