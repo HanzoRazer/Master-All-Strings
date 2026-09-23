@@ -116,30 +116,76 @@ export function buildBenchmarkProjection({ eventCount }) {
   };
 }
 
-/** A TAB/notation projection payload. */
-export function buildBenchmarkScorePayload({ eventCount }) {
+/**
+ * A TAB projection payload, shaped like the checked-in ones.
+ *
+ * The shapes differ between the two score views -- TAB is a flat event list,
+ * notation is measures holding events -- so they are built separately from one
+ * workload rather than one payload bent to fit both.
+ */
+export function buildBenchmarkTabPayload({ eventCount }) {
   const workload = buildBenchmarkWorkload(eventCount);
   return {
     schema_version: "1.0.0",
-    revision_id: "bench-revision",
-    ticks_per_quarter: 480,
+    canonical_revision_id: "bench-revision",
+    instrument_profile_id: "bench-instrument",
     events: workload.events.map((event, index) => ({
+      schema_version: "1.0.0",
       canonical_event_id: event.canonical_event_id,
-      tick: index * 480,
+      start_tick: index * 480,
       duration_ticks: 480,
-      string_id: `bench-string-${event.string_index}`,
-      display_order: event.string_index,
-      fret: event.fret,
       midi_note: event.midi_note,
       status: "playable",
-      measure_index: Math.floor(index / 4),
+      string_id: `bench-string-${event.string_index}`,
+      fret: event.fret,
+      cents_offset: 0.0,
     })),
-    measures: Array.from({ length: Math.ceil(eventCount / 4) || 1 }, (_, index) => ({
-      measure_index: index,
-      start_tick: index * 4 * 480,
-      beats: 4,
-      beat_type: 4,
-    })),
+    unsupported_features: [],
+  };
+}
+
+const PITCH_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+function displayPitch(midiNote) {
+  const name = PITCH_NAMES[midiNote % 12];
+  const octave = Math.floor(midiNote / 12) - 1;
+  return `${name}${octave}`;
+}
+
+/** A notation projection payload: four events per measure, like the real ones. */
+export function buildBenchmarkNotationPayload({ eventCount }) {
+  const workload = buildBenchmarkWorkload(eventCount);
+  const perMeasure = 4;
+  const measures = [];
+  for (let index = 0; index < workload.events.length; index += perMeasure) {
+    const slice = workload.events.slice(index, index + perMeasure);
+    const measureIndex = measures.length;
+    measures.push({
+      schema_version: "1.0.0",
+      measure_index: measureIndex,
+      start_tick: measureIndex * 1920,
+      end_tick: (measureIndex + 1) * 1920,
+      meter: { schema_version: "1.0.0", tick: measureIndex * 1920, numerator: 4, denominator: 4 },
+      events: slice.map((event, offset) => ({
+        schema_version: "1.0.0",
+        event_kind: "note",
+        start_tick: measureIndex * 1920 + offset * 480,
+        duration_ticks: 480,
+        canonical_event_id: event.canonical_event_id,
+        midi_note: event.midi_note,
+        display_pitch: displayPitch(event.midi_note),
+        display_duration: "quarter",
+        derivation: null,
+      })),
+    });
+  }
+  return {
+    schema_version: "1.0.0",
+    canonical_revision_id: "bench-revision",
+    ticks_per_quarter: 480,
+    display_policy: { schema_version: "1.0.0" },
+    measures,
+    unsupported_features: [],
   };
 }
 
