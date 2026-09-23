@@ -7,6 +7,26 @@ Educational next action.
 
 from __future__ import annotations
 
+from master_all_strings.education.assignment_delivery import (
+    LESSON_DELIVERY_SCHEMA_ID,
+    LESSON_DELIVERY_SCHEMA_VERSION,
+    LessonDeliveryEnvelopeV1,
+    LessonDeliverySummaryV1,
+    validate_delivery_integrity,
+)
+from master_all_strings.education.assignment_delivery_repository import (
+    InMemoryLessonDeliveryRepository,
+    LessonDeliveryRepository,
+)
+from master_all_strings.education.assignment_delivery_serialization import (
+    deserialize_delivery,
+    serialize_delivery,
+)
+from master_all_strings.education.assignment_delivery_service import (
+    DuplicateDeliveryError,
+    LessonDeliveryNotFoundError,
+    LessonDeliveryService,
+)
 from master_all_strings.education.contracts import (
     PracticeAttemptSummaryV1,
     PracticeEvaluationPolicyV1,
@@ -66,11 +86,20 @@ from master_all_strings.education.session_history import PracticeSessionHistory
 
 __all__ = [
     "GUIDANCE_POLICY_VERSION",
+    "LESSON_DELIVERY_SCHEMA_ID",
+    "LESSON_DELIVERY_SCHEMA_VERSION",
     "GUIDANCE_SCHEMA_VERSION",
     "MESSAGE_CATALOG_V1",
     "SESSION_POLICY_VERSION",
     "SESSION_SCHEMA_VERSION",
+    "DuplicateDeliveryError",
     "EducationContractError",
+    "InMemoryLessonDeliveryRepository",
+    "LessonDeliveryNotFoundError",
+    "LessonDeliveryRepository",
+    "LessonDeliveryService",
+    "LessonDeliveryEnvelopeV1",
+    "LessonDeliverySummaryV1",
     "GuidedPracticeActionDisposition",
     "GuidedPracticeActionV1",
     "GuidedPracticeAttemptV1",
@@ -109,4 +138,7 @@ __all__ = [
     "sort_guidance_items",
     "to_dict",
     "transition_session",
+    "deserialize_delivery",
+    "serialize_delivery",
+    "validate_delivery_integrity",
 ]
