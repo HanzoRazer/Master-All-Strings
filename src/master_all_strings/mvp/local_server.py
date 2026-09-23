@@ -16,6 +16,7 @@ from urllib.parse import unquote, urlparse
 from master_all_strings.media.catalog import default_media_root
 from master_all_strings.media.presentation import lesson_media_payload
 from master_all_strings.media.resolver import MediaResolver
+from master_all_strings.mvp.lesson_delivery_api import LocalLessonDeliveryApi
 
 __all__ = ["find_available_local_port", "serve_mvp_directory"]
 
@@ -30,6 +31,7 @@ class _QuietHandler(SimpleHTTPRequestHandler):
     performance_api: Any = None
     education_api: Any = None
     guided_session_api: Any = None
+    lesson_delivery_api: Any = None
     media_root: Path | None = None
 
     def log_message(self, format: str, *args: object) -> None:  # noqa: A003
@@ -40,6 +42,9 @@ class _QuietHandler(SimpleHTTPRequestHandler):
         path = unquote(parsed.path)
         if path.startswith("/api/education/guided-sessions"):
             self._guided_session_http("GET", path, {})
+            return
+        if path.startswith("/api/education/lesson-deliveries"):
+            self._lesson_delivery_http("GET", parsed.geturl(), {})
             return
         if path.startswith("/api/v1/lessons/") and path.endswith("/media"):
             lesson_key = path[len("/api/v1/lessons/") : -len("/media")].strip("/")
@@ -113,6 +118,12 @@ class _QuietHandler(SimpleHTTPRequestHandler):
                 return
             self._guided_session_http("POST", path, payload)
             return
+        if path.startswith("/api/education/lesson-deliveries"):
+            payload_or_error = self._json_body()
+            if payload_or_error is None:
+                return
+            self._lesson_delivery_http("POST", parsed.geturl(), payload_or_error)
+            return
         api = None
         if path.startswith("/api/performance/") and self.performance_api is not None:
             api = self.performance_api
@@ -138,6 +149,36 @@ class _QuietHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
 
+    def _json_body(self) -> dict[str, Any] | None:
+        """Read a JSON object body, answering 400 itself when it is not one."""
+
+        try:
+            length = int(self.headers.get("content-length", "0"))
+            payload = json.loads(self.rfile.read(length) or b"{}")
+        except (ValueError, json.JSONDecodeError):
+            self._json_response(400, {"error": "malformed JSON"})
+            return None
+        if not isinstance(payload, dict):
+            self._json_response(400, {"error": "payload must be an object"})
+            return None
+        return payload
+
+    def _json_response(self, status: int, result: dict[str, Any]) -> None:
+        body = json.dumps(result).encode()
+        self.send_response(status)
+        self.send_header("content-type", "application/json")
+        self.send_header("content-length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _lesson_delivery_http(self, method: str, path: str, payload: dict[str, Any]) -> None:
+        api = self.lesson_delivery_api
+        if api is None:
+            self.send_error(404, "lesson delivery API is not enabled")
+            return
+        status, result = api.handle_http(method, path, payload)
+        self._json_response(status, result)
+
     def _guided_session_http(self, method: str, path: str, payload: dict[str, Any]) -> None:
         api = self.guided_session_api
         if api is None:
@@ -162,6 +203,7 @@ def serve_mvp_directory(
     performance_api: object | None = None,
     education_api: object | None = None,
     guided_session_api: object | None = None,
+    lesson_delivery_api: object | None = None,
     media_root: Path | None = None,
 ) -> tuple[ThreadingHTTPServer, threading.Thread, str]:
     """Serve ``directory`` on localhost. Returns server, thread, and URL."""
@@ -174,6 +216,7 @@ def serve_mvp_directory(
     Handler.performance_api = performance_api
     Handler.education_api = education_api
     Handler.guided_session_api = guided_session_api
+    Handler.lesson_delivery_api = lesson_delivery_api or LocalLessonDeliveryApi()
     Handler.media_root = media_root or default_media_root()
     handler = functools.partial(Handler, directory=str(directory))
     server = ThreadingHTTPServer((host, chosen), handler)
