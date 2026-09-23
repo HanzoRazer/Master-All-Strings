@@ -12,7 +12,7 @@ pull request merges the next branch clears it.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| DO-015 Stage 10 | cursor/do015-publication-closeout-cc03 | Claude | #41 | fd2c490 | green | 2026-09-22 |
+| Prune merged branches | chore/prune-merged-branches | Claude | #42 | 0efda5d | green | 2026-09-22 |
 
 An empty table means nothing is in flight.
 
@@ -113,20 +113,40 @@ If someone else's row already covers the surface you were about to change, say
 so and stop, per AGENTS.md. Two agents implementing the same order is the
 expensive failure this file exists to prevent.
 
-## Stale branches on `origin`
+## Branches on `origin` that are not in flight
 
-These are **not** in flight. They survive because their pull requests were
-squash-merged (the branch tip never became an ancestor of `main`) or because
-they never had one at all. `git branch -r --no-merged origin/main` lists all
-four, which makes them look live when they are not.
+Nineteen branches were deleted on 2026-09-22: sixteen whose pull requests had
+merged (PRs #10, #17, #19, #21, #22, #24, #29, #31, #32, #33, #34, #35, #36,
+#37, #38, #39, and the two DO-015 Stage 10 branches), and three label branches
+whose tips were already in `main`. What is left survives for a reason, and none
+of it is work in progress. `git branch -r --no-merged origin/main` still shows some of them,
+which is what makes them look live.
 
 | Branch | Last commit | Why it is still there |
 | --- | --- | --- |
-| `cursor/mvp1f-interactive-fretboard-90b8` | 2026-08-11 | PR #17 merged; branch left behind |
-| `recovery/mvp1-squash-merge` | 2026-08-16 | Recovery branch; no PR |
-| `cursor/mvp2b-teaching-timeline-90b8` | 2026-08-23 | PR #20 merged; branch left behind |
-| `agent/curriculum-smart-notation-roadmap` | 2026-07-22 | No PR; never proposed |
+| `cursor/mvp2b-teaching-timeline-90b8` | 2026-08-23 | **Do not delete.** PR #20 merged, but the branch carries two commits past the pull request's head -- 53 files, including `web/mvp1/renderer.js` and `teaching-timeline.js` -- which are not in `main` and not retained by `refs/pull/20/head`. Deleting it discards them. Whether they were superseded by #21 and #22 is an open question, not a settled one. |
+| `agent/curriculum-smart-notation-roadmap` | 2026-07-22 | No PR; never proposed. Its tip is not in `main`. |
+| `recovery/mvp1-squash-merge` | 2026-08-16 | Recovery branch from the MVP 1 squash merge; no PR. Its tip is not in `main`. |
+| `release/mvp-1` | 2026-08-17 | The MVP 1 release branch (PR #18). Kept deliberately. Note it is `042b5d5`, not the `mvp-1` tag's `ac38819`. |
 
-They can be deleted whenever the owner is content that nothing unmerged is on
-them. Until then this table is what stops the next agent reading them as work in
-progress.
+`release/mvp-1` holds nothing that is not already in `main` and is kept on
+purpose. The three above it would lose commits that exist nowhere else, so they
+stay until an owner says otherwise.
+
+The deleted label branches -- `evidence/do-008-frozen`,
+`evidence/do-009-local-snapshot` and `feat/do-010-mvp-completion` -- pointed at
+commits that are still in `main`. Deleting them lost a name, not a commit:
+`f901821`, `92f0f80` and `ba9f8e9` are reachable from `main` as they always
+were.
+
+### Before deleting a merged branch
+
+A merged pull request is not proof the branch is disposable. Check the tip:
+
+```bash
+git merge-base --is-ancestor <tip> origin/main   # in main: nothing to lose
+git ls-remote origin refs/pull/<n>/head          # squash-merged: GitHub keeps this
+```
+
+If the tip is neither an ancestor of `main` nor the pull request's retained
+head, the branch has commits that exist only there. Stop and read them.
