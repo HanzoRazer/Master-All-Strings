@@ -1,0 +1,1259 @@
+{
+  "schema_version": "1.0.0",
+  "order": "MAS-PERF-001",
+  "purpose": "measurement only; no runtime behaviour changed",
+  "environment": {
+    "os": "Windows",
+    "os_release": "10",
+    "architecture": "AMD64",
+    "processor": "Intel64 Family 6 Model 94 Stepping 3, GenuineIntel",
+    "python_version": "3.11.9",
+    "node_version": "v24.11.0",
+    "repository_sha": "d140a3cf5b64b082f6065eb3e2cc04408a7a529b",
+    "working_tree_clean": true,
+    "node_measurement_platform": "Windows",
+    "linux_node_measurement": "NOT_PRESENT"
+  },
+  "workloads": {
+    "100": "sha256:22e54945c87376dcca922839d46bfb69e6d63322519830736e3d4d03d51ce089",
+    "1000": "sha256:71969a79af80051547a9140e76036591af2c946990351c90e9faf2d7b8b3ebfb",
+    "10000": "sha256:fc2b9012e9f594f99f494ac9f6bcfc99f165e82e1a73dd1f012950a9e82102e7",
+    "workload_version": "1.0.0"
+  },
+  "measurements": {
+    "audio_scheduler": {
+      "benchmark": "audio_scheduler_tick",
+      "risk": "M1",
+      "tick_interval_ms": 25,
+      "measures": "pure JavaScript scan cost; no DOM, no audio context",
+      "scenarios": [
+        "start",
+        "middle",
+        "near_end",
+        "mostly_scheduled",
+        "after_seek"
+      ],
+      "measurements": {
+        "100": {
+          "start": {
+            "iterations": 50,
+            "median_ms": 0.01680000000000348,
+            "p95_ms": 0.0589999999999975,
+            "min_ms": 0.012199999999992883,
+            "max_ms": 1.1184000000000083,
+            "estimated_ms_per_second": 0.6720000000001392,
+            "plan_events": 100
+          },
+          "middle": {
+            "iterations": 50,
+            "median_ms": 0.017799999999994043,
+            "p95_ms": 0.047100000000000364,
+            "min_ms": 0.012000000000000455,
+            "max_ms": 1.9959999999999951,
+            "estimated_ms_per_second": 0.7119999999997617,
+            "plan_events": 100
+          },
+          "near_end": {
+            "iterations": 50,
+            "median_ms": 0.012100000000003774,
+            "p95_ms": 0.02760000000000673,
+            "min_ms": 0.0002999999999957481,
+            "max_ms": 0.077699999999993,
+            "estimated_ms_per_second": 0.484000000000151,
+            "plan_events": 100
+          },
+          "mostly_scheduled": {
+            "iterations": 50,
+            "median_ms": 0.014899999999997249,
+            "p95_ms": 0.03249999999999886,
+            "min_ms": 0.012299999999996203,
+            "max_ms": 0.09069999999999823,
+            "estimated_ms_per_second": 0.59599999999989,
+            "plan_events": 100
+          },
+          "after_seek": {
+            "iterations": 50,
+            "median_ms": 0.007099999999994111,
+            "p95_ms": 0.011899999999997135,
+            "min_ms": 0.006799999999998363,
+            "max_ms": 0.015600000000006276,
+            "estimated_ms_per_second": 0.28399999999976444,
+            "plan_events": 100
+          }
+        },
+        "1000": {
+          "start": {
+            "iterations": 50,
+            "median_ms": 0.07469999999999288,
+            "p95_ms": 0.1103999999999985,
+            "min_ms": 0.05139999999998679,
+            "max_ms": 0.6558999999999884,
+            "estimated_ms_per_second": 2.9879999999997153,
+            "plan_events": 1000
+          },
+          "middle": {
+            "iterations": 50,
+            "median_ms": 0.08480000000000132,
+            "p95_ms": 0.24869999999999948,
+            "min_ms": 0.06439999999999202,
+            "max_ms": 0.5267999999999944,
+            "estimated_ms_per_second": 3.3920000000000528,
+            "plan_events": 1000
+          },
+          "near_end": {
+            "iterations": 50,
+            "median_ms": 0.06289999999999907,
+            "p95_ms": 0.10269999999999868,
+            "min_ms": 0.050400000000010436,
+            "max_ms": 0.22650000000000148,
+            "estimated_ms_per_second": 2.5159999999999627,
+            "plan_events": 1000
+          },
+          "mostly_scheduled": {
+            "iterations": 50,
+            "median_ms": 0.06459999999999866,
+            "p95_ms": 0.07670000000000243,
+            "min_ms": 0.05010000000000048,
+            "max_ms": 0.07760000000000389,
+            "estimated_ms_per_second": 2.5839999999999463,
+            "plan_events": 1000
+          },
+          "after_seek": {
+            "iterations": 50,
+            "median_ms": 0.026900000000011914,
+            "p95_ms": 0.028600000000011505,
+            "min_ms": 0.026499999999998636,
+            "max_ms": 0.2775000000000034,
+            "estimated_ms_per_second": 1.0760000000004766,
+            "plan_events": 1000
+          }
+        },
+        "10000": {
+          "start": {
+            "iterations": 30,
+            "median_ms": 0.5726999999999975,
+            "p95_ms": 1.2701000000000136,
+            "min_ms": 0.41960000000000264,
+            "max_ms": 1.2988,
+            "estimated_ms_per_second": 22.9079999999999,
+            "plan_events": 10000
+          },
+          "middle": {
+            "iterations": 30,
+            "median_ms": 0.5412000000000035,
+            "p95_ms": 0.9268999999999892,
+            "min_ms": 0.4414999999999907,
+            "max_ms": 0.992699999999985,
+            "estimated_ms_per_second": 21.64800000000014,
+            "plan_events": 10000
+          },
+          "near_end": {
+            "iterations": 30,
+            "median_ms": 0.5686000000000035,
+            "p95_ms": 1.0190000000000055,
+            "min_ms": 0.47100000000000364,
+            "max_ms": 1.1371000000000038,
+            "estimated_ms_per_second": 22.744000000000142,
+            "plan_events": 10000
+          },
+          "mostly_scheduled": {
+            "iterations": 30,
+            "median_ms": 0.5623999999999967,
+            "p95_ms": 0.9331999999999994,
+            "min_ms": 0.4385999999999797,
+            "max_ms": 1.0756000000000085,
+            "estimated_ms_per_second": 22.495999999999867,
+            "plan_events": 10000
+          },
+          "after_seek": {
+            "iterations": 30,
+            "median_ms": 0.27029999999999177,
+            "p95_ms": 0.44299999999998363,
+            "min_ms": 0.26660000000001105,
+            "max_ms": 0.6859000000000037,
+            "estimated_ms_per_second": 10.81199999999967,
+            "plan_events": 10000
+          }
+        }
+      },
+      "status": "OK",
+      "elapsed_s": 0.3724254,
+      "quick": false
+    },
+    "fretboard_renderer": {
+      "benchmark": "fretboard_render_frame",
+      "risk": "M2, M3",
+      "measures": "JavaScript traversal and style-write counts against stub elements",
+      "does_not_measure": [
+        "style recalculation",
+        "layout",
+        "paint",
+        "compositing"
+      ],
+      "measurements": {
+        "100": {
+          "notes_rendered": 100,
+          "render_frame": {
+            "iterations": 60,
+            "median_ms": 0.02719999999999345,
+            "p95_ms": 0.041200000000003456,
+            "min_ms": 0.019500000000007844,
+            "max_ms": 0.09120000000000061,
+            "style_writes_per_frame": 103.01428571428572,
+            "class_toggles_total": 277
+          },
+          "active_event_ids": {
+            "iterations": 60,
+            "median_ms": 0.005699999999990268,
+            "p95_ms": 0.009600000000006048,
+            "min_ms": 0.00359999999999161,
+            "max_ms": 0.05190000000000339,
+            "style_writes": 0
+          },
+          "frame_plus_active": {
+            "iterations": 60,
+            "median_ms": 0.023099999999999454,
+            "p95_ms": 0.05339999999999634,
+            "min_ms": 0.020800000000008367,
+            "max_ms": 0.6578999999999979
+          }
+        },
+        "1000": {
+          "notes_rendered": 1000,
+          "render_frame": {
+            "iterations": 60,
+            "median_ms": 0.24840000000000373,
+            "p95_ms": 0.37469999999999004,
+            "min_ms": 0.1389999999999958,
+            "max_ms": 0.7378999999999962,
+            "style_writes_per_frame": 1004.6714285714286,
+            "class_toggles_total": 369
+          },
+          "active_event_ids": {
+            "iterations": 60,
+            "median_ms": 0.022599999999997067,
+            "p95_ms": 0.043199999999998795,
+            "min_ms": 0.015499999999988745,
+            "max_ms": 0.7717999999999989,
+            "style_writes": 0
+          },
+          "frame_plus_active": {
+            "iterations": 60,
+            "median_ms": 0.23329999999998563,
+            "p95_ms": 0.4519999999999982,
+            "min_ms": 0.126199999999983,
+            "max_ms": 0.6483000000000061
+          }
+        },
+        "10000": {
+          "notes_rendered": 10000,
+          "render_frame": {
+            "iterations": 30,
+            "median_ms": 5.525500000000022,
+            "p95_ms": 6.833300000000008,
+            "min_ms": 4.0593000000000075,
+            "max_ms": 17.469199999999944,
+            "style_writes_per_frame": 10006.05,
+            "class_toggles_total": 312
+          },
+          "active_event_ids": {
+            "iterations": 30,
+            "median_ms": 0.06060000000002219,
+            "p95_ms": 0.06869999999997844,
+            "min_ms": 0.059199999999975716,
+            "max_ms": 0.07630000000000337,
+            "style_writes": 0
+          },
+          "frame_plus_active": {
+            "iterations": 30,
+            "median_ms": 5.85590000000002,
+            "p95_ms": 7.207400000000007,
+            "min_ms": 4.360500000000002,
+            "max_ms": 8.370300000000043
+          }
+        }
+      },
+      "status": "OK",
+      "elapsed_s": 0.8716808,
+      "quick": false
+    },
+    "score_views": {
+      "benchmark": "score_views",
+      "risk": "M4, M5, M10",
+      "measures": [
+        "layout model, SVG tree and serialization cost",
+        "the per-element loop inside applyActiveEventIds",
+        "linear event lookup"
+      ],
+      "does_not_measure": [
+        "querySelectorAll over a real SVG tree",
+        "innerHTML parsing and DOM construction",
+        "layout and paint of a mounted score"
+      ],
+      "measurements": {
+        "100": {
+          "tab_active": {
+            "none": {
+              "iterations": 40,
+              "median_ms": 0.009699999999995157,
+              "p95_ms": 0.023099999999999454,
+              "min_ms": 0.008899999999997021,
+              "max_ms": 0.06110000000001037
+            },
+            "one": {
+              "iterations": 40,
+              "median_ms": 0.010300000000000864,
+              "p95_ms": 0.031999999999996476,
+              "min_ms": 0.009799999999998477,
+              "max_ms": 0.08789999999999054
+            },
+            "eight": {
+              "iterations": 40,
+              "median_ms": 0.010399999999989973,
+              "p95_ms": 0.07019999999999982,
+              "min_ms": 0.009699999999995157,
+              "max_ms": 0.8445999999999998
+            },
+            "shifted_by_one": {
+              "iterations": 40,
+              "median_ms": 0.014299999999991542,
+              "p95_ms": 0.029899999999997817,
+              "min_ms": 0.009999999999990905,
+              "max_ms": 0.13890000000000668
+            },
+            "elements_visited_per_call": 100,
+            "class_toggles_total": 20000
+          },
+          "notation_active": {
+            "none": {
+              "iterations": 40,
+              "median_ms": 0.010900000000006571,
+              "p95_ms": 0.03349999999998943,
+              "min_ms": 0.008399999999994634,
+              "max_ms": 0.07510000000000616
+            },
+            "one": {
+              "iterations": 40,
+              "median_ms": 0.009599999999991837,
+              "p95_ms": 0.013800000000003365,
+              "min_ms": 0.00929999999999609,
+              "max_ms": 0.04460000000000264
+            },
+            "eight": {
+              "iterations": 40,
+              "median_ms": 0.009000000000000341,
+              "p95_ms": 0.023400000000009413,
+              "min_ms": 0.008799999999993702,
+              "max_ms": 0.23279999999999745
+            },
+            "shifted_by_one": {
+              "iterations": 40,
+              "median_ms": 0.013700000000000045,
+              "p95_ms": 0.0257000000000005,
+              "min_ms": 0.00909999999998945,
+              "max_ms": 0.14929999999999666
+            },
+            "elements_visited_per_call": 100,
+            "class_toggles_total": 20000
+          },
+          "mount": {
+            "tab_layout_model": {
+              "iterations": 20,
+              "median_ms": 0.030599999999992633,
+              "p95_ms": 0.15179999999999438,
+              "min_ms": 0.02189999999998804,
+              "max_ms": 0.39519999999998845
+            },
+            "tab_svg_tree": {
+              "iterations": 20,
+              "median_ms": 0.04939999999999145,
+              "p95_ms": 0.08259999999999934,
+              "min_ms": 0.040300000000002,
+              "max_ms": 0.09709999999999752
+            },
+            "tab_serialize": {
+              "iterations": 20,
+              "median_ms": 1.0923999999999978,
+              "p95_ms": 1.5589999999999833,
+              "min_ms": 0.7823000000000206,
+              "max_ms": 1.620599999999996
+            },
+            "tab_render_total": {
+              "iterations": 20,
+              "median_ms": 1.1630999999999858,
+              "p95_ms": 1.8530000000000086,
+              "min_ms": 0.8070999999999913,
+              "max_ms": 2.2149
+            },
+            "notation_render_total": {
+              "iterations": 20,
+              "median_ms": 2.543900000000008,
+              "p95_ms": 3.3366000000000042,
+              "min_ms": 2.115399999999994,
+              "max_ms": 3.9365000000000236
+            },
+            "tab_svg_characters": 22998,
+            "notation_svg_characters": 46286
+          },
+          "lookup": {
+            "tab_first": {
+              "iterations": 40,
+              "median_ms": 0.00030000000000995897,
+              "p95_ms": 0.00030000000000995897,
+              "min_ms": 0.0001999999999782176,
+              "max_ms": 0.0014000000000180535
+            },
+            "notation_first": {
+              "iterations": 40,
+              "median_ms": 0.0004000000000132786,
+              "p95_ms": 0.0007999999999981355,
+              "min_ms": 0.0003999999999848569,
+              "max_ms": 0.0013999999999896318
+            },
+            "tab_middle": {
+              "iterations": 40,
+              "median_ms": 0.0024000000000228283,
+              "p95_ms": 0.013700000000000045,
+              "min_ms": 0.0013999999999896318,
+              "max_ms": 0.0221000000000231
+            },
+            "notation_middle": {
+              "iterations": 40,
+              "median_ms": 0.005099999999998772,
+              "p95_ms": 0.019299999999986994,
+              "min_ms": 0.003999999999990678,
+              "max_ms": 0.037499999999994316
+            },
+            "tab_last": {
+              "iterations": 40,
+              "median_ms": 0.005099999999998772,
+              "p95_ms": 0.020900000000011687,
+              "min_ms": 0.003500000000002501,
+              "max_ms": 0.13519999999999754
+            },
+            "notation_last": {
+              "iterations": 40,
+              "median_ms": 0.0075999999999964984,
+              "p95_ms": 0.02230000000000132,
+              "min_ms": 0.0036000000000058208,
+              "max_ms": 0.10009999999999764
+            },
+            "tab_missing": {
+              "iterations": 40,
+              "median_ms": 0.0013000000000147338,
+              "p95_ms": 0.0014000000000180535,
+              "min_ms": 0.0011999999999829924,
+              "max_ms": 0.002299999999991087
+            },
+            "notation_missing": {
+              "iterations": 40,
+              "median_ms": 0.0024999999999977263,
+              "p95_ms": 0.002600000000001046,
+              "min_ms": 0.002299999999991087,
+              "max_ms": 0.0033999999999991815
+            },
+            "tab_seek_tick_last": {
+              "iterations": 40,
+              "median_ms": 0.0023999999999944066,
+              "p95_ms": 0.002500000000026148,
+              "min_ms": 0.002299999999991087,
+              "max_ms": 0.0033999999999991815
+            },
+            "notation_seek_tick_last": {
+              "iterations": 40,
+              "median_ms": 0.0037000000000091404,
+              "p95_ms": 0.0049999999999954525,
+              "min_ms": 0.003500000000002501,
+              "max_ms": 0.007000000000005002
+            }
+          }
+        },
+        "1000": {
+          "tab_active": {
+            "none": {
+              "iterations": 40,
+              "median_ms": 0.03619999999997958,
+              "p95_ms": 0.061499999999995225,
+              "min_ms": 0.03560000000001651,
+              "max_ms": 0.0625
+            },
+            "one": {
+              "iterations": 40,
+              "median_ms": 0.04740000000001032,
+              "p95_ms": 0.05520000000001346,
+              "min_ms": 0.04670000000001551,
+              "max_ms": 0.7586000000000013
+            },
+            "eight": {
+              "iterations": 40,
+              "median_ms": 0.06669999999999732,
+              "p95_ms": 0.06770000000000209,
+              "min_ms": 0.06629999999998404,
+              "max_ms": 0.07380000000000564
+            },
+            "shifted_by_one": {
+              "iterations": 40,
+              "median_ms": 0.06829999999999359,
+              "p95_ms": 0.14690000000001646,
+              "min_ms": 0.066599999999994,
+              "max_ms": 0.18240000000000123
+            },
+            "elements_visited_per_call": 1000,
+            "class_toggles_total": 200000
+          },
+          "notation_active": {
+            "none": {
+              "iterations": 40,
+              "median_ms": 0.03480000000001837,
+              "p95_ms": 0.10379999999997835,
+              "min_ms": 0.03409999999996671,
+              "max_ms": 0.9612999999999943
+            },
+            "one": {
+              "iterations": 40,
+              "median_ms": 0.0484000000000151,
+              "p95_ms": 0.09120000000001482,
+              "min_ms": 0.04779999999999518,
+              "max_ms": 0.1158999999999537
+            },
+            "eight": {
+              "iterations": 40,
+              "median_ms": 0.06610000000000582,
+              "p95_ms": 0.06690000000003238,
+              "min_ms": 0.06569999999999254,
+              "max_ms": 0.07970000000000255
+            },
+            "shifted_by_one": {
+              "iterations": 40,
+              "median_ms": 0.06619999999998072,
+              "p95_ms": 0.06700000000000728,
+              "min_ms": 0.06580000000002428,
+              "max_ms": 0.07120000000003301
+            },
+            "elements_visited_per_call": 1000,
+            "class_toggles_total": 200000
+          },
+          "mount": {
+            "tab_layout_model": {
+              "iterations": 20,
+              "median_ms": 0.17719999999997071,
+              "p95_ms": 0.38309999999995625,
+              "min_ms": 0.16489999999998872,
+              "max_ms": 1.0477999999999952
+            },
+            "tab_svg_tree": {
+              "iterations": 20,
+              "median_ms": 0.1733000000000402,
+              "p95_ms": 0.626199999999983,
+              "min_ms": 0.08590000000003783,
+              "max_ms": 0.7327999999999975
+            },
+            "tab_serialize": {
+              "iterations": 20,
+              "median_ms": 10.171899999999994,
+              "p95_ms": 12.174199999999985,
+              "min_ms": 8.921700000000044,
+              "max_ms": 12.780300000000011
+            },
+            "tab_render_total": {
+              "iterations": 20,
+              "median_ms": 9.480099999999993,
+              "p95_ms": 11.500599999999963,
+              "min_ms": 8.052999999999997,
+              "max_ms": 12.693300000000022
+            },
+            "notation_render_total": {
+              "iterations": 20,
+              "median_ms": 21.284999999999968,
+              "p95_ms": 23.628400000000056,
+              "min_ms": 19.861200000000053,
+              "max_ms": 24.255999999999858
+            },
+            "tab_svg_characters": 223158,
+            "notation_svg_characters": 461390
+          },
+          "lookup": {
+            "tab_first": {
+              "iterations": 40,
+              "median_ms": 0.0001999999999497959,
+              "p95_ms": 0.00029999999992469384,
+              "min_ms": 0.0001999999999497959,
+              "max_ms": 0.0006000000000767614
+            },
+            "notation_first": {
+              "iterations": 40,
+              "median_ms": 0.0001999999999497959,
+              "p95_ms": 0.00029999999992469384,
+              "min_ms": 9.999999997489795e-05,
+              "max_ms": 0.00029999999992469384
+            },
+            "tab_middle": {
+              "iterations": 40,
+              "median_ms": 0.00930000000016662,
+              "p95_ms": 0.010500000000092768,
+              "min_ms": 0.008800000000064756,
+              "max_ms": 0.022699999999986176
+            },
+            "notation_middle": {
+              "iterations": 40,
+              "median_ms": 0.017400000000179716,
+              "p95_ms": 0.03809999999998581,
+              "min_ms": 0.0159000000001015,
+              "max_ms": 0.060899999999946886
+            },
+            "tab_last": {
+              "iterations": 40,
+              "median_ms": 0.020599999999831198,
+              "p95_ms": 0.02250000000003638,
+              "min_ms": 0.01869999999985339,
+              "max_ms": 0.023300000000062937
+            },
+            "notation_last": {
+              "iterations": 40,
+              "median_ms": 0.035499999999956344,
+              "p95_ms": 0.06799999999998363,
+              "min_ms": 0.03399999999987813,
+              "max_ms": 0.08540000000016335
+            },
+            "tab_missing": {
+              "iterations": 40,
+              "median_ms": 0.010500000000092768,
+              "p95_ms": 0.03770000000008622,
+              "min_ms": 0.00980000000004111,
+              "max_ms": 0.2799999999999727
+            },
+            "notation_missing": {
+              "iterations": 40,
+              "median_ms": 0.0059000000001105946,
+              "p95_ms": 0.0061000000000603904,
+              "min_ms": 0.005799999999908323,
+              "max_ms": 0.006399999999985084
+            },
+            "tab_seek_tick_last": {
+              "iterations": 40,
+              "median_ms": 0.031300000000101136,
+              "p95_ms": 0.053699999999935244,
+              "min_ms": 0.019400000000132422,
+              "max_ms": 0.07889999999997599
+            },
+            "notation_seek_tick_last": {
+              "iterations": 40,
+              "median_ms": 0.016599999999925785,
+              "p95_ms": 0.04370000000017171,
+              "min_ms": 0.014299999999821011,
+              "max_ms": 0.054300000000012005
+            }
+          }
+        },
+        "10000": {
+          "tab_active": {
+            "none": {
+              "iterations": 15,
+              "median_ms": 0.2016999999998461,
+              "p95_ms": 0.25499999999988177,
+              "min_ms": 0.17849999999998545,
+              "max_ms": 0.25499999999988177
+            },
+            "one": {
+              "iterations": 15,
+              "median_ms": 0.2861000000000331,
+              "p95_ms": 0.6048000000000684,
+              "min_ms": 0.25850000000014006,
+              "max_ms": 0.6048000000000684
+            },
+            "eight": {
+              "iterations": 15,
+              "median_ms": 0.6790000000000873,
+              "p95_ms": 1.7022999999999229,
+              "min_ms": 0.6716000000001259,
+              "max_ms": 1.7022999999999229
+            },
+            "shifted_by_one": {
+              "iterations": 15,
+              "median_ms": 0.6685999999999694,
+              "p95_ms": 0.8200999999999112,
+              "min_ms": 0.6636999999998352,
+              "max_ms": 0.8200999999999112
+            },
+            "elements_visited_per_call": 10000,
+            "class_toggles_total": 1000000
+          },
+          "notation_active": {
+            "none": {
+              "iterations": 15,
+              "median_ms": 0.19509999999991123,
+              "p95_ms": 0.8222000000000662,
+              "min_ms": 0.16020000000003165,
+              "max_ms": 0.8222000000000662
+            },
+            "one": {
+              "iterations": 15,
+              "median_ms": 0.25729999999998654,
+              "p95_ms": 0.2726999999999862,
+              "min_ms": 0.2519999999999527,
+              "max_ms": 0.2726999999999862
+            },
+            "eight": {
+              "iterations": 15,
+              "median_ms": 0.6769000000001597,
+              "p95_ms": 0.7931999999998425,
+              "min_ms": 0.654700000000048,
+              "max_ms": 0.7931999999998425
+            },
+            "shifted_by_one": {
+              "iterations": 15,
+              "median_ms": 1.2894999999998618,
+              "p95_ms": 1.5613000000000739,
+              "min_ms": 1.1634999999998854,
+              "max_ms": 1.5613000000000739
+            },
+            "elements_visited_per_call": 10000,
+            "class_toggles_total": 1000000
+          },
+          "mount": {
+            "tab_layout_model": {
+              "iterations": 5,
+              "median_ms": 1.5480999999999767,
+              "p95_ms": 9.542199999999866,
+              "min_ms": 1.3882000000000971,
+              "max_ms": 9.542199999999866
+            },
+            "tab_svg_tree": {
+              "iterations": 5,
+              "median_ms": 3.0994000000000597,
+              "p95_ms": 9.392000000000053,
+              "min_ms": 2.9425999999998567,
+              "max_ms": 9.392000000000053
+            },
+            "tab_serialize": {
+              "iterations": 5,
+              "median_ms": 104.47440000000006,
+              "p95_ms": 118.6278000000002,
+              "min_ms": 91.20029999999997,
+              "max_ms": 118.6278000000002
+            },
+            "tab_render_total": {
+              "iterations": 5,
+              "median_ms": 105.66859999999997,
+              "p95_ms": 112.55359999999973,
+              "min_ms": 96.79899999999998,
+              "max_ms": 112.55359999999973
+            },
+            "notation_render_total": {
+              "iterations": 5,
+              "median_ms": 241.66249999999945,
+              "p95_ms": 334.2514000000001,
+              "min_ms": 236.9967999999999,
+              "max_ms": 334.2514000000001
+            },
+            "tab_svg_characters": 2233514,
+            "notation_svg_characters": 4693757
+          },
+          "lookup": {
+            "tab_first": {
+              "iterations": 15,
+              "median_ms": 0.0003999999998995918,
+              "p95_ms": 0.09870000000046275,
+              "min_ms": 0.00029999999969732016,
+              "max_ms": 0.09870000000046275
+            },
+            "notation_first": {
+              "iterations": 15,
+              "median_ms": 0.00029999999969732016,
+              "p95_ms": 0.011300000000119326,
+              "min_ms": 0.00020000000040454324,
+              "max_ms": 0.011300000000119326
+            },
+            "tab_middle": {
+              "iterations": 15,
+              "median_ms": 0.09860000000026048,
+              "p95_ms": 0.10819999999966967,
+              "min_ms": 0.09040000000004511,
+              "max_ms": 0.10819999999966967
+            },
+            "notation_middle": {
+              "iterations": 15,
+              "median_ms": 0.07049999999981083,
+              "p95_ms": 0.07729999999992287,
+              "min_ms": 0.07009999999991123,
+              "max_ms": 0.07729999999992287
+            },
+            "tab_last": {
+              "iterations": 15,
+              "median_ms": 0.1838000000007014,
+              "p95_ms": 0.18980000000010477,
+              "min_ms": 0.18180000000029395,
+              "max_ms": 0.18980000000010477
+            },
+            "notation_last": {
+              "iterations": 15,
+              "median_ms": 0.2626000000000204,
+              "p95_ms": 0.43400000000019645,
+              "min_ms": 0.14130000000022847,
+              "max_ms": 0.43400000000019645
+            },
+            "tab_missing": {
+              "iterations": 15,
+              "median_ms": 0.11879999999928259,
+              "p95_ms": 0.29350000000067666,
+              "min_ms": 0.10089999999945576,
+              "max_ms": 0.29350000000067666
+            },
+            "notation_missing": {
+              "iterations": 15,
+              "median_ms": 0.04989999999997963,
+              "p95_ms": 0.07579999999961728,
+              "min_ms": 0.049699999999575084,
+              "max_ms": 0.07579999999961728
+            },
+            "tab_seek_tick_last": {
+              "iterations": 15,
+              "median_ms": 0.19920000000001892,
+              "p95_ms": 0.2065999999995256,
+              "min_ms": 0.1835000000000946,
+              "max_ms": 0.2065999999995256
+            },
+            "notation_seek_tick_last": {
+              "iterations": 15,
+              "median_ms": 0.2806000000000495,
+              "p95_ms": 0.3153999999994994,
+              "min_ms": 0.26559999999972206,
+              "max_ms": 0.3153999999994994
+            }
+          }
+        }
+      },
+      "status": "OK",
+      "elapsed_s": 6.8339907,
+      "quick": false
+    },
+    "python_runtime": {
+      "status": "OK",
+      "media_catalog": {
+        "risk": "M6",
+        "measurements": {
+          "100": {
+            "get_first": {
+              "iterations": 50.0,
+              "median_ms": 0.0003,
+              "p95_ms": 0.0005,
+              "min_ms": 0.0003,
+              "max_ms": 0.0009
+            },
+            "get_last": {
+              "iterations": 50.0,
+              "median_ms": 0.0042,
+              "p95_ms": 0.0042,
+              "min_ms": 0.004,
+              "max_ms": 0.0044
+            },
+            "contains_missing": {
+              "iterations": 50.0,
+              "median_ms": 0.008,
+              "p95_ms": 0.0082,
+              "min_ms": 0.0079,
+              "max_ms": 0.0082
+            },
+            "media_for_lesson": {
+              "iterations": 50.0,
+              "median_ms": 0.0987,
+              "p95_ms": 0.3294,
+              "min_ms": 0.0978,
+              "max_ms": 0.3591
+            },
+            "media_records": 100,
+            "references_resolved": 8
+          },
+          "1000": {
+            "get_first": {
+              "iterations": 50.0,
+              "median_ms": 0.0003,
+              "p95_ms": 0.0004,
+              "min_ms": 0.0002,
+              "max_ms": 0.0005
+            },
+            "get_last": {
+              "iterations": 50.0,
+              "median_ms": 0.0386,
+              "p95_ms": 0.1566,
+              "min_ms": 0.0376,
+              "max_ms": 0.1926
+            },
+            "contains_missing": {
+              "iterations": 50.0,
+              "median_ms": 0.2276,
+              "p95_ms": 0.3363,
+              "min_ms": 0.0739,
+              "max_ms": 0.399
+            },
+            "media_for_lesson": {
+              "iterations": 50.0,
+              "median_ms": 1.8219,
+              "p95_ms": 3.2192,
+              "min_ms": 0.8474,
+              "max_ms": 3.7714
+            },
+            "media_records": 1000,
+            "references_resolved": 8
+          },
+          "10000": {
+            "get_first": {
+              "iterations": 50.0,
+              "median_ms": 0.0003,
+              "p95_ms": 0.0004,
+              "min_ms": 0.0002,
+              "max_ms": 0.0007
+            },
+            "get_last": {
+              "iterations": 50.0,
+              "median_ms": 0.3605,
+              "p95_ms": 1.2615,
+              "min_ms": 0.3481,
+              "max_ms": 1.4595
+            },
+            "contains_missing": {
+              "iterations": 50.0,
+              "median_ms": 0.7078,
+              "p95_ms": 1.8773,
+              "min_ms": 0.6677,
+              "max_ms": 2.0726
+            },
+            "media_for_lesson": {
+              "iterations": 50.0,
+              "median_ms": 11.6599,
+              "p95_ms": 16.165,
+              "min_ms": 8.5622,
+              "max_ms": 19.034
+            },
+            "media_records": 10000,
+            "references_resolved": 8
+          }
+        }
+      },
+      "provenance": {
+        "risk": "M8",
+        "measurements": {
+          "100": {
+            "first": {
+              "iterations": 50.0,
+              "median_ms": 0.0003,
+              "p95_ms": 0.0005,
+              "min_ms": 0.0002,
+              "max_ms": 0.0011
+            },
+            "last": {
+              "iterations": 50.0,
+              "median_ms": 0.0039,
+              "p95_ms": 0.0041,
+              "min_ms": 0.0038,
+              "max_ms": 0.0139
+            },
+            "missing": {
+              "iterations": 50.0,
+              "median_ms": 0.0119,
+              "p95_ms": 0.0256,
+              "min_ms": 0.0031,
+              "max_ms": 0.0308
+            },
+            "entries": 100
+          },
+          "1000": {
+            "first": {
+              "iterations": 50.0,
+              "median_ms": 0.0003,
+              "p95_ms": 0.0004,
+              "min_ms": 0.0003,
+              "max_ms": 0.0007
+            },
+            "last": {
+              "iterations": 50.0,
+              "median_ms": 0.0364,
+              "p95_ms": 0.0454,
+              "min_ms": 0.0359,
+              "max_ms": 0.0858
+            },
+            "missing": {
+              "iterations": 50.0,
+              "median_ms": 0.0293,
+              "p95_ms": 0.0296,
+              "min_ms": 0.0291,
+              "max_ms": 0.0297
+            },
+            "entries": 1000
+          },
+          "10000": {
+            "first": {
+              "iterations": 50.0,
+              "median_ms": 0.0005,
+              "p95_ms": 0.0007,
+              "min_ms": 0.0004,
+              "max_ms": 0.0011
+            },
+            "last": {
+              "iterations": 50.0,
+              "median_ms": 0.3804,
+              "p95_ms": 0.9001,
+              "min_ms": 0.3732,
+              "max_ms": 1.4524
+            },
+            "missing": {
+              "iterations": 50.0,
+              "median_ms": 0.5394,
+              "p95_ms": 1.5457,
+              "min_ms": 0.3066,
+              "max_ms": 1.5687
+            },
+            "entries": 10000
+          }
+        }
+      },
+      "demo_manifest": {
+        "risk": "M7",
+        "measurements": {
+          "load_demo_manifest": {
+            "iterations": 30.0,
+            "median_ms": 0.6981,
+            "p95_ms": 1.1319,
+            "min_ms": 0.5803,
+            "max_ms": 1.2088
+          }
+        }
+      }
+    },
+    "local_media": {
+      "benchmark": "local_media_serving",
+      "risk": "M9",
+      "measures": "end-to-end latency over real sockets against the local server",
+      "sizes_mb": [
+        1,
+        10,
+        100
+      ],
+      "concurrency": [
+        1,
+        2,
+        4
+      ],
+      "measurements": {
+        "1mb": {
+          "bytes": 1048576,
+          "concurrency_1": {
+            "iterations": 5,
+            "median_ms": 12.312,
+            "p95_ms": 14.4869,
+            "min_ms": 11.2508,
+            "max_ms": 14.4869,
+            "requests": 1,
+            "megabytes_per_second": 81.22157244964262
+          },
+          "concurrency_2": {
+            "iterations": 5,
+            "median_ms": 15.8231,
+            "p95_ms": 16.8995,
+            "min_ms": 13.5895,
+            "max_ms": 16.8995,
+            "requests": 2,
+            "megabytes_per_second": 126.39748216215533
+          },
+          "concurrency_4": {
+            "iterations": 5,
+            "median_ms": 22.0637,
+            "p95_ms": 36.193,
+            "min_ms": 22.0195,
+            "max_ms": 36.193,
+            "requests": 4,
+            "megabytes_per_second": 181.29325543766456
+          },
+          "client_peak_bytes": 2123936,
+          "note": "peak is this process's allocation for one request; the server handler reads the whole file into memory before writing it"
+        },
+        "10mb": {
+          "bytes": 10485760,
+          "concurrency_1": {
+            "iterations": 5,
+            "median_ms": 24.5952,
+            "p95_ms": 53.2781,
+            "min_ms": 23.0698,
+            "max_ms": 53.2781,
+            "requests": 1,
+            "megabytes_per_second": 406.5833983866771
+          },
+          "concurrency_2": {
+            "iterations": 5,
+            "median_ms": 48.0428,
+            "p95_ms": 69.5482,
+            "min_ms": 43.7363,
+            "max_ms": 69.5482,
+            "requests": 2,
+            "megabytes_per_second": 416.29546987269686
+          },
+          "concurrency_4": {
+            "iterations": 5,
+            "median_ms": 64.1046,
+            "p95_ms": 71.737,
+            "min_ms": 54.1332,
+            "max_ms": 71.737,
+            "requests": 4,
+            "megabytes_per_second": 623.9801823894072
+          },
+          "client_peak_bytes": 20998314,
+          "note": "peak is this process's allocation for one request; the server handler reads the whole file into memory before writing it"
+        },
+        "100mb": {
+          "bytes": 104857600,
+          "concurrency_1": {
+            "iterations": 5,
+            "median_ms": 194.4204,
+            "p95_ms": 243.6014,
+            "min_ms": 151.3272,
+            "max_ms": 243.6014,
+            "requests": 1,
+            "megabytes_per_second": 514.3493172527163
+          },
+          "concurrency_2": {
+            "iterations": 5,
+            "median_ms": 294.6397,
+            "p95_ms": 343.3385,
+            "min_ms": 224.7474,
+            "max_ms": 343.3385,
+            "requests": 2,
+            "megabytes_per_second": 678.7951521807821
+          },
+          "concurrency_4": {
+            "iterations": 5,
+            "median_ms": 378.127,
+            "p95_ms": 419.3597,
+            "min_ms": 350.9274,
+            "max_ms": 419.3597,
+            "requests": 4,
+            "megabytes_per_second": 1057.8456444527897
+          },
+          "client_peak_bytes": 209741304,
+          "note": "peak is this process's allocation for one request; the server handler reads the whole file into memory before writing it"
+        }
+      },
+      "status": "OK"
+    }
+  },
+  "limitations": [
+    "Node benchmarks run against the in-repo DOM stub: they measure JavaScript traversal and style-write counts, not style recalculation, layout or paint.",
+    "querySelectorAll over a real SVG tree and innerHTML parsing are not measured; the score-view figures cover the JavaScript around them.",
+    "Node has no Linux CI in this repository, so Node figures are Windows-only.",
+    "Timings were taken on a developer machine, not an isolated host."
+  ],
+  "decisions": [
+    {
+      "risk": "M1",
+      "name": "Audio scheduler scans the whole plan every 25 ms",
+      "classification": "MATTERS_AT_SCALE",
+      "cites": [
+        "measurements.audio_scheduler.measurements.*.mostly_scheduled"
+      ],
+      "finding": "Linear, as described. The steady-state tick costs 0.012 ms at 100 events, 0.063 ms at 1,000 and 0.505 ms at 10,000 -- about 0.5, 2.5 and 20 ms of CPU per second of playback at the 25 ms interval. The p95 at 10,000 is 1.28 ms, which lands inside a frame.",
+      "next_action": "Leave it at present scale. Revisit if lessons approach 10,000 events, where 2% of a core burns continuously during playback for work already done."
+    },
+    {
+      "risk": "M2",
+      "name": "Every animation frame updates every fretboard note",
+      "classification": "MATTERS_AT_SCALE",
+      "cites": [
+        "measurements.fretboard_renderer.measurements.*.render_frame"
+      ],
+      "finding": "One style write per note per frame, exactly as described: 103, 1,005 and 10,006 writes per frame at the three sizes. JavaScript traversal alone costs 0.031, 0.288 and 5.397 ms (p95 6.75 ms). At 10,000 notes a third of a 16.7 ms frame is gone before the browser does any styling, layout or painting -- none of which this harness can measure.",
+      "next_action": "The strongest candidate for optimization, and the one needing a real browser profile first: the measured traversal is a floor, and the unmeasured DOM cost is what a viewport cull or a transform migration would actually address."
+    },
+    {
+      "risk": "M3",
+      "name": "The main animation loop repeats O(N) work per frame",
+      "classification": "NOT_MATERIAL_IN_MEASURED_RANGE",
+      "cites": [
+        "measurements.fretboard_renderer.measurements.*.active_event_ids",
+        "measurements.fretboard_renderer.measurements.*.frame_plus_active"
+      ],
+      "finding": "The second scan is not the problem. activeEventIds() costs 0.005, 0.038 and 0.064 ms -- at 10,000 notes it is 1.2% of the frame's own 5.4 ms, and the combined loop measures the same as renderFrame() alone within noise. The review's concern about a duplicate pass is real in structure and negligible in cost.",
+      "next_action": "Do not restructure the loop to share the active set. The DOM writes and the timeline publication in app.js were not isolated -- doing so needs product instrumentation this tranche forbids -- so that part stays unmeasured."
+    },
+    {
+      "risk": "M4",
+      "name": "Active-state updates traverse the whole rendered SVG",
+      "classification": "MATTERS_AT_SCALE",
+      "cites": [
+        "measurements.score_views.measurements.*.tab_active",
+        "measurements.score_views.measurements.*.notation_active"
+      ],
+      "finding": "The per-element loop after the selector costs 0.011, 0.079 and 0.874 ms for eight active events, visiting every event each time. At 10,000 events, called at frame rate, that is roughly 52 ms per second for the loop alone. The querySelectorAll over a real SVG tree is not measured here and is likely to dominate.",
+      "next_action": "Profile the selector in a browser before building an id-to-element map. The delta-only toggle is the cheaper half of the suggested fix and is measurable here."
+    },
+    {
+      "risk": "M5",
+      "name": "Full SVG regeneration on mount",
+      "classification": "MATTERS_AT_SCALE",
+      "cites": [
+        "measurements.score_views.measurements.*.mount"
+      ],
+      "finding": "Building and serializing the score costs 1.2 / 9.8 / 112.5 ms for TAB and 2.6 / 23.8 / 281.4 ms for notation, producing 2.2 MB and 4.7 MB of SVG text at 10,000 events. The innerHTML parse that follows is not measured and is additional.",
+      "next_action": "Acceptable at present sizes as a one-off per mount. At 10,000 events a notation mount is a visible freeze, so measure the parse in a browser before choosing between keyed updates and rendering visible measures only."
+    },
+    {
+      "risk": "M6",
+      "name": "Media catalog lookups are linear",
+      "classification": "MATTERS_AT_SCALE",
+      "cites": [
+        "measurements.python_runtime.media_catalog.measurements"
+      ],
+      "finding": "O(R x M) confirmed: resolving eight references costs 0.09 ms against 100 media records, 2.84 ms against 1,000 and 26.1 ms against 10,000. A single get() of the last record costs 1.41 ms at 10,000.",
+      "next_action": "Not material for the catalog this repository ships, which holds a handful of records. An id-indexed catalog is a cheap, behaviour-preserving change when the catalog grows -- and is one of the three items safe to fix without a browser profile."
+    },
+    {
+      "risk": "M7",
+      "name": "The demo manifest is reread and reparsed per call",
+      "classification": "NOT_MATERIAL_IN_MEASURED_RANGE",
+      "cites": [
+        "measurements.python_runtime.demo_manifest.measurements.load_demo_manifest"
+      ],
+      "finding": "1.0 ms per call for the real manifest, with no growth mechanism inside this tranche's control: the manifest is the size the product ships.",
+      "next_action": "Leave it. A cache would save a millisecond per lesson switch and add a staleness question nobody currently has."
+    },
+    {
+      "risk": "M8",
+      "name": "Provenance lookup is linear",
+      "classification": "MATTERS_AT_SCALE",
+      "cites": [
+        "measurements.python_runtime.provenance.measurements"
+      ],
+      "finding": "0.004, 0.138 and 1.088 ms per query for the last entry. One query is cheap at any size measured; the risk is the quadratic case the review names -- a query per event over a 10,000-entry revision would be about 11 seconds.",
+      "next_action": "Index only if a per-event query path appears. No such path was found while measuring, so this is a latent risk rather than a present cost."
+    },
+    {
+      "risk": "M9",
+      "name": "The local server reads whole media files into memory",
+      "classification": "MATTERS_AT_SCALE",
+      "cites": [
+        "measurements.local_media.measurements"
+      ],
+      "finding": "Throughput is not the problem on loopback: 100 MB serves in 175 ms single and 343 ms at four concurrent requests, around 1.1 GB/s. The memory shape is: each in-flight request holds its whole file, so four concurrent 100 MB requests means roughly 400 MB resident.",
+      "next_action": "Chunked streaming is worth doing for memory, not speed. Byte-range support is a separate feature question -- media seeking, not performance."
+    },
+    {
+      "risk": "M10",
+      "name": "Event lookup scans the projection",
+      "classification": "NOT_MATERIAL_IN_MEASURED_RANGE",
+      "cites": [
+        "measurements.score_views.measurements.*.lookup"
+      ],
+      "finding": "0.0025, 0.022 and 0.332 ms to find the last event. These run on a click, and a third of a millisecond at 10,000 events is imperceptible.",
+      "next_action": "Leave it. An index here would add state to keep correct for no measurable gain."
+    }
+  ],
+  "lower_priority_observations": {
+    "classification": "INSUFFICIENT_EVIDENCE",
+    "items": [
+      "initialTempoBpm() sorting the tempo array",
+      "tabRows() fallback using seen.includes()",
+      "oneStringViewProjection() allocation per note",
+      "apply_zone_semantics_to_projection() set construction",
+      "browser fetch with cache: \"no-store\""
+    ],
+    "why": "Not measured. Each is a load-time or interaction-time path whose cost the harness would report as a fraction of the numbers above, and the order asks that the tranche not expand to capture them. They remain statements of complexity, which is what they were before this tranche."
+  }
+}
