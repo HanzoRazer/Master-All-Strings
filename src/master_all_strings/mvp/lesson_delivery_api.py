@@ -13,6 +13,8 @@ Status codes carry the distinction the service draws:
 
     201  received and stored
     400  malformed, or digests that do not recompute
+         (a delivery_id is percent-encoded in the path: it is opaque, and
+         opaque includes characters that mean something in a URL)
     409  a delivery identity already used
     404  no such delivery
     500  a defect in this application, reported without detail
@@ -22,7 +24,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from master_all_strings.education.assignment_delivery import LessonDeliverySummaryV1
 from master_all_strings.education.assignment_delivery_serialization import (
@@ -100,7 +102,11 @@ class LocalLessonDeliveryApi:
                 recipients = query.get("recipient_ref", [])
                 return 200, self.list(recipient_ref=recipients[0] if recipients else None)
             if method == "GET" and "/" not in trimmed:
-                return 200, self.get(trimmed)
+                # Percent-decoded, because delivery_id is an opaque string and
+                # opaque includes "/". Reading the raw segment would accept a
+                # delivery the boundary could never hand back, which breaks the
+                # one promise Stage 1 makes: what was delivered is recoverable.
+                return 200, self.get(unquote(trimmed))
         except DuplicateDeliveryError as exc:
             # Distinct from 400: the delivery is well formed, the identity is
             # taken. A sender that retried needs to know which of the two

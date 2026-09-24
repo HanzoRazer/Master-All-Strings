@@ -27,6 +27,20 @@ def find_available_local_port(host: str = "127.0.0.1") -> int:
         return int(sock.getsockname()[1])
 
 
+_LESSON_DELIVERY_PREFIX = "/api/education/lesson-deliveries"
+
+
+def _is_lesson_delivery(path: str) -> bool:
+    """The route owns its own path, not every path beginning with its name.
+
+    ``startswith`` would claim ``/api/education/lesson-deliveries-summary`` for
+    the delivery API and read "-summary" as a delivery identity, so a sibling
+    route added later would return 404 from the wrong handler.
+    """
+
+    return path == _LESSON_DELIVERY_PREFIX or path.startswith(_LESSON_DELIVERY_PREFIX + "/")
+
+
 class _QuietHandler(SimpleHTTPRequestHandler):
     performance_api: Any = None
     education_api: Any = None
@@ -43,7 +57,7 @@ class _QuietHandler(SimpleHTTPRequestHandler):
         if path.startswith("/api/education/guided-sessions"):
             self._guided_session_http("GET", path, {})
             return
-        if path.startswith("/api/education/lesson-deliveries"):
+        if _is_lesson_delivery(path):
             self._lesson_delivery_http("GET", parsed.geturl(), {})
             return
         if path.startswith("/api/v1/lessons/") and path.endswith("/media"):
@@ -118,7 +132,7 @@ class _QuietHandler(SimpleHTTPRequestHandler):
                 return
             self._guided_session_http("POST", path, payload)
             return
-        if path.startswith("/api/education/lesson-deliveries"):
+        if _is_lesson_delivery(path):
             payload_or_error = self._json_body()
             if payload_or_error is None:
                 return

@@ -109,6 +109,64 @@ def test_the_assignment_must_be_a_lesson_assignment(envelope: LessonDeliveryEnve
         replace(envelope, assignment={"schema_id": "master_all_strings.lesson_assignment"})
 
 
+# --- the digest format, shared with the schema ---------------------------------
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "abc",
+        "sha256:XYZ" + "a" * 61,
+        "sha256:" + "A" * 64,
+        "sha256:" + "a" * 63,
+        "sha256:" + "a" * 65,
+        "sha256:",
+        "sha1:" + "a" * 64,
+        "a" * 64,
+        " sha256:" + "a" * 64,
+    ],
+)
+def test_a_value_the_schema_calls_invalid_cannot_be_constructed(
+    envelope: LessonDeliveryEnvelopeV1, value: str
+) -> None:
+    # A public dataclass accepting what its own schema rejects is a contract
+    # disagreeing with itself, and the disagreement surfaces at whichever
+    # boundary checks second -- here, only once a digest failed to recompute.
+    with pytest.raises(EducationContractError, match="assignment_artifact_digest"):
+        replace(envelope, assignment_artifact_digest=value)
+    with pytest.raises(EducationContractError, match="assignment_behavior_digest"):
+        replace(envelope, assignment_behavior_digest=value)
+
+
+def test_a_well_formed_digest_is_accepted(envelope: LessonDeliveryEnvelopeV1) -> None:
+    # Well formed, and wrong for this assignment: the format check and the
+    # recompute check answer different questions, and both still run.
+    other = "sha256:" + "0" * 64
+    rebuilt = replace(envelope, assignment_artifact_digest=other)
+    assert rebuilt.assignment_artifact_digest == other
+    with pytest.raises(EducationContractError, match="does not match"):
+        validate_delivery_integrity(rebuilt)
+
+
+def test_the_contract_and_the_schema_use_one_pattern() -> None:
+    # Written once in the code, asserted equal to the schema here, so the two
+    # cannot drift into disagreeing again.
+    import json
+
+    schema = json.loads(
+        (
+            REPO_ROOT
+            / "resources"
+            / "education"
+            / "schema"
+            / "lesson_delivery_v1.schema.json"
+        ).read_text(encoding="utf-8")
+    )
+    from master_all_strings.education.assignment_delivery import _DIGEST
+
+    assert schema["$defs"]["digest"]["pattern"] == _DIGEST.pattern
+
+
 # --- B. the two digests are evidence, not decoration ---------------------------
 
 
