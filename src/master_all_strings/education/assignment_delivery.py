@@ -25,6 +25,7 @@ job, receiving them is the service's, and neither belongs here.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from master_all_strings.education.errors import (
@@ -41,6 +42,7 @@ from master_all_strings.lesson.serialization import (
 
 __all__ = [
     "LESSON_DELIVERY_SCHEMA_ID",
+    "require_digest",
     "LESSON_DELIVERY_SCHEMA_VERSION",
     "LessonDeliveryEnvelopeV1",
     "LessonDeliverySummaryV1",
@@ -51,6 +53,22 @@ __all__ = [
 #: change to how assignments are addressed is not a change to what a lesson is.
 LESSON_DELIVERY_SCHEMA_ID = "master_all_strings.lesson_delivery"
 LESSON_DELIVERY_SCHEMA_VERSION = "1.0.0"
+
+#: What the lesson package produces and what the JSON Schema requires, written
+#: once. A public dataclass accepting values its own schema calls invalid is a
+#: contract that disagrees with itself, and the disagreement surfaces at
+#: whichever boundary checks second.
+_DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
+
+
+def require_digest(value: str, field_name: str) -> None:
+    """A digest is ``sha256:`` and sixty-four lowercase hex characters."""
+
+    if not isinstance(value, str) or not _DIGEST.match(value):
+        raise EducationContractError(
+            f"{field_name} must look like 'sha256:' followed by 64 lowercase hex "
+            f"characters, got {value!r}"
+        )
 
 
 @dataclass(frozen=True)
@@ -88,8 +106,8 @@ class LessonDeliveryEnvelopeV1:
         require_identifier(self.sender_ref, "sender_ref")
         require_identifier(self.recipient_ref, "recipient_ref")
         require_optional_identifier(self.classroom_ref, "classroom_ref")
-        require_identifier(self.assignment_artifact_digest, "assignment_artifact_digest")
-        require_identifier(self.assignment_behavior_digest, "assignment_behavior_digest")
+        require_digest(self.assignment_artifact_digest, "assignment_artifact_digest")
+        require_digest(self.assignment_behavior_digest, "assignment_behavior_digest")
         if not isinstance(self.assignment, LessonAssignmentV1):
             raise EducationContractError("assignment must be a LessonAssignmentV1")
 

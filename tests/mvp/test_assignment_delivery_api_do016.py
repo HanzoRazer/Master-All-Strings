@@ -111,6 +111,31 @@ def test_a_received_lesson_comes_back_byte_identical(
     assert deserialize_lesson_assignment(fetched["assignment"]) == assignment
 
 
+@pytest.mark.parametrize(
+    "delivery_id",
+    ["delivery/001", "delivery 001", "delivery#001", "delivery?001", "deliver%y"],
+)
+def test_an_opaque_id_can_be_fetched_back(
+    server: Any, assignment: LessonAssignmentV1, delivery_id: str
+) -> None:
+    # The promise Stage 1 makes is that what the boundary accepted, the
+    # boundary returns. An id containing a character that means something in a
+    # URL is still an opaque id -- it was accepted as one, so it has to come
+    # back as one.
+    from urllib.parse import quote
+
+    status, _ = server("POST", LESSON_DELIVERY_API_PREFIX, payload_for(assignment, delivery_id))
+    assert status == 201
+
+    encoded = quote(delivery_id, safe="")
+    status, fetched = server("GET", f"{LESSON_DELIVERY_API_PREFIX}/{encoded}")
+    assert status == 200
+    assert fetched["delivery_id"] == delivery_id
+
+    _, listed = server("GET", LESSON_DELIVERY_API_PREFIX)
+    assert [item["delivery_id"] for item in listed["deliveries"]] == [delivery_id]
+
+
 def test_malformed_json_is_refused(server: Any, tmp_path: Path) -> None:
     status, body = server("POST", LESSON_DELIVERY_API_PREFIX, None)
     assert status == 400
@@ -290,7 +315,31 @@ def test_an_unexpected_defect_is_a_500_and_says_nothing_else(
         assert "secret internal detail" not in json.dumps(body)
 
 
-def test_the_server_still_serves_its_own_pages(server: Any) -> None:
-    # The delivery seam must not swallow the rest of the local server.
-    status, body = server("GET", "/api/education/lesson-deliveries-not-a-route")
-    assert status in (404, 400)
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/education/lesson-deliveries-summary",
+        "/api/education/lesson-deliveriesX",
+        "/api/education/lesson-deliveries-not-a-route",
+    ],
+)
+def test_a_sibling_route_is_not_swallowed_by_the_delivery_prefix(
+    server: Any, path: str
+) -> None:
+    # The route owns its own path, not every path beginning with its name.
+    # Under a startswith match these arrived at the delivery handler and were
+    # read as delivery identities, so a sibling route added later would have
+    # answered 404 from the wrong place.
+    from master_all_strings.mvp.local_server import _is_lesson_delivery
+
+    assert not _is_lesson_delivery(path)
+    status, _ = server("GET", path)
+    assert status == 404
+
+
+def test_the_route_still_owns_its_own_paths() -> None:
+    from master_all_strings.mvp.local_server import _is_lesson_delivery
+
+    assert _is_lesson_delivery(LESSON_DELIVERY_API_PREFIX)
+    assert _is_lesson_delivery(f"{LESSON_DELIVERY_API_PREFIX}/delivery-001")
+    assert _is_lesson_delivery(f"{LESSON_DELIVERY_API_PREFIX}/")
