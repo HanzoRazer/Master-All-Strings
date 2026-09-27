@@ -180,6 +180,9 @@ class LocalLessonDeliveryApi:
             return 400, {"error": str(exc)}
         try:
             preview = LessonDeliveryPreviewService(self.service).preview(delivery_id)
+            # Inside the handler so a serializer defect is the sanitized 500,
+            # not an exception escaping onto the socket.
+            return 200, preview_to_dict(preview)
         except LessonDeliveryNotFoundError as exc:
             return 404, {"error": str(exc)}
         except DeliveryIntegrityError:
@@ -188,4 +191,3 @@ class LocalLessonDeliveryApi:
             return 422, {"error": "unresolvable_assignment"}
         except Exception:
             return 500, {"error": "internal server error"}
-        return 200, preview_to_dict(preview)

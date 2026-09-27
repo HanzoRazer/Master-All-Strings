@@ -190,7 +190,9 @@ from exactly one query value.
 The query value is percent-decoded once, by `parse_qs` with blank values kept,
 at the HTTP boundary. It is not passed through `unquote()` again and it is not
 stripped. A missing, blank, whitespace-only, or repeated `delivery_id` is
-`400`. Any method other than GET on that exact path is `405`.
+`400`. Any method other than GET on that exact path is `405`, including
+`HEAD` (the static handler would otherwise treat the path as a file) and
+verbs the server does not implement on any other route.
 
 ### What a preview checks, and what it returns
 
@@ -229,8 +231,10 @@ can be played on a particular device.
 | Method other than GET on the preview path | 405 | `{"error": "method not allowed"}` |
 | Unexpected failure | 500 | `{"error": "internal server error"}` |
 
-A failure returns no preview fields. Stage 1 POST, list, and GET-one are
-unchanged, including duplicate-identity `409` and digest `400` on receive.
+A failure returns no preview fields. Serializing the preview document happens
+inside the same handler, so a failure there is the sanitized `500` and not an
+uncaught exception. Stage 1 POST, list, and GET-one are unchanged, including
+duplicate-identity `409` and digest `400` on receive.
 
 ### What this stage does not do
 
@@ -250,7 +254,7 @@ interpreter satisfies `requires-python >= 3.11`, and no gate was relaxed.
 | --- | --- |
 | `ruff check src tests` | PASS |
 | `mypy` (strict, `src` only) | PASS, 167 source files |
-| `pytest --cov --cov-report=term-missing` | 3328 passed, 3 skipped, 95.66% (floor 95%) |
+| `pytest --cov --cov-report=term-missing` | 3337 passed, 3 skipped, 95.67% (floor 95%) |
 | `npm test` in `web/mvp1` | 505 passed, 0 failed |
 | `python3 scripts/check_in_flight.py` | OK |
 | `python3 scripts/verify_do015_certification.py` | OK (9 of 9) |

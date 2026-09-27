@@ -125,11 +125,39 @@ class _QuietHandler(SimpleHTTPRequestHandler):
             return
         super().do_GET()
 
+    def do_HEAD(self) -> None:  # noqa: N802
+        # The static handler's inherited HEAD serves a file and would answer
+        # this path with 404. The preview route's only success method is GET.
+        parsed = urlparse(self.path)
+        if _is_lesson_delivery_preview(unquote(parsed.path)):
+            self._discard_body()
+            self._lesson_delivery_http("HEAD", parsed.geturl(), {})
+            return
+        super().do_HEAD()
+
     def do_PUT(self) -> None:  # noqa: N802
         self._preview_or_unsupported("PUT")
 
     def do_DELETE(self) -> None:  # noqa: N802
         self._preview_or_unsupported("DELETE")
+
+    def __getattr__(self, name: str) -> Any:
+        """Verbs this class does not declare still meet the preview refusal.
+
+        ``BaseHTTPRequestHandler`` answers an unimplemented verb with 501
+        before any route code runs. On the preview path that would break the
+        promise that every method other than GET is 405. Elsewhere the 501
+        stands.
+        """
+
+        if not name.startswith("do_"):
+            raise AttributeError(name)
+        method = name.removeprefix("do_")
+
+        def respond() -> None:
+            self._preview_or_unsupported(method)
+
+        return respond
 
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)

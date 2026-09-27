@@ -9,6 +9,7 @@ in a direct function call.
 from __future__ import annotations
 
 import json
+import socket
 import threading
 import urllib.error
 import urllib.request
@@ -94,11 +95,52 @@ def server(tmp_path: Path) -> Any:
         return _request(base, method, path, body)
 
     request.api = api  # type: ignore[attr-defined]
+    request.base = base  # type: ignore[attr-defined]
     try:
         yield request
     finally:
         httpd.shutdown()
         httpd.server_close()
+
+
+def _wire(
+    base: str, method: str, path: str, body: dict[str, Any] | None = None
+) -> tuple[int, dict[str, Any]]:
+    """Read the status and body off the socket, including for HEAD.
+
+    ``urllib`` reports a HEAD response as empty even when the server wrote a
+    JSON body, so a method check that used it would not see the 405 document.
+    """
+
+    host_port = base.removeprefix("http://")
+    host, port_text = host_port.rsplit(":", 1)
+    payload = json.dumps(body).encode() if body is not None else b""
+    headers = [
+        f"{method} {path} HTTP/1.1",
+        f"Host: {host}:{port_text}",
+        "Connection: close",
+    ]
+    if body is not None:
+        headers.append("content-type: application/json")
+        headers.append(f"content-length: {len(payload)}")
+    request = ("\r\n".join(headers) + "\r\n\r\n").encode() + payload
+    with socket.create_connection((host, int(port_text)), timeout=5) as sock:
+        sock.sendall(request)
+        data = b""
+        while True:
+            chunk = sock.recv(65536)
+            if not chunk:
+                break
+            data += chunk
+    head, _, raw = data.partition(b"\r\n\r\n")
+    status = int(head.split()[1])
+    try:
+        loaded = json.loads(raw or b"{}")
+    except json.JSONDecodeError:
+        return status, {"error": raw.decode("utf-8", "replace")}
+    if isinstance(loaded, dict):
+        return status, loaded
+    return status, {"error": raw.decode("utf-8", "replace")}
 
 
 def preview_query(delivery_id: str) -> str:
@@ -296,6 +338,46 @@ def test_put_elsewhere_stays_unsupported(server: Any) -> None:
     assert status == 501
 
 
+@pytest.mark.parametrize("method", ["HEAD", "PATCH", "OPTIONS", "TRACE", "CONNECT", "CUSTOM"])
+def test_other_non_get_preview_methods_are_405_and_do_not_receive(
+    server: Any, assignment: LessonAssignmentV1, method: str
+) -> None:
+    status, body = _wire(
+        server.base, method, preview_query("delivery-001"), payload_for(assignment)
+    )
+    assert status == 405
+    assert body == {"error": "method not allowed"}
+    status, listed = server("GET", LESSON_DELIVERY_API_PREFIX)
+    assert status == 200
+    assert listed["count"] == 0
+
+
+def test_head_on_a_stored_delivery_does_not_preview(
+    server: Any, assignment: LessonAssignmentV1
+) -> None:
+    sent = payload_for(assignment)
+    assert server("POST", LESSON_DELIVERY_API_PREFIX, sent)[0] == 201
+    status, body = _wire(server.base, "HEAD", preview_query("delivery-001"))
+    assert status == 405
+    assert body == {"error": "method not allowed"}
+    status, preview = server("GET", preview_query("delivery-001"))
+    assert status == 200
+    assert preview["preview_status"] == "READY"
+    status, fetched = server("GET", f"{LESSON_DELIVERY_API_PREFIX}/delivery-001")
+    assert status == 200
+    assert fetched == sent
+
+
+def test_head_and_patch_off_the_preview_route_keep_their_old_answers(server: Any) -> None:
+    status, _body = server("HEAD", "/index.html")
+    assert status == 200
+    status, _body = server("PATCH", "/index.html")
+    assert status == 501
+    status, body = _wire(server.base, "CUSTOM", "/index.html")
+    assert status == 501
+    assert body["error"] != "method not allowed"
+
+
 def test_an_unexpected_failure_is_a_sanitized_500(
     server: Any, assignment: LessonAssignmentV1, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -311,6 +393,28 @@ def test_an_unexpected_failure_is_a_sanitized_500(
     status, fetched = server("GET", f"{LESSON_DELIVERY_API_PREFIX}/delivery-001")
     assert status == 200
     assert fetched["delivery_id"] == "delivery-001"
+
+
+def test_a_serializer_failure_is_a_sanitized_500_on_the_localhost_route(
+    server: Any, assignment: LessonAssignmentV1, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sent = payload_for(assignment)
+    assert server("POST", LESSON_DELIVERY_API_PREFIX, sent)[0] == 201
+
+    def boom(_preview: object) -> dict[str, Any]:
+        raise RuntimeError("serializer secret")
+
+    monkeypatch.setattr(
+        "master_all_strings.mvp.lesson_delivery_api.preview_to_dict",
+        boom,
+    )
+    status, body = server("GET", preview_query("delivery-001"))
+    assert status == 500
+    assert body == {"error": "internal server error"}
+    assert "serializer secret" not in json.dumps(body)
+    status, fetched = server("GET", f"{LESSON_DELIVERY_API_PREFIX}/delivery-001")
+    assert status == 200
+    assert fetched == sent
 
 
 def test_repeated_and_concurrent_previews_do_not_change_stage_1_bytes(
