@@ -16,7 +16,10 @@ from urllib.parse import unquote, urlparse
 from master_all_strings.media.catalog import default_media_root
 from master_all_strings.media.presentation import lesson_media_payload
 from master_all_strings.media.resolver import MediaResolver
-from master_all_strings.mvp.lesson_delivery_api import LocalLessonDeliveryApi
+from master_all_strings.mvp.lesson_delivery_api import (
+    LESSON_DELIVERY_PREVIEW_PATH,
+    LocalLessonDeliveryApi,
+)
 
 __all__ = ["find_available_local_port", "serve_mvp_directory"]
 
@@ -41,6 +44,17 @@ def _is_lesson_delivery(path: str) -> bool:
     return path == _LESSON_DELIVERY_PREFIX or path.startswith(_LESSON_DELIVERY_PREFIX + "/")
 
 
+def _is_lesson_delivery_preview(path: str) -> bool:
+    """Exact sibling of the delivery collection.
+
+    ``lesson-delivery-preview`` shares a prefix with nothing we already route
+    only when the comparison is equality. A delivery id that ends in
+    ``/preview`` still belongs to the collection route.
+    """
+
+    return path == LESSON_DELIVERY_PREVIEW_PATH
+
+
 class _QuietHandler(SimpleHTTPRequestHandler):
     performance_api: Any = None
     education_api: Any = None
@@ -54,6 +68,10 @@ class _QuietHandler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         path = unquote(parsed.path)
+        if _is_lesson_delivery_preview(path):
+            # Query stays encoded. The API decodes delivery_id once.
+            self._lesson_delivery_http("GET", parsed.geturl(), {})
+            return
         if path.startswith("/api/education/guided-sessions"):
             self._guided_session_http("GET", path, {})
             return
@@ -107,9 +125,47 @@ class _QuietHandler(SimpleHTTPRequestHandler):
             return
         super().do_GET()
 
+    def do_HEAD(self) -> None:  # noqa: N802
+        # The static handler's inherited HEAD serves a file and would answer
+        # this path with 404. The preview route's only success method is GET.
+        parsed = urlparse(self.path)
+        if _is_lesson_delivery_preview(unquote(parsed.path)):
+            self._discard_body()
+            self._lesson_delivery_http("HEAD", parsed.geturl(), {})
+            return
+        super().do_HEAD()
+
+    def do_PUT(self) -> None:  # noqa: N802
+        self._preview_or_unsupported("PUT")
+
+    def do_DELETE(self) -> None:  # noqa: N802
+        self._preview_or_unsupported("DELETE")
+
+    def __getattr__(self, name: str) -> Any:
+        """Verbs this class does not declare still meet the preview refusal.
+
+        ``BaseHTTPRequestHandler`` answers an unimplemented verb with 501
+        before any route code runs. On the preview path that would break the
+        promise that every method other than GET is 405. Elsewhere the 501
+        stands.
+        """
+
+        if not name.startswith("do_"):
+            raise AttributeError(name)
+        method = name.removeprefix("do_")
+
+        def respond() -> None:
+            self._preview_or_unsupported(method)
+
+        return respond
+
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         path = unquote(parsed.path)
+        if _is_lesson_delivery_preview(path):
+            self._discard_body()
+            self._lesson_delivery_http("POST", parsed.geturl(), {})
+            return
         if path.startswith("/api/education/guided-sessions"):
             try:
                 length = int(self.headers.get("content-length", "0"))
@@ -162,6 +218,23 @@ class _QuietHandler(SimpleHTTPRequestHandler):
             self.send_header("content-length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+
+    def _preview_or_unsupported(self, method: str) -> None:
+        parsed = urlparse(self.path)
+        if _is_lesson_delivery_preview(unquote(parsed.path)):
+            self._discard_body()
+            self._lesson_delivery_http(method, parsed.geturl(), {})
+            return
+        self.send_error(501, f"Unsupported method ({method!r})")
+
+    def _discard_body(self) -> None:
+        raw = self.headers.get("content-length", "0")
+        try:
+            length = int(raw)
+        except ValueError:
+            return
+        if length > 0:
+            self.rfile.read(length)
 
     def _json_body(self) -> dict[str, Any] | None:
         """Read a JSON object body, answering 400 itself when it is not one."""
