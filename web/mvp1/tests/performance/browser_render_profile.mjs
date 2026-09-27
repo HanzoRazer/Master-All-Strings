@@ -272,7 +272,7 @@ function reduceTrace(events, startMark, endMark, perFrame = null) {
       byThread[role][name] = {
         count: list.length,
         union_ms: unionMs(list.map((event) => [event.from, event.to])),
-        max_ms: Math.max(...list.map((event) => (event.to - event.from) / 1000)),
+        max_ms: list.reduce((most, event) => Math.max(most, (event.to - event.from) / 1000), 0),
       };
     }
   }
@@ -333,7 +333,10 @@ function reduceTrace(events, startMark, endMark, perFrame = null) {
 async function traced(cdp, page, url, eventCount) {
   const events = [];
   const collect = (message) => {
-    if (message.method === "Tracing.dataCollected") events.push(...message.params.value);
+    // Not push(...value): a large trace chunk overflows the argument stack.
+    if (message.method === "Tracing.dataCollected") {
+      for (const event of message.params.value) events.push(event);
+    }
   };
   cdp.listeners.add(collect);
   try {
