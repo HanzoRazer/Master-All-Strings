@@ -12,7 +12,7 @@ pull request merges the next branch clears it.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| DO-016 delivery id and digest | fix/do016-delivery-id-and-digest | Claude | #47 | bc835a4 | in review | 2026-09-23 |
+| MAS-PERF-002R | cursor/mas-browser-render-profile-r01 | Claude | #48 | c832aef | green | 2026-09-26 |
 
 An empty table means nothing is in flight.
 

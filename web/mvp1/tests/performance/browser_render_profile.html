@@ -1,0 +1,55 @@
+<!doctype html>
+<!--
+  MAS-PERF-002R browser render profile page. Test-only.
+
+  The fretboard and score-panel markup is the product's own, copied from
+  web/mvp1/index.html with the controls around it left out, and styled by the
+  product stylesheets. app.js is not loaded: the measurement module drives
+  FretboardRenderer and the TAB/notation views directly, so what is timed is
+  the product code and nothing that happens to share its page.
+
+  The import map lets the unmodified benchmark fixtures load here; see
+  browser_crypto_shim.js.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MAS-PERF-002R browser render profile</title>
+    <link rel="stylesheet" href="../../styles.css" />
+    <link rel="stylesheet" href="../../score-view.css" />
+    <script type="importmap">
+      { "imports": { "node:crypto": "./browser_crypto_shim.js" } }
+    </script>
+  </head>
+  <body>
+    <main class="stage">
+      <div class="board-shell">
+        <div class="board-header">
+          <div id="instrumentTitle">Instrument</div>
+        </div>
+        <div class="board" id="board">
+          <div class="lane-labels" id="laneLabels"></div>
+          <div class="scroll-viewport" id="scrollViewport">
+            <div class="scroll-canvas" id="scrollCanvas">
+              <div class="play-line" id="playLine"></div>
+            </div>
+          </div>
+          <div class="unplayable-gutter" id="unplayableGutter">
+            <div class="gutter-title">Unplayable</div>
+            <div class="gutter-notes" id="gutterNotes"></div>
+          </div>
+        </div>
+        <div class="neck-map" id="neckMap" aria-label="Neck map overview"></div>
+      </div>
+
+      <section class="score-panel" id="scorePanel" aria-label="Score views">
+        <div class="score-panel__views">
+          <div class="score-panel__view" id="tabView" aria-label="Tablature"></div>
+          <div class="score-panel__view" id="notationView" aria-label="Standard notation"></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./browser_render_profile_page.js"></script>
+  </body>
+</html>
