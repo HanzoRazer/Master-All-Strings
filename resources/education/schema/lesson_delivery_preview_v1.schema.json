@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/education/lesson-delivery-preview-v1.schema.json",
+  "title": "LessonDeliveryPreviewV1",
+  "description": "Read-only inspection of one received lesson delivery. READY means the lesson can be inspected on this device. It does not mean the student accepted it, started it, played it, or completed it. Addressing is not included: sender, recipient, and classroom labels authorize nothing. The embedded assignment is not returned.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "preview_status",
+    "delivery_id",
+    "assignment_id",
+    "content_id",
+    "assignment_artifact_digest",
+    "assignment_behavior_digest",
+    "title",
+    "canonical_event_count",
+    "canonical_event_ids",
+    "playback_policy",
+    "spatial_policy",
+    "meter_change_count",
+    "instruction_objective",
+    "teacher_note"
+  ],
+  "properties": {
+    "schema_id": { "const": "master_all_strings.lesson_delivery_preview" },
+    "schema_version": { "const": "1.0.0" },
+    "preview_status": {
+      "const": "READY",
+      "description": "The only success status. Failures are HTTP errors, not another value here."
+    },
+    "delivery_id": { "$ref": "#/$defs/opaqueRef" },
+    "assignment_id": { "$ref": "#/$defs/opaqueRef" },
+    "content_id": { "$ref": "#/$defs/opaqueRef" },
+    "assignment_artifact_digest": {
+      "$ref": "#/$defs/digest",
+      "description": "The digest declared on the stored envelope, not a value recomputed for this response."
+    },
+    "assignment_behavior_digest": {
+      "$ref": "#/$defs/digest",
+      "description": "The behavior digest declared on the stored envelope. A routing-only edit does not move this digest."
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "canonical_event_count": { "type": "integer", "minimum": 1 },
+    "canonical_event_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Resolver event order. Not a second ordering of the assignment."
+    },
+    "playback_policy": { "$ref": "#/$defs/playbackPolicy" },
+    "spatial_policy": { "$ref": "#/$defs/spatialPolicy" },
+    "meter_change_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "How many meter changes the resolver kept after same-tick dedupe."
+    },
+    "instruction_objective": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    },
+    "teacher_note": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    }
+  },
+  "$defs": {
+    "opaqueRef": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(.*\\S)?$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "playbackPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The resolver's playback request. It does not assert that a device can sound the lesson.",
+      "required": [
+        "tempo_bpm",
+        "start_tick",
+        "end_tick",
+        "loop_enabled",
+        "count_in_bars",
+        "ticks_per_quarter",
+        "source_tempo_bpm"
+      ],
+      "properties": {
+        "tempo_bpm": { "anyOf": [{ "type": "number" }, { "type": "null" }] },
+        "start_tick": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] },
+        "end_tick": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] },
+        "loop_enabled": { "type": "boolean" },
+        "count_in_bars": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] },
+        "ticks_per_quarter": { "type": "integer", "minimum": 1 },
+        "source_tempo_bpm": { "anyOf": [{ "type": "number" }, { "type": "null" }] }
+      }
+    },
+    "spatialPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Spatial intent from the resolver. Fingering positions are not chosen here.",
+      "required": [
+        "instrument_profile_id",
+        "fingering_policy_id",
+        "preferred_fret_min",
+        "preferred_fret_max",
+        "open_string_preference"
+      ],
+      "properties": {
+        "instrument_profile_id": { "type": "string", "minLength": 1 },
+        "fingering_policy_id": { "type": "string", "minLength": 1 },
+        "preferred_fret_min": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] },
+        "preferred_fret_max": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] },
+        "open_string_preference": {
+          "enum": ["allow", "prefer", "avoid", "exclude"]
+        }
+      }
+    }
+  }
+}
