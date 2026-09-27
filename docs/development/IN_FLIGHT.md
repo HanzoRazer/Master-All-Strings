@@ -12,7 +12,7 @@ pull request merges the next branch clears it.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| MAS-PERF-002R | cursor/mas-browser-render-profile-r01 | Claude | — | c832aef | in flight | 2026-09-26 |
+| MAS-PERF-002R | cursor/mas-browser-render-profile-r01 | Claude | #48 | c832aef | in review | 2026-09-26 |
 
 An empty table means nothing is in flight.
 
