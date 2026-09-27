@@ -150,15 +150,16 @@ def place_long_task(
 
 
 def attribution_status(attribution: list[dict[str, Any]] | None) -> str:
+    """``unknown`` whenever the browser could not name the culprit.
+
+    A container of ``window`` says where the task ran, not what ran it, so it
+    does not lift an ``unknown`` name to attributed. The container fields stay
+    in the record either way.
+    """
+
     if not attribution:
         return "missing"
-    names = {item.get("name") for item in attribution}
-    containers = {
-        item.get(key)
-        for item in attribution
-        for key in ("container_type", "container_name", "container_id", "container_src")
-    } - {None, ""}
-    if names <= {"unknown", None} and not containers:
+    if {item.get("name") for item in attribution} <= {"unknown", None, ""}:
         return "unknown"
     return "attributed"
 
@@ -351,14 +352,18 @@ def _windows_query(expression: str) -> str:
     return _run(["powershell", "-NoProfile", "-Command", expression])
 
 
-def environment_metadata(raw: dict[str, Any], chrome: Path) -> dict[str, Any]:
-    page_env = raw["runs"][next(iter(raw["runs"]))]["fretboard"]["environment"]
+def host_metadata(chrome: Path) -> dict[str, Any]:
+    """The machine and the tree, read when collection starts.
+
+    Kept with the raw output, so evidence rebuilt later with ``--from-raw``
+    still names the commit and tree state that were actually measured.
+    """
+
     cpu = _windows_query("(Get-CimInstance Win32_Processor | Select-Object -First 1).Name")
     refresh = _windows_query(
         "(Get-CimInstance Win32_VideoController | Where-Object CurrentRefreshRate "
         "| Select-Object -First 1).CurrentRefreshRate"
     )
-    head = _git("rev-parse", "HEAD")
     return {
         "os": platform.platform(),
         "architecture": platform.machine(),
@@ -366,23 +371,33 @@ def environment_metadata(raw: dict[str, Any], chrome: Path) -> dict[str, Any]:
         "logical_cpus": os.cpu_count(),
         "python_version": platform.python_version(),
         "node_version": _run(["node", "--version"]) or "NOT_AVAILABLE",
-        "browser": {**raw["browser"], "executable": str(chrome), "headed": True},
-        "viewport": page_env["viewport"],
-        "device_scale_factor": page_env["device_pixel_ratio"],
+        "browser_executable": str(chrome),
         "display_refresh_rate_hz": int(refresh) if refresh.isdigit() else "NOT_AVAILABLE",
         "display_refresh_rate_source": "Win32_VideoController.CurrentRefreshRate"
         if refresh.isdigit()
         else None,
+        "repository_sha": _git("rev-parse", "HEAD") or "NOT_AVAILABLE",
+        "base_sha": _git("merge-base", "HEAD", "origin/main") or "NOT_AVAILABLE",
+        "working_tree_clean": _git("status", "--porcelain") == "",
+        "captured_at": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
+        "host_note": "developer machine, not an isolated host",
+    }
+
+
+def environment_metadata(raw: dict[str, Any]) -> dict[str, Any]:
+    host = dict(raw["host"])
+    page_env = raw["runs"][next(iter(raw["runs"]))]["fretboard"]["environment"]
+    executable = host.pop("browser_executable")
+    return {
+        **host,
+        "browser": {**raw["browser"], "executable": executable, "headed": True},
+        "viewport": page_env["viewport"],
+        "device_scale_factor": page_env["device_pixel_ratio"],
         "cross_origin_isolated": page_env["cross_origin_isolated"],
         "visibility_state": page_env["visibility_state"],
         "has_focus": page_env["has_focus"],
         "longtask_supported": page_env["longtask_supported"],
         "fretboard_viewport_width_px": page_env["fretboard_viewport_width_px"],
-        "repository_sha": head or "NOT_AVAILABLE",
-        "base_sha": _git("merge-base", "HEAD", "origin/main") or "NOT_AVAILABLE",
-        "working_tree_clean": _git("status", "--porcelain") == "",
-        "captured_at": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
-        "host_note": "developer machine, not an isolated host",
     }
 
 
@@ -476,7 +491,7 @@ def collect(chrome: Path, sizes: list[int]) -> tuple[dict[str, Any], list[str]]:
 # --- evidence ----------------------------------------------------------------
 
 
-def build_evidence(raw: dict[str, Any], sizes: list[int], chrome: Path) -> dict[str, Any]:
+def build_evidence(raw: dict[str, Any], sizes: list[int]) -> dict[str, Any]:
     operations = {str(size): build_operations(raw["runs"][str(size)]) for size in sizes}
     frame_windows: dict[str, Any] = {
         key: {"run_1": ops["m2_frame_window"]} for key, ops in operations.items()
@@ -500,7 +515,7 @@ def build_evidence(raw: dict[str, Any], sizes: list[int], chrome: Path) -> dict[
             "note": "Never pushed and not recoverable. Its reported numbers were planning "
             "leads only; every measurement here was produced anew by MAS-PERF-002R.",
         },
-        "environment": environment_metadata(raw, chrome),
+        "environment": environment_metadata(raw),
         "collection": {
             "runner_version": RUNNER_VERSION,
             "harness_version": raw["runs"][str(sizes[0])]["fretboard"]["environment"][
@@ -560,11 +575,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.from_raw:
         raw = json.loads(args.from_raw.read_text(encoding="utf-8"))
     else:
+        host = host_metadata(chrome)
         raw, _ = collect(chrome, sizes)
+        raw["host"] = host
         if args.raw_out:
             args.raw_out.write_text(json.dumps(raw), encoding="utf-8")
 
-    evidence = build_evidence(raw, sizes, chrome)
+    evidence = build_evidence(raw, sizes)
     disagreements = [key for key, value in evidence["workloads"].items() if not value["agree"]]
     if disagreements:
         print(f"FAIL workload digests disagree at {', '.join(disagreements)}", file=sys.stderr)
