@@ -160,3 +160,86 @@ a `UnicodeDecodeError` from inside the boundary.
 An unexpected exception is a `500` carrying no detail, not a `400`. A defect in
 this application is not a malformed request, and answering `400` would send a
 caller looking for a mistake in a correct payload.
+
+## Stage 2 — local lesson selection and verified preview
+
+| Field | Value |
+| --- | --- |
+| Branch | `cursor/do016-lesson-preview-s02` |
+| Base | `a5cf2640a733ffdafef4bd46280d092a60a3ecaf` |
+| Agent | Cursor |
+| Merge / tag / release | not authorized |
+
+Stage 1 left a received envelope in an inbox and returned that same envelope on
+GET. Stage 2 lets a caller name one of those deliveries and read a bounded
+summary of the lesson it carries. The summary is produced on this device. It
+is not acceptance, not a start, not playback, and not completion.
+
+### Route
+
+```text
+GET /api/education/lesson-delivery-preview?delivery_id=<encoded-value>
+```
+
+This is an exact sibling of `/api/education/lesson-deliveries`, not a path
+beneath it. A delivery id that ends in `/preview`, or that contains `/`, `%`,
+space, `#`, `?`, or `&`, is still a Stage 1 id when it is fetched through the
+collection. The preview route matches the path by equality and reads the id
+from exactly one query value.
+
+The query value is percent-decoded once, by `parse_qs` with blank values kept,
+at the HTTP boundary. It is not passed through `unquote()` again and it is not
+stripped. A missing, blank, whitespace-only, or repeated `delivery_id` is
+`400`. Any method other than GET on that exact path is `405`.
+
+### What a preview checks, and what it returns
+
+The stored envelope comes from `LessonDeliveryService.get()`. Both declared
+digests are rechecked with `validate_delivery_integrity()` before
+`resolve_lesson_assignment()` runs. `envelope_for()` is not used on the way
+out, so the response carries the digests the envelope declared rather than a
+freshly substituted pair.
+
+`LessonDeliveryPreviewV1` (`master_all_strings.lesson_delivery_preview`,
+`1.0.0`) is a closed document:
+
+| Field | Source |
+| --- | --- |
+| `preview_status` | always `READY` on success; failures are HTTP errors, not a partial document |
+| `delivery_id`, `assignment_id`, `content_id` | the delivery and the resolved lesson identity |
+| both digests | the envelope's declared values |
+| `title`, `canonical_event_count`, `canonical_event_ids` | resolver event order |
+| `playback_policy` | the resolver's playback request, not a second planner |
+| `spatial_policy` | the resolver's spatial intent |
+| `meter_change_count` | the resolver's meter map, after its same-tick dedupe |
+| `instruction_objective`, `teacher_note` | the resolver, null when the lesson has none |
+
+`sender_ref`, `recipient_ref`, and `classroom_ref` stay off the document. They
+are opaque labels and authorize nothing. The document does not claim the lesson
+can be played on a particular device.
+
+### Failures
+
+| Condition | Status | Body |
+| --- | --- | --- |
+| Missing, blank, or repeated `delivery_id` | 400 | `{"error": ...}` |
+| Unknown delivery | 404 | Stage 1 not-found text |
+| Declared digest does not recompute | 409 | `{"error": "integrity_mismatch"}` |
+| Envelope is intact but the assignment cannot resolve | 422 | `{"error": "unresolvable_assignment"}` |
+| Method other than GET on the preview path | 405 | `{"error": "method not allowed"}` |
+| Unexpected failure | 500 | `{"error": "internal server error"}` |
+
+A failure returns no preview fields. Stage 1 POST, list, and GET-one are
+unchanged, including duplicate-identity `409` and digest `400` on receive.
+
+### What this stage does not do
+
+No student UI, no teacher send path, no remote transport, no accounts, no
+authorization, no persistence, no acceptance record, no guided session, no
+evaluation, and no playback. `LessonAssignmentV1` and
+`LessonDeliveryEnvelopeV1` stay at schema 1.0.0. DO-015 frozen artifacts and
+the certified browser runtime are not part of this stage.
+
+### Verification
+
+Recorded after the gate run on this branch.
