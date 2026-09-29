@@ -19,9 +19,14 @@ Status codes carry the distinction the service draws:
     409  a delivery identity already used, or a stored preview whose declared
          digests do not recompute (``integrity_mismatch``)
     404  no such delivery
-    405  a method other than GET on the preview route
+    405  a method other than GET on the preview route, or other than GET or POST
+         on the practice-choice route
     422  a stored assignment that cannot be resolved (``unresolvable_assignment``)
     500  a defect in this application, reported without detail
+
+A practice choice uses the same codes, plus ``unknown_practice_choice``,
+``unknown_delivery_id``, ``stale_preview``, and ``choice_conflict``. Those
+bodies are codes. Stage 1's not-found sentence stays on the delivery routes.
 """
 
 from __future__ import annotations
@@ -30,7 +35,10 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
-from master_all_strings.education.assignment_delivery import LessonDeliverySummaryV1
+from master_all_strings.education.assignment_delivery import (
+    LessonDeliverySummaryV1,
+    require_digest,
+)
 from master_all_strings.education.assignment_delivery_preview import (
     DeliveryIntegrityError,
     LessonDeliveryPreviewService,
@@ -47,21 +55,43 @@ from master_all_strings.education.assignment_delivery_service import (
     LessonDeliveryService,
 )
 from master_all_strings.education.errors import EducationContractError
+from master_all_strings.education.local_practice_choice import (
+    ChoiceConflictError,
+    LocalPracticeChoiceService,
+    StalePreviewError,
+    UnknownPracticeChoiceError,
+    choice_to_dict,
+)
+from master_all_strings.education.local_practice_choice_repository import (
+    InMemoryLocalPracticeChoiceRepository,
+)
 from master_all_strings.lesson.errors import LessonAssignmentError
 
 __all__ = [
     "LESSON_DELIVERY_API_PREFIX",
     "LESSON_DELIVERY_PREVIEW_PATH",
+    "LESSON_PRACTICE_CHOICE_PATH",
     "LocalLessonDeliveryApi",
 ]
 
 LESSON_DELIVERY_API_PREFIX = "/api/education/lesson-deliveries"
 #: Sibling of the collection, not a suffix of it. Equality is the match.
 LESSON_DELIVERY_PREVIEW_PATH = "/api/education/lesson-delivery-preview"
+#: Exact collection. Not a suffix of the delivery inbox or the preview route.
+LESSON_PRACTICE_CHOICE_PATH = "/api/education/lesson-practice-choices"
+_CHOICE_FIELDS = (
+    "delivery_id",
+    "expected_assignment_artifact_digest",
+    "expected_assignment_behavior_digest",
+)
 
 
 class _PreviewQueryError(Exception):
     """The preview route was asked for an identity it can refuse locally."""
+
+
+class _ChoiceRequestError(Exception):
+    """The choice route was asked for a body or query it can refuse locally."""
 
 
 def _single_delivery_id(query: str) -> str:
@@ -83,6 +113,33 @@ def _single_delivery_id(query: str) -> str:
     if not delivery_id.strip():
         raise _PreviewQueryError("delivery_id must be nonblank")
     return delivery_id
+
+
+def _choice_body(payload: dict[str, Any]) -> tuple[str, str, str]:
+    """Exactly the three choice fields. The caller cannot send a status."""
+
+    if not isinstance(payload, dict):
+        raise _ChoiceRequestError("payload must be an object")
+    if set(payload) != set(_CHOICE_FIELDS):
+        names = ", ".join(_CHOICE_FIELDS)
+        raise _ChoiceRequestError(f"choice body must contain exactly {names}")
+    delivery_id = payload["delivery_id"]
+    if not isinstance(delivery_id, str) or not delivery_id.strip():
+        raise _ChoiceRequestError("delivery_id must be nonblank")
+    artifact = payload["expected_assignment_artifact_digest"]
+    behavior = payload["expected_assignment_behavior_digest"]
+    _require_choice_digest(artifact, "expected_assignment_artifact_digest")
+    _require_choice_digest(behavior, "expected_assignment_behavior_digest")
+    return delivery_id, artifact, behavior
+
+
+def _require_choice_digest(value: object, field_name: str) -> None:
+    if not isinstance(value, str):
+        raise _ChoiceRequestError(f"{field_name} must be a string")
+    try:
+        require_digest(value, field_name)
+    except EducationContractError as exc:
+        raise _ChoiceRequestError(str(exc)) from exc
 
 
 def _summary_to_dict(summary: LessonDeliverySummaryV1) -> dict[str, Any]:
@@ -109,6 +166,15 @@ class LocalLessonDeliveryApi:
     """
 
     service: LessonDeliveryService = field(default_factory=LessonDeliveryService)
+    choices: InMemoryLocalPracticeChoiceRepository = field(
+        default_factory=InMemoryLocalPracticeChoiceRepository
+    )
+
+    def _practice_choices(self) -> LocalPracticeChoiceService:
+        return LocalPracticeChoiceService(
+            LessonDeliveryPreviewService(self.service),
+            self.choices,
+        )
 
     def receive(self, payload: dict[str, Any]) -> dict[str, Any]:
         envelope = deserialize_delivery(payload)
@@ -131,6 +197,8 @@ class LocalLessonDeliveryApi:
         """Map a request onto the service, and failures onto status codes."""
 
         parsed = urlparse(path)
+        if parsed.path == LESSON_PRACTICE_CHOICE_PATH:
+            return self._handle_choice(method, parsed.query, payload)
         if parsed.path == LESSON_DELIVERY_PREVIEW_PATH:
             return self._handle_preview(method, parsed.query)
         trimmed = parsed.path[len(LESSON_DELIVERY_API_PREFIX) :].strip("/")
@@ -187,6 +255,60 @@ class LocalLessonDeliveryApi:
             return 404, {"error": str(exc)}
         except DeliveryIntegrityError:
             return 409, {"error": "integrity_mismatch"}
+        except UnresolvableAssignmentError:
+            return 422, {"error": "unresolvable_assignment"}
+        except Exception:
+            return 500, {"error": "internal server error"}
+
+    def _handle_choice(
+        self, method: str, query: str, payload: dict[str, Any]
+    ) -> tuple[int, dict[str, Any]]:
+        """Record or read one local practice choice.
+
+        Failures are codes and carry no choice fields. GET previews again
+        before it will say the choice is still usable, and does not delete it.
+        """
+
+        if method not in ("GET", "POST"):
+            return 405, {"error": "method not allowed"}
+        if method == "POST":
+            if query:
+                return 400, {"error": "query string is not allowed"}
+            try:
+                delivery_id, artifact, behavior = _choice_body(payload)
+            except _ChoiceRequestError as exc:
+                return 400, {"error": str(exc)}
+            try:
+                choice, created = self._practice_choices().choose(delivery_id, artifact, behavior)
+                document = choice_to_dict(choice)
+                return (201 if created else 200), document
+            except LessonDeliveryNotFoundError:
+                return 404, {"error": "unknown_delivery_id"}
+            except DeliveryIntegrityError:
+                return 409, {"error": "integrity_mismatch"}
+            except StalePreviewError:
+                return 409, {"error": "stale_preview"}
+            except ChoiceConflictError:
+                return 409, {"error": "choice_conflict"}
+            except UnresolvableAssignmentError:
+                return 422, {"error": "unresolvable_assignment"}
+            except Exception:
+                return 500, {"error": "internal server error"}
+        try:
+            delivery_id = _single_delivery_id(query)
+        except _PreviewQueryError as exc:
+            return 400, {"error": str(exc)}
+        try:
+            choice = self._practice_choices().get(delivery_id)
+            return 200, choice_to_dict(choice)
+        except UnknownPracticeChoiceError:
+            return 404, {"error": "unknown_practice_choice"}
+        except LessonDeliveryNotFoundError:
+            return 404, {"error": "unknown_delivery_id"}
+        except DeliveryIntegrityError:
+            return 409, {"error": "integrity_mismatch"}
+        except StalePreviewError:
+            return 409, {"error": "stale_preview"}
         except UnresolvableAssignmentError:
             return 422, {"error": "unresolvable_assignment"}
         except Exception:

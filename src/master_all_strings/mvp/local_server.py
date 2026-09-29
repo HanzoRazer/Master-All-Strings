@@ -18,6 +18,7 @@ from master_all_strings.media.presentation import lesson_media_payload
 from master_all_strings.media.resolver import MediaResolver
 from master_all_strings.mvp.lesson_delivery_api import (
     LESSON_DELIVERY_PREVIEW_PATH,
+    LESSON_PRACTICE_CHOICE_PATH,
     LocalLessonDeliveryApi,
 )
 
@@ -55,6 +56,18 @@ def _is_lesson_delivery_preview(path: str) -> bool:
     return path == LESSON_DELIVERY_PREVIEW_PATH
 
 
+def _is_lesson_practice_choice(path: str) -> bool:
+    """Exact collection, not a delivery id and not the preview sibling."""
+
+    return path == LESSON_PRACTICE_CHOICE_PATH
+
+
+def _is_closed_education_method(path: str) -> bool:
+    """Routes whose unsupported verbs are 405 rather than a static 501."""
+
+    return _is_lesson_delivery_preview(path) or _is_lesson_practice_choice(path)
+
+
 class _QuietHandler(SimpleHTTPRequestHandler):
     performance_api: Any = None
     education_api: Any = None
@@ -68,7 +81,7 @@ class _QuietHandler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         path = unquote(parsed.path)
-        if _is_lesson_delivery_preview(path):
+        if _is_lesson_delivery_preview(path) or _is_lesson_practice_choice(path):
             # Query stays encoded. The API decodes delivery_id once.
             self._lesson_delivery_http("GET", parsed.geturl(), {})
             return
@@ -129,7 +142,7 @@ class _QuietHandler(SimpleHTTPRequestHandler):
         # The static handler's inherited HEAD serves a file and would answer
         # this path with 404. The preview route's only success method is GET.
         parsed = urlparse(self.path)
-        if _is_lesson_delivery_preview(unquote(parsed.path)):
+        if _is_closed_education_method(unquote(parsed.path)):
             self._discard_body()
             self._lesson_delivery_http("HEAD", parsed.geturl(), {})
             return
@@ -165,6 +178,16 @@ class _QuietHandler(SimpleHTTPRequestHandler):
         if _is_lesson_delivery_preview(path):
             self._discard_body()
             self._lesson_delivery_http("POST", parsed.geturl(), {})
+            return
+        if _is_lesson_practice_choice(path):
+            if parsed.query:
+                self._discard_body()
+                self._lesson_delivery_http("POST", parsed.geturl(), {})
+                return
+            payload_or_error = self._json_body()
+            if payload_or_error is None:
+                return
+            self._lesson_delivery_http("POST", parsed.geturl(), payload_or_error)
             return
         if path.startswith("/api/education/guided-sessions"):
             try:
@@ -221,7 +244,7 @@ class _QuietHandler(SimpleHTTPRequestHandler):
 
     def _preview_or_unsupported(self, method: str) -> None:
         parsed = urlparse(self.path)
-        if _is_lesson_delivery_preview(unquote(parsed.path)):
+        if _is_closed_education_method(unquote(parsed.path)):
             self._discard_body()
             self._lesson_delivery_http(method, parsed.geturl(), {})
             return
