@@ -480,4 +480,45 @@ This is a device-local choice UI only.
 
 ### Verification
 
-Gate results are filled in after the local run on this branch.
+Recorded on `cursor/do016-local-lesson-inbox-s04` after the gate run. The
+interpreter here is Python 3.12.3. CI runs the same commands on Python 3.11;
+this interpreter satisfies `requires-python >= 3.11`, and no gate was relaxed.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` | PASS |
+| `mypy` (strict, `src` only) | PASS, 169 source files |
+| `pytest --cov --cov-report=term-missing` | 3401 passed, 3 skipped, 95.70% (floor 95%) |
+| `npm test` in `web/mvp1` | 523 passed, 0 failed |
+| `python3 scripts/check_in_flight.py` | OK |
+| `python3 scripts/verify_do015_certification.py` | OK (9 of 9) |
+| `python3 scripts/verify_do015_publication.py` | OK (8 of 8), successor mode |
+| Stage 9 browser witness | PASS |
+
+The witness is `node web/mvp1/tests/do015_certification_capture.mjs`. It exited
+0 with final status `CLOSED` and 3 attempts. The harness rewrites
+`docs/mvp2/do015_artifacts/browser_smoke_summary.json`, so that file was
+restored. Its sha256 is
+`11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
+
+Merge base is `537dfb30b5f5fe2e6154408e89e761d7f904a53e`, the tip of
+`origin/main` at verification. The diff against that base is the register,
+this plan, and the new inbox page, client, stylesheet, and Node tests. It
+does not touch `LessonAssignmentV1`, `LessonDeliveryEnvelopeV1`,
+`LessonDeliveryPreviewV1`, `LocalPracticeChoiceV1`, certified `index.html`,
+`app.js`, `styles.css`, or the DO-015 frozen artifacts.
+
+The localhost browser smoke is `python3 /tmp/inbox-smoke/harness.py` against
+`serve_mvp_directory` on `web/mvp1` with the existing
+`LocalLessonDeliveryApi`. Chrome is `/usr/local/bin/google-chrome`, driven
+headless by puppeteer-core. It seeds a valid delivery with Stage 1 POST, then
+the harness injects a corrupt envelope and deletes one from that server's
+in-memory repository. There is no production route for either injection.
+Empty inbox, summary list, READY preview, `stale_preview` without a second
+POST, `CHOSEN_FOR_PRACTICE` after reload, `integrity_mismatch`, a removed
+delivery, and HTML-like text all passed. A desktop Chrome walkthrough of the
+same page showed the empty inbox, the choice, the reload, and the corrupt
+delivery.
+
+This is a device-local choice UI only. The inbox and the choice disappear
+when the server process ends. Practice activation remains a later order.
