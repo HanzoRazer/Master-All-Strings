@@ -272,3 +272,107 @@ Merge base is `a5cf2640a733ffdafef4bd46280d092a60a3ecaf`, the tip of
 `origin/main` at verification. The diff against that base does not touch
 `LessonAssignmentV1`, `LessonDeliveryEnvelopeV1` schema 1.0.0, `web/mvp1`
 product files, or the DO-015 frozen artifacts.
+
+## Stage 3 — local practice choice
+
+| Field | Value |
+| --- | --- |
+| Branch | `cursor/do016-local-practice-choice-s03` |
+| Base | `be22591367bab376a3ad88db4a93ffa0b274c2c9` |
+| Agent | Cursor |
+| Merge / tag / release | not authorized |
+
+Stage 2 previews a received delivery and changes nothing. Stage 3 records an
+explicit choice, on this device, to use that delivery for later practice. The
+record means chosen for practice here. It is not authenticated acceptance, and
+it is not evidence that the lesson started, played, or was completed.
+
+### Routes
+
+```text
+POST /api/education/lesson-practice-choices
+GET  /api/education/lesson-practice-choices?delivery_id=<encoded-value>
+```
+
+Both are exact paths. A delivery id is not this route, including one that ends
+in `/preview` or contains `/`, `%`, space, `#`, `?`, or `&`.
+
+POST takes a JSON object and nothing else. Any query string on that path,
+including `?delivery_id=`, is `400`. The body is the only source of the id:
+
+```json
+{
+  "delivery_id": "<opaque delivery ID>",
+  "expected_assignment_artifact_digest": "sha256:<64 lowercase hex>",
+  "expected_assignment_behavior_digest": "sha256:<64 lowercase hex>"
+}
+```
+
+GET reads exactly one nonblank `delivery_id`, percent-decoded once. The value
+is not stripped. A missing, blank, whitespace-only, or repeated id is `400`.
+Extra query fields do not filter or authorize. Any method other than GET or
+POST on the exact path is `405`, including `HEAD`.
+
+### What a choice checks
+
+Recording calls `LessonDeliveryPreviewService.preview()` first. That rechecks
+both stored digests and resolves the assignment. The expected digests are then
+compared with the envelope's declared digests. `envelope_for()` is not used to
+replace them. Only then does the choice repository run `put_if_absent` under
+its own lock. A stale request returns before that write, so it cannot replace
+a choice already stored.
+
+The store is in memory, separate from the delivery inbox, and keyed by
+`delivery_id`. There is no unconditional replacement.
+
+`LocalPracticeChoiceV1` (`master_all_strings.local_practice_choice`, `1.0.0`)
+is a closed document:
+
+| Field | Source |
+| --- | --- |
+| `choice_status` | always `CHOSEN_FOR_PRACTICE`; the caller cannot send a status |
+| `delivery_id`, `assignment_id`, `content_id` | the delivery and the resolved lesson |
+| both digests | the envelope's declared values, pinned on the choice |
+
+No student identity, addressing label, acceptance time, playback state, or
+assignment object is included. `recipient_ref` does not authorize or merge
+choices. Two deliveries of one assignment stay two choices.
+
+GET loads the stored choice, then previews again. The choice is returned only
+when that preview's identity and declared digests still match the pins. GET
+does not mutate or delete the choice.
+
+### Failures
+
+| Condition | Status | Body |
+| --- | --- | --- |
+| Malformed body, or any POST query string | 400 | `{"error": ...}` |
+| Missing, blank, or repeated GET `delivery_id` | 400 | `{"error": ...}` |
+| No choice stored | 404 | `{"error": "unknown_practice_choice"}` |
+| Delivery missing | 404 | `{"error": "unknown_delivery_id"}` |
+| Stored digest does not recompute | 409 | `{"error": "integrity_mismatch"}` |
+| Expected or pinned digests differ from the intact delivery | 409 | `{"error": "stale_preview"}` |
+| Choice already stored with different pins | 409 | `{"error": "choice_conflict"}` |
+| Assignment cannot resolve | 422 | `{"error": "unresolvable_assignment"}` |
+| Method other than GET or POST | 405 | `{"error": "method not allowed"}` |
+| Unexpected failure | 500 | `{"error": "internal server error"}` |
+
+A failure returns no choice fields. The first valid POST is `201`. An identical
+repeat — same delivery, assignment, content, and both digests — is `200` and
+the same document. Two concurrent identical POSTs store one choice and answer
+`201` and `200`.
+
+Stage 1 receive, list, and GET, and Stage 2 preview, stay as they were.
+
+### What this stage does not do
+
+No student UI, no teacher-visible acceptance, no login, no remote transport, no
+durable database, no synchronization, no guided session, no evaluation, no
+history update, and no playback. Authenticated acceptance and practice
+activation are a later order. `LessonAssignmentV1`, `LessonDeliveryEnvelopeV1`,
+and `LessonDeliveryPreviewV1` stay unchanged. DO-015 frozen artifacts and the
+certified browser runtime are not part of this stage.
+
+### Verification
+
+Recorded after the gate run on this branch.
