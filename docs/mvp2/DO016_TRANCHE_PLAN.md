@@ -403,3 +403,81 @@ Merge base is `be22591367bab376a3ad88db4a93ffa0b274c2c9`, the tip of
 Two concurrent identical choice POSTs against the threaded localhost server
 returned `201` and `200` and left one stored choice. This stage is local choice
 only. Authenticated acceptance and practice activation remain a later order.
+
+## Stage 4 — local lesson inbox
+
+| Field | Value |
+| --- | --- |
+| Branch | `cursor/do016-local-lesson-inbox-s04` |
+| Base | `537dfb30b5f5fe2e6154408e89e761d7f904a53e` |
+| Agent | Cursor |
+| Page | `/lesson-inbox.html` |
+| Merge / tag / release | not authorized |
+
+Stage 3 records a choice and does not show it. Stage 4 is a page on the
+existing localhost server so a person on this device can see received
+deliveries, request a fresh preview of one, see whether a valid local choice
+already exists, and explicitly choose that previewed delivery for later
+practice. The page calls the Stage 1–3 HTTP contracts. It adds no backend
+route, schema, or production hook.
+
+### What the page shows
+
+The list is summary metadata in server order: `delivery_id`, `assignment_id`,
+`content_id`, `sender_ref`, `recipient_ref`, and `classroom_ref`. A row does
+not resolve the lesson and does not authorize practice. Title, notes, event
+details, and both declared digests appear only after a successful `READY`
+preview. Choice status appears only in the selected panel. The list does not
+request a choice for every row.
+
+`recipient_ref` is an opaque recipient label. It is not the person using the
+page and it does not authorize.
+
+The page is a separate entry point. Certified `index.html` does not link to
+it. Styles live in `lesson-inbox.css`. Server strings are text, not HTML.
+Delivery ids are not read from a free-text field, the URL fragment, or
+browser storage.
+
+The inbox and the choice are in memory. The page says that they disappear
+when the server process ends.
+
+### How a selection becomes a choice
+
+Selecting a row, or refreshing the selected delivery, requests a new preview.
+Choice GET runs only after that preview is `READY`, the `delivery_id` matches
+the selection, and both declared digests are present. The client returns the
+HTTP status and the public `error` code. The page decides whether Choose is
+enabled.
+
+**Choose for practice** is enabled only when that full sequence succeeds and
+choice GET returns `404` with `unknown_practice_choice`. A successful preview
+does not clear `choice_conflict` or any other choice-GET failure. Any failure
+leaves Choose disabled until a later full sequence reaches that 404.
+
+Choose POSTs the preview document's declared digests as
+`expected_assignment_artifact_digest` and
+`expected_assignment_behavior_digest`. The page does not recompute them, does
+not take them from the list row, and does not retry POST. `201` and an
+identical `200` display `CHOSEN_FOR_PRACTICE` and do not open the lesson.
+An existing valid choice does not POST again.
+
+`stale_preview` keeps the pinned digests and tells the person to refresh the
+selected delivery. Refresh inbox reloads the list only. An older response
+cannot paint a newer selection. Opaque ids are encoded once with
+`encodeURIComponent`.
+
+### What this stage does not do
+
+No practice activation, remote delivery, student acceptance, guided session,
+Transport, playback, evaluation, or completion. No new backend endpoint.
+Corrupt or removed envelopes are injected only by the browser-smoke harness
+into that test server's in-memory repository. `LessonAssignmentV1`,
+`LessonDeliveryEnvelopeV1`, `LessonDeliveryPreviewV1`, and
+`LocalPracticeChoiceV1` stay unchanged. DO-015 frozen artifacts and the
+certified browser runtime are not part of this stage.
+
+This is a device-local choice UI only.
+
+### Verification
+
+Gate results are filled in after the local run on this branch.
