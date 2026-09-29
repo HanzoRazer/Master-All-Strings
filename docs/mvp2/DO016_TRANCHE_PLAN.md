@@ -375,4 +375,31 @@ certified browser runtime are not part of this stage.
 
 ### Verification
 
-Recorded after the gate run on this branch.
+Recorded on `cursor/do016-local-practice-choice-s03` after the gate run. The
+interpreter here is Python 3.12.3. CI runs the same commands on Python 3.11;
+this interpreter satisfies `requires-python >= 3.11`, and no gate was relaxed.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` | PASS |
+| `mypy` (strict, `src` only) | PASS, 169 source files |
+| `pytest --cov --cov-report=term-missing` | 3401 passed, 3 skipped, 95.70% (floor 95%) |
+| `npm test` in `web/mvp1` | 505 passed, 0 failed |
+| `python3 scripts/check_in_flight.py` | OK |
+| `python3 scripts/verify_do015_certification.py` | OK (9 of 9) |
+| `python3 scripts/verify_do015_publication.py` | OK (8 of 8), successor mode |
+| Stage 9 browser witness | PASS |
+
+The witness is `node web/mvp1/tests/do015_certification_capture.mjs`. It exited
+0 with final status `CLOSED` and 3 attempts. The harness rewrites
+`docs/mvp2/do015_artifacts/browser_smoke_summary.json` with fresh session
+identifiers, so that file was restored after the run.
+
+Merge base is `be22591367bab376a3ad88db4a93ffa0b274c2c9`, the tip of
+`origin/main` at verification. The diff against that base does not touch
+`LessonAssignmentV1`, `LessonDeliveryEnvelopeV1`, `LessonDeliveryPreviewV1`,
+`web/mvp1` product files, or the DO-015 frozen artifacts.
+
+Two concurrent identical choice POSTs against the threaded localhost server
+returned `201` and `200` and left one stored choice. This stage is local choice
+only. Authenticated acceptance and practice activation remain a later order.
