@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/education/local-practice-choice-v1.schema.json",
+  "title": "LocalPracticeChoiceV1",
+  "description": "A local device's choice to practice one received delivery. CHOSEN_FOR_PRACTICE means chosen on this device. It does not mean an authenticated student accepted the lesson, or that the lesson started, played, or was completed. Addressing, acceptance time, playback state, and the assignment object are not included.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "choice_status",
+    "delivery_id",
+    "assignment_id",
+    "content_id",
+    "assignment_artifact_digest",
+    "assignment_behavior_digest"
+  ],
+  "properties": {
+    "schema_id": { "const": "master_all_strings.local_practice_choice" },
+    "schema_version": { "const": "1.0.0" },
+    "choice_status": {
+      "const": "CHOSEN_FOR_PRACTICE",
+      "description": "The only success status. The caller cannot send this field. Failures are HTTP errors, not another value here."
+    },
+    "delivery_id": { "$ref": "#/$defs/opaqueRef" },
+    "assignment_id": { "$ref": "#/$defs/opaqueRef" },
+    "content_id": { "$ref": "#/$defs/opaqueRef" },
+    "assignment_artifact_digest": {
+      "$ref": "#/$defs/digest",
+      "description": "The artifact digest declared on the stored envelope when the choice was recorded."
+    },
+    "assignment_behavior_digest": {
+      "$ref": "#/$defs/digest",
+      "description": "The behavior digest declared on the stored envelope when the choice was recorded."
+    }
+  },
+  "$defs": {
+    "opaqueRef": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(.*\\S)?$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}
