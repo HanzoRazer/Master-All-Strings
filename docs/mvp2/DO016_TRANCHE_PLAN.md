@@ -659,8 +659,39 @@ browser files and frozen DO-015 artifacts stay as they are.
 
 ### Verification
 
-Recorded when the gates for this branch have been run. The numbers below are
-filled from that run, not copied from Stage 4.
+Recorded on `cursor/do016-local-practice-preparation-s05` after the gate run.
+The interpreter here is Python 3.12.3. CI runs the same commands on Python
+3.11; this interpreter satisfies `requires-python >= 3.11`, and no gate was
+relaxed. These counts are from this run.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` | PASS |
+| `mypy` (strict, `src` only) | PASS, 170 source files |
+| `pytest --cov --cov-report=term-missing` | 3471 passed, 3 skipped, 95.45% (10390 statements, 473 missed; floor 95%) |
+| `npm test` in `web/mvp1` | 526 passed, 0 failed |
+| `python3 scripts/check_in_flight.py` | OK |
+| `python3 scripts/verify_do015_certification.py` | OK (9 of 9) |
+| `python3 scripts/verify_do015_publication.py` | OK (8 of 8), successor mode |
+| `python3 scripts/build_do015_certification_evidence.py --check` | OK |
+| Stage 9 browser witness | PASS |
+
+The witness is `node web/mvp1/tests/do015_certification_capture.mjs`. It exited
+0 with final status `CLOSED` and 3 attempts. The harness rewrites
+`docs/mvp2/do015_artifacts/browser_smoke_summary.json`, so that file was
+restored. Its sha256 is
+`11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
+
+Merge base is `e2929f73a9a649c06d9692483e7099420c6fe977`, the tip of
+`origin/main` at verification. The diff against that base is the register,
+this plan, the preparation service and schema, the export payload builders,
+the exact preparation route, and the service, schema, HTTP, export-parity,
+and authority tests. It does not touch Stage 1–4 contracts, certified
+browser files, or the DO-015 frozen artifacts.
+
+This prepares a bundle and does not start practice. The inbox, the choice,
+and the bundle disappear when the server process ends. A practice screen
+remains a later order.
 
 ### Response validation follow-up
 
