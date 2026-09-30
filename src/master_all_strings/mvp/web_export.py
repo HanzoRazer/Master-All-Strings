@@ -6,9 +6,10 @@ import json
 import os
 from dataclasses import asdict
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from master_all_strings.core.projections.serialization import (
+    projection_to_dict,
     projection_to_json,
 )
 from master_all_strings.core.score.serialization import revision_to_dict
@@ -30,7 +31,11 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 __all__ = [
     "atomic_write_text",
     "export_score_projections",
+    "playback_export_payload",
+    "practice_export_payload",
+    "projection_export_payload",
     "projection_timeline_anchors",
+    "score_export_payload",
     "export_demo_catalog",
     "export_instrument_catalog",
     "export_playback_json",
@@ -79,12 +84,29 @@ def projection_timeline_anchors(projection: object) -> list[dict[str, float | in
     )
 
 
-def export_projection_json(
+def _json_ready(payload: dict[str, Any]) -> dict[str, Any]:
+    """Drop enums and tuples so the dict is the document a file would hold."""
+
+    ready = json.loads(json.dumps(payload))
+    if not isinstance(ready, dict):
+        raise TypeError("export payload did not serialize to an object")
+    return ready
+
+
+def projection_export_payload(
     response: MvpProjectionResponseV1,
-    output_path: Path,
     *,
     demo_id: str | None = None,
-) -> Path:
+) -> dict[str, Any]:
+    """The projection document the web exporter writes, without touching a file.
+
+    ``demo_id`` is a catalog key. A received delivery is not a bundled demo, so
+    callers that prepare one pass null and leave the key present.
+    """
+
+    projection = json.loads(serialize_fretboard_projection(response.projection))
+    if not isinstance(projection, dict):
+        raise TypeError("fretboard projection did not serialize to an object")
     payload = {
         "status": response.status.value,
         # Stable identity for the UI to key on. Titles are display text and must
@@ -98,7 +120,7 @@ def export_projection_json(
         "teaching_aids": {
             "one_string": [asdict(item) for item in response.one_string_teaching],
         },
-        "projection": json.loads(serialize_fretboard_projection(response.projection)),
+        "projection": projection,
         # DO-012: Musical Core authors the tick-to-second mapping; the browser
         # only interpolates within it, so no tick converter lives in JavaScript.
         #
@@ -109,7 +131,66 @@ def export_projection_json(
         "timeline_anchors_schema_version": PRESENTATION_SCHEMA_VERSION,
         "timeline_anchors": projection_timeline_anchors(response.projection),
     }
-    atomic_write_text(output_path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
+    return _json_ready(payload)
+
+
+def playback_export_payload(response: MvpProjectionResponseV1) -> dict[str, Any]:
+    """The playback plan as the existing serializer already emits it."""
+
+    payload = json.loads(serialize_lesson_playback_plan(response.playback_plan))
+    if not isinstance(payload, dict):
+        raise TypeError("playback plan did not serialize to an object")
+    return payload
+
+
+def practice_export_payload(response: MvpProjectionResponseV1) -> dict[str, Any]:
+    """Practice policy plus the loop bounds Musical Core already derived."""
+
+    loop_start_seconds, loop_end_seconds = loop_ticks_to_seconds(
+        response.practice_policy.loop,
+        ticks_per_quarter=response.playback_plan.timeline.ticks_per_quarter,
+        tempo_changes=response.playback_plan.timeline.tempo_changes,
+    )
+    return _json_ready(
+        {
+            "policy": asdict(response.practice_policy),
+            "runtime": {
+                "loop_start_seconds": loop_start_seconds,
+                "loop_end_seconds": loop_end_seconds,
+            },
+        }
+    )
+
+
+def score_export_payload(response: MvpProjectionResponseV1) -> dict[str, Any] | None:
+    """Canonical revision and the TAB and notation envelopes, or none.
+
+    Returning none keeps the file exporter's older contract: a response with
+    no score bundle writes nothing. A preparation caller treats none as a
+    failed bundle rather than an omitted field.
+    """
+
+    bundle = response.score
+    if bundle is None:
+        return None
+    return {
+        "canonical_revision": revision_to_dict(bundle.revision),
+        "tab": projection_to_dict(bundle.tab),
+        "notation": projection_to_dict(bundle.notation),
+    }
+
+
+def _dump(payload: Any) -> str:
+    return json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+
+
+def export_projection_json(
+    response: MvpProjectionResponseV1,
+    output_path: Path,
+    *,
+    demo_id: str | None = None,
+) -> Path:
+    atomic_write_text(output_path, _dump(projection_export_payload(response, demo_id=demo_id)))
     return output_path
 
 
@@ -119,19 +200,7 @@ def export_playback_json(response: MvpProjectionResponseV1, output_path: Path) -
 
 
 def export_practice_json(response: MvpProjectionResponseV1, output_path: Path) -> Path:
-    loop_start_seconds, loop_end_seconds = loop_ticks_to_seconds(
-        response.practice_policy.loop,
-        ticks_per_quarter=response.playback_plan.timeline.ticks_per_quarter,
-        tempo_changes=response.playback_plan.timeline.tempo_changes,
-    )
-    payload = {
-        "policy": asdict(response.practice_policy),
-        "runtime": {
-            "loop_start_seconds": loop_start_seconds,
-            "loop_end_seconds": loop_end_seconds,
-        },
-    }
-    atomic_write_text(output_path, json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
+    atomic_write_text(output_path, _dump(practice_export_payload(response)))
     return output_path
 
 
@@ -227,13 +296,14 @@ def export_score_projections(
     tab_path = lesson_dir / "tab.json"
     notation_path = lesson_dir / "notation.json"
 
-    revision_json = json.dumps(
-        revision_to_dict(bundle.revision), indent=2, ensure_ascii=False
-    )
-    atomic_write_text(revision_path, revision_json + "\n")
+    parts = score_export_payload(response)
+    if parts is None:
+        return ()
+    atomic_write_text(revision_path, _dump(parts["canonical_revision"]))
     # Each projection is written inside its envelope, so the file carries the
     # revision citation and the digest alongside the payload rather than leaving a
-    # reader to recompute either.
+    # reader to recompute either. ``projection_to_json`` is the same encoding the
+    # payload builder used; writing that text keeps the file bytes stable.
     atomic_write_text(tab_path, projection_to_json(bundle.tab))
     atomic_write_text(notation_path, projection_to_json(bundle.notation))
     return (revision_path, tab_path, notation_path)
