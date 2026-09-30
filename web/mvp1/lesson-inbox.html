@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson inbox</title>
+    <link rel="stylesheet" href="lesson-inbox.css" />
+  </head>
+  <body>
+    <main class="page" data-lesson-inbox>
+      <header class="masthead">
+        <p class="eyebrow">On this device</p>
+        <h1>Lesson inbox</h1>
+        <p class="lifetime">
+          Received deliveries and practice choices stay in memory on this device
+          and disappear when the server process ends.
+        </p>
+      </header>
+
+      <div class="layout">
+        <section class="panel" aria-labelledby="received-heading">
+          <div class="panel-head">
+            <h2 id="received-heading">Received on this device</h2>
+            <button type="button" id="refresh-inbox">Refresh inbox</button>
+          </div>
+          <p class="note">
+            A row lists the delivery. It does not resolve the lesson and it does
+            not authorize practice.
+          </p>
+          <p id="inbox-status" role="status"></p>
+          <p id="inbox-empty" hidden>No deliveries have been received on this device.</p>
+          <ul id="delivery-list" class="delivery-list"></ul>
+        </section>
+
+        <div class="detail">
+          <section class="panel" aria-labelledby="selected-heading">
+            <div class="panel-head">
+              <h2 id="selected-heading">Selected delivery</h2>
+              <button type="button" id="refresh-selected" disabled>
+                Refresh selected delivery
+              </button>
+            </div>
+            <div id="preview">
+              <p id="preview-placeholder">Select a delivery to request a fresh preview.</p>
+              <dl id="preview-fields" hidden></dl>
+            </div>
+            <p id="status" class="status" role="status"></p>
+            <button type="button" id="choose" disabled>Choose for practice</button>
+          </section>
+
+          <section class="panel" aria-labelledby="chosen-heading">
+            <h2 id="chosen-heading">Chosen for practice on this device</h2>
+            <p id="choice-status"></p>
+            <p id="choice-note"></p>
+            <dl id="choice-fields" hidden></dl>
+          </section>
+        </div>
+      </div>
+    </main>
+    <script type="module" src="lesson_inbox.js"></script>
+  </body>
+</html>

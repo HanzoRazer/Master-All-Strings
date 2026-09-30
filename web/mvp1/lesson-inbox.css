@@ -1,0 +1,224 @@
+:root {
+  --bg: #12161c;
+  --panel: #1a212b;
+  --panel-2: #222b37;
+  --ink: #e8eef7;
+  --muted: #93a0b4;
+  --line: #314055;
+  --accent: #d7a35c;
+  --accent-2: #6ec4ff;
+  --danger: #ff7a7a;
+  --ok: #79d3a3;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  --font: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", sans-serif;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(215, 163, 92, 0.12), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, rgba(110, 196, 255, 0.1), transparent 50%),
+    var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+body {
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.masthead h1 {
+  margin: 0.15rem 0 0.4rem;
+  font-size: 1.8rem;
+  letter-spacing: -0.02em;
+}
+
+.eyebrow,
+.note,
+.lifetime,
+.panel-head button,
+#inbox-status,
+#choice-note,
+#preview-placeholder {
+  color: var(--muted);
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+}
+
+.lifetime,
+.note {
+  margin: 0;
+  max-width: 42rem;
+  line-height: 1.45;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+  align-items: start;
+}
+
+.detail {
+  display: grid;
+  gap: 1rem;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  padding: 1rem 1rem 1.1rem;
+  box-shadow: var(--shadow);
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+button {
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#choose:not(:disabled) {
+  background: var(--accent);
+  color: #1a140c;
+  border-color: transparent;
+  font-weight: 650;
+}
+
+.delivery-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.delivery-list button {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.delivery-list button[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 0.4rem;
+}
+
+.meta .k {
+  color: var(--muted);
+}
+
+.meta .v {
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
+  font-size: 0.86rem;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: minmax(8rem, 14rem) minmax(0, 1fr);
+  gap: 0.35rem 0.75rem;
+  margin: 0;
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+dd.mono {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+}
+
+.status {
+  min-height: 1.3rem;
+  margin: 0.9rem 0;
+}
+
+.status.is-error {
+  color: var(--danger);
+}
+
+#choice-status {
+  font-family: var(--mono);
+  color: var(--ok);
+  min-height: 1.2rem;
+}
+
+#inbox-status:not(:empty) {
+  color: var(--danger);
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

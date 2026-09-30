@@ -403,3 +403,141 @@ Merge base is `be22591367bab376a3ad88db4a93ffa0b274c2c9`, the tip of
 Two concurrent identical choice POSTs against the threaded localhost server
 returned `201` and `200` and left one stored choice. This stage is local choice
 only. Authenticated acceptance and practice activation remain a later order.
+
+## Stage 4 — local lesson inbox
+
+| Field | Value |
+| --- | --- |
+| Branch | `cursor/do016-local-lesson-inbox-s04` |
+| Base | `537dfb30b5f5fe2e6154408e89e761d7f904a53e` |
+| Agent | Cursor |
+| Page | `/lesson-inbox.html` |
+| Merge / tag / release | not authorized |
+
+Stage 3 records a choice and does not show it. Stage 4 is a page on the
+existing localhost server so a person on this device can see received
+deliveries, request a fresh preview of one, see whether a valid local choice
+already exists, and explicitly choose that previewed delivery for later
+practice. The page calls the Stage 1–3 HTTP contracts. It adds no backend
+route, schema, or production hook.
+
+### What the page shows
+
+The list is summary metadata in server order: `delivery_id`, `assignment_id`,
+`content_id`, `sender_ref`, `recipient_ref`, and `classroom_ref`. A row does
+not resolve the lesson and does not authorize practice. Title, notes, event
+details, and both declared digests appear only after a successful `READY`
+preview. Choice status appears only in the selected panel. The list does not
+request a choice for every row.
+
+`recipient_ref` is an opaque recipient label. It is not the person using the
+page and it does not authorize.
+
+The page is a separate entry point. Certified `index.html` does not link to
+it. Styles live in `lesson-inbox.css`. Server strings are text, not HTML.
+Delivery ids are not read from a free-text field, the URL fragment, or
+browser storage.
+
+The inbox and the choice are in memory. The page says that they disappear
+when the server process ends.
+
+### How a selection becomes a choice
+
+Selecting a row, or refreshing the selected delivery, requests a new preview.
+Choice GET runs only after that preview is `READY`, the `delivery_id` matches
+the selection, and both declared digests are present. The client returns the
+HTTP status and the public `error` code. The page decides whether Choose is
+enabled.
+
+**Choose for practice** is enabled only when that full sequence succeeds and
+choice GET returns `404` with `unknown_practice_choice`. A successful preview
+does not clear `choice_conflict` or any other choice-GET failure. Any failure
+leaves Choose disabled until a later full sequence reaches that 404.
+
+Choose POSTs the preview document's declared digests as
+`expected_assignment_artifact_digest` and
+`expected_assignment_behavior_digest`. The page does not recompute them, does
+not take them from the list row, and does not retry POST. `201` and an
+identical `200` display `CHOSEN_FOR_PRACTICE` and do not open the lesson.
+An existing valid choice does not POST again.
+
+`stale_preview` keeps the pinned digests and tells the person to refresh the
+selected delivery. Refresh inbox reloads the list only. An older response
+cannot paint a newer selection. Opaque ids are encoded once with
+`encodeURIComponent`.
+
+### What this stage does not do
+
+No practice activation, remote delivery, student acceptance, guided session,
+Transport, playback, evaluation, or completion. No new backend endpoint.
+Corrupt or removed envelopes are injected only by the browser-smoke harness
+into that test server's in-memory repository. `LessonAssignmentV1`,
+`LessonDeliveryEnvelopeV1`, `LessonDeliveryPreviewV1`, and
+`LocalPracticeChoiceV1` stay unchanged. DO-015 frozen artifacts and the
+certified browser runtime are not part of this stage.
+
+This is a device-local choice UI only.
+
+### Verification
+
+Recorded on `cursor/do016-local-lesson-inbox-s04` after the gate run. The
+interpreter here is Python 3.12.3. CI runs the same commands on Python 3.11;
+this interpreter satisfies `requires-python >= 3.11`, and no gate was relaxed.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` | PASS |
+| `mypy` (strict, `src` only) | PASS, 169 source files |
+| `pytest --cov --cov-report=term-missing` | 3401 passed, 3 skipped, 95.70% (floor 95%) |
+| `npm test` in `web/mvp1` | 523 passed, 0 failed |
+| `python3 scripts/check_in_flight.py` | OK |
+| `python3 scripts/verify_do015_certification.py` | OK (9 of 9) |
+| `python3 scripts/verify_do015_publication.py` | OK (8 of 8), successor mode |
+| Stage 9 browser witness | PASS |
+
+The witness is `node web/mvp1/tests/do015_certification_capture.mjs`. It exited
+0 with final status `CLOSED` and 3 attempts. The harness rewrites
+`docs/mvp2/do015_artifacts/browser_smoke_summary.json`, so that file was
+restored. Its sha256 is
+`11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
+
+Merge base is `537dfb30b5f5fe2e6154408e89e761d7f904a53e`, the tip of
+`origin/main` at verification. The diff against that base is the register,
+this plan, and the new inbox page, client, stylesheet, and Node tests. It
+does not touch `LessonAssignmentV1`, `LessonDeliveryEnvelopeV1`,
+`LessonDeliveryPreviewV1`, `LocalPracticeChoiceV1`, certified `index.html`,
+`app.js`, `styles.css`, or the DO-015 frozen artifacts.
+
+The localhost browser smoke is `python3 /tmp/inbox-smoke/harness.py` against
+`serve_mvp_directory` on `web/mvp1` with the existing
+`LocalLessonDeliveryApi`. Chrome is `/usr/local/bin/google-chrome`, driven
+headless by puppeteer-core. It seeds a valid delivery with Stage 1 POST, then
+the harness injects a corrupt envelope and deletes one from that server's
+in-memory repository. There is no production route for either injection.
+Empty inbox, summary list, READY preview, `stale_preview` without a second
+POST, `CHOSEN_FOR_PRACTICE` after reload, `integrity_mismatch`, a removed
+delivery, and HTML-like text all passed. A desktop Chrome walkthrough of the
+same page showed the empty inbox, the choice, the reload, and the corrupt
+delivery.
+
+This is a device-local choice UI only. The inbox and the choice disappear
+when the server process ends. Practice activation remains a later order.
+
+### Response validation follow-up
+
+The page checks the closed top-level preview and choice documents at their declared
+schema IDs and version 1.0.0. READY requires event-count/array agreement and
+unique, nonblank event IDs, as well as the required policy and metadata
+fields. Policy objects remain opaque to preserve browser authority boundaries.
+Digests must be strings in the declared format.
+
+Both choice GET and choice POST compare delivery, assignment, content, and
+both declared digests with the pinned READY preview before displaying
+CHOSEN_FOR_PRACTICE. GET accepts only 200; POST accepts 200 or 201. An
+inconsistent success leaves Choose disabled and displays no choice claim.
+
+The follow-up passed all 526 Node tests on Node 24.19.0, including malformed
+preview cases and independent pin mismatches on GET and POST. The existing
+DO-015 certification scenario tests also pass. The localhost browser smoke
+above belongs to the original Stage 4 validation; it was not rerun for this
+follow-up because the repair environment refuses listening sockets.
