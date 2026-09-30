@@ -9,6 +9,16 @@ or start practice.
 import { LessonDeliveryClient } from "./lesson_delivery_client.js";
 
 const DIGEST = /^sha256:[0-9a-f]{64}$/;
+const PREVIEW_FIELDS = [
+  "schema_id", "schema_version", "preview_status", "delivery_id", "assignment_id", "content_id",
+  "assignment_artifact_digest", "assignment_behavior_digest", "title", "canonical_event_count",
+  "canonical_event_ids", "playback_policy", "spatial_policy", "meter_change_count",
+  "instruction_objective", "teacher_note",
+];
+const CHOICE_FIELDS = [
+  "schema_id", "schema_version", "choice_status", "delivery_id", "assignment_id", "content_id",
+  "assignment_artifact_digest", "assignment_behavior_digest",
+];
 
 const SUMMARY_FIELDS = [
   ["Delivery", "delivery_id"],
@@ -185,7 +195,7 @@ export function mountLessonInbox(root, { client = new LessonDeliveryClient() } =
       renderStatus();
       return;
     }
-    if (isChosen(choice, deliveryId)) {
+    if (isChosen(choice, pinnedPreview)) {
       blocking = null;
       showChosen(choice.body);
       renderStatus();
@@ -261,7 +271,7 @@ export function mountLessonInbox(root, { client = new LessonDeliveryClient() } =
     const result = await client.choose(deliveryId, artifactDigest, behaviorDigest);
     if (generation !== selectionGeneration) return;
     if (pinnedPreview !== preview) return;
-    if (isChosen(result, deliveryId)) {
+    if (isChosen(result, preview, true)) {
       blocking = null;
       showChosen(result.body);
       renderStatus();
@@ -367,27 +377,29 @@ function isDeliveryList(result) {
 function isReadyPreview(result, deliveryId) {
   if (!result?.ok || result.status !== 200) return false;
   const body = result.body;
-  if (!body || typeof body !== "object") return false;
+  if (!hasFields(body, PREVIEW_FIELDS)) return false;
+  if (body.schema_id !== "master_all_strings.lesson_delivery_preview") return false;
+  if (body.schema_version !== "1.0.0") return false;
   if (body.preview_status !== "READY") return false;
   if (body.delivery_id !== deliveryId) return false;
-  if (typeof body.assignment_id !== "string" || body.assignment_id.length === 0) return false;
-  if (typeof body.content_id !== "string" || body.content_id.length === 0) return false;
-  if (!DIGEST.test(body.assignment_artifact_digest)) return false;
-  if (!DIGEST.test(body.assignment_behavior_digest)) return false;
-  if (typeof body.title !== "string" || body.title.length === 0) return false;
+  if (!nonblank(body.assignment_id) || !nonblank(body.content_id)) return false;
+  if (!isDigest(body.assignment_artifact_digest) || !isDigest(body.assignment_behavior_digest)) return false;
+  if (!nonblank(body.title)) return false;
   if (!Number.isInteger(body.canonical_event_count) || body.canonical_event_count < 1) {
     return false;
   }
   if (!Array.isArray(body.canonical_event_ids) || body.canonical_event_ids.length === 0) {
     return false;
   }
-  if (!body.canonical_event_ids.every((id) => typeof id === "string" && id.length > 0)) {
+  if (body.canonical_event_count !== body.canonical_event_ids.length) return false;
+  if (new Set(body.canonical_event_ids).size !== body.canonical_event_count) return false;
+  if (!body.canonical_event_ids.every(nonblank)) {
     return false;
   }
-  if (body.instruction_objective !== null && typeof body.instruction_objective !== "string") {
-    return false;
-  }
-  if (body.teacher_note !== null && typeof body.teacher_note !== "string") return false;
+  if (!isPlaybackPolicy(body.playback_policy) || !isSpatialPolicy(body.spatial_policy)) return false;
+  if (!Number.isInteger(body.meter_change_count) || body.meter_change_count < 0) return false;
+  if (body.instruction_objective !== null && !nonblank(body.instruction_objective)) return false;
+  if (body.teacher_note !== null && !nonblank(body.teacher_note)) return false;
   return true;
 }
 
@@ -400,16 +412,71 @@ function isAvailable(result) {
 
 /**
  * @param {{ ok?: boolean, status?: number, body?: object }} result
- * @param {string} deliveryId
+ * @param {object|null} preview  The READY document inspected for this selection.
+ * @param {boolean} [allowCreated]  Only POST can return 201.
  */
-function isChosen(result, deliveryId) {
-  if (!result?.ok || (result.status !== 200 && result.status !== 201)) return false;
+function isChosen(result, preview, allowCreated = false) {
+  if (!preview || !result?.ok) return false;
+  if (result.status !== 200 && !(allowCreated && result.status === 201)) return false;
   const body = result.body;
-  if (!body || typeof body !== "object") return false;
+  if (!hasFields(body, CHOICE_FIELDS)) return false;
+  if (body.schema_id !== "master_all_strings.local_practice_choice") return false;
+  if (body.schema_version !== "1.0.0") return false;
   if (body.choice_status !== "CHOSEN_FOR_PRACTICE") return false;
-  if (body.delivery_id !== deliveryId) return false;
-  if (typeof body.assignment_id !== "string" || typeof body.content_id !== "string") return false;
-  if (!DIGEST.test(body.assignment_artifact_digest)) return false;
-  if (!DIGEST.test(body.assignment_behavior_digest)) return false;
+  for (const field of [
+    "delivery_id",
+    "assignment_id",
+    "content_id",
+    "assignment_artifact_digest",
+    "assignment_behavior_digest",
+  ]) {
+    if (body[field] !== preview[field]) return false;
+  }
   return true;
+}
+
+// Check the closed 1.0.0 documents without interpreting their policies or
+// recomputing a digest. A partial or differently versioned document cannot
+// authorize the page's choice flow.
+function hasFields(body, fields) {
+  return Boolean(
+    body && typeof body === "object" && !Array.isArray(body) &&
+    Object.keys(body).length === fields.length &&
+    fields.every((field) => Object.hasOwn(body, field)),
+  );
+}
+
+function nonblank(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isDigest(value) {
+  return typeof value === "string" && DIGEST.test(value);
+}
+
+function optionalTick(value) {
+  return value === null || (Number.isInteger(value) && value >= 0);
+}
+
+function optionalBpm(value) {
+  return value === null || (typeof value === "number" && Number.isFinite(value));
+}
+
+function isPlaybackPolicy(body) {
+  return hasFields(body, [
+    "tempo_bpm", "start_tick", "end_tick", "loop_enabled", "count_in_bars",
+    "ticks_per_quarter", "source_tempo_bpm",
+  ]) && optionalBpm(body.tempo_bpm) && optionalBpm(body.source_tempo_bpm) &&
+    optionalTick(body.start_tick) && optionalTick(body.end_tick) && optionalTick(body.count_in_bars) &&
+    typeof body.loop_enabled === "boolean" &&
+    Number.isInteger(body.ticks_per_quarter) && body.ticks_per_quarter > 0;
+}
+
+function isSpatialPolicy(body) {
+  return hasFields(body, [
+    "instrument_profile_id", "fingering_policy_id", "preferred_fret_min", "preferred_fret_max",
+    "open_string_preference",
+  ]) && nonblank(body.instrument_profile_id) && nonblank(body.fingering_policy_id) &&
+    optionalTick(body.preferred_fret_min) && optionalTick(body.preferred_fret_max) &&
+    ["allow", "prefer", "avoid", "exclude"].includes(body.open_string_preference);
 }

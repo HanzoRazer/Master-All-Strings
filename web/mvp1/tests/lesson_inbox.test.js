@@ -153,6 +153,8 @@ function ready(id, extra = {}) {
     status: 200,
     error: null,
     body: {
+      schema_id: "master_all_strings.lesson_delivery_preview",
+      schema_version: "1.0.0",
       preview_status: "READY",
       delivery_id: id,
       assignment_id: "asg-1",
@@ -162,6 +164,15 @@ function ready(id, extra = {}) {
       title: "Blues Turnaround",
       canonical_event_count: 3,
       canonical_event_ids: ["ev-1", "ev-2", "ev-3"],
+      playback_policy: {
+        tempo_bpm: null, start_tick: null, end_tick: null, loop_enabled: false,
+        count_in_bars: null, ticks_per_quarter: 480, source_tempo_bpm: 120,
+      },
+      spatial_policy: {
+        instrument_profile_id: "guitar-standard-6", fingering_policy_id: "default",
+        preferred_fret_min: null, preferred_fret_max: null, open_string_preference: "allow",
+      },
+      meter_change_count: 0,
       instruction_objective: "Play the turnaround cleanly",
       teacher_note: "Watch the third",
       ...extra,
@@ -191,6 +202,8 @@ function chosen(id, status = 200) {
     status,
     error: null,
     body: {
+      schema_id: "master_all_strings.local_practice_choice",
+      schema_version: "1.0.0",
       choice_status: "CHOSEN_FOR_PRACTICE",
       delivery_id: id,
       assignment_id: "asg-1",
@@ -696,6 +709,7 @@ test("HTML-like delivery text is shown as text", async () => {
         title: `title${NASTY}`,
         teacher_note: `note${NASTY}`,
         instruction_objective: `objective${NASTY}`,
+        canonical_event_count: 1,
         canonical_event_ids: [`ev${NASTY}`],
       }),
     getChoice: () => unknown(),
@@ -709,6 +723,95 @@ test("HTML-like delivery text is shown as text", async () => {
   assert.match(inbox.q("preview-fields").textContent, new RegExp(escapeRegExp(`note${NASTY}`)));
   assert.equal(inbox.root.ownerDocument.innerHtmlUsed, false);
   assert.equal(hasTag(inbox.root, "IMG"), false);
+});
+
+test("inconsistent or unsupported previews never reach choice GET or POST", async () => {
+  const invalid = [
+    { canonical_event_count: 1 },
+    { canonical_event_ids: ["ev-1", "ev-1", "ev-3"] },
+    { canonical_event_ids: ["ev-1", " ", "ev-3"] },
+    { assignment_artifact_digest: [ART] },
+    { assignment_behavior_digest: [BEH] },
+    { assignment_id: " " },
+    { content_id: " " },
+    { title: " " },
+    { teacher_note: "" },
+    { instruction_objective: " " },
+    { playback_policy: null },
+    { playback_policy: { ...ready("delivery-001").body.playback_policy, loop_enabled: "false" } },
+    { spatial_policy: undefined },
+    { spatial_policy: { ...ready("delivery-001").body.spatial_policy, open_string_preference: "invalid" } },
+    { meter_change_count: -1 },
+    { unexpected: "extra field" },
+    { schema_id: "master_all_strings.local_practice_choice" },
+    { schema_version: "2.0.0" },
+    { schema_id: undefined },
+    { schema_version: undefined },
+  ];
+  for (const extra of invalid) {
+    const inbox = await mount({
+      list: () => listOf([summary("delivery-001")]),
+      preview: () => ready("delivery-001", extra),
+      getChoice: () => unknown(),
+      choose: () => chosen("delivery-001", 201),
+    });
+    await inbox.ui.select("delivery-001");
+    await inbox.ui.choose();
+    assert.equal(inbox.q("choose").disabled, true, JSON.stringify(extra));
+    assert.equal(inbox.q("preview-fields").hidden, true);
+    assert.equal(calls(inbox.client, "getChoice").length, 0);
+    assert.equal(calls(inbox.client, "choose").length, 0);
+  }
+});
+
+test("choice GET and POST must match every identity and digest pinned by the preview", async () => {
+  const invalid = [
+    { delivery_id: "another-delivery" },
+    { assignment_id: "another-assignment" },
+    { content_id: "another-content" },
+    { assignment_artifact_digest: ART_B },
+    { assignment_behavior_digest: BEH_B },
+    { schema_id: "master_all_strings.lesson_delivery_preview" },
+    { schema_version: "2.0.0" },
+    { schema_id: undefined },
+    { schema_version: undefined },
+    { unexpected: "extra field" },
+  ];
+  for (const phase of ["GET", "POST"]) {
+    for (const extra of invalid) {
+      const response = chosen("delivery-001", phase === "GET" ? 200 : 201);
+      Object.assign(response.body, extra);
+      const inbox = await mount({
+        list: () => listOf([summary("delivery-001")]),
+        preview: () => ready("delivery-001"),
+        getChoice: () => phase === "GET" ? response : unknown(),
+        choose: () => response,
+      });
+      await inbox.ui.select("delivery-001");
+      await inbox.ui.choose();
+      assert.equal(inbox.q("choose").disabled, true, phase + JSON.stringify(extra));
+      assert.equal(inbox.q("choice-fields").hidden, true);
+      assert.equal(inbox.q("choice-status").textContent.includes("CHOSEN_FOR_PRACTICE"), false);
+      assert.match(inbox.q("status").textContent, /Request failed/);
+      assert.equal(calls(inbox.client, "choose").length, phase === "GET" ? 0 : 1);
+      await inbox.ui.choose();
+      assert.equal(calls(inbox.client, "choose").length, phase === "GET" ? 0 : 1);
+    }
+  }
+});
+
+test("a choice GET cannot claim creation with 201", async () => {
+  const inbox = await mount({
+    list: () => listOf([summary("delivery-001")]),
+    preview: () => ready("delivery-001"),
+    getChoice: () => chosen("delivery-001", 201),
+    choose: () => chosen("delivery-001", 201),
+  });
+  await inbox.ui.select("delivery-001");
+  await inbox.ui.choose();
+  assert.equal(inbox.q("choose").disabled, true);
+  assert.equal(inbox.q("choice-status").textContent.includes("CHOSEN_FOR_PRACTICE"), false);
+  assert.equal(calls(inbox.client, "choose").length, 0);
 });
 
 function escapeRegExp(value) {
