@@ -522,3 +522,21 @@ delivery.
 
 This is a device-local choice UI only. The inbox and the choice disappear
 when the server process ends. Practice activation remains a later order.
+
+### Response validation follow-up
+
+The page accepts only closed preview and choice documents at their declared
+schema IDs and version 1.0.0. READY requires event-count/array agreement and
+unique, nonblank event IDs, as well as the required policy and metadata
+fields. Digests must be strings in the declared format.
+
+Both choice GET and choice POST compare delivery, assignment, content, and
+both declared digests with the pinned READY preview before displaying
+CHOSEN_FOR_PRACTICE. GET accepts only 200; POST accepts 200 or 201. An
+inconsistent success leaves Choose disabled and displays no choice claim.
+
+The follow-up passed all 526 Node tests on Node 24.19.0, including malformed
+preview cases and independent pin mismatches on GET and POST. The existing
+DO-015 certification scenario tests also pass. The localhost browser smoke
+above belongs to the original Stage 4 validation; it was not rerun for this
+follow-up because the repair environment refuses listening sockets.
