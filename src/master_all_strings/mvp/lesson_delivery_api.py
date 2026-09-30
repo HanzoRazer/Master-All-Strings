@@ -19,14 +19,21 @@ Status codes carry the distinction the service draws:
     409  a delivery identity already used, or a stored preview whose declared
          digests do not recompute (``integrity_mismatch``)
     404  no such delivery
-    405  a method other than GET on the preview route, or other than GET or POST
-         on the practice-choice route
-    422  a stored assignment that cannot be resolved (``unresolvable_assignment``)
+    405  a method other than GET on the preview route, other than GET or POST
+         on the practice-choice route, or other than POST on the preparation
+         route
+    422  a stored assignment that cannot be resolved (``unresolvable_assignment``),
+         or a preparation whose declared instrument is missing
+         (``unsupported_instrument``) or whose assignment fails a known check
+         (``unpreparable_assignment``)
     500  a defect in this application, reported without detail
 
 A practice choice uses the same codes, plus ``unknown_practice_choice``,
-``unknown_delivery_id``, ``stale_preview``, and ``choice_conflict``. Those
-bodies are codes. Stage 1's not-found sentence stays on the delivery routes.
+``unknown_delivery_id``, ``stale_preview``, and ``choice_conflict``. A
+preparation uses those codes except ``choice_conflict``, and adds the two
+422 codes above. Those bodies are codes. Stage 1's not-found sentence stays
+on the delivery routes. An unexpected projection or playback failure during
+preparation is the sanitized 500, not a 422.
 """
 
 from __future__ import annotations
@@ -66,11 +73,20 @@ from master_all_strings.education.local_practice_choice_repository import (
     InMemoryLocalPracticeChoiceRepository,
 )
 from master_all_strings.lesson.errors import LessonAssignmentError
+from master_all_strings.mvp.local_practice_preparation import (
+    LocalPracticePreparationService,
+    PreparationFailure,
+    UnpreparableAssignmentError,
+    UnsupportedInstrumentError,
+    preparation_to_dict,
+    shared_application,
+)
 
 __all__ = [
     "LESSON_DELIVERY_API_PREFIX",
     "LESSON_DELIVERY_PREVIEW_PATH",
     "LESSON_PRACTICE_CHOICE_PATH",
+    "LESSON_PRACTICE_PREPARATION_PATH",
     "LocalLessonDeliveryApi",
 ]
 
@@ -79,6 +95,8 @@ LESSON_DELIVERY_API_PREFIX = "/api/education/lesson-deliveries"
 LESSON_DELIVERY_PREVIEW_PATH = "/api/education/lesson-delivery-preview"
 #: Exact collection. Not a suffix of the delivery inbox or the preview route.
 LESSON_PRACTICE_CHOICE_PATH = "/api/education/lesson-practice-choices"
+#: Exact collection. Preparing a choice is not choosing it, and not fetching it.
+LESSON_PRACTICE_PREPARATION_PATH = "/api/education/lesson-practice-preparations"
 _CHOICE_FIELDS = (
     "delivery_id",
     "expected_assignment_artifact_digest",
@@ -118,11 +136,21 @@ def _single_delivery_id(query: str) -> str:
 def _choice_body(payload: dict[str, Any]) -> tuple[str, str, str]:
     """Exactly the three choice fields. The caller cannot send a status."""
 
+    return _pinned_body(payload, label="choice")
+
+
+def _preparation_body(payload: dict[str, Any]) -> tuple[str, str, str]:
+    """The same three fields as a choice. Preparation adds no fourth."""
+
+    return _pinned_body(payload, label="preparation")
+
+
+def _pinned_body(payload: dict[str, Any], *, label: str) -> tuple[str, str, str]:
     if not isinstance(payload, dict):
         raise _ChoiceRequestError("payload must be an object")
     if set(payload) != set(_CHOICE_FIELDS):
         names = ", ".join(_CHOICE_FIELDS)
-        raise _ChoiceRequestError(f"choice body must contain exactly {names}")
+        raise _ChoiceRequestError(f"{label} body must contain exactly {names}")
     delivery_id = payload["delivery_id"]
     if not isinstance(delivery_id, str) or not delivery_id.strip():
         raise _ChoiceRequestError("delivery_id must be nonblank")
@@ -176,6 +204,13 @@ class LocalLessonDeliveryApi:
             self.choices,
         )
 
+    def _preparations(self) -> LocalPracticePreparationService:
+        return LocalPracticePreparationService(
+            self.service,
+            self._practice_choices(),
+            shared_application(),
+        )
+
     def receive(self, payload: dict[str, Any]) -> dict[str, Any]:
         envelope = deserialize_delivery(payload)
         return delivery_to_dict(self.service.receive(envelope))
@@ -197,6 +232,8 @@ class LocalLessonDeliveryApi:
         """Map a request onto the service, and failures onto status codes."""
 
         parsed = urlparse(path)
+        if parsed.path == LESSON_PRACTICE_PREPARATION_PATH:
+            return self._handle_preparation(method, parsed.query, payload)
         if parsed.path == LESSON_PRACTICE_CHOICE_PATH:
             return self._handle_choice(method, parsed.query, payload)
         if parsed.path == LESSON_DELIVERY_PREVIEW_PATH:
@@ -232,6 +269,45 @@ class LocalLessonDeliveryApi:
             # whoever is on the other end of a socket.
             return 500, {"error": "internal server error"}
         return 404, {"error": f"unsupported lesson delivery request: {method} {path}"}
+
+    def _handle_preparation(
+        self, method: str, query: str, payload: dict[str, Any]
+    ) -> tuple[int, dict[str, Any]]:
+        """Build one practice bundle, or return a code and nothing else.
+
+        Serialization sits in this handler so a defect while encoding the
+        document is the same sanitized 500 as a defect while building it.
+        """
+
+        if method != "POST":
+            return 405, {"error": "method not allowed"}
+        if query:
+            return 400, {"error": "query string is not allowed"}
+        try:
+            delivery_id, artifact, behavior = _preparation_body(payload)
+        except _ChoiceRequestError as exc:
+            return 400, {"error": str(exc)}
+        try:
+            prepared = self._preparations().prepare(delivery_id, artifact, behavior)
+            return 200, preparation_to_dict(prepared)
+        except UnknownPracticeChoiceError:
+            return 404, {"error": "unknown_practice_choice"}
+        except LessonDeliveryNotFoundError:
+            return 404, {"error": "unknown_delivery_id"}
+        except DeliveryIntegrityError:
+            return 409, {"error": "integrity_mismatch"}
+        except StalePreviewError:
+            return 409, {"error": "stale_preview"}
+        except UnresolvableAssignmentError:
+            return 422, {"error": "unresolvable_assignment"}
+        except UnsupportedInstrumentError:
+            return 422, {"error": "unsupported_instrument"}
+        except UnpreparableAssignmentError:
+            return 422, {"error": "unpreparable_assignment"}
+        except PreparationFailure:
+            return 500, {"error": "internal server error"}
+        except Exception:
+            return 500, {"error": "internal server error"}
 
     def _handle_preview(self, method: str, query: str) -> tuple[int, dict[str, Any]]:
         """Select one delivery and return its read-only summary, or an error.

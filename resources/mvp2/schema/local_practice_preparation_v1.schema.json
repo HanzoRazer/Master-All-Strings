@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/mvp2/local-practice-preparation-v1.schema.json",
+  "title": "LocalPracticePreparationV1",
+  "description": "The in-memory bundle a later practice screen reads. PREPARED means the existing pipeline produced every artifact. It does not say the device can play the lesson, that every note has a position, or that practice started. Nested musical artifacts keep their existing schemas.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "preparation_status",
+    "delivery_id",
+    "assignment_id",
+    "content_id",
+    "assignment_artifact_digest",
+    "assignment_behavior_digest",
+    "projection",
+    "playback",
+    "practice",
+    "score"
+  ],
+  "properties": {
+    "schema_id": {"const": "master_all_strings.local_practice_preparation"},
+    "schema_version": {"const": "1.0.0"},
+    "preparation_status": {"const": "PREPARED"},
+    "delivery_id": {"type": "string", "minLength": 1},
+    "assignment_id": {"type": "string", "minLength": 1},
+    "content_id": {"type": "string", "minLength": 1},
+    "assignment_artifact_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "assignment_behavior_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "demo_id",
+        "summary_title",
+        "instrument_id",
+        "behavior_digest",
+        "warnings",
+        "unsupported_features",
+        "teaching_aids",
+        "projection",
+        "timeline_anchors_schema_version",
+        "timeline_anchors"
+      ],
+      "properties": {
+        "status": {"const": "ready"},
+        "demo_id": {"type": "null"},
+        "summary_title": {"type": "string", "minLength": 1},
+        "instrument_id": {"type": "string", "minLength": 1},
+        "behavior_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "unsupported_features": {"type": "array", "items": {"type": "string"}},
+        "teaching_aids": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["one_string"],
+          "properties": {
+            "one_string": {"type": "array", "items": {"type": "object"}}
+          }
+        },
+        "projection": {
+          "$ref": "https://master-all-strings.dev/schema/mvp1/fretboard-scroll-projection-v1.schema.json"
+        },
+        "timeline_anchors_schema_version": {"const": "1.0.0"},
+        "timeline_anchors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tick", "seconds"],
+            "properties": {
+              "tick": {"type": "integer", "minimum": 0},
+              "seconds": {"type": "number", "minimum": 0}
+            }
+          }
+        }
+      }
+    },
+    "playback": {
+      "$ref": "https://master-all-strings.dev/schema/mvp2/lesson-playback-plan-v1.schema.json"
+    },
+    "practice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "runtime"],
+      "properties": {
+        "policy": {
+          "$ref": "https://master-all-strings.dev/schema/mvp2/practice-session-policy-v1.schema.json"
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["loop_start_seconds", "loop_end_seconds"],
+          "properties": {
+            "loop_start_seconds": {"type": "number"},
+            "loop_end_seconds": {"type": "number"}
+          }
+        }
+      }
+    },
+    "score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical_revision", "tab", "notation"],
+      "properties": {
+        "canonical_revision": {"type": "object"},
+        "tab": {
+          "allOf": [
+            {
+              "$ref": "https://master-all-strings.dev/schema/projections/projection-result-v1.schema.json"
+            },
+            {
+              "properties": {"projection_kind": {"const": "tab"}},
+              "required": ["projection_kind"]
+            }
+          ]
+        },
+        "notation": {
+          "allOf": [
+            {
+              "$ref": "https://master-all-strings.dev/schema/projections/projection-result-v1.schema.json"
+            },
+            {
+              "properties": {"projection_kind": {"const": "notation"}},
+              "required": ["projection_kind"]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

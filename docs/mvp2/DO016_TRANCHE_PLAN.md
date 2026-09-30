@@ -523,6 +523,176 @@ delivery.
 This is a device-local choice UI only. The inbox and the choice disappear
 when the server process ends. Practice activation remains a later order.
 
+## Stage 5 — prepare a chosen delivery
+
+| Field | Value |
+| --- | --- |
+| Branch | `cursor/do016-local-practice-preparation-s05` |
+| Base | `e2929f73a9a649c06d9692483e7099420c6fe977` |
+| Agent | Cursor |
+| Predecessor | PR #51, merged |
+| Route | `POST /api/education/lesson-practice-preparations` |
+| Merge / tag / release | not authorized |
+
+Stage 4 shows a choice. Stage 5 turns that choice into the projection,
+playback plan, practice policy, and score artifacts a later practice screen
+will read. It does not open that screen, play the lesson, or record that
+practice started.
+
+### Route
+
+```text
+POST /api/education/lesson-practice-preparations
+```
+
+The path is exact. A trailing slash and any sibling path keep the routing
+they already had. The body is a JSON object and nothing else:
+
+```json
+{
+  "delivery_id": "<opaque ID>",
+  "expected_assignment_artifact_digest": "sha256:<64 lowercase hex>",
+  "expected_assignment_behavior_digest": "sha256:<64 lowercase hex>"
+}
+```
+
+The id is nonblank and preserved exactly. It is read only from the body,
+never from the path, and it is not decoded again. Digests use the existing
+declared format. A missing field, an extra field, or any nonempty query
+string is `400` under the same sanitized request-validation sentences Stage 3
+uses. Every method other than POST on this exact path is `405`, including
+GET, HEAD, PUT, DELETE, PATCH, and OPTIONS.
+
+POST computes. It does not store a preparation, create a choice, open a
+session, or write a file. A repeated POST prepares again from the current
+verified state.
+
+### What a success contains
+
+`200` returns `LocalPracticePreparationV1`:
+
+| Field | Value |
+| --- | --- |
+| `schema_id` | `master_all_strings.local_practice_preparation` |
+| `schema_version` | `1.0.0` |
+| `preparation_status` | `PREPARED` |
+| `delivery_id`, `assignment_id`, `content_id` | The verified delivery |
+| `assignment_artifact_digest`, `assignment_behavior_digest` | The verified declared pins |
+| `projection` | The existing web projection export, with `demo_id` null |
+| `playback` | The existing serialized playback plan |
+| `practice` | The existing practice export, including Python loop seconds |
+| `score` | `canonical_revision`, `tab`, and `notation` |
+
+Every top-level field is required, and additional properties are forbidden.
+`score` is closed and requires all three artifacts. Nested artifacts keep
+their existing wire shapes. A received delivery is not a bundled demo, so
+`demo_id` is null. The two assignment pins stay distinct fields from the
+projection digest and from the canonical revision id.
+
+`PREPARED` means the existing pipeline produced the whole bundle. It does
+not say the device can play it, that every note has a position, or that
+practice started. Warnings, unsupported features, and unresolved notes stay
+as the pipeline already represents them.
+
+### What a failure contains
+
+A failure is `{"error": "<code>"}` and nothing else. `400` uses the existing
+request-validation sentences.
+
+| Condition | HTTP | Error |
+| --- | ---: | --- |
+| Malformed body, invalid fields, or a POST query string | 400 | sanitized request validation |
+| No stored practice choice | 404 | `unknown_practice_choice` |
+| Delivery missing | 404 | `unknown_delivery_id` |
+| Stored assignment fails its declared pins | 409 | `integrity_mismatch` |
+| Choice pins or request pins differ from the verified delivery | 409 | `stale_preview` |
+| Assignment cannot resolve | 422 | `unresolvable_assignment` |
+| Declared instrument is unavailable | 422 | `unsupported_instrument` |
+| Known assignment validation fails during preparation | 422 | `unpreparable_assignment` |
+| Any method other than POST | 405 | `method not allowed` |
+| Unexpected pipeline, serialization, or consistency failure | 500 | `internal server error` |
+
+Not every `MvpError` is `422`. An unexpected projection, playback-plan, or
+practice-policy failure stays a sanitized `500`. No failure returns part of
+a preparation. Serializing the success document is inside that same boundary.
+
+### How a choice becomes a bundle
+
+1. Validate the request.
+2. `LocalPracticeChoiceService.get` on the Stage 3 repositories. That
+   previews again.
+3. Compare both request digests with the choice's pins.
+4. Read the stored envelope once.
+5. Recheck that envelope's integrity, then its delivery, assignment,
+   content, and both declared digests against the choice.
+6. Prepare that captured assignment through
+   `MvpApplication.run_assignment_json` and the existing assignment
+   serializer. No instrument override: the declared profile is the one used.
+7. Build the existing export payloads in memory.
+8. Check the bundle and return it.
+
+Step 5 is what makes a swapped envelope visible. A missing delivery is
+missing. A corrupt envelope is an integrity failure. An intact envelope
+whose pins differ from the choice is stale. Artifact builders keep the
+captured envelope; they do not load the delivery again.
+
+The behavior digest on the prepared assignment must match the declared
+behavior pin. The instrument must match the declared profile. TAB and
+notation must cite the exported canonical revision. Canonical event
+references must stay consistent with the resolved assignment under each
+artifact's own inclusion rules: simultaneous notes, unsupported positions,
+and score rests are not forced into one row per event.
+
+Musical resolution, spatial selection, tempo, playback planning, practice
+policy, and score generation stay with their existing Python authorities.
+The preparation service lives under `mvp/` and composes those artifacts.
+`education/` does not import the MVP application. A title, a demo lookup, a
+recipient label, or routing metadata does not select or authorize anything.
+Preparations are not cached.
+
+### What this stage does not do
+
+No practice screen, playback execution, performance attempt, guided session,
+evaluation, history update, persistence, remote delivery, account, or
+authenticated acceptance. Stage 1–4 contracts stay as they are. Certified
+browser files and frozen DO-015 artifacts stay as they are.
+
+### Verification
+
+Recorded on `cursor/do016-local-practice-preparation-s05` after the gate run.
+The interpreter here is Python 3.12.3. CI runs the same commands on Python
+3.11; this interpreter satisfies `requires-python >= 3.11`, and no gate was
+relaxed. These counts are from this run.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` | PASS |
+| `mypy` (strict, `src` only) | PASS, 170 source files |
+| `pytest --cov --cov-report=term-missing` | 3471 passed, 3 skipped, 95.45% (10390 statements, 473 missed; floor 95%) |
+| `npm test` in `web/mvp1` | 526 passed, 0 failed |
+| `python3 scripts/check_in_flight.py` | OK |
+| `python3 scripts/verify_do015_certification.py` | OK (9 of 9) |
+| `python3 scripts/verify_do015_publication.py` | OK (8 of 8), successor mode |
+| `python3 scripts/build_do015_certification_evidence.py --check` | OK |
+| Stage 9 browser witness | PASS |
+
+The witness is `node web/mvp1/tests/do015_certification_capture.mjs`. It exited
+0 with final status `CLOSED` and 3 attempts. The harness rewrites
+`docs/mvp2/do015_artifacts/browser_smoke_summary.json`, so that file was
+restored. Its sha256 is
+`11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
+
+Merge base is `e2929f73a9a649c06d9692483e7099420c6fe977`, the tip of
+`origin/main` at verification. The diff against that base is the register,
+this plan, the preparation service and schema, the export payload builders,
+the exact preparation route, and the service, schema, HTTP, export-parity,
+and authority tests. It does not touch Stage 1–4 contracts, certified
+browser files, or the DO-015 frozen artifacts.
+
+This prepares a bundle and does not start practice. The inbox, the choice,
+and the bundle disappear when the server process ends. A practice screen
+remains a later order.
+
 ### Response validation follow-up
 
 The page checks the closed top-level preview and choice documents at their declared

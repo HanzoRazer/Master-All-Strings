@@ -21,6 +21,11 @@ from master_all_strings.mvp.web_export import (
     export_playback_json,
     export_practice_json,
     export_projection_json,
+    export_score_projections,
+    playback_export_payload,
+    practice_export_payload,
+    projection_export_payload,
+    score_export_payload,
 )
 
 
@@ -51,6 +56,41 @@ def test_export_projection_and_catalog(app: MvpApplication, tmp_path: Path) -> N
     manifest_copy = tmp_path / "manifest_copy.json"
     export_manifest_copy(manifest_copy)
     assert "teacher_override" in manifest_copy.read_text(encoding="utf-8")
+
+
+def test_payload_builders_match_the_exporters(app: MvpApplication, tmp_path: Path) -> None:
+    response = app.run_demo("ascending_scale")
+    projection_path = tmp_path / "projection.json"
+    export_projection_json(response, projection_path, demo_id="ascending_scale")
+    assert json.loads(projection_path.read_text(encoding="utf-8")) == projection_export_payload(
+        response, demo_id="ascending_scale"
+    )
+    untitled = tmp_path / "delivery.json"
+    export_projection_json(response, untitled)
+    assert json.loads(untitled.read_text(encoding="utf-8"))["demo_id"] is None
+
+    playback_path = tmp_path / "playback.json"
+    export_playback_json(response, playback_path)
+    playback_text = playback_path.read_text(encoding="utf-8")
+    assert json.loads(playback_text) == playback_export_payload(response)
+
+    practice_path = tmp_path / "practice.json"
+    export_practice_json(response, practice_path)
+    practice_text = practice_path.read_text(encoding="utf-8")
+    assert json.loads(practice_text) == practice_export_payload(response)
+
+    lesson_dir = tmp_path / "lesson"
+    written = export_score_projections(response, lesson_dir)
+    payload = score_export_payload(response)
+    assert payload is not None
+    assert len(written) == 3
+    assert json.loads((lesson_dir / "canonical_revision.json").read_text(encoding="utf-8")) == (
+        payload["canonical_revision"]
+    )
+    tab_text = (lesson_dir / "tab.json").read_text(encoding="utf-8")
+    notation_text = (lesson_dir / "notation.json").read_text(encoding="utf-8")
+    assert json.loads(tab_text) == payload["tab"]
+    assert json.loads(notation_text) == payload["notation"]
 
 
 def test_list_demos_and_instruments(app: MvpApplication) -> None:

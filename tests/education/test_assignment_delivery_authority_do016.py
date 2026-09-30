@@ -165,6 +165,75 @@ def test_the_lesson_is_unchanged_by_the_round_trip(assignment: LessonAssignmentV
     assert serialize_lesson_assignment(received) == serialize_lesson_assignment(assignment)
 
 
+def test_preparation_does_not_pull_mvp_into_education() -> None:
+    """The bundle composer may use the MVP application. Education may not."""
+
+    education = SOURCE / "education"
+    offenders: list[str] = []
+    for path in sorted(education.glob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                names = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                names = [node.module] if node.module else []
+            else:
+                continue
+            for name in names:
+                if name is None:
+                    continue
+                if name.startswith("master_all_strings.mvp"):
+                    offenders.append(f"{path.name} imports {name}")
+    assert offenders == []
+    preparation = (SOURCE / "mvp" / "local_practice_preparation.py").read_text(encoding="utf-8")
+    assert "uuid" not in preparation.lower()
+    for forbidden in (
+        "master_all_strings.performance",
+        "master_all_strings.core.transport",
+        "master_all_strings.education.evaluation",
+        "master_all_strings.education.guided_session",
+    ):
+        assert forbidden not in preparation
+
+
+def test_preparation_does_not_rewrite_a_delivery_or_a_choice(
+    assignment: LessonAssignmentV1,
+) -> None:
+    from master_all_strings.education.assignment_delivery_preview import (
+        LessonDeliveryPreviewService,
+    )
+    from master_all_strings.education.local_practice_choice import LocalPracticeChoiceService
+    from master_all_strings.mvp.local_practice_preparation import (
+        LocalPracticePreparationService,
+    )
+
+    deliveries = LessonDeliveryService()
+    choices = LocalPracticeChoiceService(LessonDeliveryPreviewService(deliveries))
+    envelope = envelope_for(
+        assignment,
+        delivery_id="delivery-001",
+        sender_ref="teacher-ana",
+        recipient_ref="student-bo",
+    )
+    deliveries.receive(envelope)
+    choices.choose(
+        envelope.delivery_id,
+        envelope.assignment_artifact_digest,
+        envelope.assignment_behavior_digest,
+    )
+    before_lesson = serialize_lesson_assignment(deliveries.get("delivery-001").assignment)
+    stored_choice = choices.repository.get("delivery-001")
+    LocalPracticePreparationService(
+        deliveries, choices, application_module.MvpApplication()
+    ).prepare(
+        envelope.delivery_id,
+        envelope.assignment_artifact_digest,
+        envelope.assignment_behavior_digest,
+    )
+    assert serialize_lesson_assignment(deliveries.get("delivery-001").assignment) == before_lesson
+    assert choices.repository.get("delivery-001") is stored_choice
+
+
 def test_the_service_mints_no_identities(assignment: LessonAssignmentV1) -> None:
     # Delivery IDs are caller supplied. A service that minted them would make
     # a retry indistinguishable from a new delivery.

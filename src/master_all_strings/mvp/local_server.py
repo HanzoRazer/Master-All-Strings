@@ -19,6 +19,7 @@ from master_all_strings.media.resolver import MediaResolver
 from master_all_strings.mvp.lesson_delivery_api import (
     LESSON_DELIVERY_PREVIEW_PATH,
     LESSON_PRACTICE_CHOICE_PATH,
+    LESSON_PRACTICE_PREPARATION_PATH,
     LocalLessonDeliveryApi,
 )
 
@@ -62,10 +63,20 @@ def _is_lesson_practice_choice(path: str) -> bool:
     return path == LESSON_PRACTICE_CHOICE_PATH
 
 
+def _is_lesson_practice_preparation(path: str) -> bool:
+    """Exact collection. A trailing slash is a different path."""
+
+    return path == LESSON_PRACTICE_PREPARATION_PATH
+
+
 def _is_closed_education_method(path: str) -> bool:
     """Routes whose unsupported verbs are 405 rather than a static 501."""
 
-    return _is_lesson_delivery_preview(path) or _is_lesson_practice_choice(path)
+    return (
+        _is_lesson_delivery_preview(path)
+        or _is_lesson_practice_choice(path)
+        or _is_lesson_practice_preparation(path)
+    )
 
 
 class _QuietHandler(SimpleHTTPRequestHandler):
@@ -81,7 +92,7 @@ class _QuietHandler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         path = unquote(parsed.path)
-        if _is_lesson_delivery_preview(path) or _is_lesson_practice_choice(path):
+        if _is_closed_education_method(path):
             # Query stays encoded. The API decodes delivery_id once.
             self._lesson_delivery_http("GET", parsed.geturl(), {})
             return
@@ -179,7 +190,7 @@ class _QuietHandler(SimpleHTTPRequestHandler):
             self._discard_body()
             self._lesson_delivery_http("POST", parsed.geturl(), {})
             return
-        if _is_lesson_practice_choice(path):
+        if _is_lesson_practice_choice(path) or _is_lesson_practice_preparation(path):
             if parsed.query:
                 self._discard_body()
                 self._lesson_delivery_http("POST", parsed.geturl(), {})
