@@ -396,7 +396,8 @@ function isReadyPreview(result, deliveryId) {
   if (!body.canonical_event_ids.every(nonblank)) {
     return false;
   }
-  if (!isPlaybackPolicy(body.playback_policy) || !isSpatialPolicy(body.spatial_policy)) return false;
+  // Policy contents remain opaque: this page has no playback or spatial authority.
+  if (!isRecord(body.playback_policy) || !isRecord(body.spatial_policy)) return false;
   if (!Number.isInteger(body.meter_change_count) || body.meter_change_count < 0) return false;
   if (body.instruction_objective !== null && !nonblank(body.instruction_objective)) return false;
   if (body.teacher_note !== null && !nonblank(body.teacher_note)) return false;
@@ -435,7 +436,7 @@ function isChosen(result, preview, allowCreated = false) {
   return true;
 }
 
-// Check the closed 1.0.0 documents without interpreting their policies or
+// Check the closed 1.0.0 top-level documents without interpreting their policies or
 // recomputing a digest. A partial or differently versioned document cannot
 // authorize the page's choice flow.
 function hasFields(body, fields) {
@@ -454,29 +455,6 @@ function isDigest(value) {
   return typeof value === "string" && DIGEST.test(value);
 }
 
-function optionalTick(value) {
-  return value === null || (Number.isInteger(value) && value >= 0);
-}
-
-function optionalBpm(value) {
-  return value === null || (typeof value === "number" && Number.isFinite(value));
-}
-
-function isPlaybackPolicy(body) {
-  return hasFields(body, [
-    "tempo_bpm", "start_tick", "end_tick", "loop_enabled", "count_in_bars",
-    "ticks_per_quarter", "source_tempo_bpm",
-  ]) && optionalBpm(body.tempo_bpm) && optionalBpm(body.source_tempo_bpm) &&
-    optionalTick(body.start_tick) && optionalTick(body.end_tick) && optionalTick(body.count_in_bars) &&
-    typeof body.loop_enabled === "boolean" &&
-    Number.isInteger(body.ticks_per_quarter) && body.ticks_per_quarter > 0;
-}
-
-function isSpatialPolicy(body) {
-  return hasFields(body, [
-    "instrument_profile_id", "fingering_policy_id", "preferred_fret_min", "preferred_fret_max",
-    "open_string_preference",
-  ]) && nonblank(body.instrument_profile_id) && nonblank(body.fingering_policy_id) &&
-    optionalTick(body.preferred_fret_min) && optionalTick(body.preferred_fret_max) &&
-    ["allow", "prefer", "avoid", "exclude"].includes(body.open_string_preference);
+function isRecord(value) {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }

@@ -525,10 +525,11 @@ when the server process ends. Practice activation remains a later order.
 
 ### Response validation follow-up
 
-The page accepts only closed preview and choice documents at their declared
+The page checks the closed top-level preview and choice documents at their declared
 schema IDs and version 1.0.0. READY requires event-count/array agreement and
 unique, nonblank event IDs, as well as the required policy and metadata
-fields. Digests must be strings in the declared format.
+fields. Policy objects remain opaque to preserve browser authority boundaries.
+Digests must be strings in the declared format.
 
 Both choice GET and choice POST compare delivery, assignment, content, and
 both declared digests with the pinned READY preview before displaying
