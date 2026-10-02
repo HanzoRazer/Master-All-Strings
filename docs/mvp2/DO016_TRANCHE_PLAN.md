@@ -1014,4 +1014,48 @@ lesson-completion claim is added.
 
 ### Verification
 
-Recorded after the gate run on this branch.
+Recorded on `cursor/do016-received-lesson-attempts-s07` after the gate run.
+The interpreter here is Python 3.12.3. Node is v22.14.0. CI runs the Python
+commands on Python 3.11; this interpreter satisfies `requires-python >= 3.11`,
+and no gate was relaxed. These counts are from this run. The coverage floor
+stays 95%.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` | PASS |
+| `mypy` (strict, `src` only) | PASS, 173 source files |
+| `pytest --cov --cov-report=term-missing` | 3526 passed, 3 skipped, 95.34% (10910 statements, 508 missed; floor 95%) |
+| `npm test` in `web/mvp1` | 547 passed, 0 failed |
+| `python3 scripts/check_in_flight.py` | OK (1 row) |
+| `python3 scripts/verify_do015_certification.py` | OK (9 of 9) |
+| `python3 scripts/verify_do015_publication.py` | OK (8 of 8), successor mode |
+| `python3 scripts/build_do015_certification_evidence.py --check` | OK |
+| Stage 6 browser witness | PASS, 0 failures |
+| Stage 9 browser witness | PASS |
+
+The Stage 6 witness is `python3 scripts/smoke_do016_received_practice.py`
+driving `web/mvp1/tests/do016_received_practice_capture.mjs` against an
+ephemeral localhost server. It exited 0. The summary records
+`physical_audio: "not certified"`: the scheduler accepted 2 events, which
+does not certify speakers. The practice page is still not wired to these
+attempt routes.
+
+The Stage 9 witness is `node web/mvp1/tests/do015_certification_capture.mjs`.
+It exited 0 with final status `CLOSED` and 3 attempts. The harness rewrites
+`docs/mvp2/do015_artifacts/browser_smoke_summary.json`, so that file was
+restored. Its sha256 is
+`11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
+
+Merge base is `fdcf6fbfd98994f357911ba2924e18fa68cb4ce7`, the tip of
+`origin/main` at verification. The diff against that base is the register,
+this plan, the attempt repository, service, HTTP facade, localhost dispatch,
+the new attempt schema, and the tests named in the patch plan. It does not
+touch browser product files, the legacy capture or evaluation facades,
+musical algorithms, existing schemas, governance, or the frozen DO-015
+artifacts.
+
+Attempts, deliveries, and choices die with the process. A repeated begin
+creates a different attempt. Physical MIDI input and audio output stay
+explicitly unverified. This stage does not connect the practice page, store
+durable history, or claim that a lesson is complete.
+
