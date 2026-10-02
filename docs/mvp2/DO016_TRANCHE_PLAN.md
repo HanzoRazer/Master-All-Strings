@@ -833,4 +833,56 @@ history, remote delivery, authentication, or hardware integration.
 
 ### Verification
 
-Recorded after the gate run on this branch.
+Recorded on `cursor/do016-received-lesson-practice-s06` after the gate run.
+The interpreter here is Python 3.12.3. Node is v22.14.0. CI runs the Python
+commands on Python 3.11; this interpreter satisfies `requires-python >= 3.11`,
+and no gate was relaxed. These counts are from this run.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` | PASS |
+| `ruff check scripts/smoke_do016_received_practice.py` | PASS |
+| `mypy` (strict, `src` only) | PASS, 170 source files |
+| `pytest --cov --cov-report=term-missing` | 3471 passed, 3 skipped, 95.45% (10390 statements, 473 missed; floor 95%) |
+| `npm test` in `web/mvp1` | 547 passed, 0 failed |
+| `python3 scripts/check_in_flight.py` | OK (1 row) |
+| `python3 scripts/verify_do015_certification.py` | OK (9 of 9) |
+| `python3 scripts/verify_do015_publication.py` | OK (8 of 8), successor mode |
+| `python3 scripts/build_do015_certification_evidence.py --check` | OK |
+| Stage 6 browser witness | PASS, 0 failures |
+| Stage 9 browser witness | PASS |
+
+The Stage 6 witness is `python3 scripts/smoke_do016_received_practice.py`
+driving `web/mvp1/tests/do016_received_practice_capture.mjs` against an
+ephemeral localhost server. It exited 0. The summary records
+`physical_audio: "not certified"`: scheduler diagnostics showed two notes
+scheduled after an explicit sound gesture, which does not certify speakers.
+Screenshots cover the inbox choice, the paused practice page, playback with
+sound, refresh, reload, the four fail-closed deliveries, and the narrow
+layout.
+
+The Stage 9 witness is `node web/mvp1/tests/do015_certification_capture.mjs`.
+It exited 0 with final status `CLOSED` and 3 attempts. The harness rewrites
+`docs/mvp2/do015_artifacts/browser_smoke_summary.json`, so that file was
+restored. Its sha256 is
+`11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
+
+Merge base is `805a6a5f163b4cb4dcbba579175556b7454976a7`, the tip of
+`origin/main` at verification. The diff against that base is the register,
+this plan, the practice page and its stylesheet, the shared browser
+validators, the preparation client method, the inbox Open practice control,
+the in-memory runtime, the Node tests, one shared test fixture, the smoke
+script, and the browser capture. It does not touch backend routes or schemas,
+certified `index.html`, `app.js`, or `styles.css`, the renderer, transport,
+audio, timeline, or score modules, or the frozen DO-015 artifacts.
+
+`web/mvp1/tests/lesson_practice_fixture.js` is the one file outside the
+order's file table. It holds the shared documents the Node tests import.
+Importing a `*.test.js` file would re-register those tests. It is not a
+product module and adds no package dependency. Puppeteer stays outside the
+repository, as in the earlier inbox smoke.
+
+This opens a chosen delivery for local viewing and reference playback. It
+does not capture a performance, evaluate one, or write a completion record.
+Deliveries and choices disappear when the local server process ends. Browser
+scheduling evidence does not certify physical audio.
