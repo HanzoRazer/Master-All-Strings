@@ -886,3 +886,132 @@ This opens a chosen delivery for local viewing and reference playback. It
 does not capture a performance, evaluate one, or write a completion record.
 Deliveries and choices disappear when the local server process ends. Browser
 scheduling evidence does not certify physical audio.
+
+## Stage 7 — isolated attempts for received lessons
+
+| Field | Value |
+| --- | --- |
+| Branch | `cursor/do016-received-lesson-attempts-s07` |
+| Base | `fdcf6fbfd98994f357911ba2924e18fa68cb4ce7` |
+| Predecessor | Stage 6, PR #53, merged |
+| Browser | unchanged |
+
+A localhost service captures one performance attempt against a verified
+received lesson, closes that capture, and returns evaluation and teaching
+feedback from the existing Python authorities. Each attempt holds its own
+lesson snapshot, capture, and evaluation state. One tab's attempt does not
+replace another tab's lesson or capture.
+
+This stage is the backend boundary. The Stage 6 practice page is not
+connected to these operations. That connection is Stage 8.
+
+### Lifecycle
+
+`POST /api/education/lesson-practice-attempts` begins an attempt. The body is
+exactly the delivery id, the two assignment pins, a device label, and a
+nonnegative integer `capture_time_ns`. Identifiers are not trimmed or decoded
+again. Digests use the existing declared format. Booleans are not integers.
+
+Begin runs a fresh Stage 5 preparation against the shared delivery and choice
+repositories. The server mints distinct attempt, capture, and
+performance-session ids. The caller cannot supply them. The preparation and
+the evaluation context taken from it are the attempt's immutable snapshot.
+The response is `201`, schema `master_all_strings.received_lesson_attempt`
+version `1.0.0`, status `CAPTURING`, with the identity, both pins, the
+complete preparation, and an explicit attempt policy.
+
+The policy for this stage is one pass at rate `1`, with looping, seeking, and
+lesson switching disallowed during capture. Reference sound is independent of
+capture. Beginning an attempt does not start browser playback. A repeated
+begin creates a different attempt. There is no idempotent retry.
+
+`POST /api/education/lesson-practice-attempt-messages` appends one MIDI
+message. The body is exactly the attempt id, the next sequence number
+starting at zero, a capture timestamp, a practice position, and a three-byte
+note-on or note-off payload. Velocity-zero note-on stays a note-off.
+Sequence numbers must be the next consecutive value. Timestamps cannot
+precede begin or decrease. Practice position must be finite, nonnegative,
+nondecreasing, and within the prepared playback duration. Device, repetition
+`0`, and rate `1` come from the attempt, not the client. A rejected message
+does not consume its sequence number or change the capture. Success is `200`,
+still `CAPTURING`, with the closed identity and the accepted event count.
+
+`POST /api/education/lesson-practice-attempt-finishes` closes the raw capture,
+pairs notes, and evaluates. Expected events come from the snapshot's
+canonical revision. Timing comes from the snapshot's playback timeline.
+There is no default `120 BPM`, no guessed duration, no demo lookup, and no
+client-supplied expected music. Guidance cites that snapshot's canonical
+revision. The attempt keeps its own evaluation history and records one
+evaluation. Success is `200` and `EVALUATED`, with the closed capture,
+observed notes, unmatched-note evidence, the evaluation document, message
+enrichment, teaching guidance, and an explicit unverified physical MIDI and
+audio status. An early or empty finish is a real evaluation and may contain
+missing notes. It does not invent successful notes.
+
+`POST /api/education/lesson-practice-attempt-cancellations` uses the same
+body as finish. It closes the capture as interrupted, keeps the captured
+evidence, and does not evaluate, guide, or claim success. Success is `200`
+and `INTERRUPTED`.
+
+A repeated finish after `EVALUATED`, or a repeated cancel after
+`INTERRUPTED`, returns the stored result. Finish after cancellation, and
+cancel after evaluation, are `409 attempt_conflict`. Messages after a
+terminal transition are `409 attempt_closed`. A duplicate or out-of-order
+sequence is `409 sequence_conflict`.
+
+### Snapshot and concurrency
+
+Fresh choice and delivery validation happens at begin. After that, the
+attempt describes the captured snapshot. Removing or changing the inbox does
+not replace that snapshot or discard its evidence.
+
+Delivery, assignment pins, canonical revision, attempt, raw capture,
+performance session, and evaluation digest stay distinct identities.
+
+Lookup and each state transition take the attempt's own lock. The repository
+does not replace an active attempt. Preparation and evaluation run outside
+any repository-wide lock. Terminal results are published atomically. Concurrent
+appends cannot lose an accepted message. Concurrent finishes evaluate once.
+Concurrent finish and cancel produce one terminal winner and one conflict.
+
+If evaluation fails after the capture has closed, the closed capture and its
+pairing evidence stay. The attempt is marked failed internally. The response
+is a sanitized `500`. A repeated finish does not reopen the capture or append
+another history entry.
+
+Raw-capture `started_at` and `ended_at` are actual UTC timestamps. Browser
+performance time stays on `capture_time_ns` and is named
+`browser_performance_time`. The legacy facade's fixed example dates are not
+copied.
+
+### HTTP
+
+All four routes match by exact path. A nonempty query string is rejected.
+Bodies are closed objects. Every method other than POST on those exact routes
+is `405`, including HEAD. Failures return only an error document.
+
+| Condition | HTTP | Public error |
+| --- | ---: | --- |
+| Malformed request | 400 | The request-validation sentence |
+| Unknown choice or delivery at begin | 404 | The Stage 5 code |
+| Corrupt or stale delivery at begin | 409 | The Stage 5 code |
+| Unresolvable or unpreparable lesson | 422 | The Stage 5 code |
+| Unknown attempt | 404 | `unknown_attempt` |
+| Invalid sequence | 409 | `sequence_conflict` |
+| Message after closure | 409 | `attempt_closed` |
+| Conflicting terminal operation | 409 | `attempt_conflict` |
+| Unsupported method | 405 | `method not allowed` |
+| Unexpected failure | 500 | `internal server error` |
+
+The legacy capture and evaluation facades stay as they are for the certified
+page. New attempts reuse the underlying normalization, pairing, alignment,
+evaluation, and guidance authorities with attempt-local state. They do not
+call private facade methods or accept that facade's broad client payload.
+
+No browser control, guided session, recommendation execution, durable
+history, remote delivery, authentication, hardware integration, or
+lesson-completion claim is added.
+
+### Verification
+
+Recorded after the gate run on this branch.
