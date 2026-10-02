@@ -711,3 +711,126 @@ preview cases and independent pin mismatches on GET and POST. The existing
 DO-015 certification scenario tests also pass. The localhost browser smoke
 above belongs to the original Stage 4 validation; it was not rerun for this
 follow-up because the repair environment refuses listening sockets.
+
+## Stage 6 — open and practice a received lesson
+
+| Field | Value |
+| --- | --- |
+| Branch | `cursor/do016-received-lesson-practice-s06` |
+| Base | `805a6a5f163b4cb4dcbba579175556b7454976a7` |
+| Page | `/lesson-practice.html` |
+| Predecessor | Stage 5 preparation, merged |
+
+A person opens a chosen delivery from the inbox, sees the prepared fretboard
+and score, and uses the existing transport. This stage does not capture a
+performance, evaluate one, create a guided session, or talk to hardware.
+
+### Inbox entry
+
+**Open practice** sits in the selected-delivery panel. It is enabled only
+after a choice GET `200` or a choice POST `200`/`201` matches the pinned
+READY preview on delivery, assignment, content, artifact digest, and behavior
+digest. Selection change, selected-delivery refresh, and any invalid response
+disable it immediately and remove its navigation target. Choosing stays a
+separate action and does not navigate or play.
+
+The enabled control navigates in the same tab to
+`lesson-practice.html?delivery_id=<encoded-value>`. The id is encoded once
+with `URLSearchParams`. The URL carries no digest, artifact, recipient label,
+or musical state.
+
+### Practice page
+
+The page accepts exactly one nonblank `delivery_id`. A repeated id, an extra
+parameter, or a blank value fails before any request. A fragment is not input.
+
+Loading is preview, then choice GET, then preparation POST. Preparation uses
+the fresh preview's two declared digests. The page never POSTs a choice and
+never starts playback on its own. A direct visit works when a valid choice
+already exists. Without one, the failure stays on screen with a link back to
+the inbox.
+
+**Refresh lesson** repeats that sequence. It stops playback and drops the
+current runtime before the new requests. There is no automatic retry. A stale
+response tells the person to refresh; it does not substitute new pins.
+
+The page shows the lesson title, objective, teacher note, and instrument;
+delivery, assignment, and content identity in a collapsible section; the
+fretboard, TAB, and notation; Play, Pause, Restart, and Seek; rates `0.5`,
+`0.75`, `1`, and `1.5`; the supplied loop's enabled state, bounds, and
+repetition target; sound enable, volume, and readiness; warnings and
+unsupported-feature notices. Reaching the end of the transport says
+**Playback ended**. It does not say the lesson was completed or passed. The
+page says deliveries and choices disappear when the local server ends.
+
+### What the browser accepts
+
+Preview and choice checks move into `lesson_delivery_validation.js` without a
+change in their rules. A preparation is usable only when it is HTTP `200`,
+schema `master_all_strings.local_practice_preparation` version `1.0.0`,
+status `PREPARED`, and the closed top-level field set. The five identity and
+pin fields must match the fresh preview and the choice. The projection
+wrapper is `ready` with `demo_id: null`, and its behavior digest matches the
+assignment behavior pin. Assignment and content identity must agree across
+the projection, the playback plan, and the practice policy. The instrument
+id on the wrapper and the inner projection must equal the preview spatial
+policy's declared `instrument_profile_id`. Consumed artifact versions must
+be the supported `1.0.0` values. Score artifacts must cite one canonical
+revision. Timeline anchors must be a nonempty table the existing timeline
+accepts. Event ids must be unique and nonblank, and each artifact's event
+references must be the preview's canonical set. Notation rests are not
+events. One onset, measure, or visual group is not assumed to be one event.
+Playback seconds and loop bounds must be finite and ordered. Tempo-policy
+contents stay opaque. Pin equality is a consistency check, not a second
+digest calculation.
+
+A successful response that fails these checks is unusable. Playback stays
+disabled.
+
+### Runtime
+
+One accepted bundle builds one runtime from the existing `Transport`,
+`TeachingTimeline`, `FretboardRenderer`, `AudioScheduler`, `ReferenceSynth`,
+and `ScoreViewCoordinator`. The animation loop reads transport position,
+draws the fretboard frame, forwards that frame's active event ids to the
+timeline, and publishes the timeline to the score follower. Frame deltas are
+not musical position. Score clicks use the existing anchor seek helper.
+Fretboard selection highlights only.
+
+`ScoreViewCoordinator` is unchanged. Its `loadJson` reads the preparation's
+canonical revision, TAB, notation, and projection context from memory under
+the lookup key `received`. That key is not a demo id. Unknown paths are
+refused. The page does not fetch demo files, build a path from the delivery
+id, use a blob URL, or write artifacts to disk.
+
+Transport duration is `playback.total_seconds`. The scheduler loads the
+prepared playback plan. The loop uses the supplied runtime seconds and the
+policy's repetition target. The person can enable or disable that loop, not
+edit its bounds. Sound starts disabled. Visual playback works without it.
+Web Audio starts only after an explicit sound gesture. A failed init leaves
+sound off. A late init cannot enable a runtime that has already been
+replaced.
+
+A bad identity, pin, version, anchor table, or revision blocks the load. A
+TAB or notation renderer failure after a valid bundle disables that view
+only. A fretboard or other essential mount failure disposes the partial
+runtime and leaves playback off.
+
+Each load has a generation. Late preview, choice, preparation, mount, and
+audio results cannot replace a newer load. Refresh, navigation, and disposal
+pause the transport, silence voices, cancel the animation frame, destroy the
+scheduler, dispose the timeline, clear the score and fretboard, and drop
+pending work. `pagehide` disposes the runtime. A restored page loads again
+and stays paused with sound disabled.
+
+### Authority boundary
+
+No backend route or schema changes. Certified `index.html`, `app.js`, and
+`styles.css` stay untouched, as do the renderer, transport, audio, timeline,
+and score modules and the frozen DO-015 artifacts. No performance capture,
+evaluation, guided session, recommendation, completion record, durable
+history, remote delivery, authentication, or hardware integration.
+
+### Verification
+
+Recorded after the gate run on this branch.
