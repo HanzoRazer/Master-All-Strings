@@ -529,20 +529,22 @@ def test_a_rejected_message_does_not_consume_its_sequence(assignment: LessonAssi
         service.append_message(attempt_id, 0, 2_000, float("nan"), [0x90, 60, 90])
     with pytest.raises(AttemptRequestError):
         service.append_message(attempt_id, 0, 2_000, float("inf"), [0x90, 60, 90])
-    accepted = service.append_message(attempt_id, 0, 2_000, 0.0, [0x90, 60, 90])
+    accepted = service.append_message(attempt_id, 0, 2_000, 0.25, [0x90, 60, 90])
     assert accepted["accepted_event_count"] == 1
     with pytest.raises(SequenceConflictError):
-        service.append_message(attempt_id, 0, 2_100, 0.0, [0x80, 60, 0])
+        service.append_message(attempt_id, 0, 2_100, 0.25, [0x80, 60, 0])
     with pytest.raises(SequenceConflictError):
-        service.append_message(attempt_id, 2, 2_100, 0.0, [0x80, 60, 0])
+        service.append_message(attempt_id, 2, 2_100, 0.25, [0x80, 60, 0])
     with pytest.raises(AttemptRequestError):
-        service.append_message(attempt_id, 1, 1_000, 0.0, [0x80, 60, 0])
+        service.append_message(attempt_id, 1, 1_000, 0.25, [0x80, 60, 0])
+    with pytest.raises(AttemptRequestError):
+        service.append_message(attempt_id, 1, 2_100, 0.1, [0x80, 60, 0])
     with pytest.raises(AttemptRequestError):
         service.append_message(attempt_id, 1, 2_100, -0.1, [0x80, 60, 0])
     outside = begun["preparation"]["playback"]["total_seconds"] + 0.01
     with pytest.raises(AttemptRequestError):
         service.append_message(attempt_id, 1, 2_100, outside, [0x80, 60, 0])
-    service.append_message(attempt_id, 1, 2_100, 0.0, [0x80, 60, 0])
+    service.append_message(attempt_id, 1, 2_100, 0.25, [0x80, 60, 0])
     record = service.repository.get(attempt_id)
     assert record is not None
     assert record.next_sequence == 2

@@ -260,6 +260,58 @@ def test_unknown_attempt_and_stage5_codes_stay_public(
     assert response == {"error": "query string is not allowed"}
 
 
+def test_conflict_codes_are_public(
+    attempts: LocalReceivedLessonAttemptApi, api: LocalLessonDeliveryApi
+) -> None:
+    sent = api.service.get("deliv/ery 1")
+    status, begun = attempts.handle_http(
+        "POST",
+        LESSON_PRACTICE_ATTEMPT_PATH,
+        {
+            "delivery_id": "deliv/ery 1",
+            "expected_assignment_artifact_digest": sent.assignment_artifact_digest,
+            "expected_assignment_behavior_digest": sent.assignment_behavior_digest,
+            "device_id": "keyboard-a",
+            "capture_time_ns": 1,
+        },
+    )
+    assert status == 201
+    message = {
+        "attempt_id": begun["attempt_id"],
+        "sequence_number": 1,
+        "capture_time_ns": 2,
+        "practice_position_seconds": 0,
+        "raw_payload": [144, 60, 90],
+    }
+    status, response = attempts.handle_http("POST", LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH, message)
+    assert status == 409
+    assert response == {"error": "sequence_conflict"}
+    status, finished = attempts.handle_http(
+        "POST",
+        LESSON_PRACTICE_ATTEMPT_FINISH_PATH,
+        {"attempt_id": begun["attempt_id"], "capture_time_ns": 2},
+    )
+    assert status == 200
+    message["sequence_number"] = 0
+    status, response = attempts.handle_http("POST", LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH, message)
+    assert status == 409
+    assert response == {"error": "attempt_closed"}
+    status, response = attempts.handle_http(
+        "POST",
+        LESSON_PRACTICE_ATTEMPT_CANCELLATION_PATH,
+        {"attempt_id": begun["attempt_id"], "capture_time_ns": 3},
+    )
+    assert status == 409
+    assert response == {"error": "attempt_conflict"}
+    status, again = attempts.handle_http(
+        "POST",
+        LESSON_PRACTICE_ATTEMPT_FINISH_PATH,
+        {"attempt_id": begun["attempt_id"], "capture_time_ns": 2},
+    )
+    assert status == 200
+    assert again == finished
+
+
 @pytest.mark.parametrize(
     "method", ["GET", "HEAD", "PUT", "DELETE", "PATCH", "OPTIONS"]
 )
@@ -393,6 +445,13 @@ def test_the_server_rejects_a_bad_body(server: Any, raw: bytes) -> None:
     assert status == 400
     assert set(response) == {"error"}
     assert "Traceback" not in response["error"]
+
+
+def test_a_static_page_still_serves(server: Any, tmp_path: Path) -> None:
+    (tmp_path / "index.html").write_text("stage-7-static", encoding="utf-8")
+    status, response = _wire(server.base, "GET", "/index.html")
+    assert status == 200
+    assert "stage-7-static" in response["error"]
 
 
 def test_a_post_query_string_is_rejected(server: Any) -> None:
