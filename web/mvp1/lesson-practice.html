@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson practice</title>
+    <link rel="stylesheet" href="lesson-practice.css" />
+    <link rel="stylesheet" href="score-view.css" />
+  </head>
+  <body>
+    <main class="practice-page" data-lesson-practice>
+      <header class="masthead">
+        <p class="eyebrow">On this device</p>
+        <h1 id="lesson-title">Lesson practice</h1>
+        <p id="lesson-objective"></p>
+        <p id="teacher-note"></p>
+        <p id="instrument-name"></p>
+        <p class="lifetime">
+          Received deliveries and practice choices stay in memory on this device
+          and disappear when the server process ends.
+        </p>
+      </header>
+
+      <p id="status" class="status" role="status">Loading the lesson.</p>
+
+      <div class="toolbar">
+        <button type="button" id="refresh-lesson">Refresh lesson</button>
+        <a id="back-inbox" href="lesson-inbox.html">Back to inbox</a>
+      </div>
+
+      <details id="identity">
+        <summary>Delivery identity</summary>
+        <dl>
+          <dt>Delivery</dt>
+          <dd id="identity-delivery"></dd>
+          <dt>Assignment</dt>
+          <dd id="identity-assignment"></dd>
+          <dt>Content</dt>
+          <dd id="identity-content"></dd>
+        </dl>
+      </details>
+
+      <section class="notices" aria-label="Lesson notices">
+        <ul id="warning-list"></ul>
+        <ul id="unsupported-list"></ul>
+        <ul id="unresolved-list"></ul>
+        <p id="score-notice" hidden></p>
+      </section>
+
+      <section class="board-shell" aria-label="Fretboard">
+        <div class="board-header">
+          <div id="instrumentTitle">Instrument</div>
+          <div id="clock">0.00s</div>
+        </div>
+        <div class="board">
+          <div class="lane-labels" id="laneLabels"></div>
+          <div class="scroll-viewport" id="scrollViewport">
+            <div class="scroll-canvas" id="scrollCanvas">
+              <div class="play-line" id="playLine"></div>
+            </div>
+          </div>
+          <div class="unplayable-gutter" id="unplayableGutter">
+            <div class="gutter-title">Unplayable</div>
+            <div class="gutter-notes" id="gutterNotes"></div>
+          </div>
+        </div>
+        <div class="neck-map" id="neckMap" aria-label="Neck map overview"></div>
+      </section>
+
+      <section class="transport" aria-label="Playback">
+        <button type="button" id="btn-play" disabled>Play</button>
+        <button type="button" id="btn-pause" disabled>Pause</button>
+        <button type="button" id="btn-restart" disabled>Restart</button>
+        <label class="scrub">
+          Seek
+          <input id="seek" type="range" min="0" max="1000" value="0" disabled />
+        </label>
+        <div class="rates" role="group" aria-label="Playback speed">
+          <button type="button" data-rate="0.5" disabled>0.5×</button>
+          <button type="button" data-rate="0.75" disabled>0.75×</button>
+          <button type="button" data-rate="1" disabled>1×</button>
+          <button type="button" data-rate="1.5" disabled>1.5×</button>
+        </div>
+        <label class="loop-toggle">
+          <input id="loop-enabled" type="checkbox" disabled />
+          Practice loop
+        </label>
+        <p id="loop-bounds"></p>
+        <p id="loop-target"></p>
+        <p>Repetitions <span id="repetition-count">0</span></p>
+      </section>
+
+      <section class="sound" aria-label="Reference sound">
+        <label>
+          <input id="sound-enabled" type="checkbox" disabled />
+          Sound
+        </label>
+        <label>
+          Volume
+          <input id="master-volume" type="range" min="0" max="1" step="0.05" value="0.6" disabled />
+        </label>
+        <p id="audio-status">Sound off.</p>
+      </section>
+
+      <section class="score-panel" id="scorePanel" aria-label="Score views">
+        <div class="score-panel__views">
+          <div class="score-panel__view" id="tabView" aria-label="Tablature"></div>
+          <div class="score-panel__view" id="notationView" aria-label="Standard notation"></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="lesson_practice.js"></script>
+  </body>
+</html>
