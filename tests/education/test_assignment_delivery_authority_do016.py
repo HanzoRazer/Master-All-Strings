@@ -234,6 +234,50 @@ def test_preparation_does_not_rewrite_a_delivery_or_a_choice(
     assert choices.repository.get("delivery-001") is stored_choice
 
 
+def test_education_does_not_orchestrate_received_lesson_attempts(
+    assignment: LessonAssignmentV1,
+) -> None:
+    """Attempt capture stays in mvp. Delivery and choice contracts stay put."""
+
+    needle = "received_lesson_attempt"
+    offenders = [
+        path.name
+        for path in sorted((SOURCE / "education").glob("*.py"))
+        if needle in path.read_text(encoding="utf-8")
+    ]
+    offenders.extend(
+        path.name for path in DELIVERY_MODULES if needle in path.read_text(encoding="utf-8")
+    )
+    assert offenders == []
+    from master_all_strings.education.assignment_delivery_preview import (
+        LessonDeliveryPreviewService,
+    )
+    from master_all_strings.education.local_practice_choice import (
+        LOCAL_PRACTICE_CHOICE_SCHEMA_ID,
+        LocalPracticeChoiceService,
+    )
+
+    deliveries = LessonDeliveryService()
+    choices = LocalPracticeChoiceService(LessonDeliveryPreviewService(deliveries))
+    envelope = envelope_for(
+        assignment,
+        delivery_id="delivery-001",
+        sender_ref="teacher-ana",
+        recipient_ref="student-bo",
+    )
+    stored = deliveries.receive(envelope)
+    choice, created = choices.choose(
+        envelope.delivery_id,
+        envelope.assignment_artifact_digest,
+        envelope.assignment_behavior_digest,
+    )
+    assert created is True
+    assert stored.delivery_id == "delivery-001"
+    assert choice.schema_id == LOCAL_PRACTICE_CHOICE_SCHEMA_ID
+    assert choice.assignment_artifact_digest == stored.assignment_artifact_digest
+    assert choice.assignment_behavior_digest == stored.assignment_behavior_digest
+
+
 def test_the_service_mints_no_identities(assignment: LessonAssignmentV1) -> None:
     # Delivery IDs are caller supplied. A service that minted them would make
     # a retry indistinguishable from a new delivery.
