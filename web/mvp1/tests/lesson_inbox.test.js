@@ -69,6 +69,14 @@ class El {
     this.attributes[name] = String(value);
   }
 
+  getAttribute(name) {
+    return Object.hasOwn(this.attributes, name) ? this.attributes[name] : null;
+  }
+
+  removeAttribute(name) {
+    delete this.attributes[name];
+  }
+
   addEventListener(type, handler) {
     (this.listeners[type] ||= []).push(handler);
   }
@@ -120,6 +128,8 @@ function buildRoot() {
   add("p", "status");
   const choose = add("button", "choose");
   choose.disabled = true;
+  const openPractice = add("a", "open-practice");
+  openPractice.setAttribute("aria-disabled", "true");
   add("p", "choice-status");
   add("p", "choice-note");
   const choiceFields = add("dl", "choice-fields");
@@ -817,3 +827,78 @@ test("a choice GET cannot claim creation with 201", async () => {
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+
+function openHref(inbox) {
+  return inbox.q("open-practice").getAttribute("href");
+}
+
+test("Open practice stays disabled until a matching choice and clears on refresh", async () => {
+  assert.match(pageSource, /id="open-practice"/);
+  assert.doesNotMatch(pageSource, /id="open-practice"[^>]*href=/);
+  let previewMode = "ready";
+  let releasePreview;
+  const inbox = await mount({
+    list: () => listOf([summary("delivery-001"), summary("delivery-002")]),
+    preview: (id) => {
+      if (previewMode === "hold") {
+        return new Promise((resolve) => {
+          releasePreview = () => resolve(ready(id));
+        });
+      }
+      return ready(id);
+    },
+    getChoice: () => unknown(),
+    choose: (id) => chosen(id, 201),
+  });
+  await inbox.ui.select("delivery-001");
+  assert.equal(inbox.q("choose").disabled, false);
+  assert.equal(openHref(inbox), null);
+  await inbox.ui.choose();
+  assert.equal(calls(inbox.client, "choose").length, 1);
+  assert.equal(openHref(inbox), "lesson-practice.html?delivery_id=delivery-001");
+
+  previewMode = "hold";
+  const refreshing = inbox.ui.refreshSelected();
+  assert.equal(openHref(inbox), null);
+  releasePreview();
+  await refreshing;
+  assert.equal(inbox.q("choose").disabled, false);
+  assert.equal(openHref(inbox), null);
+});
+
+test("a stored choice and a created choice enable one opaque practice URL", async () => {
+  const nasty = "a/b c?x=1&y=2#frag";
+  const stored = await mount({
+    list: () => listOf([summary(nasty)]),
+    preview: () => ready(nasty),
+    getChoice: () => chosen(nasty),
+    choose: () => {
+      throw new Error("stored choice must not POST");
+    },
+  });
+  await stored.ui.select(nasty);
+  assert.equal(stored.q("choose").disabled, true);
+  const href = openHref(stored);
+  assert.equal(href, `lesson-practice.html?${new URLSearchParams({ delivery_id: nasty })}`);
+  assert.equal(href.includes(nasty), false);
+  assert.equal(href.includes("sha256"), false);
+  assert.equal(calls(stored.client, "choose").length, 0);
+
+  let release;
+  const created = await mount({
+    list: () => listOf([summary("delivery-001"), summary("delivery-002")]),
+    preview: (id) => ready(id),
+    getChoice: () => unknown(),
+    choose: (id) => new Promise((resolve) => {
+      release = () => resolve(chosen(id, 201));
+    }),
+  });
+  await created.ui.select("delivery-001");
+  const pending = created.ui.choose();
+  await created.ui.select("delivery-002");
+  assert.equal(openHref(created), null);
+  release();
+  await pending;
+  assert.equal(openHref(created), null);
+  assert.equal(created.q("choice-status").textContent.includes("CHOSEN_FOR_PRACTICE"), false);
+});

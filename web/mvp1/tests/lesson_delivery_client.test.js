@@ -7,6 +7,7 @@ import {
   LESSON_DELIVERY_LIST_PATH,
   LESSON_DELIVERY_PREVIEW_PATH,
   LESSON_PRACTICE_CHOICE_PATH,
+  LESSON_PRACTICE_PREPARATION_PATH,
   LessonDeliveryClient,
   lessonDeliveryQuery,
 } from "../lesson_delivery_client.js";
@@ -192,6 +193,40 @@ test("malformed JSON and a rejected fetch stay unavailable", async () => {
   }).choose("delivery-001", "sha256:ab", "sha256:cd");
   assert.deepEqual(rejectedResult, { ok: false, status: 0, error: null, body: null });
   assert.equal(JSON.stringify(rejectedResult).includes("INTERNAL_EXCEPTION_TEXT"), false);
+});
+
+test("prepare POSTs the three preview pins and no query", async () => {
+  const id = "a/b c?x=1";
+  const artifact = `sha256:${"ab".repeat(32)}`;
+  const behavior = `sha256:${"cd".repeat(32)}`;
+  const { calls, fetchImpl } = fakeFetch(() => jsonResponse(200, { preparation_status: "PREPARED" }));
+  const client = new LessonDeliveryClient({ fetchImpl });
+  const result = await client.prepare(id, artifact, behavior);
+  assert.equal(result.ok, true);
+  assert.equal(result.status, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, LESSON_PRACTICE_PREPARATION_PATH);
+  assert.equal(calls[0].url.includes("?"), false);
+  assert.equal(calls[0].options.method, "POST");
+  assert.deepEqual(JSON.parse(calls[0].options.body), {
+    delivery_id: id,
+    expected_assignment_artifact_digest: artifact,
+    expected_assignment_behavior_digest: behavior,
+  });
+
+  const failed = fakeFetch(() => jsonResponse(409, { error: "stale_preview", detail: "SECRET" }));
+  const failure = await new LessonDeliveryClient({ fetchImpl: failed.fetchImpl }).prepare(
+    id, artifact, behavior,
+  );
+  assert.deepEqual(failure, { ok: false, status: 409, error: "stale_preview", body: null });
+
+  const rejected = fakeFetch(() => {
+    throw new Error("network down");
+  });
+  const network = await new LessonDeliveryClient({ fetchImpl: rejected.fetchImpl }).prepare(
+    id, artifact, behavior,
+  );
+  assert.deepEqual(network, { ok: false, status: 0, error: null, body: null });
 });
 
 test("the client does not decode ids or decide choosability", () => {

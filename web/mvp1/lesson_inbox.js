@@ -7,18 +7,14 @@ or start practice.
 */
 
 import { LessonDeliveryClient } from "./lesson_delivery_client.js";
-
-const DIGEST = /^sha256:[0-9a-f]{64}$/;
-const PREVIEW_FIELDS = [
-  "schema_id", "schema_version", "preview_status", "delivery_id", "assignment_id", "content_id",
-  "assignment_artifact_digest", "assignment_behavior_digest", "title", "canonical_event_count",
-  "canonical_event_ids", "playback_policy", "spatial_policy", "meter_change_count",
-  "instruction_objective", "teacher_note",
-];
-const CHOICE_FIELDS = [
-  "schema_id", "schema_version", "choice_status", "delivery_id", "assignment_id", "content_id",
-  "assignment_artifact_digest", "assignment_behavior_digest",
-];
+import {
+  failureMessage,
+  isAvailable,
+  isChosen,
+  isDeliveryList,
+  isReadyPreview,
+  practicePageHref,
+} from "./lesson_delivery_validation.js";
 
 const SUMMARY_FIELDS = [
   ["Delivery", "delivery_id"],
@@ -46,6 +42,7 @@ export function mountLessonInbox(root, { client = new LessonDeliveryClient() } =
   const previewFields = required(root, "#preview-fields");
   const statusEl = required(root, "#status");
   const chooseButton = required(root, "#choose");
+  const openPractice = required(root, "#open-practice");
   const choiceStatus = required(root, "#choice-status");
   const choiceNote = required(root, "#choice-note");
   const choiceFields = required(root, "#choice-fields");
@@ -108,6 +105,7 @@ export function mountLessonInbox(root, { client = new LessonDeliveryClient() } =
     choosable = false;
     blocking = null;
     chooseButton.disabled = true;
+    setOpenPractice(null);
     refreshSelectedButton.disabled = true;
     clearPreview();
     previewPlaceholder.textContent = "Select a delivery to request a fresh preview.";
@@ -184,9 +182,20 @@ export function mountLessonInbox(root, { client = new LessonDeliveryClient() } =
     choiceFields.replaceChildren();
   }
 
+  function setOpenPractice(deliveryId) {
+    if (deliveryId) {
+      openPractice.setAttribute("href", practicePageHref(deliveryId));
+      openPractice.setAttribute("aria-disabled", "false");
+      return;
+    }
+    openPractice.removeAttribute("href");
+    openPractice.setAttribute("aria-disabled", "true");
+  }
+
   function applyChoice(choice, deliveryId) {
     choosable = false;
     chooseButton.disabled = true;
+    setOpenPractice(null);
     if (isAvailable(choice)) {
       blocking = null;
       showAvailable();
@@ -198,6 +207,7 @@ export function mountLessonInbox(root, { client = new LessonDeliveryClient() } =
     if (isChosen(choice, pinnedPreview)) {
       blocking = null;
       showChosen(choice.body);
+      setOpenPractice(choice.body.delivery_id);
       renderStatus();
       return;
     }
@@ -232,6 +242,7 @@ export function mountLessonInbox(root, { client = new LessonDeliveryClient() } =
     pinnedPreview = null;
     choosable = false;
     chooseButton.disabled = true;
+    setOpenPractice(null);
     refreshSelectedButton.disabled = false;
     clearPreview();
     previewPlaceholder.textContent = "Requesting a fresh preview.";
@@ -268,12 +279,14 @@ export function mountLessonInbox(root, { client = new LessonDeliveryClient() } =
     const behaviorDigest = preview.assignment_behavior_digest;
     choosable = false;
     chooseButton.disabled = true;
+    setOpenPractice(null);
     const result = await client.choose(deliveryId, artifactDigest, behaviorDigest);
     if (generation !== selectionGeneration) return;
     if (pinnedPreview !== preview) return;
     if (isChosen(result, preview, true)) {
       blocking = null;
       showChosen(result.body);
+      setOpenPractice(result.body.delivery_id);
       renderStatus();
       return;
     }
@@ -291,6 +304,9 @@ export function mountLessonInbox(root, { client = new LessonDeliveryClient() } =
   });
   chooseButton.addEventListener("click", () => {
     track(chooseForPractice());
+  });
+  openPractice.addEventListener("click", (event) => {
+    if (!openPractice.getAttribute("href")) event.preventDefault();
   });
 
   track(refreshInbox());
@@ -342,119 +358,4 @@ function fillPairs(document, list, rows) {
     nodes.push(term, detail);
   }
   list.replaceChildren(...nodes);
-}
-
-/**
- * @param {{ status?: number, error?: string|null }} failure
- */
-function failureMessage(failure) {
-  const status =
-    failure && Number.isInteger(failure.status) && failure.status > 0
-      ? String(failure.status)
-      : "unavailable";
-  const code =
-    failure && typeof failure.error === "string" && failure.error.length > 0
-      ? failure.error
-      : "unavailable";
-  let text = `Request failed (${status}, ${code}).`;
-  if (failure && failure.error === "stale_preview") {
-    text += " Refresh the selected delivery before choosing again.";
-  }
-  return text;
-}
-
-/**
- * @param {{ ok?: boolean, status?: number, body?: { deliveries?: unknown } }} result
- */
-function isDeliveryList(result) {
-  return Boolean(result?.ok && result.status === 200 && Array.isArray(result.body?.deliveries));
-}
-
-/**
- * @param {{ ok?: boolean, status?: number, body?: object }} result
- * @param {string} deliveryId
- */
-function isReadyPreview(result, deliveryId) {
-  if (!result?.ok || result.status !== 200) return false;
-  const body = result.body;
-  if (!hasFields(body, PREVIEW_FIELDS)) return false;
-  if (body.schema_id !== "master_all_strings.lesson_delivery_preview") return false;
-  if (body.schema_version !== "1.0.0") return false;
-  if (body.preview_status !== "READY") return false;
-  if (body.delivery_id !== deliveryId) return false;
-  if (!nonblank(body.assignment_id) || !nonblank(body.content_id)) return false;
-  if (!isDigest(body.assignment_artifact_digest) || !isDigest(body.assignment_behavior_digest)) return false;
-  if (!nonblank(body.title)) return false;
-  if (!Number.isInteger(body.canonical_event_count) || body.canonical_event_count < 1) {
-    return false;
-  }
-  if (!Array.isArray(body.canonical_event_ids) || body.canonical_event_ids.length === 0) {
-    return false;
-  }
-  if (body.canonical_event_count !== body.canonical_event_ids.length) return false;
-  if (new Set(body.canonical_event_ids).size !== body.canonical_event_count) return false;
-  if (!body.canonical_event_ids.every(nonblank)) {
-    return false;
-  }
-  // Policy contents remain opaque: this page has no playback or spatial authority.
-  if (!isRecord(body.playback_policy) || !isRecord(body.spatial_policy)) return false;
-  if (!Number.isInteger(body.meter_change_count) || body.meter_change_count < 0) return false;
-  if (body.instruction_objective !== null && !nonblank(body.instruction_objective)) return false;
-  if (body.teacher_note !== null && !nonblank(body.teacher_note)) return false;
-  return true;
-}
-
-/**
- * @param {{ status?: number, error?: string|null }} result
- */
-function isAvailable(result) {
-  return result?.status === 404 && result?.error === "unknown_practice_choice";
-}
-
-/**
- * @param {{ ok?: boolean, status?: number, body?: object }} result
- * @param {object|null} preview  The READY document inspected for this selection.
- * @param {boolean} [allowCreated]  Only POST can return 201.
- */
-function isChosen(result, preview, allowCreated = false) {
-  if (!preview || !result?.ok) return false;
-  if (result.status !== 200 && !(allowCreated && result.status === 201)) return false;
-  const body = result.body;
-  if (!hasFields(body, CHOICE_FIELDS)) return false;
-  if (body.schema_id !== "master_all_strings.local_practice_choice") return false;
-  if (body.schema_version !== "1.0.0") return false;
-  if (body.choice_status !== "CHOSEN_FOR_PRACTICE") return false;
-  for (const field of [
-    "delivery_id",
-    "assignment_id",
-    "content_id",
-    "assignment_artifact_digest",
-    "assignment_behavior_digest",
-  ]) {
-    if (body[field] !== preview[field]) return false;
-  }
-  return true;
-}
-
-// Check the closed 1.0.0 top-level documents without interpreting their policies or
-// recomputing a digest. A partial or differently versioned document cannot
-// authorize the page's choice flow.
-function hasFields(body, fields) {
-  return Boolean(
-    body && typeof body === "object" && !Array.isArray(body) &&
-    Object.keys(body).length === fields.length &&
-    fields.every((field) => Object.hasOwn(body, field)),
-  );
-}
-
-function nonblank(value) {
-  return typeof value === "string" && value.trim().length > 0;
-}
-
-function isDigest(value) {
-  return typeof value === "string" && DIGEST.test(value);
-}
-
-function isRecord(value) {
-  return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }

@@ -1,14 +1,15 @@
-/** HTTP client for the local lesson inbox.
+/** HTTP client for the local lesson inbox and practice page.
 
-Transport only. This module calls the Stage 1 list, Stage 2 preview, and
-Stage 3 choice routes. It preserves the HTTP status and the public error
-code. It does not decide whether a delivery can be chosen, and it does not
-preview, choose, or start a lesson.
+Transport only. This module calls the Stage 1 list, Stage 2 preview, Stage 3
+choice, and Stage 5 preparation routes. It preserves the HTTP status and the
+public error code. It does not decide whether a document is usable, and it
+does not preview, choose, prepare, or start a lesson.
 */
 
 export const LESSON_DELIVERY_LIST_PATH = "/api/education/lesson-deliveries";
 export const LESSON_DELIVERY_PREVIEW_PATH = "/api/education/lesson-delivery-preview";
 export const LESSON_PRACTICE_CHOICE_PATH = "/api/education/lesson-practice-choices";
+export const LESSON_PRACTICE_PREPARATION_PATH = "/api/education/lesson-practice-preparations";
 
 /**
  * One `delivery_id` query, encoded once.
@@ -75,6 +76,24 @@ export class LessonDeliveryClient {
    */
   choose(deliveryId, artifactDigest, behaviorDigest) {
     return this._send("POST", LESSON_PRACTICE_CHOICE_PATH, {
+      delivery_id: deliveryId,
+      expected_assignment_artifact_digest: artifactDigest,
+      expected_assignment_behavior_digest: behaviorDigest,
+    });
+  }
+
+  /**
+   * POST the preview's declared digests. The body is the only place the id
+   * is sent; this URL has no query string. The call computes a bundle. It
+   * does not create a choice or start playback.
+   *
+   * @param {string} deliveryId
+   * @param {string} artifactDigest
+   * @param {string} behaviorDigest
+   * @returns {Promise<LessonHttpResult>}
+   */
+  prepare(deliveryId, artifactDigest, behaviorDigest) {
+    return this._send("POST", LESSON_PRACTICE_PREPARATION_PATH, {
       delivery_id: deliveryId,
       expected_assignment_artifact_digest: artifactDigest,
       expected_assignment_behavior_digest: behaviorDigest,
