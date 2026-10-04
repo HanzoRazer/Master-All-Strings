@@ -1059,3 +1059,75 @@ creates a different attempt. Physical MIDI input and audio output stay
 explicitly unverified. This stage does not connect the practice page, store
 durable history, or claim that a lesson is complete.
 
+## Stage 8 — perform and receive feedback on a delivered lesson
+
+| Field | Value |
+| --- | --- |
+| Branch | `cursor/do016-received-lesson-attempt-ui-s08` |
+| Base | `aff6b7c8e3254945e0306c222f0a5468bb5d338b` |
+| Predecessor | Stage 7, PR #54, merged |
+| Page | `/lesson-practice.html` |
+
+The practice page talks only to the four Stage 7 attempt routes. A person
+enables MIDI, selects an input, and explicitly starts one attempt. The page
+mounts the preparation returned by begin, captures note messages through a
+serial queue, and shows evaluation and teaching feedback only after the
+terminal document matches that begin snapshot.
+
+Ordinary Stage 6 reference practice stays available when no attempt is
+active. This stage does not create a guided session, execute a
+recommendation, record lesson completion, or persist history.
+
+### States and policy
+
+The controller states are `IDLE`, `STARTING`, `CAPTURING`, `FINISHING`,
+`CANCELLING`, `EVALUATED`, `INTERRUPTED`, and `UNCONFIRMED`.
+
+Start is ignored while a begin or terminal transition is already running.
+The accepted policy is one pass at rate `1`, with looping, seeking, and
+lesson switching off. Reference sound stays independent and starts off.
+The note beside Start is "Attempts use one pass at normal speed."
+
+During `STARTING`, `CAPTURING`, `FINISHING`, and `CANCELLING`, speed, seek,
+loop, restart, refresh, input switching, and score-seek do not move the
+transport. Pause is replaced by Cancel attempt. Outside an attempt those
+reference-practice controls work again.
+
+### Begin, queue, and recovery
+
+Begin posts the preview's pinned digests, the selected device label, and a
+browser performance-clock timestamp. The returned preparation replaces the
+whole runtime. A different canonical revision is kept. Messages are not
+captured until that mount has succeeded. A mount failure cancels the new
+attempt. A late begin cannot start a page that has already been cancelled,
+refreshed, or left; a usable late attempt id is cancelled.
+
+Supported note-on and note-off messages, including velocity-zero note-on,
+are copied at intake with the event timestamp and the transport position.
+Other MIDI messages get no sequence number. One queue sends the next message
+only after the previous acknowledgement matches the attempt and the expected
+count. The queue holds at most 256 messages. It does not retry, renumber, or
+silently drop. Append failure and overflow cancel instead of evaluating.
+
+Finish and natural playback end share one terminal operation. Finish drains
+acknowledgements first. A lost finish can be retried explicitly with the same
+attempt id and no replayed MIDI. Cancel, disconnect, and page exit stop
+intake immediately. Interruption is shown only after a valid `INTERRUPTED`
+response. Exit cancellation is best-effort `keepalive`. An unacknowledged
+write stays `UNCONFIRMED`. A lost begin has no attempt id and is not repeated
+automatically.
+
+### Feedback
+
+Evaluated feedback is accepted only when the identity, pins, raw capture,
+performance session, canonical revision, and evaluation digest chain agree
+with the begin snapshot. Server strings are DOM text. `continue` means no
+immediate repetition is required under the policy. It is not mastery or
+lesson completion. Guidance is applied on the score coordinator's guidance
+channel and does not change playback. The previous result is cleared when
+another attempt starts or the lesson is reloaded.
+
+### Verification
+
+Recorded after the gate run on this branch.
+
