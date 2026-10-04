@@ -9,9 +9,19 @@ import {
   preparationBody,
   previewBody,
 } from "./lesson_practice_fixture.js";
+import {
+  acknowledgementDocument,
+  beginDocument,
+  evaluatedDocument,
+  interruptedDocument,
+} from "./received_attempt_fixture.js";
 
 const pageSource = readFileSync(
   fileURLToPath(new URL("../lesson-practice.html", import.meta.url)),
+  "utf8",
+);
+const practiceSource = readFileSync(
+  fileURLToPath(new URL("../lesson_practice.js", import.meta.url)),
   "utf8",
 );
 const ART = previewBody().assignment_artifact_digest;
@@ -108,11 +118,21 @@ function buildRoot() {
     "unsupported-list", "unresolved-list", "score-notice", "clock", "repetition-count",
     "loop-bounds", "loop-target", "audio-status", "laneLabels", "scrollViewport",
     "scrollCanvas", "playLine", "gutterNotes", "unplayableGutter", "neckMap",
-    "instrumentTitle", "tabView", "notationView",
+    "instrumentTitle", "tabView", "notationView", "attempt-feedback",
+    "attempt-evidence-body", "attempt-status", "attempt-count", "midi-status",
+    "attempt-policy-note",
   ]) {
     add(id === "warning-list" || id.endsWith("-list") ? "ul" : "div", id);
   }
+  add("details", "attempt-evidence");
   add("button", "refresh-lesson");
+  add("button", "btn-enable-midi");
+  add("select", "midi-input").disabled = true;
+  for (const id of ["btn-start-attempt", "btn-finish-attempt"]) {
+    add("button", id).disabled = true;
+  }
+  add("button", "btn-cancel-attempt").hidden = true;
+  add("button", "btn-retry-finish").hidden = true;
   add("a", "back-inbox").setAttribute("href", "lesson-inbox.html");
   for (const id of ["btn-play", "btn-pause", "btn-restart"]) {
     const button = add("button", id);
@@ -140,8 +160,8 @@ function buildRoot() {
   return root;
 }
 
-function ok(body) {
-  return { ok: true, status: 200, error: null, body };
+function ok(body, status = 200) {
+  return { ok: true, status, error: null, body };
 }
 
 function failed(status, error) {
@@ -174,11 +194,19 @@ function clientFor(handlers) {
 function fakeRuntime(spec, record) {
   const runtime = {
     spec,
-    transport: { durationSeconds: 2, playbackRate: 1 },
+    transport: {
+      durationSeconds: 2,
+      playbackRate: 1,
+      positionSeconds: () => record.position ?? 0,
+    },
     coordinator: {
       views: {
         tab: { mounted: true },
         notation: { mounted: spec.notationMounted !== false },
+      },
+      applyGuidance(projection) {
+        record.guidance = projection;
+        return projection;
       },
     },
     disposed: false,
@@ -196,6 +224,8 @@ function fakeRuntime(spec, record) {
     setRate(rate) { this.rate = rate; },
     setLoopEnabled(enabled) { this.loopEnabled = enabled; },
     setVolume(value) { this.volume = value; },
+    silence() { this.silenced = (this.silenced || 0) + 1; },
+    setInteractionLock(locked) { this.locked = locked; },
     enableSound() {
       this.soundCalls = (this.soundCalls || 0) + 1;
       return record.sound;
@@ -206,19 +236,86 @@ function fakeRuntime(spec, record) {
   return runtime;
 }
 
-async function mount(handlers, { search = "?delivery_id=delivery-001", view, notationMounted = true } = {}) {
-  const root = buildRoot();
-  const record = {
+function midiStub(devices = [{ id: "key-1", name: "Injected keyboard" }]) {
+  const midi = {
+    listener: null,
+    devicesList: devices,
+    permission: "ready",
+    async requestPermission() {
+      return this.permission;
+    },
+    devices() {
+      return this.devicesList;
+    },
+    connect(id, listener) {
+      this.connected = id;
+      this.listener = listener;
+      return this.devicesList.some((device) => device.id === id);
+    },
+    disconnect() {
+      this.listener = null;
+      this.connected = null;
+    },
+    emit(payload, captureTimeNs) {
+      this.listener?.({
+        device_id: this.connected,
+        raw_payload: payload,
+        capture_time_ns: captureTimeNs,
+      });
+    },
+  };
+  return midi;
+}
+
+function attemptCalls() {
+  const calls = [];
+  return {
+    calls,
+    async begin(body) {
+      calls.push({ op: "begin", body });
+      return this.next.begin(body);
+    },
+    async append(body) {
+      calls.push({ op: "append", body });
+      return this.next.append(body);
+    },
+    async finish(body) {
+      calls.push({ op: "finish", body });
+      return this.next.finish(body);
+    },
+    async cancel(body) {
+      calls.push({ op: "cancel", body });
+      return this.next.cancel(body);
+    },
+    next: {},
+  };
+}
+
+async function mount(handlers, {
+  search = "?delivery_id=delivery-001",
+  view,
+  notationMounted = true,
+  attemptClient,
+  midi,
+  nowNs,
+  runtimeFactory,
+  record = {
     disposed: 0,
     runtimes: [],
     sound: Promise.resolve({ ok: true }),
-  };
+    position: 0.25,
+  },
+} = {}) {
+  const root = buildRoot();
   const client = clientFor(handlers);
   const ui = mountLessonPractice(root, {
     client,
     location: { search },
     view,
-    runtimeFactory: (spec) => fakeRuntime({ ...spec, notationMounted }, record),
+    attemptClient,
+    midi,
+    nowNs,
+    runtimeFactory: runtimeFactory || ((spec) => fakeRuntime({ ...spec, notationMounted }, record)),
   });
   await ui.idle();
   return { root, client, ui, record, q: (id) => root.querySelector(`#${id}`) };
@@ -230,7 +327,11 @@ test("the practice page is a separate shell", () => {
   assert.match(pageSource, /score-view\.css/);
   assert.match(pageSource, /disappear when the server process ends/);
   assert.match(pageSource, /href="lesson-inbox.html"/);
+  assert.match(pageSource, /Attempts use one pass at normal speed/);
   assert.doesNotMatch(pageSource, /styles\.css|app\.js|index\.html/);
+  assert.match(practiceSource, /fakeMode:\s*false/);
+  assert.doesNotMatch(practiceSource, /fakeMidi/);
+  assert.doesNotMatch(practiceSource, /renderResultsPanel|guided-sessions|\/api\/performance\//);
 });
 
 test("a bad URL fails before any request", async () => {
@@ -413,4 +514,191 @@ test("a network failure is shown and not retried", async () => {
   });
   assert.match(page.q("status").textContent, /unavailable, unavailable/);
   assert.equal(page.client.calls.length, 1);
+});
+
+test("an explicit attempt mounts the server snapshot and shows text feedback", async () => {
+  const attempt = beginDocument({ attemptId: "<attempt>", revisionId: "rev-from-server" });
+  const midi = midiStub();
+  const transport = attemptCalls();
+  const record = {
+    disposed: 0,
+    runtimes: [],
+    sound: Promise.resolve({ ok: true }),
+    position: 0.25,
+  };
+  let holdMount = null;
+  transport.next = {
+    begin: () => ok(attempt, 201),
+    append: (body) => ok(acknowledgementDocument(attempt, body.sequenceNumber + 1)),
+    finish: () => ok(evaluatedDocument(attempt)),
+    cancel: () => ok(interruptedDocument(attempt)),
+  };
+  const page = await mount({
+    preview: () => ok(previewBody()),
+    getChoice: () => ok(choiceBody()),
+    prepare: () => ok(preparationBody()),
+  }, {
+    midi,
+    attemptClient: transport,
+    nowNs: () => 4_000_000,
+    record,
+    runtimeFactory: (spec) => {
+      const revision = spec.bundle.score.canonical_revision.revision_id;
+      if (revision === "rev-from-server") {
+        return new Promise((resolve) => {
+          holdMount = () => resolve(fakeRuntime(spec, record));
+        });
+      }
+      return fakeRuntime(spec, record);
+    },
+  });
+  assert.equal(page.q("btn-play").disabled, false);
+  assert.equal(page.q("btn-start-attempt").disabled, true);
+  page.q("btn-play").click();
+  assert.equal(page.record.runtimes[0].played, true);
+
+  page.q("btn-enable-midi").click();
+  await page.ui.idle();
+  assert.match(page.q("midi-status").textContent, /ready/);
+  page.q("btn-start-attempt").click();
+  for (let step = 0; step < 8 && typeof holdMount !== "function"; step += 1) {
+    await Promise.resolve();
+  }
+  midi.emit([0x90, 64, 80], 50);
+  assert.equal(transport.calls.some((call) => call.op === "append"), false);
+  assert.equal(midi.connected, null);
+  holdMount();
+  await page.ui.idle();
+  const mounted = page.record.runtimes.at(-1);
+  assert.equal(mounted.spec.bundle.score.canonical_revision.revision_id, "rev-from-server");
+  assert.equal(mounted.locked, true);
+  assert.deepEqual(mounted.calls?.includes?.("play") || mounted.played, true);
+  assert.equal(page.q("btn-pause").hidden, true);
+  assert.equal(page.q("btn-cancel-attempt").hidden, false);
+  assert.equal(page.q("seek").disabled, true);
+  assert.equal(page.q("refresh-lesson").disabled, true);
+  assert.equal(page.q("sound-enabled").disabled, false);
+  page.q("seek").value = "500";
+  page.q("seek").input();
+  assert.equal(mounted.sought, undefined);
+  page.root.querySelectorAll("[data-rate]").find((button) => button.getAttribute("data-rate") === "0.75").click();
+  assert.equal(mounted.rate, 1);
+
+  midi.emit([0x90, 64, 80], 60);
+  midi.emit([0x90, 64, 0], 70);
+  midi.emit([0x80, 67, 0], 80);
+  for (
+    let step = 0;
+    step < 12 && transport.calls.filter((call) => call.op === "append").length < 3;
+    step += 1
+  ) {
+    await Promise.resolve();
+  }
+  assert.deepEqual(
+    transport.calls.filter((call) => call.op === "append").map((call) => call.body.sequenceNumber),
+    [0, 1, 2],
+  );
+  page.q("btn-finish-attempt").click();
+  await page.ui.idle();
+  const feedback = page.q("attempt-feedback").textContent;
+  assert.match(feedback, /Matched: 1/);
+  assert.match(feedback, /Missing: 2/);
+  assert.match(feedback, /Extra: 1/);
+  assert.match(feedback, /<attempt>/);
+  assert.match(feedback, /<img src=x onerror=alert\(1\)>/);
+  assert.match(feedback, /No immediate repetition is required under this attempt policy/);
+  assert.match(feedback, /UNVERIFIED_PHYSICAL_MIDI_INPUT/);
+  assert.equal(feedback.toLowerCase().includes("lesson complete"), false);
+  assert.equal(page.root.ownerDocument.innerHtmlUsed, false);
+  assert.equal(page.record.guidance.canonical_revision_id, "rev-from-server");
+  assert.equal(mounted.rate, 1);
+  assert.equal(page.q("btn-play").disabled, false);
+  assert.equal(page.q("loop-enabled").checked, true);
+  assert.equal(
+    transport.calls.every((call) => ["begin", "append", "finish", "cancel"].includes(call.op)),
+    true,
+  );
+  assert.equal(transport.calls.filter((call) => call.op === "finish").length, 1);
+
+  const next = beginDocument({ attemptId: "attempt-2", revisionId: "rev-from-server" });
+  transport.next.begin = () => ok(next, 201);
+  transport.next.append = (body) => ok(acknowledgementDocument(next, body.sequenceNumber + 1));
+  transport.next.finish = () => ok(evaluatedDocument(next));
+  const previousHold = holdMount;
+  page.q("btn-start-attempt").click();
+  assert.equal(page.q("attempt-feedback").textContent, "");
+  for (let step = 0; step < 8 && holdMount === previousHold; step += 1) {
+    await Promise.resolve();
+  }
+  holdMount();
+  await page.ui.idle();
+  assert.equal(transport.calls.filter((call) => call.op === "begin").at(-1).body.deviceId, "Injected keyboard");
+});
+
+test("MIDI denial leaves reference practice usable", async () => {
+  const midi = midiStub([]);
+  midi.permission = "permission_denied";
+  const page = await mount({
+    preview: () => ok(previewBody()),
+    getChoice: () => ok(choiceBody()),
+    prepare: () => ok(preparationBody()),
+  }, { midi });
+  page.q("btn-enable-midi").click();
+  await page.ui.idle();
+  assert.match(page.q("midi-status").textContent, /denied/);
+  assert.match(page.q("midi-status").textContent, /Reference practice/);
+  assert.equal(page.q("btn-play").disabled, false);
+  assert.equal(page.q("btn-start-attempt").disabled, true);
+  page.q("btn-play").click();
+  assert.equal(page.record.runtimes[0].played, true);
+});
+
+test("leaving the page abandons an attempt and restoration does not resume capture", async () => {
+  const listeners = {};
+  const view = {
+    addEventListener(type, handler) {
+      (listeners[type] ||= []).push(handler);
+    },
+    dispatch(type, event) {
+      for (const handler of listeners[type] || []) handler(event);
+    },
+  };
+  const attempt = beginDocument();
+  let releaseBegin;
+  const midi = midiStub();
+  const transport = attemptCalls();
+  transport.next = {
+    begin: () => new Promise((resolve) => {
+      releaseBegin = resolve;
+    }),
+    append: () => ok(acknowledgementDocument(attempt, 1)),
+    finish: () => ok(evaluatedDocument(attempt)),
+    cancel: (body) => {
+      transport.cancelBody = body;
+      return ok(interruptedDocument(attempt));
+    },
+  };
+  const page = await mount({
+    preview: () => ok(previewBody()),
+    getChoice: () => ok(choiceBody()),
+    prepare: () => ok(preparationBody()),
+  }, { view, midi, attemptClient: transport });
+  page.q("btn-enable-midi").click();
+  await page.ui.idle();
+  page.q("btn-start-attempt").click();
+  await Promise.resolve();
+  assert.equal(page.q("attempt-status").textContent, "Starting the attempt.");
+  view.dispatch("pagehide", {});
+  releaseBegin(ok(attempt, 201));
+  await page.ui.idle();
+  assert.equal(transport.calls.some((call) => call.op === "cancel"), true);
+  assert.equal(transport.cancelBody.keepalive, true);
+  assert.equal(page.record.runtimes.some((runtime) => runtime.played && runtime.spec.bundle.score.canonical_revision.revision_id === "rev-attempt"), false);
+  view.dispatch("pageshow", { persisted: true });
+  await page.ui.idle();
+  assert.match(page.q("status").textContent, /Paused/);
+  assert.equal(page.q("sound-enabled").checked, false);
+  assert.match(page.q("attempt-status").textContent, /No attempt/);
+  assert.equal(page.record.runtimes.at(-1).played, undefined);
+  assert.equal(midi.connected, null);
 });
