@@ -1129,5 +1129,65 @@ another attempt starts or the lesson is reloaded.
 
 ### Verification
 
-Recorded after the gate run on this branch.
+Recorded on `cursor/do016-received-lesson-attempt-ui-s08` after the gate run.
+The interpreter here is Python 3.12.3. Node is v22.14.0. CI runs the Python
+commands on Python 3.11; this interpreter satisfies `requires-python >= 3.11`,
+and no gate was relaxed. These counts are from this run. The coverage floor
+stays 95%.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` | PASS |
+| `ruff check scripts/smoke_do016_received_attempt.py` | PASS |
+| `mypy` (strict, `src` only) | PASS, 173 source files |
+| `pytest --cov --cov-report=term-missing` | 3526 passed, 3 skipped, 95.34% (10910 statements, 508 missed; floor 95%) |
+| `npm test` in `web/mvp1` | 582 passed, 0 failed |
+| `python3 scripts/check_in_flight.py` | OK (1 row, 0 notes) |
+| `python3 scripts/verify_do015_certification.py` | OK (9 of 9) |
+| `python3 scripts/verify_do015_publication.py` | OK (8 of 8), successor mode |
+| `python3 scripts/build_do015_certification_evidence.py --check` | OK |
+| Stage 8 browser witness | PASS, 0 failures |
+| Stage 6 browser witness | PASS, 0 failures |
+| Stage 9 browser witness | PASS |
+
+The Stage 8 witness is `python3 scripts/smoke_do016_received_attempt.py`
+driving `web/mvp1/tests/do016_received_attempt_capture.mjs` against an
+ephemeral localhost server and a custom received lesson titled
+"Stage 8 Received Etude". MIDI is injected through
+`navigator.requestMIDIAccess` before page boot. It is not a physical device.
+The witness exited 0. Two page contexts received different attempt ids, and
+a third context aborted one message post. The attempts are evaluated
+`2b471195-62ef-4011-88c3-995f89004c01`, interrupted
+`a31e673f-03c5-4d1e-a3f0-8f2a199ddbf4`, and append-failure
+`0d5c1eb8-49ec-4721-9a4d-9ef61fe2b2dd`. All three used revision
+`rev-036484ff348ddccfa42fa081`. Request counts were begin 3, message 7,
+finish 1, cancel 2, guided 0, and performance 0. The evaluated page showed
+matched 1, missing 2, extra 2, and the server hardware constants
+`UNVERIFIED_PHYSICAL_MIDI_INPUT` and `UNVERIFIED_AUDIO_OUTPUT`. The narrow
+Start control was 40px tall. Physical MIDI input and audio output stay
+unverified.
+
+The Stage 6 witness is `python3 scripts/smoke_do016_received_practice.py`.
+It exited 0. The summary records `physical_audio: "not certified"`: the
+scheduler accepted 2 events, which does not certify speakers. Ordinary
+reference practice still works when no attempt is active.
+
+The Stage 9 witness is `node web/mvp1/tests/do015_certification_capture.mjs`.
+It exited 0 with final status `CLOSED` and 3 attempts. The harness rewrites
+`docs/mvp2/do015_artifacts/browser_smoke_summary.json`, so that file was
+restored. Its sha256 is
+`11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
+
+Merge base is `aff6b7c8e3254945e0306c222f0a5468bb5d338b`, the tip of
+`origin/main` at verification. The diff against that base is the register,
+this plan, the practice page, the attempt client, validators, controller,
+feedback renderer, runtime lock, their tests, and the Stage 8 witness. It
+does not change backend schemas, the legacy capture or evaluation facades,
+certified app, results, or MIDI modules, renderer, transport, or audio
+algorithms, dependencies, governance, or the frozen DO-015 artifacts.
+
+A lost begin is not repeated automatically. An unacknowledged exit
+cancellation stays unconfirmed. Attempts die with the process. This stage
+does not open a guided session, execute a recommendation, store durable
+history, or claim that a lesson is complete.
 
