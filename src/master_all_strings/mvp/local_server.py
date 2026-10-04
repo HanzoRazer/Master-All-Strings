@@ -22,6 +22,10 @@ from master_all_strings.mvp.lesson_delivery_api import (
     LESSON_PRACTICE_PREPARATION_PATH,
     LocalLessonDeliveryApi,
 )
+from master_all_strings.mvp.received_lesson_attempt_api import (
+    ATTEMPT_PATHS,
+    LocalReceivedLessonAttemptApi,
+)
 
 __all__ = ["find_available_local_port", "serve_mvp_directory"]
 
@@ -69,6 +73,12 @@ def _is_lesson_practice_preparation(path: str) -> bool:
     return path == LESSON_PRACTICE_PREPARATION_PATH
 
 
+def _is_received_lesson_attempt(path: str) -> bool:
+    """Exact attempt routes. A trailing slash is a different path."""
+
+    return path in ATTEMPT_PATHS
+
+
 def _is_closed_education_method(path: str) -> bool:
     """Routes whose unsupported verbs are 405 rather than a static 501."""
 
@@ -76,6 +86,7 @@ def _is_closed_education_method(path: str) -> bool:
         _is_lesson_delivery_preview(path)
         or _is_lesson_practice_choice(path)
         or _is_lesson_practice_preparation(path)
+        or _is_received_lesson_attempt(path)
     )
 
 
@@ -84,6 +95,7 @@ class _QuietHandler(SimpleHTTPRequestHandler):
     education_api: Any = None
     guided_session_api: Any = None
     lesson_delivery_api: Any = None
+    attempt_api: Any = None
     media_root: Path | None = None
 
     def log_message(self, format: str, *args: object) -> None:  # noqa: A003
@@ -92,6 +104,9 @@ class _QuietHandler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         path = unquote(parsed.path)
+        if _is_received_lesson_attempt(path):
+            self._attempt_http("GET", parsed.geturl(), {})
+            return
         if _is_closed_education_method(path):
             # Query stays encoded. The API decodes delivery_id once.
             self._lesson_delivery_http("GET", parsed.geturl(), {})
@@ -153,7 +168,12 @@ class _QuietHandler(SimpleHTTPRequestHandler):
         # The static handler's inherited HEAD serves a file and would answer
         # this path with 404. The preview route's only success method is GET.
         parsed = urlparse(self.path)
-        if _is_closed_education_method(unquote(parsed.path)):
+        path = unquote(parsed.path)
+        if _is_received_lesson_attempt(path):
+            self._discard_body()
+            self._attempt_http("HEAD", parsed.geturl(), {})
+            return
+        if _is_closed_education_method(path):
             self._discard_body()
             self._lesson_delivery_http("HEAD", parsed.geturl(), {})
             return
@@ -189,6 +209,16 @@ class _QuietHandler(SimpleHTTPRequestHandler):
         if _is_lesson_delivery_preview(path):
             self._discard_body()
             self._lesson_delivery_http("POST", parsed.geturl(), {})
+            return
+        if _is_received_lesson_attempt(path):
+            if parsed.query:
+                self._discard_body()
+                self._attempt_http("POST", parsed.geturl(), {})
+                return
+            payload_or_error = self._json_body()
+            if payload_or_error is None:
+                return
+            self._attempt_http("POST", parsed.geturl(), payload_or_error)
             return
         if _is_lesson_practice_choice(path) or _is_lesson_practice_preparation(path):
             if parsed.query:
@@ -255,7 +285,12 @@ class _QuietHandler(SimpleHTTPRequestHandler):
 
     def _preview_or_unsupported(self, method: str) -> None:
         parsed = urlparse(self.path)
-        if _is_closed_education_method(unquote(parsed.path)):
+        path = unquote(parsed.path)
+        if _is_received_lesson_attempt(path):
+            self._discard_body()
+            self._attempt_http(method, parsed.geturl(), {})
+            return
+        if _is_closed_education_method(path):
             self._discard_body()
             self._lesson_delivery_http(method, parsed.geturl(), {})
             return
@@ -292,6 +327,14 @@ class _QuietHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _attempt_http(self, method: str, path: str, payload: dict[str, Any]) -> None:
+        api = self.attempt_api
+        if api is None:
+            self.send_error(404, "lesson attempt API is not enabled")
+            return
+        status, result = api.handle_http(method, path, payload)
+        self._json_response(status, result)
+
     def _lesson_delivery_http(self, method: str, path: str, payload: dict[str, Any]) -> None:
         api = self.lesson_delivery_api
         if api is None:
@@ -324,7 +367,7 @@ def serve_mvp_directory(
     performance_api: object | None = None,
     education_api: object | None = None,
     guided_session_api: object | None = None,
-    lesson_delivery_api: object | None = None,
+    lesson_delivery_api: LocalLessonDeliveryApi | None = None,
     media_root: Path | None = None,
 ) -> tuple[ThreadingHTTPServer, threading.Thread, str]:
     """Serve ``directory`` on localhost. Returns server, thread, and URL."""
@@ -337,7 +380,11 @@ def serve_mvp_directory(
     Handler.performance_api = performance_api
     Handler.education_api = education_api
     Handler.guided_session_api = guided_session_api
-    Handler.lesson_delivery_api = lesson_delivery_api or LocalLessonDeliveryApi()
+    delivery = lesson_delivery_api or LocalLessonDeliveryApi()
+    Handler.lesson_delivery_api = delivery
+    # Same inbox and choice store as Stage 5. A second pair would prepare a
+    # lesson the delivery routes cannot see.
+    Handler.attempt_api = LocalReceivedLessonAttemptApi(delivery.service, delivery.choices)
     Handler.media_root = media_root or default_media_root()
     handler = functools.partial(Handler, directory=str(directory))
     server = ThreadingHTTPServer((host, chosen), handler)

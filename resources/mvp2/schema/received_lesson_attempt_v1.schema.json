@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/mvp2/received-lesson-attempt-v1.schema.json",
+  "title": "ReceivedLessonAttemptV1",
+  "description": "One isolated attempt against a received lesson. CAPTURING is either the opened snapshot or an accepted message. EVALUATED is one closed evaluation. INTERRUPTED keeps captured evidence and does not evaluate. Nested preparation, capture, evaluation, and guidance documents keep their own schemas.",
+  "type": "object",
+  "oneOf": [
+    {"$ref": "#/$defs/begin"},
+    {"$ref": "#/$defs/message"},
+    {"$ref": "#/$defs/evaluated"},
+    {"$ref": "#/$defs/interrupted"}
+  ],
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "schema_id",
+        "schema_version",
+        "attempt_id",
+        "capture_id",
+        "performance_session_id",
+        "delivery_id",
+        "assignment_id",
+        "content_id",
+        "assignment_artifact_digest",
+        "assignment_behavior_digest",
+        "capture_clock"
+      ],
+      "properties": {
+        "schema_id": {"const": "master_all_strings.received_lesson_attempt"},
+        "schema_version": {"const": "1.0.0"},
+        "attempt_id": {"type": "string", "minLength": 1},
+        "capture_id": {"type": "string", "minLength": 1},
+        "performance_session_id": {"type": "string", "minLength": 1},
+        "delivery_id": {"type": "string", "minLength": 1},
+        "assignment_id": {"type": "string", "minLength": 1},
+        "content_id": {"type": "string", "minLength": 1},
+        "assignment_artifact_digest": {"$ref": "#/$defs/digest"},
+        "assignment_behavior_digest": {"$ref": "#/$defs/digest"},
+        "capture_clock": {"const": "browser_performance_time"}
+      }
+    },
+    "attemptPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "pass_count",
+        "playback_rate",
+        "looping_allowed",
+        "seeking_allowed",
+        "lesson_switching_allowed",
+        "reference_sound"
+      ],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "pass_count": {"const": 1},
+        "playback_rate": {"const": 1},
+        "looping_allowed": {"const": false},
+        "seeking_allowed": {"const": false},
+        "lesson_switching_allowed": {"const": false},
+        "reference_sound": {"const": "independent_of_capture"}
+      }
+    },
+    "hardwareStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["midi_input", "audio_output"],
+      "properties": {
+        "midi_input": {"const": "UNVERIFIED_PHYSICAL_MIDI_INPUT"},
+        "audio_output": {"const": "UNVERIFIED_AUDIO_OUTPUT"}
+      }
+    },
+    "unmatchedNoteOff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "raw_event_id",
+        "capture_id",
+        "midi_note",
+        "channel",
+        "source_device",
+        "capture_time_ns",
+        "source_string",
+        "repetition_index"
+      ],
+      "properties": {
+        "schema_version": {"const": "1.0.0"},
+        "raw_event_id": {"type": "string", "minLength": 1},
+        "capture_id": {"type": "string", "minLength": 1},
+        "midi_note": {"type": "integer", "minimum": 0, "maximum": 127},
+        "channel": {"type": "integer", "minimum": 0, "maximum": 15},
+        "source_device": {"type": "string", "minLength": 1},
+        "capture_time_ns": {"type": "integer", "minimum": 0},
+        "source_string": {"type": ["integer", "null"], "minimum": 0, "maximum": 15},
+        "repetition_index": {"type": "integer", "minimum": 0}
+      }
+    },
+    "begin": {
+      "allOf": [
+        {"$ref": "#/$defs/identity"},
+        {
+          "type": "object",
+          "required": ["attempt_status", "preparation", "attempt_policy"],
+          "properties": {
+            "attempt_status": {"const": "CAPTURING"},
+            "preparation": {
+              "$ref": "https://master-all-strings.dev/schema/mvp2/local-practice-preparation-v1.schema.json"
+            },
+            "attempt_policy": {"$ref": "#/$defs/attemptPolicy"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "message": {
+      "allOf": [
+        {"$ref": "#/$defs/identity"},
+        {
+          "type": "object",
+          "required": ["attempt_status", "accepted_event_count"],
+          "properties": {
+            "attempt_status": {"const": "CAPTURING"},
+            "accepted_event_count": {"type": "integer", "minimum": 1}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "evaluated": {
+      "allOf": [
+        {"$ref": "#/$defs/identity"},
+        {
+          "type": "object",
+          "required": [
+            "attempt_status",
+            "raw_capture",
+            "observed_events",
+            "unmatched_note_offs",
+            "evaluation",
+            "messages",
+            "guidance",
+            "hardware_status"
+          ],
+          "properties": {
+            "attempt_status": {"const": "EVALUATED"},
+            "raw_capture": {
+              "$ref": "https://master-all-strings.dev/schema/performance/raw-performance-capture-v1.schema.json"
+            },
+            "observed_events": {
+              "type": "array",
+              "items": {
+                "$ref": "https://master-all-strings.dev/schema/performance/observed-midi-note-v1.schema.json"
+              }
+            },
+            "unmatched_note_offs": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/unmatchedNoteOff"}
+            },
+            "evaluation": {
+              "$ref": "https://master-all-strings.dev/schema/education/practice-evaluation-result-v1.schema.json"
+            },
+            "messages": {"type": "object", "additionalProperties": {"type": "string", "minLength": 1}},
+            "guidance": {
+              "$ref": "https://master-all-strings.dev/schema/education/teaching-guidance-projection-v1.schema.json"
+            },
+            "hardware_status": {"$ref": "#/$defs/hardwareStatus"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "interrupted": {
+      "allOf": [
+        {"$ref": "#/$defs/identity"},
+        {
+          "type": "object",
+          "required": [
+            "attempt_status",
+            "raw_capture",
+            "observed_events",
+            "unmatched_note_offs",
+            "hardware_status"
+          ],
+          "properties": {
+            "attempt_status": {"const": "INTERRUPTED"},
+            "raw_capture": {
+              "$ref": "https://master-all-strings.dev/schema/performance/raw-performance-capture-v1.schema.json"
+            },
+            "observed_events": {
+              "type": "array",
+              "items": {
+                "$ref": "https://master-all-strings.dev/schema/performance/observed-midi-note-v1.schema.json"
+              }
+            },
+            "unmatched_note_offs": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/unmatchedNoteOff"}
+            },
+            "hardware_status": {"$ref": "#/$defs/hardwareStatus"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}
