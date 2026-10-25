@@ -737,7 +737,7 @@ test("reference sound stays as shown across an attempt", async () => {
     assert.match(page.q("audio-status").textContent, /Sound ready/);
   }
 
-  transport.next.begin = () => failed(500, { code: "internal_error", message: "x" });
+  transport.next.begin = () => failed(500, "internal server error");
   page.q("btn-start-attempt").click();
   await page.ui.idle();
   const reference = page.record.runtimes.at(-1);
@@ -745,4 +745,65 @@ test("reference sound stays as shown across an attempt", async () => {
   assert.equal(page.q("sound-enabled").checked, false);
   assert.match(page.q("audio-status").textContent, /Sound off/);
   assert.equal(page.q("btn-play").disabled, false);
+});
+
+test("a server that lost the attempt returns the page to practice and a new attempt", async () => {
+  const first = beginDocument({ attemptId: "attempt-1" });
+  const second = beginDocument({ attemptId: "attempt-2" });
+  const midi = midiStub();
+  const transport = attemptCalls();
+  transport.next = {
+    begin: () => ok(first, 201),
+    append: (body) => ok(acknowledgementDocument(first, body.sequenceNumber + 1)),
+    finish: () => ok(evaluatedDocument(first)),
+    cancel: () => ok(interruptedDocument(first)),
+  };
+  const page = await mount({
+    preview: () => ok(previewBody()),
+    getChoice: () => ok(choiceBody()),
+    prepare: () => ok(preparationBody()),
+  }, { midi, attemptClient: transport });
+  page.q("btn-enable-midi").click();
+  await page.ui.idle();
+  page.q("btn-start-attempt").click();
+  await page.ui.idle();
+  page.q("btn-finish-attempt").click();
+  await page.ui.idle();
+  assert.match(page.q("attempt-feedback").textContent, /Matched:/);
+
+  transport.next.begin = () => ok(second, 201);
+  transport.next.append = (body) => ok(acknowledgementDocument(second, body.sequenceNumber + 1));
+  transport.next.finish = () => failed(404, "unknown_attempt");
+  page.q("btn-start-attempt").click();
+  await page.ui.idle();
+  midi.emit([0x90, 64, 80], 60);
+  page.q("btn-finish-attempt").click();
+  await page.ui.idle();
+  assert.match(page.q("attempt-status").textContent, /no longer has this attempt/);
+  assert.equal(page.q("attempt-feedback").hidden, true);
+  assert.equal(page.q("attempt-feedback").textContent, "");
+  assert.equal(page.q("btn-retry-finish").hidden, true);
+  assert.equal(page.q("btn-start-attempt").disabled, false);
+  assert.equal(page.q("btn-cancel-attempt").hidden, true);
+  assert.equal(page.q("btn-pause").hidden, false);
+  assert.equal(page.q("btn-play").disabled, false);
+  assert.equal(page.q("seek").disabled, false);
+  assert.equal(page.q("refresh-lesson").disabled, false);
+  assert.equal(page.q("loop-enabled").checked, true);
+  const reference = page.record.runtimes.at(-1);
+  assert.equal(reference.locked, false);
+  page.q("btn-play").click();
+  assert.equal(reference.played, true);
+
+  const third = beginDocument({ attemptId: "attempt-3" });
+  transport.next.begin = () => ok(third, 201);
+  transport.next.append = (body) => ok(acknowledgementDocument(third, body.sequenceNumber + 1));
+  transport.next.finish = () => ok(evaluatedDocument(third));
+  page.q("btn-start-attempt").click();
+  await page.ui.idle();
+  assert.equal(page.q("attempt-status").textContent, "Capturing.");
+  page.q("btn-finish-attempt").click();
+  await page.ui.idle();
+  assert.equal(page.q("attempt-status").textContent, "Evaluated.");
+  assert.equal(transport.calls.filter((call) => call.op === "finish").at(-1).body.attemptId, "attempt-3");
 });

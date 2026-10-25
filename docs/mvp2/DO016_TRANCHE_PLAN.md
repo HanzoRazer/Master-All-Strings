@@ -1081,7 +1081,7 @@ recommendation, record lesson completion, or persist history.
 ### States and policy
 
 The controller states are `IDLE`, `STARTING`, `CAPTURING`, `FINISHING`,
-`CANCELLING`, `EVALUATED`, `INTERRUPTED`, and `UNCONFIRMED`.
+`CANCELLING`, `EVALUATED`, `INTERRUPTED`, `UNCONFIRMED`, and `REJECTED`.
 
 Start is ignored while a begin or terminal transition is already running.
 The accepted policy is one pass at rate `1`, with looping, seeking, and
@@ -1116,6 +1116,18 @@ intake immediately. Interruption is shown only after a valid `INTERRUPTED`
 response. Exit cancellation is best-effort `keepalive`. An unacknowledged
 write stays `UNCONFIRMED`. A lost begin has no attempt id and is not repeated
 automatically.
+
+A finish or cancellation the server refuses with a 4xx is `REJECTED`, not
+`UNCONFIRMED`. It claims no evaluation and no cancellation, offers no finish
+retry, clears feedback, restores reference practice, and allows a new
+attempt. `404 unknown_attempt`, which is what a restarted server returns, says
+the server no longer has the attempt; other refusals show the public error.
+Only a lost response, an unreadable body, or a 5xx stays `UNCONFIRMED`, and
+only a finish in that state is retried, with the same attempt id.
+
+Reference sound is independent of capture. Finish and cancel pause the
+transport and leave the sound setting alone. Start silences the old runtime
+and shows sound off, because the attempt's runtime starts with sound off.
 
 ### Feedback
 
@@ -1185,6 +1197,34 @@ feedback renderer, runtime lock, their tests, and the Stage 8 witness. It
 does not change backend schemas, the legacy capture or evaluation facades,
 certified app, results, or MIDI modules, renderer, transport, or audio
 algorithms, dependencies, governance, or the frozen DO-015 artifacts.
+
+#### Review fixes
+
+Review at `68a28551c93eb45060677666c72905c62988d337` found three defects:
+the attempt runtime was locked before its rate, loop, and restart were set,
+so the locked runtime ignored them; a stale append pump blocked the next
+attempt's queue; and finish or cancel silenced reference sound the page still
+showed as on. A refused finish or cancellation was also reported as a lost
+one. All four are fixed with regression tests, and the Stage 8 witness now
+answers one finish with `404 unknown_attempt`.
+
+Re-verified on Windows 11 with Python 3.11.9 and Node v24.11.0. The two
+browser witnesses ran the checked-in harnesses with the driver's Chrome path
+and puppeteer-core import path replaced for this machine. Nothing else was
+changed.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` | PASS |
+| `mypy` (strict, `src` only) | PASS, 173 source files |
+| `pytest --cov --cov-report=term` | 3524 passed, 2 failed, 3 skipped, 95.34%; both failures reproduce at `68a2855` on Windows only (cp1252 console encoding, checkout line endings) |
+| `npm test` in `web/mvp1` | 589 passed, 0 failed |
+| `scripts/check_in_flight.py` | OK (1 row, 0 notes) |
+| `scripts/verify_do015_certification.py` | OK (9 of 9) |
+| `scripts/verify_do015_publication.py` | OK (8 of 8) |
+| `scripts/build_do015_certification_evidence.py --check` | OK |
+| Stage 8 browser witness | PASS, 0 failures; begin 5, message 8, finish 3, cancel 2, guided 0, performance 0 |
+| Stage 6 browser witness | PASS, 0 failures |
 
 A lost begin is not repeated automatically. An unacknowledged exit
 cancellation stays unconfirmed. Attempts die with the process. This stage

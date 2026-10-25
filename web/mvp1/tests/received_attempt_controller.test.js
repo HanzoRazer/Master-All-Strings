@@ -30,6 +30,7 @@ function harness(options = {}) {
   let position = 0;
   let current = true;
   const shown = [];
+  const notices = [];
   const locks = [];
   const playback = [];
   // Like received_lesson_runtime.js, a locked runtime ignores restart, rate, and loop.
@@ -121,6 +122,7 @@ function harness(options = {}) {
     clearFeedback() { shown.push({ kind: "clear" }); },
     showEvaluated(body) { shown.push({ kind: "evaluated", body }); },
     showInterrupted(body) { shown.push({ kind: "interrupted", body }); },
+    onChange(snap, notice) { notices.push({ state: snap.state, notice }); },
   });
   return {
     begin,
@@ -128,6 +130,7 @@ function harness(options = {}) {
     midi,
     calls,
     shown,
+    notices,
     locks,
     playback,
     runtime,
@@ -529,4 +532,136 @@ test("a restart while the old append is pending still drains and finishes", asyn
   assert.equal(env.controller.snapshot().state, "EVALUATED");
   assert.equal(env.controller.snapshot().attemptId, second.attempt_id);
   assert.equal(env.controller.snapshot().acked, 1);
+});
+
+function rejectedWith(status, error) {
+  return { ok: false, status, error, body: null };
+}
+
+function lastNotice(env) {
+  return env.notices.at(-1).notice;
+}
+
+function assertRecovered(env) {
+  const snap = env.controller.snapshot();
+  assert.equal(snap.state, "REJECTED");
+  assert.equal(snap.unconfirmedKind, null);
+  assert.equal(env.locks.at(-1), false);
+  assert.equal(env.shown.at(-1).kind, "clear");
+  assert.equal(env.shown.some((item) => item.kind === "evaluated" || item.kind === "interrupted"), false);
+}
+
+test("a server restart is an unavailable attempt, not a lost finish", async () => {
+  const atFinish = harness({ finishResult: () => rejectedWith(404, "unknown_attempt") });
+  await capture(atFinish);
+  atFinish.midi.emit([0x90, 64, 80], 9);
+  await atFinish.controller.finish();
+  assertRecovered(atFinish);
+  assert.match(lastNotice(atFinish), /no longer has this attempt/);
+  assert.match(lastNotice(atFinish), /not evaluated/);
+  assert.doesNotMatch(lastNotice(atFinish), /Retry/);
+  await atFinish.controller.retryFinish();
+  assert.equal(ops(atFinish.calls, "finish").length, 1);
+
+  const midCapture = harness({
+    appendResult: () => rejectedWith(404, "unknown_attempt"),
+    cancelResult: () => rejectedWith(404, "unknown_attempt"),
+  });
+  await capture(midCapture);
+  midCapture.midi.emit([0x90, 64, 80], 9);
+  for (let step = 0; step < 8 && midCapture.controller.state !== "REJECTED"; step += 1) {
+    await Promise.resolve();
+  }
+  assertRecovered(midCapture);
+  assert.match(lastNotice(midCapture), /cancellation was not recorded/);
+  assert.equal(ops(midCapture.calls, "finish").length, 0);
+});
+
+test("an explicit rejection shows the server error and claims nothing", async () => {
+  const finish = harness({ finishResult: () => rejectedWith(409, "attempt_conflict") });
+  await capture(finish);
+  await finish.controller.finish();
+  assertRecovered(finish);
+  assert.match(lastNotice(finish), /rejected the finish \(attempt_conflict\)/);
+  assert.match(lastNotice(finish), /not evaluated/);
+  assert.equal(ops(finish.calls, "finish").length, 1);
+
+  const cancel = harness({ cancelResult: () => rejectedWith(409, "attempt_conflict") });
+  await capture(cancel);
+  await cancel.controller.cancel();
+  assertRecovered(cancel);
+  assert.match(lastNotice(cancel), /rejected the cancellation \(attempt_conflict\)/);
+  assert.doesNotMatch(lastNotice(cancel), /was cancelled/);
+
+  const quiet = harness({ finishResult: () => rejectedWith(400, "Traceback (most recent call last)") });
+  await capture(quiet);
+  await quiet.controller.finish();
+  assertRecovered(quiet);
+  assert.doesNotMatch(lastNotice(quiet), /Traceback/);
+});
+
+test("a lost or failed finish response retries the same attempt without replay", async () => {
+  const answers = [
+    rejectedWith(0, null),
+    rejectedWith(500, "internal server error"),
+  ];
+  const env = harness({
+    finishResult: () => answers.shift() ?? ok(evaluatedDocument(env.begin)),
+  });
+  await capture(env);
+  env.midi.emit([0x90, 64, 80], 9);
+  await env.controller.finish();
+  assert.equal(env.controller.snapshot().unconfirmedKind, "finish");
+  assert.match(lastNotice(env), /did not finish/);
+  await env.controller.retryFinish();
+  assert.equal(env.controller.snapshot().state, "UNCONFIRMED");
+  assert.match(lastNotice(env), /failed on the server/);
+  assert.equal(env.shown.at(-1).kind, "clear");
+  await env.controller.retryFinish();
+  assert.equal(env.controller.snapshot().state, "EVALUATED");
+  assert.deepEqual(
+    ops(env.calls, "finish").map((call) => call.body.attemptId),
+    [env.begin.attempt_id, env.begin.attempt_id, env.begin.attempt_id],
+  );
+  assert.equal(ops(env.calls, "append").length, 1);
+
+  const gone = harness({
+    finishResult: () => (ops(gone.calls, "finish").length === 1
+      ? rejectedWith(0, null)
+      : rejectedWith(404, "unknown_attempt")),
+  });
+  await capture(gone);
+  await gone.controller.finish();
+  await gone.controller.retryFinish();
+  assertRecovered(gone);
+});
+
+test("a rejected attempt recovers into another attempt", async () => {
+  const first = beginDocument({ attemptId: "attempt-1" });
+  const second = beginDocument({ attemptId: "attempt-2" });
+  const begins = [first, second];
+  const env = harness({
+    begin: first,
+    beginResult: () => ok(begins.shift(), 201),
+    appendResult: (body) => ok(acknowledgementDocument(
+      body.attemptId === first.attempt_id ? first : second,
+      body.sequenceNumber + 1,
+    )),
+    finishResult: (body) => (body.attemptId === first.attempt_id
+      ? rejectedWith(404, "unknown_attempt")
+      : ok(evaluatedDocument(second))),
+  });
+  await capture(env);
+  env.midi.emit([0x90, 64, 80], 9);
+  await env.controller.finish();
+  assertRecovered(env);
+  const restarted = await env.controller.start();
+  assert.equal(restarted.state, "CAPTURING");
+  assert.equal(restarted.attemptId, second.attempt_id);
+  assert.equal(restarted.acked, 0);
+  env.midi.emit([0x90, 67, 80], 20);
+  const done = await env.controller.finish();
+  assert.equal(done.state, "EVALUATED");
+  assert.equal(env.shown.at(-1).kind, "evaluated");
+  assert.equal(env.shown.at(-1).body.attempt_id, second.attempt_id);
 });

@@ -165,12 +165,41 @@ export function acceptInterrupted(body, begin) {
  * @param {{ status?: number, error?: string|null }} result
  */
 export function publicAttemptFailure(result) {
+  const error = publicError(result);
+  if (error) return error;
+  if (result?.status === 0) return "The attempt request did not finish.";
+  return "The attempt request was rejected.";
+}
+
+/**
+ * The server answered a finish or cancellation with a refusal. Nothing in it
+ * means the attempt was evaluated or cancelled.
+ *
+ * @param {"finish"|"cancel"} kind
+ * @param {{ status?: number, error?: string|null }} result
+ */
+export function attemptRejectionNotice(kind, result) {
+  const outcome = kind === "finish"
+    ? "The attempt was not evaluated."
+    : "The cancellation was not recorded.";
+  const next = "Keep practicing or start a new attempt.";
+  if (result?.status === 404 && result.error === "unknown_attempt") {
+    return `The server no longer has this attempt. ${outcome} ${next}`;
+  }
+  const error = publicError(result);
+  const action = kind === "finish" ? "finish" : "cancellation";
+  return `The server rejected the ${action}${error ? ` (${error})` : ""}. ${outcome} ${next}`;
+}
+
+/**
+ * @param {{ error?: string|null }} result
+ */
+function publicError(result) {
   const error = result?.error;
   if (typeof error === "string" && error.length > 0 && error.length <= 160 && !/traceback/i.test(error)) {
     return error;
   }
-  if (result?.status === 0) return "The attempt request did not finish.";
-  return "The attempt request was rejected.";
+  return null;
 }
 
 /**

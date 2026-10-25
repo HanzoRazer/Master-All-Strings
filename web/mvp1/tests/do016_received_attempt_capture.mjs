@@ -259,6 +259,69 @@ try {
   check("the aborted message was intercepted", aborted);
   await pageC.screenshot({ path: `${output}/04-append-failure.png`, fullPage: true });
   await contextC.close();
+
+  // A restarted server no longer has the attempt. The page answers the first
+  // finish with the server's 404 in place of the live route.
+  const contextD = await browser.createBrowserContext();
+  const pageD = await contextD.newPage();
+  watch(pageD, "unknown-attempt", false);
+  await installMidi(pageD);
+  await pageD.setViewport({ width: 1280, height: 900 });
+  let lostFinish = false;
+  await pageD.setRequestInterception(true);
+  pageD.on("request", (request) => {
+    tally(request.url());
+    if (!lostFinish && request.url().endsWith("/api/education/lesson-practice-attempt-finishes")) {
+      lostFinish = true;
+      request.respond({
+        status: 404,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "unknown_attempt" }),
+      }).catch(() => {});
+      return;
+    }
+    request.continue().catch(() => {});
+  });
+  await openPractice(pageD);
+  await startAttempt(pageD);
+  await pageD.evaluate(() => window.__emitMidi([0x90, 64, 80], performance.now() + 5));
+  await pageD.waitForFunction(() => (
+    document.querySelector("#attempt-count")?.textContent || ""
+  ).includes("Acknowledged messages: 1"));
+  await pageD.click("#btn-finish-attempt");
+  await pageD.waitForFunction(() => document.querySelector("#btn-finish-attempt")?.disabled === true
+    && !/Finishing/.test(document.querySelector("#attempt-status")?.textContent || ""));
+  const lostStatus = await text(pageD, "#attempt-status");
+  const lostState = await pageD.evaluate(() => ({
+    feedback: document.querySelector("#attempt-feedback").textContent,
+    retryHidden: document.querySelector("#btn-retry-finish").hidden,
+    startEnabled: !document.querySelector("#btn-start-attempt").disabled,
+    playEnabled: !document.querySelector("#btn-play").disabled,
+    refreshEnabled: !document.querySelector("#refresh-lesson").disabled,
+  }));
+  check("a lost attempt says the server no longer has it", lostStatus.includes("no longer has this attempt"), lostStatus);
+  check("a lost attempt claims no evaluation", !lostState.feedback.includes("Matched:"), lostState.feedback.slice(0, 180));
+  check("a lost attempt offers no finish retry", lostState.retryHidden);
+  check(
+    "a lost attempt returns to reference practice",
+    lostState.playEnabled && lostState.refreshEnabled,
+    JSON.stringify(lostState),
+  );
+  check("a lost attempt allows a new attempt", lostState.startEnabled);
+  await pageD.screenshot({ path: `${output}/05-unknown-attempt.png`, fullPage: true });
+  await pageD.click("#btn-start-attempt");
+  await pageD.waitForFunction(() => document.querySelector("#attempt-status")?.textContent === "Capturing.");
+  await pageD.click("#btn-finish-attempt");
+  await pageD.waitForFunction(() => {
+    const status = document.querySelector("#attempt-status")?.textContent || "";
+    return status === "Evaluated." || /not confirmed|rejected|no longer/.test(status);
+  });
+  check(
+    "the next attempt after a lost one is evaluated",
+    (await text(pageD, "#attempt-status")) === "Evaluated.",
+    await text(pageD, "#attempt-status"),
+  );
+  await contextD.close();
 } catch (error) {
   failures += 1;
   notes.push(`FAIL driver — ${error.stack || error.message}`);

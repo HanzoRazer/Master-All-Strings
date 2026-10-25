@@ -9,6 +9,7 @@ import {
   acceptBegin,
   acceptEvaluated,
   acceptInterrupted,
+  attemptRejectionNotice,
   isSupportedNoteMessage,
   publicAttemptFailure,
 } from "./received_attempt_validation.js";
@@ -22,6 +23,7 @@ export const AttemptState = Object.freeze({
   EVALUATED: "EVALUATED",
   INTERRUPTED: "INTERRUPTED",
   UNCONFIRMED: "UNCONFIRMED",
+  REJECTED: "REJECTED",
 });
 
 const QUEUE_LIMIT = 256;
@@ -74,6 +76,21 @@ export function createReceivedAttemptController(deps) {
 
   function alive(token) {
     return token === generation && deps.isCurrent() !== false;
+  }
+
+  // The server refused a terminal write. Only a missing or unreadable answer,
+  // or a server fault, leaves the outcome open.
+  function isRejection(response) {
+    return response.status >= 400 && response.status < 500;
+  }
+
+  // Every non-success end clears feedback and gives the controls back.
+  function settle(next, notice, kind = null) {
+    unconfirmedKind = kind;
+    deps.clearFeedback?.();
+    deps.lockInteractions(false);
+    setState(next, notice);
+    return snapshot();
   }
 
   function stopIntake() {
@@ -314,19 +331,20 @@ export function createReceivedAttemptController(deps) {
       captureTimeNs: terminalNs(),
     });
     if (!alive(token)) return snapshot();
-    if (response.status === 0 || !response.body) {
-      unconfirmedKind = "finish";
-      deps.lockInteractions(false);
-      setState(AttemptState.UNCONFIRMED, "The finish request did not finish. Retry finish to read the stored result.");
-      return snapshot();
+    if (isRejection(response)) {
+      return settle(AttemptState.REJECTED, attemptRejectionNotice("finish", response));
+    }
+    if (!response.ok || !response.body) {
+      const what = response.status === 0 ? "did not finish" : "failed on the server";
+      return settle(
+        AttemptState.UNCONFIRMED,
+        `The finish request ${what}. Retry finish to read the stored result.`,
+        "finish",
+      );
     }
     const accepted = acceptEvaluated(response.body, beginDoc);
     if (!accepted.ok) {
-      unconfirmedKind = "finish";
-      deps.lockInteractions(false);
-      deps.clearFeedback?.();
-      setState(AttemptState.UNCONFIRMED, "The evaluation response could not be checked.");
-      return snapshot();
+      return settle(AttemptState.UNCONFIRMED, "The evaluation response could not be checked.", "finish");
     }
     unconfirmedKind = null;
     deps.showEvaluated?.(accepted.body);
@@ -380,20 +398,15 @@ export function createReceivedAttemptController(deps) {
       captureTimeNs: terminalNs(),
     });
     if (!alive(token)) return snapshot();
-    if (response.status === 0 || !response.body) {
-      unconfirmedKind = "cancel";
-      deps.lockInteractions(false);
-      deps.clearFeedback?.();
-      setState(AttemptState.UNCONFIRMED, "The cancellation was not confirmed.");
-      return snapshot();
+    if (isRejection(response)) {
+      return settle(AttemptState.REJECTED, attemptRejectionNotice("cancel", response));
+    }
+    if (!response.ok || !response.body) {
+      return settle(AttemptState.UNCONFIRMED, "The cancellation was not confirmed.", "cancel");
     }
     const accepted = acceptInterrupted(response.body, beginDoc);
     if (!accepted.ok) {
-      unconfirmedKind = "cancel";
-      deps.lockInteractions(false);
-      deps.clearFeedback?.();
-      setState(AttemptState.UNCONFIRMED, "The cancellation response could not be checked.");
-      return snapshot();
+      return settle(AttemptState.UNCONFIRMED, "The cancellation response could not be checked.", "cancel");
     }
     unconfirmedKind = null;
     deps.showInterrupted?.(accepted.body);

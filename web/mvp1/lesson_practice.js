@@ -594,6 +594,7 @@ function attemptLabel(state) {
   if (state === AttemptState.EVALUATED) return "Evaluated.";
   if (state === AttemptState.INTERRUPTED) return "Interrupted.";
   if (state === AttemptState.UNCONFIRMED) return "The last attempt write was not confirmed.";
+  if (state === AttemptState.REJECTED) return "The server rejected the last attempt write.";
   return "No attempt.";
 }
 
