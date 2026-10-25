@@ -90,6 +90,30 @@
         <p>Repetitions <span id="repetition-count">0</span></p>
       </section>
 
+      <section class="attempt" aria-label="Performance attempt">
+        <p id="attempt-policy-note">Attempts use one pass at normal speed.</p>
+        <button type="button" id="btn-enable-midi">Enable MIDI</button>
+        <label>
+          MIDI input
+          <select id="midi-input" disabled>
+            <option value="">Select an input</option>
+          </select>
+        </label>
+        <p id="midi-status">MIDI input is off.</p>
+        <button type="button" id="btn-start-attempt" disabled>Start attempt</button>
+        <button type="button" id="btn-finish-attempt" disabled>Finish and evaluate</button>
+        <button type="button" id="btn-cancel-attempt" hidden>Cancel attempt</button>
+        <button type="button" id="btn-retry-finish" hidden>Retry finish</button>
+        <p id="attempt-status" role="status">No attempt.</p>
+        <p id="attempt-count">Acknowledged messages: 0</p>
+      </section>
+
+      <section id="attempt-feedback" class="feedback" hidden aria-live="polite"></section>
+      <details id="attempt-evidence">
+        <summary>Captured evidence</summary>
+        <div id="attempt-evidence-body"></div>
+      </details>
+
       <section class="sound" aria-label="Reference sound">
         <label>
           <input id="sound-enabled" type="checkbox" disabled />

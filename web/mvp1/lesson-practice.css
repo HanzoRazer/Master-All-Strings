@@ -53,7 +53,7 @@ h1 { margin: 0.2rem 0; font-size: 1.6rem; }
 
 .status.is-error { color: var(--danger); }
 
-.toolbar, .transport, .sound, .rates {
+.toolbar, .transport, .sound, .rates, .attempt {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
@@ -229,6 +229,27 @@ dd { margin: 0 0 0.45rem; font-family: var(--mono); }
 
 button[aria-pressed="true"] { border-color: var(--play); }
 
+.attempt, .feedback, #attempt-evidence {
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  padding: 0.75rem;
+  background: var(--panel);
+}
+
+#attempt-policy-note, #midi-status, #attempt-status, #attempt-count {
+  margin: 0;
+}
+
+#attempt-status { color: var(--accent-2); }
+
+.feedback h2 { font-size: 1.05rem; margin: 0 0 0.4rem; }
+.feedback p, .feedback li { overflow-wrap: anywhere; }
+.feedback ul { margin: 0.3rem 0; padding-left: 1.1rem; }
+
+#midi-input, #btn-start-attempt, #btn-finish-attempt, #btn-cancel-attempt, #btn-retry-finish {
+  min-height: 2.5rem;
+}
+
 @media (max-width: 720px) {
   .practice-page { padding: 0.8rem 0.7rem 2rem; }
   h1 { font-size: 1.35rem; }
@@ -238,7 +259,8 @@ button[aria-pressed="true"] { border-color: var(--play); }
   }
   .lane-labels { grid-auto-flow: column; overflow-x: auto; }
   .scroll-viewport { min-height: 220px; }
-  .toolbar button, .toolbar a, .transport button {
+  .toolbar button, .toolbar a, .transport button, .attempt button, .attempt select {
     min-height: 2.5rem;
   }
+  .attempt, .feedback { padding: 0.65rem; }
 }

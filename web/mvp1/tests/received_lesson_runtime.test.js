@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { mountReceivedLessonRuntime } from "../received_lesson_runtime.js";
+import { createMemoryScoreLoader, mountReceivedLessonRuntime } from "../received_lesson_runtime.js";
 import { preparationBody } from "./lesson_practice_fixture.js";
 
 function createElement() {
@@ -304,6 +304,58 @@ test("a late audio init cannot enable a replacement runtime", async () => {
   assert.equal(second.runtime.scheduler.enabled, false);
   assert.equal(first.runtime.scheduler.enabled, false);
   second.runtime.dispose();
+});
+
+test("an attempt lock blocks transport changes and score seek", async () => {
+  const { runtime } = await mount();
+  runtime.seek(0.4);
+  runtime.setInteractionLock(true);
+  runtime.seek(1);
+  runtime.setRate(0.5);
+  runtime.restart();
+  runtime.setLoopEnabled(false);
+  runtime.coordinator.seekTo("ev-2");
+  assert.equal(runtime.transport.positionSeconds(), 0.4);
+  assert.equal(runtime.transport.playbackRate, 1);
+  assert.equal(runtime.transport.loop.enabled, true);
+  runtime.setInteractionLock(false);
+  runtime.seek(0.1);
+  runtime.setRate(0.75);
+  runtime.setLoopEnabled(false);
+  assert.equal(runtime.transport.positionSeconds(), 0.1);
+  assert.equal(runtime.transport.playbackRate, 0.75);
+  assert.equal(runtime.transport.loop.enabled, false);
+  runtime.dispose();
+});
+
+test("silence stops the scheduler and panics sounding voices", async () => {
+  const { runtime } = await mount();
+  const pending = runtime.enableSound();
+  runtime.synth.gate.resolve();
+  const ready = await pending;
+  assert.equal(ready.ok, true);
+  assert.equal(runtime.scheduler.enabled, true);
+  const panics = runtime.synth.panicCount;
+  runtime.silence();
+  assert.equal(runtime.scheduler.enabled, false);
+  assert.equal(runtime.synth.panicCount > panics, true);
+  runtime.dispose();
+});
+
+test("two snapshots do not share score loaders", async () => {
+  const first = preparationBody();
+  const second = preparationBody();
+  second.score.canonical_revision.revision_id = "rev-other";
+  const left = createMemoryScoreLoader(first);
+  const right = createMemoryScoreLoader(second);
+  const leftRevision = await left("projections/received/canonical_revision.json");
+  const rightRevision = await right("projections/received/canonical_revision.json");
+  assert.equal(leftRevision.revision_id, "rev-received");
+  assert.equal(rightRevision.revision_id, "rev-other");
+  leftRevision.revision_id = "mutated";
+  const again = await left("projections/received/canonical_revision.json");
+  assert.equal(again.revision_id, "rev-received");
+  assert.equal(rightRevision.revision_id, "rev-other");
 });
 
 test("repeated disposal leaves no timers", async () => {

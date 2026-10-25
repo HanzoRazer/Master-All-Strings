@@ -81,12 +81,17 @@ export async function mountReceivedLessonRuntime(options) {
     loadJson: createMemoryScoreLoader(bundle),
     containers: { tab: roots.tab, notation: roots.notation },
     ...(renderers ? { renderers } : {}),
-    onSeek: createScoreSeekHandler({ timeline, transport, secondsAtTick }),
+    onSeek: (canonicalEventId, tick) => {
+      if (interactionLocked || disposed) return null;
+      return seekFromScore(canonicalEventId, tick);
+    },
   });
 
   let frameId = null;
   let disposed = false;
   let soundToken = 0;
+  let interactionLocked = false;
+  const seekFromScore = createScoreSeekHandler({ timeline, transport, secondsAtTick });
   const selectFromFretboard = createFretboardSelectionHandler({ coordinator });
 
   function onFretboardClick(event) {
@@ -137,19 +142,19 @@ export async function mountReceivedLessonRuntime(options) {
       return transport.pause();
     },
     restart() {
-      if (disposed) return;
+      if (disposed || interactionLocked) return;
       transport.restart();
     },
     seek(seconds) {
-      if (disposed) return;
+      if (disposed || interactionLocked) return;
       transport.seek(seconds);
     },
     setRate(rate) {
-      if (disposed) return;
+      if (disposed || interactionLocked) return;
       transport.setRate(rate);
     },
     setLoopEnabled(enabled) {
-      if (disposed || !transport.loop) return;
+      if (disposed || interactionLocked || !transport.loop) return;
       const loop = transport.loop;
       transport.setLoop({
         startSeconds: loop.startSeconds,
@@ -185,6 +190,18 @@ export async function mountReceivedLessonRuntime(options) {
     disableSound() {
       soundToken += 1;
       scheduler.setEnabled(false);
+    },
+    silence() {
+      soundToken += 1;
+      scheduler.setEnabled(false);
+      try {
+        synth.panic();
+      } catch {
+        // Silencing is best-effort. A failed panic must not keep the attempt open.
+      }
+    },
+    setInteractionLock(locked) {
+      interactionLocked = Boolean(locked);
     },
     dispose() {
       if (disposed) return;
