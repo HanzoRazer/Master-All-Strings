@@ -702,3 +702,47 @@ test("leaving the page abandons an attempt and restoration does not resume captu
   assert.equal(page.record.runtimes.at(-1).played, undefined);
   assert.equal(midi.connected, null);
 });
+
+test("reference sound stays as shown across an attempt", async () => {
+  const attempt = beginDocument();
+  const midi = midiStub();
+  const transport = attemptCalls();
+  transport.next = {
+    begin: () => ok(attempt, 201),
+    append: (body) => ok(acknowledgementDocument(attempt, body.sequenceNumber + 1)),
+    finish: () => ok(evaluatedDocument(attempt)),
+    cancel: () => ok(interruptedDocument(attempt)),
+  };
+  const page = await mount({
+    preview: () => ok(previewBody()),
+    getChoice: () => ok(choiceBody()),
+    prepare: () => ok(preparationBody()),
+  }, { midi, attemptClient: transport });
+  page.q("btn-enable-midi").click();
+  await page.ui.idle();
+
+  for (const end of ["btn-finish-attempt", "btn-cancel-attempt"]) {
+    page.q("btn-start-attempt").click();
+    await page.ui.idle();
+    const mounted = page.record.runtimes.at(-1);
+    assert.equal(page.q("sound-enabled").checked, false);
+    page.q("sound-enabled").checked = true;
+    page.q("sound-enabled").change();
+    await page.ui.idle();
+    assert.match(page.q("audio-status").textContent, /Sound ready/);
+    page.q(end).click();
+    await page.ui.idle();
+    assert.equal(mounted.silenced ?? 0, 0, `${end} silenced sound the page still shows as on`);
+    assert.equal(page.q("sound-enabled").checked, true);
+    assert.match(page.q("audio-status").textContent, /Sound ready/);
+  }
+
+  transport.next.begin = () => failed(500, { code: "internal_error", message: "x" });
+  page.q("btn-start-attempt").click();
+  await page.ui.idle();
+  const reference = page.record.runtimes.at(-1);
+  assert.equal(reference.silenced, 1);
+  assert.equal(page.q("sound-enabled").checked, false);
+  assert.match(page.q("audio-status").textContent, /Sound off/);
+  assert.equal(page.q("btn-play").disabled, false);
+});

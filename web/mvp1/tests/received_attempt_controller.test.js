@@ -32,14 +32,19 @@ function harness(options = {}) {
   const shown = [];
   const locks = [];
   const playback = [];
+  // Like received_lesson_runtime.js, a locked runtime ignores restart, rate, and loop.
   const runtime = {
     calls: [],
+    locked: false,
     play() { this.calls.push("play"); },
     pause() { this.calls.push("pause"); },
-    restart() { this.calls.push("restart"); },
-    setRate(rate) { this.calls.push(["rate", rate]); },
-    setLoopEnabled(enabled) { this.calls.push(["loop", enabled]); },
-    setInteractionLock(locked) { this.calls.push(["lock", locked]); },
+    restart() { this.calls.push(this.locked ? "restart-ignored" : "restart"); },
+    setRate(rate) { this.calls.push([this.locked ? "rate-ignored" : "rate", rate]); },
+    setLoopEnabled(enabled) { this.calls.push([this.locked ? "loop-ignored" : "loop", enabled]); },
+    setInteractionLock(locked) {
+      this.locked = Boolean(locked);
+      this.calls.push(["lock", locked]);
+    },
     dispose() { this.calls.push("dispose"); },
   };
   const midi = {
@@ -160,10 +165,10 @@ test("start replaces the runtime before any message is captured", async () => {
   const started = await pending;
   assert.equal(started.state, "CAPTURING");
   assert.deepEqual(runtime.calls, [
-    ["lock", true],
     ["rate", 1],
     ["loop", false],
     "restart",
+    ["lock", true],
     "play",
   ]);
   assert.equal(env.calls.find((call) => call.op === "begin").body.deviceId, "Keyboard");
@@ -484,4 +489,44 @@ test("a late acknowledgement cannot change a newer attempt", async () => {
   assert.equal(env.controller.snapshot().acked, 0);
   assert.equal(ops(env.calls, "cancel")[0].body.attemptId, firstId);
   assert.equal(env.shown.some((item) => item.kind === "evaluated"), false);
+});
+
+test("a restart while the old append is pending still drains and finishes", async () => {
+  const first = beginDocument({ attemptId: "attempt-1" });
+  const second = beginDocument({ attemptId: "attempt-2" });
+  const begins = [first, second];
+  const stalled = deferred();
+  const env = harness({
+    begin: first,
+    beginResult: () => ok(begins.shift(), 201),
+    appendResult: (body) => (body.attemptId === first.attempt_id
+      ? stalled.promise
+      : ok(acknowledgementDocument(second, body.sequenceNumber + 1))),
+    finishResult: () => ok(evaluatedDocument(second)),
+    cancelResult: () => ok(interruptedDocument(first)),
+  });
+  await capture(env);
+  env.midi.emit([0x90, 64, 80], 10);
+  assert.equal((await env.controller.cancel()).state, "INTERRUPTED");
+  const restarted = await env.controller.start();
+  assert.equal(restarted.attemptId, second.attempt_id);
+  env.midi.emit([0x90, 67, 80], 20);
+  const secondAppends = () => ops(env.calls, "append").filter(
+    (call) => call.body.attemptId === second.attempt_id,
+  );
+  for (let step = 0; step < 8 && secondAppends().length === 0; step += 1) {
+    await Promise.resolve();
+  }
+  assert.equal(secondAppends().length, 1);
+  assert.equal(secondAppends()[0].body.sequenceNumber, 0);
+  const finished = await env.controller.finish();
+  assert.equal(finished.state, "EVALUATED");
+  assert.equal(finished.acked, 1);
+  assert.equal(ops(env.calls, "finish")[0].body.attemptId, second.attempt_id);
+  stalled.resolve(ok(acknowledgementDocument(first, 1)));
+  await Promise.resolve();
+  await Promise.resolve();
+  assert.equal(env.controller.snapshot().state, "EVALUATED");
+  assert.equal(env.controller.snapshot().attemptId, second.attempt_id);
+  assert.equal(env.controller.snapshot().acked, 1);
 });

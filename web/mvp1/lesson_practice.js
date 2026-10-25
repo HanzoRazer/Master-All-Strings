@@ -131,7 +131,7 @@ export function mountLessonPractice(root, options = {}) {
     positionSeconds: () => runtime?.transport.positionSeconds() ?? 0,
     lockInteractions,
     stopPlayback,
-    pausePlayback: stopPlayback,
+    pausePlayback,
     replaceRuntime: (bundle) => mountBundle(bundle, generation),
     clearFeedback,
     showEvaluated,
@@ -206,6 +206,14 @@ export function mountLessonPractice(root, options = {}) {
   function stopPlayback() {
     runtime?.pause?.();
     runtime?.silence?.();
+    soundEnabled.checked = false;
+    audioStatus.textContent = "Sound off.";
+  }
+
+  // Pausing already stops the voices. Reference sound is independent of
+  // capture, so finishing or cancelling leaves it as the user set it.
+  function pausePlayback() {
+    runtime?.pause?.();
   }
 
   function showFailure(result, invalid = false) {

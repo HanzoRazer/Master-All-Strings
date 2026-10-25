@@ -42,7 +42,7 @@ export function createReceivedAttemptController(deps) {
   let beginDoc = null;
   let selectedId = null;
   let queue = [];
-  let sending = false;
+  let pumping = null;
   let nextSequence = 0;
   let acked = 0;
   let lastCaptureNs = 0;
@@ -201,10 +201,11 @@ export function createReceivedAttemptController(deps) {
       await performCancel(token, "The lesson snapshot could not be mounted.");
       return snapshot();
     }
-    runtime.setInteractionLock?.(true);
+    // A locked runtime ignores rate, loop, and restart, so set the policy first.
     runtime.setRate?.(1);
     runtime.setLoopEnabled?.(false);
     runtime.restart?.();
+    runtime.setInteractionLock?.(true);
     beginDoc = accepted.body;
     lastCaptureNs = captureTimeNs;
     setState(AttemptState.CAPTURING);
@@ -254,9 +255,11 @@ export function createReceivedAttemptController(deps) {
     void pump(token);
   }
 
+  // A pump belongs to one attempt. A stale one still waiting on its append
+  // must not stop the next attempt's queue from draining.
   function pump(token) {
-    if (sending) return drain;
-    sending = true;
+    if (pumping === token) return drain;
+    pumping = token;
     drain = runPump(token);
     return drain;
   }
@@ -286,7 +289,7 @@ export function createReceivedAttemptController(deps) {
         publish();
       }
     } finally {
-      sending = false;
+      if (pumping === token) pumping = null;
     }
     if (!alive(token)) return snapshot();
     if (failed) return performCancel(token, "A captured message was not accepted.");
