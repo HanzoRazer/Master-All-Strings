@@ -1296,8 +1296,40 @@ or a guided session.
 
 ### Verification
 
-Measured results are recorded with the retained evidence packet after the
-gates on this branch. The packet names the tested source revision. Later
-commits on this branch may change only the report, this plan's measured
-table, the evidence packet, and the in-flight register.
+Measured on Linux against tested source `8804f0c90cab1ff3a2f84def68e43c1eb1afa871`
+(tree `293162586de1c9c843b7886fbc21b265828e6c5e`). The local interpreter was
+Python 3.12.3. Node was v22.23.4. Chrome was 148.0.7778.96. CI runs the same
+pytest command on Python 3.11. The packet is
+`docs/mvp2/do016_integration_artifacts/evidence.json`.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` | PASS |
+| `ruff` on the three touched scripts | PASS |
+| `mypy` (strict, `src` only) | PASS, 173 source files |
+| `pytest --cov --cov-report=term-missing` | 3536 passed, 3 skipped, 95.34% |
+| `npm test` in `web/mvp1` | 589 passed, 0 failed |
+| Stage 6 browser witness | PASS, 0 failures |
+| Stage 8 browser witness | PASS, 0 failures; begin 5, message 8, finish 3, cancel 2, guided 0, performance 0 |
+| Stage 9 integration witness | PASS, 0 failures; epochs A/B/C pids 3684, 3854, 3871 |
+| `scripts/verify_do016_integration_evidence.py` | PASS, including the retained packet |
+| `scripts/verify_do015_certification.py` | OK (9 of 9) |
+| `scripts/verify_do015_publication.py` | OK (8 of 8) |
+| `scripts/build_do015_certification_evidence.py --check` | OK |
+| `scripts/check_in_flight.py` | OK (1 row, 0 notes) |
+| DO-015 certification capture | exit 0, `CLOSED`, 3 attempts; smoke summary restored |
+
+The DO-015 capture rewrote `docs/mvp2/do015_artifacts/browser_smoke_summary.json`.
+That file was restored. Its sha256 is
+`11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
+
+Stage 8's unknown-attempt finish is labeled `source: simulated`. The
+integration witness's Finish and Cancel 404 bodies are the restarted
+process's `{"error": "unknown_attempt"}`. A lost Finish was stored by that
+process and then retried with the same attempt id and no further appends.
+
+A lost begin is not repeated automatically. Injected MIDI is not a physical
+input. Scheduled audio is not certified speaker output. This stage does not
+open a guided session, execute a recommendation, store durable history, or
+claim that a lesson is complete.
 
