@@ -34,6 +34,27 @@ PIN_FIELDS = (
     "performance_session_id",
     "evaluation_digest",
 )
+DELIVERY_PINS = PIN_FIELDS[:6]
+ATTEMPT_PINS = ("attempt_id", "capture_id", "performance_session_id")
+# Every key, at any depth of a recorded request or response body, that names
+# one of the pins. A value under one of these keys must equal that pin.
+PIN_KEYS = {
+    "delivery_id": "delivery_id",
+    "assignment_id": "assignment_id",
+    "content_id": "content_id",
+    "assignment_artifact_digest": "assignment_artifact_digest",
+    "expected_assignment_artifact_digest": "assignment_artifact_digest",
+    "assignment_behavior_digest": "assignment_behavior_digest",
+    "expected_assignment_behavior_digest": "assignment_behavior_digest",
+    "behavior_digest": "assignment_behavior_digest",
+    "revision_id": "revision_id",
+    "canonical_revision_id": "revision_id",
+    "attempt_id": "attempt_id",
+    "capture_id": "capture_id",
+    "performance_session_id": "performance_session_id",
+    "alignment_session": "performance_session_id",
+    "evaluation_digest": "evaluation_digest",
+}
 T2_FLAGS = (
     "non_normal_rate_before",
     "loop_toggled_before",
@@ -146,6 +167,7 @@ def verify_evidence(packet: dict[str, Any], *, frozen_root: Path | None = None) 
         _verify_t6_recovery(problems, scenarios["T6"], identities.get("T1"))
     if "T7" in scenarios:
         _verify_t7(problems, scenarios["T7"], by_scenario["T7"])
+    _verify_continuity(problems, by_scenario, identities)
     _verify_epochs(problems, epochs, barriers)
     _verify_frozen(problems, packet.get("frozen_files"), frozen_root)
     return problems
@@ -232,6 +254,19 @@ def _verify_evaluated_chain(
         problems.append(f"{scenario_id}: expected one begin and one finish")
     if "cancel" in operations or "guided" in operations or "performance" in operations:
         problems.append(f"{scenario_id}: a forbidden request was recorded")
+    before_begin = items[:begin]
+    for operation, field, value in (
+        ("preview", "preview_status", "READY"),
+        ("choice", "choice_status", "CHOSEN_FOR_PRACTICE"),
+        ("prepare", None, None),
+    ):
+        if not any(
+            item["operation"] == operation
+            and item["status"] in (200, 201)
+            and (field is None or item["response"].get(field) == value)
+            for item in before_begin
+        ):
+            problems.append(f"{scenario_id}: no successful {operation} preceded begin")
     messages = items[begin + 1 : finish]
     if not messages or any(item["operation"] != "message" for item in messages):
         problems.append(f"{scenario_id}: appends are not strictly between begin and finish")
@@ -255,6 +290,8 @@ def _verify_evaluated_chain(
         problems.append(f"{scenario_id}: behavior digest is not a sha256 pin")
     if not DIGEST.fullmatch(pins["evaluation_digest"]):
         problems.append(f"{scenario_id}: evaluation digest is not a sha256 pin")
+    if _evaluation_digest(finish_item["response"]) != pins["evaluation_digest"]:
+        problems.append(f"{scenario_id}: evaluation body does not hash to its digest")
     _verify_messages(problems, scenario_id, messages, pins["attempt_id"])
     recorded = scenario.get("identities")
     if recorded != pins:
@@ -500,10 +537,20 @@ def _verify_t7(problems: list[str], scenario: Any, items: list[dict[str, Any]]) 
         response_id = item["response"].get("attempt_id")
         if request_id != attempt_id or response_id != attempt_id:
             problems.append("T7: a finish names another attempt")
-    stored_digest = forwarded["response"].get("evaluation", {}).get("evaluation_digest")
-    retry_digest = retry["response"].get("evaluation", {}).get("evaluation_digest")
+    stored_digest = _mapping(forwarded["response"].get("evaluation")).get("evaluation_digest")
+    retry_digest = _mapping(retry["response"].get("evaluation")).get("evaluation_digest")
     if stored_digest != retry_digest:
         problems.append("T7: retry returned a different evaluation digest")
+    if not isinstance(stored_digest, str) or DIGEST.fullmatch(stored_digest) is None:
+        problems.append("T7: the stored evaluation digest is not a sha256 pin")
+    for label, item in (("stored finish", forwarded), ("retry", retry)):
+        claimed = _mapping(item["response"].get("evaluation")).get("evaluation_digest")
+        if claimed is None or _evaluation_digest(item["response"]) != claimed:
+            problems.append(f"T7: the {label} evaluation body does not hash to its digest")
+    # The retry must return the stored result itself, not one that merely
+    # repeats its digest string.
+    if forwarded["response"] != retry["response"]:
+        problems.append("T7: retry did not return the complete stored result")
     if forwarded["response"].get("capture_id") != retry["response"].get("capture_id"):
         problems.append("T7: retry returned a different capture")
     stored_session = forwarded["response"].get("performance_session_id")
@@ -530,6 +577,96 @@ def _verify_t7(problems: list[str], scenario: Any, items: list[dict[str, Any]]) 
         problems.append("T7: no message was acknowledged before the lost finish")
     else:
         _verify_messages(problems, "T7", messages, str(attempt_id))
+
+
+def _verify_continuity(
+    problems: list[str],
+    by_scenario: dict[str, list[dict[str, Any]]],
+    identities: dict[str, dict[str, str]],
+) -> None:
+    """Hold every recorded body in every scenario to one delivery's pins.
+
+    The delivery pins come from T1. Each scenario adds the attempt pins its own
+    begin returned, and an evaluated chain adds its evaluation digest. Any pin
+    named anywhere in a request or response, preview through finish, must
+    agree.
+    """
+
+    delivery = identities.get("T1")
+    if delivery is None:
+        return
+    for scenario_id, items in by_scenario.items():
+        expected = {field: delivery[field] for field in DELIVERY_PINS}
+        evaluated = identities.get(scenario_id)
+        if evaluated is not None:
+            expected.update(evaluated)
+        else:
+            begin = next(
+                (item for item in items if item["operation"] == "begin"
+                    and item["status"] == 201),
+                None,
+            )
+            if begin is not None:
+                for field in ATTEMPT_PINS:
+                    value = begin["response"].get(field)
+                    if isinstance(value, str):
+                        expected[field] = value
+        reported: set[tuple[str, str]] = set()
+        for item in items:
+            for side in ("request", "response"):
+                for key, value in _pin_values(item[side]):
+                    pin = PIN_KEYS[key]
+                    if pin in expected and value != expected[pin]:
+                        if (item["id"], pin) not in reported:
+                            reported.add((item["id"], pin))
+                            problems.append(
+                                f"{scenario_id}: {item['id']} {side} {key} breaks the "
+                                f"{pin} pin"
+                            )
+
+
+def _pin_values(body: Any) -> list[tuple[str, Any]]:
+    found: list[tuple[str, Any]] = []
+    if isinstance(body, dict):
+        for key, value in body.items():
+            if key in PIN_KEYS and not isinstance(value, (dict, list)):
+                # A null pin asserts nothing, e.g. playback's unbound revision.
+                if value is not None:
+                    found.append((key, value))
+            else:
+                found.extend(_pin_values(value))
+    elif isinstance(body, list):
+        for value in body:
+            found.extend(_pin_values(value))
+    return found
+
+
+def _evaluation_digest(response: dict[str, Any]) -> str | None:
+    """Recompute the Educational Engine's evaluation digest from the body.
+
+    Mirrors ``compute_evaluation_digest``: every evaluation field except the
+    schema version and the digest itself, with the summary's duplicated
+    action fields removed, as sorted compact ASCII JSON.
+    """
+
+    evaluation = response.get("evaluation")
+    if not isinstance(evaluation, dict) or not isinstance(evaluation.get("summary"), dict):
+        return None
+    payload = {
+        key: value
+        for key, value in evaluation.items()
+        if key not in ("schema_version", "evaluation_digest")
+    }
+    summary = dict(evaluation["summary"])
+    summary.pop("primary_action", None)
+    summary.pop("secondary_actions", None)
+    payload["summary"] = summary
+    encoded = json.dumps(payload, separators=(",", ":"), sort_keys=True, ensure_ascii=True)
+    return "sha256:" + hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def _mapping(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
 
 
 def _verify_epochs(problems: list[str], epochs: list[Any], barriers: list[Any]) -> None:
@@ -586,14 +723,12 @@ def _verify_frozen(problems: list[str], recorded: Any, frozen_root: Path | None)
 
 def _pins(begin: dict[str, Any], finish: dict[str, Any]) -> dict[str, str] | None:
     revision = (
-        begin.get("preparation", {})
-        .get("score", {})
-        .get("canonical_revision", {})
-        .get("revision_id")
+        _mapping(_mapping(_mapping(begin.get("preparation")).get("score")).get(
+            "canonical_revision"
+        )).get("revision_id")
     )
-    evaluation = finish.get("evaluation", {})
-    guidance = finish.get("guidance", {})
-    digest = evaluation.get("evaluation_digest") if isinstance(evaluation, dict) else None
+    digest = _mapping(finish.get("evaluation")).get("evaluation_digest")
+    guidance = finish.get("guidance")
     if not isinstance(guidance, dict) or guidance.get("evaluation_digest") != digest:
         return None
     if guidance.get("canonical_revision_id") != revision:

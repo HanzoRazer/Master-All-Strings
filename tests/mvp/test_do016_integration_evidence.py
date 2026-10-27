@@ -25,7 +25,6 @@ VERIFIER = REPO_ROOT / "scripts" / "verify_do016_integration_evidence.py"
 DRIVER = REPO_ROOT / "scripts" / "smoke_do016_integration.py"
 ARTIFACT = "aa" * 32
 BEHAVIOR = "bb" * 32
-EVALUATION = "11" * 32
 REVISION = "rev-stage9"
 
 
@@ -97,13 +96,49 @@ def _begin(attempt: str, capture: str, session: str) -> dict[str, Any]:
     return body
 
 
+def _evaluation(session: str) -> dict[str, Any]:
+    """An evaluation body whose digest is computed the way the engine does."""
+
+    action = {"action_type": "repeat", "reason_finding_ids": ["missing-0001"]}
+    body: dict[str, Any] = {
+        "schema_version": "1.0.0",
+        "assignment_id": "assignment-stage9",
+        "content_id": "content-stage9",
+        "performance_session_id": session,
+        "evaluation_policy_id": "policy-stage9",
+        "evaluation_policy_version": "1.0.0",
+        "findings": [{"finding_id": "missing-0001"}],
+        "summary": {
+            "performance_session_id": session,
+            "matched_count": 1,
+            "missing_count": 1,
+            "extra_count": 0,
+            "primary_action": action,
+            "secondary_actions": [],
+        },
+        "primary_next_action": action,
+        "secondary_actions": [],
+        "provenance": {"alignment_session": session, "producer": "PracticeEvaluator/v1"},
+    }
+    payload = {key: value for key, value in body.items() if key != "schema_version"}
+    payload["summary"] = {
+        key: value
+        for key, value in body["summary"].items()
+        if key not in ("primary_action", "secondary_actions")
+    }
+    encoded = json.dumps(payload, separators=(",", ":"), sort_keys=True, ensure_ascii=True)
+    body["evaluation_digest"] = "sha256:" + hashlib.sha256(encoded.encode()).hexdigest()
+    return body
+
+
 def _evaluated(attempt: str, capture: str, session: str) -> dict[str, Any]:
     body = _pins(attempt, capture, session)
-    digest = f"sha256:{EVALUATION}"
+    evaluation = _evaluation(session)
+    digest = evaluation["evaluation_digest"]
     body.update(
         {
             "attempt_status": "EVALUATED",
-            "evaluation": {"evaluation_digest": digest},
+            "evaluation": evaluation,
             "guidance": {"evaluation_digest": digest, "canonical_revision_id": REVISION},
             "hardware_status": {
                 "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
@@ -123,11 +158,18 @@ def _message(attempt: str, sequence: int) -> tuple[dict[str, Any], dict[str, Any
 
 def _chain(scenario: str, attempt: str, capture: str, session: str,
     messages: int) -> list[dict[str, Any]]:
+    delivery = {
+        key: value
+        for key, value in _pins(attempt, capture, session).items()
+        if key not in ("attempt_id", "capture_id", "performance_session_id")
+    }
     items = [
-        _exchange(scenario, "preview", 200, {}, {"preview_status": "READY"}),
+        _exchange(scenario, "preview", 200, {}, {"preview_status": "READY", **delivery}),
         _exchange(scenario, "choice", 201, {"delivery_id": "delivery-stage9"},
-            {"choice_status": "CHOSEN_FOR_PRACTICE"}),
-        _exchange(scenario, "prepare", 200, {"delivery_id": "delivery-stage9"}, {"ok": True}),
+            {"choice_status": "CHOSEN_FOR_PRACTICE", **delivery}),
+        _exchange(scenario, "prepare", 200, {"delivery_id": "delivery-stage9"},
+            {"preparation_status": "READY", **delivery,
+                "score": {"canonical_revision": {"revision_id": REVISION}}}),
         _exchange(scenario, "begin", 201, {"delivery_id": "delivery-stage9"}, _begin(attempt,
             capture, session)),
     ]
@@ -235,7 +277,7 @@ def _packet(frozen_dir: Path) -> dict[str, Any]:
                 "identities": {
                     **_pins("attempt-t1", "capture-t1", "session-t1"),
                     "revision_id": REVISION,
-                    "evaluation_digest": f"sha256:{EVALUATION}",
+                    "evaluation_digest": _evaluation("session-t1")["evaluation_digest"],
                 },
                 "requests": _counts(t1),
                 "feedback_text": feedback.format(attempt="attempt-t1"),
@@ -281,7 +323,7 @@ def _packet(frozen_dir: Path) -> dict[str, Any]:
                 "identities": {
                     **_pins("attempt-t6", "capture-t6", "session-t6"),
                     "revision_id": REVISION,
-                    "evaluation_digest": f"sha256:{EVALUATION}",
+                    "evaluation_digest": _evaluation("session-t6")["evaluation_digest"],
                 },
                 "requests": _counts(t6),
                 "feedback_text": feedback.format(attempt="attempt-t6"),
@@ -397,6 +439,115 @@ def test_fabricated_restart_and_changed_retry_fail(verifier: ModuleType, tmp_pat
     retry["response_sha256"] = hashlib.sha256(raw).hexdigest()
     changed_result = _problems(verifier, packet, root)
     assert any("different evaluation digest" in problem for problem in changed_result)
+
+
+def _rewrite_response(exchange: dict[str, Any], body: dict[str, Any]) -> None:
+    """Replace a response and recompute its byte hash, as a forger would."""
+
+    raw = json.dumps(body).encode()
+    exchange["response_base64"] = base64.b64encode(raw).decode()
+    exchange["response_sha256"] = hashlib.sha256(raw).hexdigest()
+
+
+def _response(exchange: dict[str, Any]) -> dict[str, Any]:
+    body = json.loads(base64.b64decode(exchange["response_base64"]))
+    assert isinstance(body, dict)
+    return body
+
+
+def _find(packet: dict[str, Any], scenario: str, operation: str) -> list[dict[str, Any]]:
+    return [item for item in packet["exchanges"] if item["scenario"] == scenario
+        and item["operation"] == operation]
+
+
+def test_preview_with_another_assignment_fails(verifier: ModuleType, tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    packet = _packet(root / "docs" / "mvp2" / "do015_artifacts")
+    preview = _find(packet, "T1", "preview")[0]
+    body = _response(preview)
+    body["assignment_id"] = "assignment-other"
+    body["assignment_artifact_digest"] = "sha256:" + "cc" * 32
+    _rewrite_response(preview, body)
+    problems = _problems(verifier, packet, root)
+    assert any("preview" in problem and "assignment_id pin" in problem for problem in problems)
+    assert any("assignment_artifact_digest pin" in problem for problem in problems)
+
+
+def test_nested_and_cross_scenario_pins_fail(verifier: ModuleType, tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    packet = _packet(root / "docs" / "mvp2" / "do015_artifacts")
+    begin = _find(packet, "T7", "begin")[0]
+    body = _response(begin)
+    body["preparation"]["score"]["canonical_revision"]["revision_id"] = "rev-other"
+    _rewrite_response(begin, body)
+    nested = _problems(verifier, packet, root)
+    assert any("T7" in problem and "revision_id pin" in problem for problem in nested)
+
+    packet = _packet(root / "docs" / "mvp2" / "do015_artifacts")
+    begin = _find(packet, "T4", "begin")[0]
+    body = _response(begin)
+    body["delivery_id"] = "delivery-other"
+    _rewrite_response(begin, body)
+    crossed = _problems(verifier, packet, root)
+    assert any("T4" in problem and "delivery_id pin" in problem for problem in crossed)
+
+
+def test_unsuccessful_choice_before_begin_fails(verifier: ModuleType, tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    packet = _packet(root / "docs" / "mvp2" / "do015_artifacts")
+    choice = _find(packet, "T1", "choice")[0]
+    choice["status"] = 409
+    _rewrite_response(choice, {"error": "assignment_digest_mismatch"})
+    problems = _problems(verifier, packet, root)
+    assert any("no successful choice preceded begin" in problem for problem in problems)
+
+
+def test_evaluation_body_must_hash_to_its_digest(verifier: ModuleType, tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    packet = _packet(root / "docs" / "mvp2" / "do015_artifacts")
+    finish = _find(packet, "T1", "finish")[0]
+    body = _response(finish)
+    body["evaluation"]["summary"]["matched_count"] = 987654
+    _rewrite_response(finish, body)
+    problems = _problems(verifier, packet, root)
+    assert any("T1: evaluation body does not hash" in problem for problem in problems)
+
+
+def test_retry_with_a_changed_result_and_kept_digest_fails(
+    verifier: ModuleType, tmp_path: Path
+) -> None:
+    root = tmp_path / "repo"
+    packet = _packet(root / "docs" / "mvp2" / "do015_artifacts")
+    retry = _find(packet, "T7", "finish")[1]
+    body = _response(retry)
+    body["evaluation"]["summary"]["matched_count"] = 987654
+    _rewrite_response(retry, body)
+    edited = _problems(verifier, packet, root)
+    assert any("complete stored result" in problem for problem in edited)
+    assert any("retry evaluation body does not hash" in problem for problem in edited)
+
+    # A field outside the evaluation digest still has to be the stored one.
+    packet = _packet(root / "docs" / "mvp2" / "do015_artifacts")
+    retry = _find(packet, "T7", "finish")[1]
+    body = _response(retry)
+    body["hardware_status"]["midi_input"] = "VERIFIED"
+    _rewrite_response(retry, body)
+    undigested = _problems(verifier, packet, root)
+    assert undigested == ["T7: retry did not return the complete stored result"]
+
+
+def test_non_object_evaluation_is_reported_not_raised(
+    verifier: ModuleType, tmp_path: Path
+) -> None:
+    root = tmp_path / "repo"
+    packet = _packet(root / "docs" / "mvp2" / "do015_artifacts")
+    for exchange in _find(packet, "T7", "finish"):
+        body = _response(exchange)
+        body["evaluation"] = None
+        _rewrite_response(exchange, body)
+    problems = _problems(verifier, packet, root)
+    assert any("T7: the stored evaluation digest is not a sha256 pin" in problem
+        for problem in problems)
 
 
 def test_missing_scenario_and_frozen_drift_fail(verifier: ModuleType, tmp_path: Path) -> None:
