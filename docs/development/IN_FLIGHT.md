@@ -12,7 +12,7 @@ pull request merges the next branch clears it.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| DO-016 Stage 8 | cursor/do016-received-lesson-attempt-ui-s08 | Cursor | #55 | aff6b7c8e3254945e0306c222f0a5468bb5d338b | green | 2026-10-04 |
+| DO-016 Stage 9 | agent/do016-integration-recovery-s09 | Cursor | — | 7a1aecfb2ab4b03872a571fbebaca7ee22418093 | in flight | 2026-10-27 |
 
 An empty table means nothing is in flight.
 
