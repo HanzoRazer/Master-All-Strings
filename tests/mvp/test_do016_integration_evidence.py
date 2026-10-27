@@ -452,6 +452,12 @@ def test_driver_failure_reaps_its_child(driver: ModuleType, tmp_path: Path) -> N
     assert classification["kind"] == "driver_failure"
 
 
+def test_retained_packet_matches_its_bytes(verifier: ModuleType) -> None:
+    path = REPO_ROOT / "docs/mvp2/do016_integration_artifacts/evidence.json"
+    packet = json.loads(path.read_text(encoding="utf-8"))
+    assert verifier.verify_evidence(packet, frozen_root=REPO_ROOT) == []
+
+
 def test_child_server_restarts_on_the_same_port(driver: ModuleType, tmp_path: Path) -> None:
     port = driver.free_port()
     first = subprocess.Popen(
