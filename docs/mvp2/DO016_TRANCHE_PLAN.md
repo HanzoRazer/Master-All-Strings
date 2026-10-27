@@ -1231,3 +1231,105 @@ cancellation stays unconfirmed. Attempts die with the process. This stage
 does not open a guided session, execute a recommendation, store durable
 history, or claim that a lesson is complete.
 
+## Stage 9 — received-lesson integration and recovery witness
+
+| Field | Value |
+| --- | --- |
+| Branch | `agent/do016-integration-recovery-s09` |
+| Entry SHA | `7a1aecfb2ab4b03872a571fbebaca7ee22418093` |
+| Predecessor | Stage 8, PR #55, merged |
+| Designation | Proposed by this order. Stage 8's plan did not already mandate it. |
+
+This stage adds one correlated witness. It does not change production
+routes, schemas, engines, or runtime controllers. The "Stage 9 browser
+witness" named in Stage 8 is the DO-015 certification capture. This stage's
+witness is `scripts/smoke_do016_integration.py`.
+
+A custom assignment, "Stage 9 Integration Etude" (`delivery-stage9`), is
+received through the Stage 1 POST. Its tempo is 8 BPM so one pass stays in
+capture across a process restart. The browser then chooses it from the
+inbox, opens practice, and starts the attempt. Restart kills that process
+and binds a fresh server to the same origin. The page that is already open
+submits Finish or Cancel. The 404 comes from that new process. Recovery
+receives the envelope again and chooses through the inbox. A lost Finish
+is forwarded to the live server once, hidden from the page, and retried
+from the Finish retry control.
+
+### Acceptance
+
+| Id | Required observation |
+| --- | --- |
+| T1 | Inbox preview, choice, preparation, begin, and finish share one snapshot. Feedback shows that attempt and does not claim completion. |
+| T2 | Ordinary controls can leave normal speed and enable looping. Start installs rate 1, loop off, and a restarted position, then locks the timeline. |
+| T3 | Cancel after an acknowledgement shows interruption and no evaluation counts. The next attempt id is new. |
+| T4 | Finish after a real restart is `404 unknown_attempt`. Retry stays hidden. Practice controls return. |
+| T5 | Cancel after a separate real restart is the same 404 and claims no recorded cancellation. |
+| T6 | The restarted inbox is empty. A new receive, choice, and evaluation use new attempt, capture, and session ids. |
+| T7 | The server stores the evaluation. The page stays unconfirmed. Retry uses the same attempt and sends no new MIDI. |
+| T8 | The Stage 8 witness still passes, including its simulated 404, which is labeled simulated. |
+| T9 | The offline verifier rejects swapped pins, broken acknowledgements, a fabricated restart, a changed retry result, a missing scenario, and frozen-byte drift. |
+| T10 | A failed browser launch, a readiness timeout, and a driver failure leave a classification and no owned child. |
+
+### Evidence commands
+
+```bash
+python scripts/smoke_do016_integration.py OUTPUT \
+  --chrome-executable /usr/local/bin/google-chrome \
+  --puppeteer-module /tmp/inbox-smoke/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js
+python scripts/verify_do016_integration_evidence.py \
+  docs/mvp2/do016_integration_artifacts/evidence.json --root .
+python scripts/smoke_do016_received_practice.py OUTPUT
+python scripts/smoke_do016_received_attempt.py OUTPUT
+```
+
+Stage 8's driver accepts the same browser flags and
+`DO016_CHROME_EXECUTABLE` / `DO016_PUPPETEER_MODULE`. Its Linux defaults are
+unchanged. Its unknown-attempt finish is a simulated response.
+
+### Limits
+
+Evaluation is one stored attempt, not mastery or lesson completion. Injected
+MIDI is not a physical input, and scheduled audio is not a speaker. A lost
+begin is still not repeated. Deliveries, choices, and attempts die with the
+process. This stage does not add a durable inbox, accounts, remote delivery,
+or a guided session.
+
+### Verification
+
+Measured on Linux against tested source `8804f0c90cab1ff3a2f84def68e43c1eb1afa871`
+(tree `293162586de1c9c843b7886fbc21b265828e6c5e`). The local interpreter was
+Python 3.12.3. Node was v22.23.4. Chrome was 148.0.7778.96. CI runs the same
+pytest command on Python 3.11. The packet is
+`docs/mvp2/do016_integration_artifacts/evidence.json`.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` | PASS |
+| `ruff` on the three touched scripts | PASS |
+| `mypy` (strict, `src` only) | PASS, 173 source files |
+| `pytest --cov --cov-report=term-missing` | 3536 passed, 3 skipped, 95.34% |
+| `npm test` in `web/mvp1` | 589 passed, 0 failed |
+| Stage 6 browser witness | PASS, 0 failures |
+| Stage 8 browser witness | PASS, 0 failures; begin 5, message 8, finish 3, cancel 2, guided 0, performance 0 |
+| Stage 9 integration witness | PASS, 0 failures; epochs A/B/C pids 3684, 3854, 3871 |
+| `scripts/verify_do016_integration_evidence.py` | PASS, including the retained packet |
+| `scripts/verify_do015_certification.py` | OK (9 of 9) |
+| `scripts/verify_do015_publication.py` | OK (8 of 8) |
+| `scripts/build_do015_certification_evidence.py --check` | OK |
+| `scripts/check_in_flight.py` | OK (1 row, 0 notes) |
+| DO-015 certification capture | exit 0, `CLOSED`, 3 attempts; smoke summary restored |
+
+The DO-015 capture rewrote `docs/mvp2/do015_artifacts/browser_smoke_summary.json`.
+That file was restored. Its sha256 is
+`11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
+
+Stage 8's unknown-attempt finish is labeled `source: simulated`. The
+integration witness's Finish and Cancel 404 bodies are the restarted
+process's `{"error": "unknown_attempt"}`. A lost Finish was stored by that
+process and then retried with the same attempt id and no further appends.
+
+A lost begin is not repeated automatically. Injected MIDI is not a physical
+input. Scheduled audio is not certified speaker output. This stage does not
+open a guided session, execute a recommendation, store durable history, or
+claim that a lesson is complete.
+

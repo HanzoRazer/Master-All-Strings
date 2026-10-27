@@ -33,6 +33,37 @@ from master_all_strings.mvp.local_server import serve_mvp_directory
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE = ROOT / "resources" / "lesson" / "examples" / "local_midi_basic.json"
 TITLE = "Stage 8 Received Etude"
+CHROME_ENV = "DO016_CHROME_EXECUTABLE"
+PUPPETEER_ENV = "DO016_PUPPETEER_MODULE"
+DEFAULT_CHROME = Path("/usr/local/bin/google-chrome")
+DEFAULT_PUPPETEER = Path(
+    "/tmp/inbox-smoke/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js"
+)
+
+
+class BrowserConfigError(RuntimeError):
+    """The witness was given a browser it cannot launch."""
+
+
+def resolve_browser_config(chrome: str | None, puppeteer: str | None) -> tuple[Path, Path]:
+    """Flags win, then the environment, then the documented Linux defaults."""
+
+    chrome_text = chrome or os.environ.get(CHROME_ENV) or str(DEFAULT_CHROME)
+    puppeteer_text = puppeteer or os.environ.get(PUPPETEER_ENV) or str(DEFAULT_PUPPETEER)
+    chrome_path = Path(chrome_text).expanduser()
+    puppeteer_path = Path(puppeteer_text).expanduser()
+    if not chrome_path.is_file():
+        raise BrowserConfigError(f"chrome executable was not found: {chrome_path}")
+    if not puppeteer_path.is_file():
+        raise BrowserConfigError(f"puppeteer module was not found: {puppeteer_path}")
+    return chrome_path, puppeteer_path
+
+
+def _node_modules(puppeteer_path: Path) -> str:
+    for parent in puppeteer_path.parents:
+        if parent.name == "node_modules":
+            return str(parent)
+    return str(puppeteer_path.parent)
 
 
 def _request(base: str, method: str, path: str, body: dict | None = None) -> tuple[int, dict]:
@@ -100,21 +131,32 @@ def _choose(base: str, preview: dict) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
+    parser.add_argument("--chrome-executable")
+    parser.add_argument("--puppeteer-module")
     args = parser.parse_args(argv)
     output = args.output
     output.mkdir(parents=True, exist_ok=True)
+    try:
+        chrome_path, puppeteer_path = resolve_browser_config(
+            args.chrome_executable,
+            args.puppeteer_module,
+        )
+    except BrowserConfigError as exc:
+        (output / "driver.log").write_text(f"{exc}\n", encoding="utf-8")
+        return 2
 
     raw = json.loads(EXAMPLE.read_text(encoding="utf-8"))
     raw["identity"]["title"] = TITLE
     assignment = deserialize_lesson_assignment(json.dumps(raw))
     api = LocalLessonDeliveryApi()
-    server, _thread, url = serve_mvp_directory(
-        ROOT / "web" / "mvp1",
-        open_browser=False,
-        lesson_delivery_api=api,
-    )
-    base = url.rsplit("/", 1)[0]
+    server = None
     try:
+        server, _thread, url = serve_mvp_directory(
+            ROOT / "web" / "mvp1",
+            open_browser=False,
+            lesson_delivery_api=api,
+        )
+        base = url.rsplit("/", 1)[0]
         delivery_id = "delivery-stage8"
         _receive(base, assignment, delivery_id)
         preview = _preview(base, delivery_id)
@@ -126,12 +168,18 @@ def main(argv: list[str] | None = None) -> int:
             "delivery_id": delivery_id,
             "title": TITLE,
             "injected_midi": True,
+            "chrome_executable": str(chrome_path),
+            "puppeteer_module": str(puppeteer_path),
         }
         (output / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
         env = os.environ.copy()
+        node_modules = _node_modules(puppeteer_path)
         node_path = env.get("NODE_PATH", "")
-        puppeteer_path = "/tmp/inbox-smoke/node_modules"
-        env["NODE_PATH"] = puppeteer_path if not node_path else f"{puppeteer_path}:{node_path}"
+        env["NODE_PATH"] = (
+            node_modules if not node_path else os.pathsep.join((node_modules, node_path))
+        )
+        env[CHROME_ENV] = str(chrome_path)
+        env[PUPPETEER_ENV] = str(puppeteer_path)
         completed = subprocess.run(
             [
                 "node",
@@ -143,11 +191,18 @@ def main(argv: list[str] | None = None) -> int:
             cwd=ROOT,
             env=env,
             check=False,
+            capture_output=True,
+            text=True,
+        )
+        (output / "driver.log").write_text(
+            completed.stdout + completed.stderr,
+            encoding="utf-8",
         )
         return completed.returncode
     finally:
-        server.shutdown()
-        server.server_close()
+        if server is not None:
+            server.shutdown()
+            server.server_close()
 
 
 if __name__ == "__main__":

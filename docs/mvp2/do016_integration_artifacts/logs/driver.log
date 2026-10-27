@@ -1,0 +1,56 @@
+console: Failed to load resource: the server responded with a status of 404 (File not found)
+PASS inbox lists the custom delivery - delivery-stage9
+console: Failed to load resource: the server responded with a status of 404 (Not Found)
+PASS preview shows the custom title - TitleStage 9 Integration EtudeInstructional objectiveShow one received lesson from inbox through feedback.Teacher noteIntegration witness assignment. Not a bundled demo.Canonical e
+PASS open practice carries only the delivery id - lesson-practice.html?delivery_id=delivery-stage9
+PASS practice opens paused
+PASS custom title is on the practice page
+PASS MIDI was injected before boot
+PASS ordinary rate can leave normal before an attempt - true
+PASS ordinary loop can change before an attempt
+PASS capture installs normal speed and loop off
+PASS capture locks timeline controls - {"status":"Capturing.","feedback":"","retryHidden":true,"startDisabled":true,"playDisabled":true,"refreshDisabled":true,"rate":"true","slow":"false","slowDisabled":true,"loop":false,"loopDisabled":true,"seekDisabled":true,"seek":"1","restartDisabled":true,"clock":"0.01s","sound":false,"delivery":"delivery-stage9","assignment":"teacher_smith_student_42_2026_08_10","content":"blues_turnaround_01"}
+PASS capture restarts before the locked pass - 18.00s -> 0.01s
+PASS locked controls do not move the timeline - 9
+PASS injected notes reached the input - 2
+PASS displayed delivery matches the attempt - delivery-stage9
+PASS feedback names this attempt
+PASS feedback shows counts without a completion claim
+PASS sound stayed off through finish
+PASS ordinary practice returns after evaluation - {"pressed":"true","disabled":false}
+PASS injected notes reached the input - 1
+PASS cancel shows interruption without counts - Attempt interruptedAttempt: da8e5129-b4a8-4fdf-afcf-749692d6a959No evaluation was produced.MIDI input: UNVERIFIED_PHYSICAL_MIDI_INPUTAudio output: UNVERIFIED_AUDIO_OUTPUT
+PASS injected notes reached the input - 1
+PASS finish restart leaves the attempt capturing - Capturing.
+console: Failed to load resource: the server responded with a status of 404 (Not Found)
+PASS T3's next attempt has a new id
+PASS restarted finish is the lost-attempt refusal - The server no longer has this attempt. The attempt was not evaluated. Keep practicing or start a new attempt.
+PASS restarted finish clears evaluation and retry
+PASS restarted finish restores practice
+PASS reseed before the cancel restart succeeded
+PASS inbox lists the custom delivery - delivery-stage9
+console: Failed to load resource: the server responded with a status of 404 (Not Found)
+PASS preview shows the custom title - TitleStage 9 Integration EtudeInstructional objectiveShow one received lesson from inbox through feedback.Teacher noteIntegration witness assignment. Not a bundled demo.Canonical e
+PASS open practice carries only the delivery id - lesson-practice.html?delivery_id=delivery-stage9
+PASS injected notes reached the input - 1
+PASS cancel restart leaves the attempt capturing - Capturing.
+console: Failed to load resource: the server responded with a status of 404 (Not Found)
+PASS restarted cancel is not a recorded cancellation - The server no longer has this attempt. The cancellation was not recorded. Keep practicing or start a new attempt.
+PASS restart clears the inbox - No deliveries have been received on this device.
+PASS recovery receive succeeded
+PASS inbox lists the custom delivery - delivery-stage9
+console: Failed to load resource: the server responded with a status of 404 (Not Found)
+PASS preview shows the custom title - TitleStage 9 Integration EtudeInstructional objectiveShow one received lesson from inbox through feedback.Teacher noteIntegration witness assignment. Not a bundled demo.Canonical e
+PASS open practice carries only the delivery id - lesson-practice.html?delivery_id=delivery-stage9
+PASS a new attempt clears the previous feedback
+PASS injected notes reached the input - 2
+PASS recovered attempt ids differ
+PASS old feedback does not leak
+PASS injected notes reached the input - 2
+NOTE browser transport closed http://127.0.0.1:38443/api/education/lesson-practice-attempt-finishes net::ERR_FAILED
+console: Failed to load resource: net::ERR_FAILED
+PASS lost finish stays unconfirmed - The finish request did not finish. Retry finish to read the stored result.
+PASS lost finish offers retry
+PASS retry keeps one stored finish and one browser finish
+PASS retry sends no new MIDI
+PASS retry shows the same attempt - Evaluated.
