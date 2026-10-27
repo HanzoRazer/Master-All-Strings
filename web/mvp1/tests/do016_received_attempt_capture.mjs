@@ -6,8 +6,15 @@
  */
 
 import { mkdirSync, writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 
-const puppeteer = await import("/tmp/inbox-smoke/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js");
+const DEFAULT_CHROME = "/usr/local/bin/google-chrome";
+const DEFAULT_PUPPETEER = "/tmp/inbox-smoke/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js";
+const chromeExecutable = process.env.DO016_CHROME_EXECUTABLE || DEFAULT_CHROME;
+const puppeteerModule = process.env.DO016_PUPPETEER_MODULE || DEFAULT_PUPPETEER;
+const launchArgs = ["--no-sandbox", "--disable-dev-shm-usage", "--autoplay-policy=no-user-gesture-required"];
+const imported = await import(pathToFileURL(puppeteerModule).href);
+const puppeteer = imported.default?.launch ? imported.default : imported;
 
 const base = process.argv[2];
 const output = process.argv[3];
@@ -15,10 +22,11 @@ const deliveryId = process.argv[4];
 mkdirSync(output, { recursive: true });
 
 const browser = await puppeteer.launch({
-  executablePath: "/usr/local/bin/google-chrome",
+  executablePath: chromeExecutable,
   headless: "new",
-  args: ["--no-sandbox", "--disable-dev-shm-usage", "--autoplay-policy=no-user-gesture-required"],
+  args: launchArgs,
 });
+const browserVersion = await browser.version();
 
 const notes = [];
 let failures = 0;
@@ -260,8 +268,8 @@ try {
   await pageC.screenshot({ path: `${output}/04-append-failure.png`, fullPage: true });
   await contextC.close();
 
-  // A restarted server no longer has the attempt. The page answers the first
-  // finish with the server's 404 in place of the live route.
+  // Simulated 404. This driver does not stop or restart the server. The
+  // integration witness is what exercises a real second process.
   const contextD = await browser.createBrowserContext();
   const pageD = await contextD.newPage();
   watch(pageD, "unknown-attempt", false);
@@ -299,6 +307,7 @@ try {
     playEnabled: !document.querySelector("#btn-play").disabled,
     refreshEnabled: !document.querySelector("#refresh-lesson").disabled,
   }));
+  notes.push("NOTE the unknown-attempt finish is a simulated 404, not a restarted server.");
   check("a lost attempt says the server no longer has it", lostStatus.includes("no longer has this attempt"), lostStatus);
   check("a lost attempt claims no evaluation", !lostState.feedback.includes("Matched:"), lostState.feedback.slice(0, 180));
   check("a lost attempt offers no finish retry", lostState.retryHidden);
@@ -342,6 +351,24 @@ const summary = {
   midi_evidence: "Injected through navigator.requestMIDIAccess before page boot. Not a physical MIDI device.",
   physical_midi: "UNVERIFIED_PHYSICAL_MIDI_INPUT",
   physical_audio: "UNVERIFIED_AUDIO_OUTPUT",
+  restart_witness: false,
+  simulated_responses: [
+    {
+      scenario: "unknown-attempt",
+      operation: "finish",
+      status: 404,
+      body: { error: "unknown_attempt" },
+      source: "simulated",
+    },
+  ],
+  node: process.version,
+  browser: browserVersion,
+  launch: {
+    executablePath: chromeExecutable,
+    puppeteerModule,
+    headless: "new",
+    args: launchArgs,
+  },
   attempts,
   request_counts: counts,
   failures,
