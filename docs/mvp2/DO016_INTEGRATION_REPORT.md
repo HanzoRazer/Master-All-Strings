@@ -136,6 +136,13 @@ The committed npm count is 589. It is not 592.
 - Deliveries, choices, and attempts disappear when the process stops.
 - Evaluation of one attempt is not mastery and not lesson completion.
 - MIDI in this witness was injected. Physical MIDI input is unverified.
+- The injected notes were 60 and 61, note-on only. The lesson expects 64, 67,
+  and 69, so every evaluation here scored matched 0, missing 3, extra 2. That
+  is the correct score for that input, but no matched note was exercised.
+  Stage 8's witness covers a match (matched 1).
+- The prepared playback plan carries `canonical_revision_id: null`. The score
+  and TAB cite `rev-cf73ae5afa337ebe334e924b`, but playback is not bound to a
+  revision. This predates DO-016 and is outside this order.
 - The scheduler can accept events. That is not certified speaker output.
 - There is no durable inbox, teacher send UI, account, or remote delivery.
 - No guided session was opened and no recommendation was executed.

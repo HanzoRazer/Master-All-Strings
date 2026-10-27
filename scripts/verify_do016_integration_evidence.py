@@ -77,7 +77,8 @@ def verify_evidence(packet: dict[str, Any], *, frozen_root: Path | None = None) 
         problems.append("evidence: schema or version is not the integration packet")
     if packet.get("complete") is not True:
         problems.append("evidence: the run is incomplete")
-    if packet.get("failures") not in (0,):
+    # bool is an int subclass and 0.0 == 0; only the integer zero is a clean run.
+    if type(packet.get("failures")) is not int or packet["failures"] != 0:
         problems.append("evidence: the driver recorded failures")
     if not isinstance(packet.get("run_id"), str) or not packet["run_id"].strip():
         problems.append("evidence: run id is missing")
@@ -121,7 +122,9 @@ def verify_evidence(packet: dict[str, Any], *, frozen_root: Path | None = None) 
         if item is not None:
             decoded.append(item)
 
-    by_scenario = {scenario_id: [] for scenario_id in REQUIRED_SCENARIOS}
+    by_scenario: dict[str, list[dict[str, Any]]] = {
+        scenario_id: [] for scenario_id in REQUIRED_SCENARIOS
+    }
     for item in decoded:
         scenario_id = item["scenario"]
         if scenario_id in by_scenario:

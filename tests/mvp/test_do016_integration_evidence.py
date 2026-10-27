@@ -578,6 +578,12 @@ def test_missing_scenario_and_frozen_drift_fail(verifier: ModuleType, tmp_path: 
     incomplete = _problems(verifier, packet, root)
     assert any("incomplete" in problem for problem in incomplete)
 
+    for loose_zero in (False, 0.0, "0", None):
+        packet = _packet(root / "docs" / "mvp2" / "do015_artifacts")
+        packet["failures"] = loose_zero
+        loose = _problems(verifier, packet, root)
+        assert loose == ["evidence: the driver recorded failures"], loose_zero
+
 
 def test_missing_chrome_does_not_start_a_server(driver: ModuleType, tmp_path: Path) -> None:
     code = driver.main(
