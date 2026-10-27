@@ -305,6 +305,7 @@ def _verify_evaluated_chain(
             problems.append(f"{scenario_id}: feedback does not show this attempt")
         if not all(label in feedback for label in ("Matched:", "Missing:", "Extra:")):
             problems.append(f"{scenario_id}: feedback does not show the three counts")
+        _verify_feedback_counts(problems, scenario_id, feedback, finish_item["response"])
         midi = "UNVERIFIED_PHYSICAL_MIDI_INPUT"
         audio = "UNVERIFIED_AUDIO_OUTPUT"
         if midi not in feedback or audio not in feedback:
@@ -318,6 +319,23 @@ def _verify_evaluated_chain(
     }:
         problems.append(f"{scenario_id}: server hardware status is not unverified")
     return pins
+
+
+def _verify_feedback_counts(
+    problems: list[str],
+    scenario_id: str,
+    feedback: str,
+    finish: dict[str, Any],
+) -> None:
+    summary = _mapping(_mapping(finish.get("evaluation")).get("summary"))
+    for label, field in (
+        ("Matched", "matched_count"),
+        ("Missing", "missing_count"),
+        ("Extra", "extra_count"),
+    ):
+        shown = re.search(rf"{label}:\s*(\d+)", feedback)
+        if shown is None or int(shown.group(1)) != summary.get(field):
+            problems.append(f"{scenario_id}: feedback {label} count is not the evaluation's")
 
 
 def _verify_messages(
@@ -551,6 +569,9 @@ def _verify_t7(problems: list[str], scenario: Any, items: list[dict[str, Any]]) 
     # repeats its digest string.
     if forwarded["response"] != retry["response"]:
         problems.append("T7: retry did not return the complete stored result")
+    feedback = scenario.get("feedback_text")
+    if isinstance(feedback, str):
+        _verify_feedback_counts(problems, "T7", feedback, retry["response"])
     if forwarded["response"].get("capture_id") != retry["response"].get("capture_id"):
         problems.append("T7: retry returned a different capture")
     stored_session = forwarded["response"].get("performance_session_id")

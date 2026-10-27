@@ -513,6 +513,15 @@ def test_evaluation_body_must_hash_to_its_digest(verifier: ModuleType, tmp_path:
     assert any("T1: evaluation body does not hash" in problem for problem in problems)
 
 
+def test_feedback_counts_must_be_the_evaluations(verifier: ModuleType, tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    packet = _packet(root / "docs" / "mvp2" / "do015_artifacts")
+    shown = packet["scenarios"]["T1"]["feedback_text"]
+    packet["scenarios"]["T1"]["feedback_text"] = shown.replace("Matched: 1", "Matched: 2")
+    problems = _problems(verifier, packet, root)
+    assert problems == ["T1: feedback Matched count is not the evaluation's"]
+
+
 def test_retry_with_a_changed_result_and_kept_digest_fails(
     verifier: ModuleType, tmp_path: Path
 ) -> None:
