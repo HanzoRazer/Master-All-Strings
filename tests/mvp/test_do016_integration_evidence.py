@@ -759,6 +759,16 @@ def test_strict_mode_rejects_playback_mutations(verifier: ModuleType, tmp_path: 
     assert all("sha256 does not match" not in item for item in moved_problems)
 
 
+def test_retained_provenance_packet_is_bound(verifier: ModuleType) -> None:
+    path = REPO_ROOT / "docs/mvp2/do016_playback_provenance_artifacts/evidence.json"
+    packet = json.loads(path.read_text(encoding="utf-8"))
+    assert verifier.verify_evidence(packet, frozen_root=REPO_ROOT) == []
+    assert (
+        verifier.verify_evidence(packet, frozen_root=REPO_ROOT, require_bound_playback=True)
+        == []
+    )
+
+
 def test_historical_packet_fails_strict_provenance_and_passes_legacy(
     verifier: ModuleType,
 ) -> None:
