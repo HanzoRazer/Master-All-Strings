@@ -12,7 +12,7 @@ this module.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from master_all_strings.education.assignment_delivery import (
@@ -29,8 +29,16 @@ from master_all_strings.education.local_practice_choice import (
 )
 from master_all_strings.lesson.serialization import to_dict
 from master_all_strings.mvp.application import MvpApplication
-from master_all_strings.mvp.errors import LessonLoadError, UnknownInstrumentError
+from master_all_strings.mvp.errors import (
+    LessonLoadError,
+    PlaybackPlanBuildError,
+    UnknownInstrumentError,
+)
 from master_all_strings.mvp.models import MvpProjectionResponseV1
+from master_all_strings.mvp.playback.serialization import (
+    compute_playback_plan_digest,
+    verify_playback_plan_digest,
+)
 from master_all_strings.mvp.web_export import (
     playback_export_payload,
     practice_export_payload,
@@ -260,6 +268,8 @@ def _check_bundle(
         raise PreparationFailure("canonical revision has no revision_id")
     _cited_revision(tab, revision_id, "tab")
     _cited_revision(notation, revision_id, "notation")
+    if playback.get("canonical_revision_id") != revision_id:
+        raise PreparationFailure("playback does not cite the exported revision")
 
     assignment_ids = [event.event_id for event in envelope.assignment.musical_content.events]
     notes = inner.get("notes")
@@ -278,10 +288,37 @@ def _check_bundle(
     _same_ids(assignment_ids, _notation_note_ids(notation), "notation")
 
 
+def _bind_received_playback(response: MvpProjectionResponseV1) -> MvpProjectionResponseV1:
+    """Cite this response's score revision on its playback plan.
+
+    The pipeline's plan is checked first. A null citation is filled from the
+    score already in the response. A different citation is refused. The
+    source plan is left unchanged, and the pipeline is not run again.
+    """
+
+    bundle = response.score
+    if bundle is None:
+        raise PreparationFailure("preparation produced no score bundle")
+    revision_id = bundle.revision.revision_id
+    plan = response.playback_plan
+    try:
+        verify_playback_plan_digest(plan)
+    except PlaybackPlanBuildError as exc:
+        raise PreparationFailure("playback digest does not match playback content") from exc
+    cited = plan.canonical_revision_id
+    if cited is not None and cited != revision_id:
+        raise PreparationFailure("playback cites a different canonical revision")
+    if cited != revision_id:
+        cited_plan = replace(plan, canonical_revision_id=revision_id)
+        plan = replace(cited_plan, playback_digest=compute_playback_plan_digest(cited_plan))
+    return replace(response, playback_plan=plan)
+
+
 def _bundle(
     envelope: LessonDeliveryEnvelopeV1,
     response: MvpProjectionResponseV1,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+    response = _bind_received_playback(response)
     projection = projection_export_payload(response, demo_id=None)
     playback = playback_export_payload(response)
     practice = practice_export_payload(response)
