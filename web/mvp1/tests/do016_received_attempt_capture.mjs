@@ -331,6 +331,74 @@ try {
     await text(pageD, "#attempt-status"),
   );
   await contextD.close();
+
+  // Simulate a score revision changing without the playback citation. The
+  // requests still reach the real server, so a rejected Begin must cancel
+  // its actual stored attempt rather than leave it capturing.
+  const contextE = await browser.createBrowserContext();
+  const pageE = await contextE.newPage();
+  watch(pageE, "revision-mismatch", false);
+  await installMidi(pageE);
+  let changedPreparation = false;
+  let changedBegin = false;
+  await pageE.setRequestInterception(true);
+  pageE.on("request", async (request) => {
+    tally(request.url());
+    const prepare = request.url().endsWith("/api/education/lesson-practice-preparations");
+    const begin = request.url().endsWith("/api/education/lesson-practice-attempts");
+    if ((prepare && !changedPreparation) || (begin && !changedBegin)) {
+      if (prepare) changedPreparation = true;
+      if (begin) changedBegin = true;
+      try {
+        const response = await fetch(request.url(), {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: request.postData(),
+        });
+        const body = await response.json();
+        const preparation = begin ? body.preparation : body;
+        preparation.playback.canonical_revision_id = "rev-simulated-stale-playback";
+        await request.respond({
+          status: response.status,
+          contentType: "application/json",
+          body: JSON.stringify(body),
+        });
+      } catch (error) {
+        failures += 1;
+        notes.push(`FAIL revision interception: ${error.message}`);
+        await request.abort("failed");
+      }
+      return;
+    }
+    await request.continue();
+  });
+  const query = new URLSearchParams({ delivery_id: deliveryId });
+  await pageE.goto(`${base}/lesson-practice.html?${query}`, { waitUntil: "networkidle0" });
+  await pageE.waitForFunction(() => document.querySelector("#status")?.textContent.includes("invalid"));
+  check("revision mismatch blocks reference playback before mount", await pageE.evaluate(() => (
+    document.querySelector("#btn-play").disabled
+    && document.querySelector("#btn-start-attempt").disabled
+    && document.querySelectorAll("#scrollCanvas .note").length === 0
+  )));
+  check("invalid preparation gives a recovery action", (await text(pageE, "#status")).includes("Refresh the lesson"));
+  await pageE.click("#refresh-lesson");
+  await pageE.waitForFunction(() => /Paused/.test(document.querySelector("#status")?.textContent || ""));
+  await pageE.click("#btn-enable-midi");
+  await pageE.waitForFunction(() => /ready/.test(document.querySelector("#midi-status")?.textContent || ""));
+  const beforeBadBegin = { ...counts };
+  await pageE.click("#btn-start-attempt");
+  await pageE.waitForFunction(() => /begin response could not be used/.test(document.querySelector("#attempt-status")?.textContent || ""));
+  check("revision mismatch cancels the unusable Begin without capture", changedBegin
+    && counts.cancel === beforeBadBegin.cancel + 1
+    && counts.message === beforeBadBegin.message
+    && counts.finish === beforeBadBegin.finish);
+  check("rejected Begin restores ordinary practice", await pageE.evaluate(() => (
+    !document.querySelector("#btn-play").disabled
+    && !document.querySelector("#btn-start-attempt").disabled
+    && document.querySelector("#attempt-feedback").textContent === ""
+  )));
+  notes.push("NOTE revision mismatches are simulated response mutations, not a changed server lesson.");
+  await contextE.close();
 } catch (error) {
   failures += 1;
   notes.push(`FAIL driver — ${error.stack || error.message}`);
@@ -353,6 +421,12 @@ const summary = {
   physical_audio: "UNVERIFIED_AUDIO_OUTPUT",
   restart_witness: false,
   simulated_responses: [
+    {
+      scenario: "revision-mismatch",
+      operations: ["prepare", "begin"],
+      mutation: "playback.canonical_revision_id",
+      source: "mutated live response",
+    },
     {
       scenario: "unknown-attempt",
       operation: "finish",

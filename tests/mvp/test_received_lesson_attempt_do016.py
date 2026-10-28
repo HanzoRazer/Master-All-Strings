@@ -33,6 +33,8 @@ from master_all_strings.lesson.serialization import (
     deserialize_lesson_assignment,
     serialize_lesson_assignment,
 )
+from master_all_strings.mvp.application import MvpApplication
+from master_all_strings.mvp.local_practice_preparation import PreparationFailure
 from master_all_strings.mvp.received_lesson_attempt import (
     ATTEMPT_STATUS_CAPTURING,
     ATTEMPT_STATUS_EVALUATED,
@@ -47,6 +49,10 @@ from master_all_strings.mvp.received_lesson_attempt import (
     ReceivedLessonAttemptService,
     SequenceConflictError,
     UnknownAttemptError,
+)
+from master_all_strings.mvp.received_lesson_attempt_api import (
+    LESSON_PRACTICE_ATTEMPT_PATH,
+    LocalReceivedLessonAttemptApi,
 )
 from master_all_strings.performance.alignment import align_performance
 from master_all_strings.performance.contracts.alignment import (
@@ -171,6 +177,10 @@ def test_begin_freezes_a_capturing_snapshot(assignment: LessonAssignmentV1) -> N
     }
     assert begun["preparation"]["preparation_status"] == "PREPARED"
     assert begun["delivery_id"] == "delivery-001"
+    revision_id = begun["preparation"]["score"]["canonical_revision"]["revision_id"]
+    assert begun["preparation"]["playback"]["canonical_revision_id"] == revision_id
+    assert begun["preparation"]["score"]["tab"]["canonical_revision_id"] == revision_id
+    assert begun["preparation"]["score"]["notation"]["canonical_revision_id"] == revision_id
     again = service.begin(
         begun["delivery_id"],
         begun["assignment_artifact_digest"],
@@ -459,10 +469,15 @@ def test_inbox_changes_after_begin_do_not_replace_the_snapshot(
 ) -> None:
     service, begun, deliveries = _open(assignment)
     original = begun["preparation"]["score"]["canonical_revision"]["revision_id"]
+    assert begun["preparation"]["playback"]["canonical_revision_id"] == original
     deliveries.repository._deliveries.pop("delivery-001")  # noqa: SLF001
     finished = service.finish(begun["attempt_id"], 2_000)
     assert finished["assignment_artifact_digest"] == begun["assignment_artifact_digest"]
     assert finished["guidance"]["canonical_revision_id"] == original
+    stored = service.repository.get(begun["attempt_id"])
+    assert stored is not None
+    assert stored.canonical_revision_id == original
+    assert stored.preparation["playback"]["canonical_revision_id"] == original
 
 
 def test_a_changed_delivery_pin_does_not_rewrite_the_attempt(
@@ -628,3 +643,55 @@ def test_a_duplicate_attempt_id_does_not_replace_the_first(assignment: LessonAss
     kept = service.repository.get(begun["attempt_id"])
     assert kept is not None
     assert kept.device_id == "keyboard-a"
+
+
+def test_a_corrupt_playback_plan_does_not_open_an_attempt(
+    assignment: LessonAssignmentV1, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    deliveries = LessonDeliveryService()
+    choices = InMemoryLocalPracticeChoiceRepository()
+    envelope = envelope_for(
+        assignment,
+        delivery_id="delivery-001",
+        sender_ref="teacher-ana",
+        recipient_ref="student-bo",
+    )
+    deliveries.receive(envelope)
+    LocalPracticeChoiceService(LessonDeliveryPreviewService(deliveries), choices).choose(
+        envelope.delivery_id,
+        envelope.assignment_artifact_digest,
+        envelope.assignment_behavior_digest,
+    )
+    real = MvpApplication.run_assignment_json
+
+    def corrupt(self: MvpApplication, payload: object) -> Any:
+        response = real(self, payload)
+        stale = replace(response.playback_plan, playback_digest="sha256:" + "cd" * 32)
+        return replace(response, playback_plan=stale)
+
+    monkeypatch.setattr(MvpApplication, "run_assignment_json", corrupt)
+    service = ReceivedLessonAttemptService(deliveries, choices, ids=_ids(), now_utc=lambda: UTC)
+    with pytest.raises(PreparationFailure):
+        service.begin(
+            envelope.delivery_id,
+            envelope.assignment_artifact_digest,
+            envelope.assignment_behavior_digest,
+            "keyboard-a",
+            1_000,
+        )
+    assert service.repository._attempts == {}  # noqa: SLF001
+    api = LocalReceivedLessonAttemptApi(deliveries, choices, service=service)
+    status, response = api.handle_http(
+        "POST",
+        LESSON_PRACTICE_ATTEMPT_PATH,
+        {
+            "delivery_id": envelope.delivery_id,
+            "expected_assignment_artifact_digest": envelope.assignment_artifact_digest,
+            "expected_assignment_behavior_digest": envelope.assignment_behavior_digest,
+            "device_id": "keyboard-a",
+            "capture_time_ns": 1_000,
+        },
+    )
+    assert status == 500
+    assert response == {"error": "internal server error"}
+    assert service.repository._attempts == {}  # noqa: SLF001

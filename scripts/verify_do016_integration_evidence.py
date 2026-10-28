@@ -67,7 +67,30 @@ T2_FLAGS = (
 )
 
 
-def verify_evidence(packet: dict[str, Any], *, frozen_root: Path | None = None) -> list[str]:
+def document_playback_digest(playback: dict[str, Any]) -> str:
+    """Digest a recorded playback document the way the typed plan does.
+
+    ``compute_playback_plan_digest`` drops ``playback_digest`` and hashes
+    canonical compact sorted ASCII JSON. ``canonical_revision_id`` stays in
+    that payload, so a null citation and a bound citation cannot share a digest.
+    """
+
+    data = {key: value for key, value in playback.items() if key != "playback_digest"}
+    payload = json.dumps(
+        data,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        sort_keys=True,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def verify_evidence(
+    packet: dict[str, Any],
+    *,
+    frozen_root: Path | None = None,
+    require_bound_playback: bool = False,
+) -> list[str]:
     """Return one diagnostic per broken boundary. An empty list is acceptance."""
 
     problems: list[str] = []
@@ -173,7 +196,62 @@ def verify_evidence(packet: dict[str, Any], *, frozen_root: Path | None = None) 
     _verify_continuity(problems, by_scenario, identities)
     _verify_epochs(problems, epochs, barriers)
     _verify_frozen(problems, packet.get("frozen_files"), frozen_root)
+    if require_bound_playback:
+        _verify_bound_playback(problems, decoded)
     return problems
+
+
+def _verify_bound_playback(problems: list[str], decoded: list[dict[str, Any]]) -> None:
+    for item in decoded:
+        preparation = _successful_preparation(item)
+        if preparation is None:
+            continue
+        label = f"{item.get('scenario')} {item.get('operation')}"
+        _check_bound_preparation(problems, label, preparation)
+
+
+def _successful_preparation(item: dict[str, Any]) -> dict[str, Any] | None:
+    if item.get("operation") == "prepare" and item.get("status") == 200:
+        response = item.get("response")
+        return response if isinstance(response, dict) else {}
+    if item.get("operation") == "begin" and item.get("status") == 201:
+        response = item.get("response")
+        if not isinstance(response, dict):
+            return {}
+        preparation = response.get("preparation")
+        return preparation if isinstance(preparation, dict) else {}
+    return None
+
+
+def _check_bound_preparation(
+    problems: list[str], label: str, preparation: dict[str, Any]
+) -> None:
+    score = preparation.get("score")
+    revision: Any = None
+    if isinstance(score, dict):
+        canonical = score.get("canonical_revision")
+        if isinstance(canonical, dict):
+            revision = canonical.get("revision_id")
+    if not isinstance(revision, str) or not revision.strip():
+        problems.append(f"{label}: score revision is missing")
+        revision = None
+    playback = preparation.get("playback")
+    if not isinstance(playback, dict):
+        problems.append(f"{label}: playback plan is missing")
+        return
+    cited = playback.get("canonical_revision_id")
+    if not isinstance(cited, str) or not cited.strip():
+        problems.append(f"{label}: playback revision is missing")
+    elif revision is not None and cited != revision:
+        problems.append(f"{label}: playback revision does not match the score revision")
+    recorded = playback.get("playback_digest")
+    try:
+        actual = document_playback_digest(playback)
+    except (TypeError, ValueError):
+        problems.append(f"{label}: playback content is not digestible")
+        return
+    if recorded != actual:
+        problems.append(f"{label}: playback digest does not match playback content")
 
 
 def _decode_exchange(index: int, exchange: Any) -> tuple[dict[str, Any] | None, list[str]]:
@@ -817,13 +895,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("evidence", type=Path)
     parser.add_argument("--root", type=Path, default=ROOT)
+    parser.add_argument("--require-bound-playback", action="store_true")
     args = parser.parse_args(argv)
     try:
         packet = json.loads(args.evidence.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         print(f"evidence: cannot read the packet ({exc})")
         return 1
-    problems = verify_evidence(packet, frozen_root=args.root)
+    problems = verify_evidence(
+        packet,
+        frozen_root=args.root,
+        require_bound_playback=args.require_bound_playback,
+    )
     for problem in problems:
         print(problem)
     return 0 if not problems else 1

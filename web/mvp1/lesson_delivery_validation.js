@@ -4,6 +4,11 @@ Preview and choice rules are the ones the inbox already applied. Preparation
 checks only the fields a practice runtime has to consume. Policy tempo
 contents stay opaque, and no digest is recomputed here: pin equality is a
 consistency check against the fresh preview and the stored choice.
+
+The playback schema still treats canonical_revision_id as optional for legacy
+consumers. A received preparation is a stronger boundary: its playback plan
+must cite the same score revision before reference practice or an attempt
+can mount.
 */
 
 import { TeachingTimeline } from "./teaching-timeline.js";
@@ -49,7 +54,8 @@ const IDENTITY_FIELDS = [
   "assignment_behavior_digest",
 ];
 
-export const INVALID_RESPONSE = "The response is invalid. Playback stays off.";
+export const INVALID_RESPONSE =
+  "The response is invalid. Playback stays off. Refresh the lesson or reopen it from the inbox.";
 
 export const RECEIVED_SCORE_KEY = "received";
 
@@ -207,7 +213,14 @@ export function preparationMatches(body, preview, choice) {
   if (!playbackAccepted(body.playback, preview)) return false;
   if (!practiceAccepted(body.practice, preview, body.playback.total_seconds)) return false;
   if (!scoreAccepted(body.score, preview)) return false;
+  if (!receivedPlaybackCitesScore(body.playback, body.score)) return false;
   return true;
+}
+
+function receivedPlaybackCitesScore(playback, score) {
+  const cited = playback.canonical_revision_id;
+  const revisionId = score.canonical_revision.revision_id;
+  return typeof cited === "string" && cited.trim() !== "" && cited === revisionId;
 }
 
 function projectionAccepted(wrapper, preview) {

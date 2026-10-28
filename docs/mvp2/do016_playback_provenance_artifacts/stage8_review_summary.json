@@ -1,0 +1,130 @@
+{
+  "stage": "DO-016 Stage 8",
+  "base": "http://127.0.0.1:52739",
+  "delivery_id": "delivery-stage8",
+  "injected_midi": true,
+  "midi_evidence": "Injected through navigator.requestMIDIAccess before page boot. Not a physical MIDI device.",
+  "physical_midi": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+  "physical_audio": "UNVERIFIED_AUDIO_OUTPUT",
+  "restart_witness": false,
+  "simulated_responses": [
+    {
+      "scenario": "revision-mismatch",
+      "operations": [
+        "prepare",
+        "begin"
+      ],
+      "mutation": "playback.canonical_revision_id",
+      "source": "mutated live response"
+    },
+    {
+      "scenario": "unknown-attempt",
+      "operation": "finish",
+      "status": 404,
+      "body": {
+        "error": "unknown_attempt"
+      },
+      "source": "simulated"
+    }
+  ],
+  "node": "v24.22.1",
+  "browser": "HeadlessChrome/156.0.8078.73",
+  "launch": {
+    "executablePath": "/tmp/mas-pr57-browser/chrome-headless-shell/linux-156.0.8078.73/chrome-headless-shell-linux64/chrome-headless-shell",
+    "puppeteerModule": "/tmp/inbox-smoke/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js",
+    "headless": "new",
+    "args": [
+      "--no-sandbox",
+      "--disable-dev-shm-usage",
+      "--autoplay-policy=no-user-gesture-required"
+    ]
+  },
+  "attempts": [
+    {
+      "label": "evaluated",
+      "attempt_id": "669ffa10-ae67-44b4-980b-8fc371c5aa4b",
+      "capture_id": "ceca79d5-8926-4a8e-9b15-0718829e4dae",
+      "performance_session_id": "d03c5006-c6aa-4041-9508-38b6c118d9b8",
+      "revision_id": "rev-036484ff348ddccfa42fa081"
+    },
+    {
+      "label": "interrupted",
+      "attempt_id": "49a6211e-6073-43cb-94df-75c8a803b3c4",
+      "capture_id": "380904e3-95d7-4260-823a-51460f04d641",
+      "performance_session_id": "07da1f83-21a4-4450-920f-944284a07e06",
+      "revision_id": "rev-036484ff348ddccfa42fa081"
+    },
+    {
+      "label": "append-failure",
+      "attempt_id": "096ab516-18dc-4405-8d62-de337dc3c727",
+      "capture_id": "5091d1ea-be79-4dc3-94e7-0bd1aa932e28",
+      "performance_session_id": "a5b9d333-cfc7-4f00-90b4-cf9f1a79b095",
+      "revision_id": "rev-036484ff348ddccfa42fa081"
+    },
+    {
+      "label": "unknown-attempt",
+      "attempt_id": "4ced7efb-a702-42ec-9d21-64fdcb385f92",
+      "capture_id": "be110847-dfb0-4ad8-aede-ad97015eb5d9",
+      "performance_session_id": "e216ba0d-4b74-45ef-82ab-eeaa25502f9b",
+      "revision_id": "rev-036484ff348ddccfa42fa081"
+    },
+    {
+      "label": "unknown-attempt",
+      "attempt_id": "f7a0436c-0c1e-44a9-8cfb-f17713c04d50",
+      "capture_id": "bf5a4a99-4b98-4d09-8a4a-38701b99edcf",
+      "performance_session_id": "e40e2953-7569-46d3-9cd0-8457d7381299",
+      "revision_id": "rev-036484ff348ddccfa42fa081"
+    },
+    {
+      "label": "revision-mismatch",
+      "attempt_id": "771ecf95-40fb-4882-a13d-89117c5c0104",
+      "capture_id": "fd98ba06-d70b-4727-9e26-ade4a3dc9d6d",
+      "performance_session_id": "e8bbc752-6f8c-4884-865f-15e5db037cc7",
+      "revision_id": "rev-036484ff348ddccfa42fa081"
+    }
+  ],
+  "request_counts": {
+    "begin": 6,
+    "message": 8,
+    "finish": 3,
+    "cancel": 3,
+    "guided": 0,
+    "performance": 0
+  },
+  "failures": 0,
+  "notes": [
+    "PASS custom lesson title — Stage 8 Received Etude",
+    "PASS reference practice is available before an attempt",
+    "PASS MIDI is injected before boot",
+    "PASS injected notes were delivered to the connected input",
+    "PASS two contexts receive two attempt ids — 669ffa10-ae67-44b4-980b-8fc371c5aa4b, 49a6211e-6073-43cb-94df-75c8a803b3c4",
+    "PASS the other context is still capturing — Capturing.",
+    "PASS the other context has no evaluation",
+    "PASS cancellation shows interruption — The attempt was cancelled.",
+    "PASS interruption has no evaluation claim",
+    "PASS six notes were acknowledged — Capturing.",
+    "PASS evaluation is shown — Evaluated.",
+    "PASS matched missing and extra counts are shown — Attempt feedbackAttempt: 669ffa10-ae67-44b4-980b-8fc371c5aa4bMatched: 1Missing: 2Extra: 2expected_note_missing: An expected lesson note was not observed.expected_note_missing: An expected lesson note was not observed.unexpected_note: An ext",
+    "PASS server hardware status stays unverified",
+    "PASS feedback does not claim lesson completion",
+    "PASS narrow attempt control meets the tap height — 40",
+    "console append-failure: Failed to load resource: net::ERR_FAILED",
+    "PASS an aborted append does not evaluate — A captured message was not accepted.",
+    "PASS aborted append shows no matched count — Attempt interruptedAttempt: 096ab516-18dc-4405-8d62-de337dc3c727No evaluation was produced.MIDI input: UNVERIFIED_PHYSICAL_MIDI_INPUTAudio output: UNVERIFIED_AUDIO_OUTPUT",
+    "PASS aborted append sends no finish — 0",
+    "PASS the aborted message was intercepted",
+    "console unknown-attempt: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "NOTE the unknown-attempt finish is a simulated 404, not a restarted server.",
+    "PASS a lost attempt says the server no longer has it — The server no longer has this attempt. The attempt was not evaluated. Keep practicing or start a new attempt.",
+    "PASS a lost attempt claims no evaluation",
+    "PASS a lost attempt offers no finish retry",
+    "PASS a lost attempt returns to reference practice — {\"feedback\":\"\",\"retryHidden\":true,\"startEnabled\":true,\"playEnabled\":true,\"refreshEnabled\":true}",
+    "PASS a lost attempt allows a new attempt",
+    "PASS the next attempt after a lost one is evaluated — Evaluated.",
+    "PASS revision mismatch blocks reference playback before mount",
+    "PASS invalid preparation gives a recovery action",
+    "PASS revision mismatch cancels the unusable Begin without capture",
+    "PASS rejected Begin restores ordinary practice",
+    "NOTE revision mismatches are simulated response mutations, not a changed server lesson."
+  ]
+}

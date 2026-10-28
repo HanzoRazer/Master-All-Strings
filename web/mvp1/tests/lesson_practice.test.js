@@ -420,6 +420,57 @@ test("preview and choice failures never prepare", async () => {
   assert.equal(invalid.record.runtimes.length, 0);
 });
 
+test("a received revision mismatch blocks reference mount and refresh can recover", async () => {
+  let response = preparationBody();
+  response.playback.canonical_revision_id = "rev-stale-playback";
+  const page = await mount({
+    preview: () => ok(previewBody()),
+    getChoice: () => ok(choiceBody()),
+    prepare: () => ok(response),
+  });
+  assert.equal(page.record.runtimes.length, 0);
+  assert.equal(page.q("btn-play").disabled, true);
+  assert.equal(page.q("btn-start-attempt").disabled, true);
+  assert.equal(page.q("sound-enabled").checked, false);
+  assert.match(page.q("status").textContent, /Refresh the lesson or reopen it from the inbox/);
+  response = preparationBody();
+  page.q("refresh-lesson").click();
+  await page.ui.idle();
+  assert.equal(page.record.runtimes.length, 1);
+  assert.equal(page.q("btn-play").disabled, false);
+  assert.equal(page.record.runtimes[0].played, undefined);
+});
+
+test("an inconsistent Begin revision is cancelled before an attempt runtime mounts", async () => {
+  const attempt = beginDocument({ revisionId: "rev-new-score" });
+  attempt.preparation.playback.canonical_revision_id = "rev-old-playback";
+  const midi = midiStub();
+  const transport = attemptCalls();
+  transport.next = {
+    begin: () => ok(attempt, 201),
+    cancel: () => ok(interruptedDocument(attempt)),
+  };
+  const page = await mount({
+    preview: () => ok(previewBody()),
+    getChoice: () => ok(choiceBody()),
+    prepare: () => ok(preparationBody()),
+  }, { midi, attemptClient: transport, nowNs: () => 4_000_000 });
+  const reference = page.record.runtimes[0];
+  page.q("btn-enable-midi").click();
+  await page.ui.idle();
+  page.q("btn-start-attempt").click();
+  await page.ui.idle();
+  assert.deepEqual(transport.calls.map((call) => call.op), ["begin", "cancel"]);
+  assert.equal(transport.calls[1].body.attemptId, attempt.attempt_id);
+  assert.equal(page.record.runtimes.length, 1);
+  assert.equal(reference.played, undefined);
+  assert.equal(midi.connected, null);
+  assert.equal(page.q("btn-play").disabled, false);
+  assert.equal(page.q("btn-start-attempt").disabled, false);
+  assert.equal(page.q("attempt-feedback").textContent, "");
+  assert.match(page.q("attempt-status").textContent, /begin response could not be used/);
+});
+
 test("server text is rendered as text and a score view can fail alone", async () => {
   const preview = previewBody();
   preview.title = "<img src=x onerror=alert(1)>";

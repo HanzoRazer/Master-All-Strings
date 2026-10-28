@@ -24,6 +24,7 @@ from master_all_strings.education.assignment_delivery_serialization import (
 )
 from master_all_strings.lesson.models import LessonAssignmentV1, LessonRoutingV1
 from master_all_strings.lesson.serialization import deserialize_lesson_assignment
+from master_all_strings.mvp.application import MvpApplication
 from master_all_strings.mvp.lesson_delivery_api import (
     LESSON_DELIVERY_API_PREFIX,
     LESSON_DELIVERY_PREVIEW_PATH,
@@ -33,6 +34,7 @@ from master_all_strings.mvp.lesson_delivery_api import (
 )
 from master_all_strings.mvp.local_practice_preparation import preparation_to_dict
 from master_all_strings.mvp.local_server import serve_mvp_directory
+from master_all_strings.mvp.playback.serialization import compute_playback_plan_digest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLES = REPO_ROOT / "resources" / "lesson" / "examples"
@@ -177,6 +179,55 @@ def test_the_api_prepares_a_chosen_delivery(
     assert document["projection"]["demo_id"] is None
     assert "error" not in document
     assert set(document["score"]) == {"canonical_revision", "tab", "notation"}
+    revision_id = document["score"]["canonical_revision"]["revision_id"]
+    assert document["playback"]["canonical_revision_id"] == revision_id
+    assert document["score"]["tab"]["canonical_revision_id"] == revision_id
+    assert document["score"]["notation"]["canonical_revision_id"] == revision_id
+
+
+def test_injected_playback_failures_stay_sanitized(
+    api: LocalLessonDeliveryApi, assignment: LessonAssignmentV1, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sent = payload_for(assignment)
+    body = _choose(api, sent)
+    real = MvpApplication.run_assignment_json
+
+    def conflict(self: MvpApplication, payload: object) -> Any:
+        response = real(self, payload)
+        other = replace(response.playback_plan, canonical_revision_id="rev-other")
+        other = replace(other, playback_digest=compute_playback_plan_digest(other))
+        return replace(response, playback_plan=other)
+
+    monkeypatch.setattr(MvpApplication, "run_assignment_json", conflict)
+    status, response = api.handle_http("POST", LESSON_PRACTICE_PREPARATION_PATH, body)
+    assert status == 500
+    assert response == {"error": "internal server error"}
+    assert "PREPARED" not in json.dumps(response)
+    assert "rev-other" not in json.dumps(response)
+
+    def corrupt(self: MvpApplication, payload: object) -> Any:
+        response = real(self, payload)
+        stale = replace(response.playback_plan, playback_digest="sha256:" + "ab" * 32)
+        return replace(response, playback_plan=stale)
+
+    monkeypatch.setattr(MvpApplication, "run_assignment_json", corrupt)
+    status, response = api.handle_http("POST", LESSON_PRACTICE_PREPARATION_PATH, body)
+    assert status == 500
+    assert set(response) == {"error"}
+    assert "playback" not in response
+
+    def different_music(self: MvpApplication, payload: object) -> Any:
+        response = real(self, payload)
+        plan = response.playback_plan
+        event = replace(plan.events[0], midi_note=plan.events[0].midi_note + 1)
+        plan = replace(plan, events=(event, *plan.events[1:]))
+        plan = replace(plan, playback_digest=compute_playback_plan_digest(plan))
+        return replace(response, playback_plan=plan)
+
+    monkeypatch.setattr(MvpApplication, "run_assignment_json", different_music)
+    status, response = api.handle_http("POST", LESSON_PRACTICE_PREPARATION_PATH, body)
+    assert status == 500
+    assert response == {"error": "internal server error"}
 
 
 def test_direct_request_validation_rejects_the_body(

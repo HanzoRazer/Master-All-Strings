@@ -1333,3 +1333,66 @@ input. Scheduled audio is not certified speaker output. This stage does not
 open a guided session, execute a recommendation, store durable history, or
 claim that a lesson is complete.
 
+## MAS-PLAYBACK-PROVENANCE-001 — bind received playback to its score revision
+
+| Field | Value |
+| --- | --- |
+| Branch | `agent/mas-playback-provenance-001` |
+| Base | `67e909bd1d21fa9546641f13a807539273b1af11` |
+| Tested source | `ddb79a5047f4db7d63d01121b88cb9ee09ed5634` |
+| Tested tree | `6d53cc13c1c463edf4c107f2f0342d23b6026395` |
+| Predecessor | DO-016 Stage 9, PR #56, merged |
+
+This is a received-lesson successor. It is not a new DO-016 stage and it
+does not repair playback provenance for the legacy orchestration path.
+Stage 9's packet stays at `docs/mvp2/do016_integration_artifacts/` and still
+records `playback.canonical_revision_id` as null.
+
+A received preparation now copies the Core revision already present on that
+response onto the typed playback plan, then recomputes `playback_digest`.
+A plan that already cites that revision is kept. A different citation, or a
+digest that does not match the original plan, is refused. The browser
+requires the same equality before it mounts reference practice or an
+attempt. Legacy playback documents may still omit the field.
+
+Strict evidence mode is `--require-bound-playback`. Without that switch the
+Stage 9 packet still verifies. With it, the Stage 9 packet fails on the
+null citation, and the fresh packet verifies.
+
+### Verification
+
+Measured on Linux after review fixes. Python 3.11.17, Node v24.22.1,
+Chrome Headless Shell 156.0.8078.73.
+CI runs pytest on Python 3.11. The fresh packet is
+`docs/mvp2/do016_playback_provenance_artifacts/evidence.json`.
+
+| Gate | Result |
+| --- | --- |
+| `ruff check src tests` and the verifier script | PASS |
+| `mypy` | PASS, 173 source files |
+| `pytest --cov --cov-report=term-missing` | 3563 passed, 3 skipped, 95.35% |
+| `npm test` in `web/mvp1` | 593 passed, 0 failed |
+| Stage 6 witness | PASS, 0 failures |
+| Stage 8 witness | PASS, 0 failures; begin 6, message 8, finish 3, cancel 3. Its 404 and revision mutations are simulated. |
+| Integration witness | PASS, 0 failures; epochs A/B/C pids 9, 155, 199 |
+| Strict evidence verifier | PASS on the fresh packet |
+| Legacy evidence verifier | PASS on the Stage 9 packet; that packet fails strict mode |
+| DO-015 predecessor checks | PASS; smoke summary restored |
+
+The bound T1 preparation cites `rev-cf73ae5afa337ebe334e924b` and digest
+`sha256:dbdb6d0d891bd71e56ce826794c21887cf66a279fbf78048c166337efc6427e5`.
+The Stage 9 recording of the same lesson cites null and digest
+`sha256:c0c0ddd11b2d2140462ddecc4e02e6ad33813b80759399fa6f780607d356e4c3`.
+
+Review also reproduced playback content drift despite a valid self-digest.
+Before attaching a citation, preparation now uses the existing playback
+builder to check the score's events/tick basis at the effective playback
+tempo against the plan's events, timeline, and duration. Eight mutations
+are rejected. The browser witnesses additionally show that mismatched
+preparation and Begin responses never mount a new runtime. Invalid
+reference preparation offers refresh/reopen recovery. Server revision
+conflicts log expected/actual IDs without exposing them in HTTP errors.
+
+Frozen `browser_smoke_summary.json` remains
+`11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
+

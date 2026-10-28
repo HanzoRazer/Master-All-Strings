@@ -12,7 +12,7 @@ pull request merges the next branch clears it.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| DO-016 Stage 9 | agent/do016-integration-recovery-s09 | Cursor | #56 | 7a1aecfb2ab4b03872a571fbebaca7ee22418093 | green | 2026-10-27 |
+| MAS-PLAYBACK-PROVENANCE-001 | agent/mas-playback-provenance-001 | Cursor / Codex review fixes | #57 | 67e909bd1d21fa9546641f13a807539273b1af11 | green | 2026-10-28 |
 
 An empty table means nothing is in flight.
 

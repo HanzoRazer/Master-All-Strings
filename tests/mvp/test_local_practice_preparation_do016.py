@@ -8,7 +8,8 @@ before any of those artifacts are returned.
 
 from __future__ import annotations
 
-from dataclasses import replace
+import json
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
 
@@ -49,6 +50,7 @@ from master_all_strings.mvp.local_practice_preparation import (
     UnsupportedInstrumentError,
     preparation_to_dict,
 )
+from master_all_strings.mvp.playback.serialization import compute_playback_plan_digest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLES = REPO_ROOT / "resources" / "lesson" / "examples"
@@ -150,6 +152,202 @@ def test_receive_preview_choose_prepare_matches_the_choice(application: MvpAppli
     assert serialize_lesson_assignment(deliveries.get(envelope.delivery_id).assignment) == (
         serialize_lesson_assignment(assignment)
     )
+
+
+def _capture_pipeline(prepared: LocalPracticePreparationService, monkeypatch: pytest.MonkeyPatch):
+    captured: dict[str, Any] = {}
+    real = prepared.application.run_assignment_json
+
+    def spy(payload: object) -> Any:
+        response = real(payload)
+        captured["response"] = response
+        captured["plan"] = response.playback_plan
+        return response
+
+    monkeypatch.setattr(prepared.application, "run_assignment_json", spy)
+    return captured
+
+
+def test_prepared_playback_cites_the_score_revision_and_keeps_its_content(
+    application: MvpApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    deliveries, choices, prepared = service_for(application)
+    envelope = receive(deliveries, load("local_midi_basic.json"))
+    choose_pins(choices, envelope)
+    captured = _capture_pipeline(prepared, monkeypatch)
+    document = preparation_to_dict(
+        prepared.prepare(
+            envelope.delivery_id,
+            envelope.assignment_artifact_digest,
+            envelope.assignment_behavior_digest,
+        )
+    )
+    original = captured["plan"]
+    revision_id = document["score"]["canonical_revision"]["revision_id"]
+    bound = replace(original, canonical_revision_id=revision_id)
+    bound = replace(bound, playback_digest=compute_playback_plan_digest(bound))
+    playback = document["playback"]
+    assert playback["canonical_revision_id"] == revision_id
+    assert playback["playback_digest"] == bound.playback_digest
+    assert document["score"]["tab"]["canonical_revision_id"] == revision_id
+    assert document["score"]["notation"]["canonical_revision_id"] == revision_id
+    exported = json.loads(json.dumps(asdict(original)))
+    compared = dict(playback)
+    assert exported["canonical_revision_id"] is None
+    for field in ("canonical_revision_id", "playback_digest"):
+        exported.pop(field)
+        compared.pop(field)
+    assert compared == exported
+    assert captured["response"].playback_plan is original
+    assert original.canonical_revision_id is None
+
+
+def test_an_existing_matching_citation_is_preserved(
+    application: MvpApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    deliveries, choices, prepared = service_for(application)
+    envelope = receive(deliveries, load("local_midi_basic.json"))
+    choose_pins(choices, envelope)
+    real = prepared.application.run_assignment_json
+    captured: dict[str, Any] = {}
+
+    def matching(payload: object) -> Any:
+        response = real(payload)
+        revision_id = response.score.revision.revision_id
+        cited = replace(response.playback_plan, canonical_revision_id=revision_id)
+        cited = replace(cited, playback_digest=compute_playback_plan_digest(cited))
+        captured["plan"] = cited
+        return replace(response, playback_plan=cited)
+
+    monkeypatch.setattr(prepared.application, "run_assignment_json", matching)
+    document = preparation_to_dict(
+        prepared.prepare(
+            envelope.delivery_id,
+            envelope.assignment_artifact_digest,
+            envelope.assignment_behavior_digest,
+        )
+    )
+    assert document["playback"]["canonical_revision_id"] == captured["plan"].canonical_revision_id
+    assert document["playback"]["playback_digest"] == captured["plan"].playback_digest
+    assert captured["plan"].canonical_revision_id == (
+        document["score"]["canonical_revision"]["revision_id"]
+    )
+
+
+def test_a_conflicting_playback_citation_is_refused(
+    application: MvpApplication, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    deliveries, choices, prepared = service_for(application)
+    envelope = receive(deliveries, load("local_midi_basic.json"))
+    choose_pins(choices, envelope)
+    real = prepared.application.run_assignment_json
+    captured: dict[str, Any] = {}
+
+    def conflict(payload: object) -> Any:
+        response = real(payload)
+        captured["plan"] = response.playback_plan
+        other = replace(response.playback_plan, canonical_revision_id="rev-other")
+        other = replace(other, playback_digest=compute_playback_plan_digest(other))
+        return replace(response, playback_plan=other)
+
+    monkeypatch.setattr(prepared.application, "run_assignment_json", conflict)
+    with pytest.raises(PreparationFailure) as caught:
+        prepared.prepare(
+            envelope.delivery_id,
+            envelope.assignment_artifact_digest,
+            envelope.assignment_behavior_digest,
+        )
+    assert "rev-other" not in str(caught.value)
+    assert captured["plan"].canonical_revision_id is None
+    assert "Received playback revision mismatch: expected=" in caplog.text
+    assert "actual='rev-other'" in caplog.text
+
+
+def test_a_response_without_a_score_is_not_bound(
+    application: MvpApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    deliveries, choices, prepared = service_for(application)
+    envelope = receive(deliveries, load("local_midi_basic.json"))
+    choose_pins(choices, envelope)
+    real = prepared.application.run_assignment_json
+
+    def unscored(payload: object) -> Any:
+        return replace(real(payload), score=None)
+
+    monkeypatch.setattr(prepared.application, "run_assignment_json", unscored)
+    with pytest.raises(PreparationFailure) as caught:
+        prepared.prepare(
+            envelope.delivery_id,
+            envelope.assignment_artifact_digest,
+            envelope.assignment_behavior_digest,
+        )
+    assert "score" in str(caught.value)
+
+
+def test_a_stale_playback_digest_is_refused_before_rebinding(
+    application: MvpApplication, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    deliveries, choices, prepared = service_for(application)
+    envelope = receive(deliveries, load("local_midi_basic.json"))
+    choose_pins(choices, envelope)
+    real = prepared.application.run_assignment_json
+
+    def corrupt(payload: object) -> Any:
+        response = real(payload)
+        stale = replace(response.playback_plan, playback_digest="sha256:" + "ab" * 32)
+        return replace(response, playback_plan=stale)
+
+    monkeypatch.setattr(prepared.application, "run_assignment_json", corrupt)
+    with pytest.raises(PreparationFailure) as caught:
+        prepared.prepare(
+            envelope.delivery_id,
+            envelope.assignment_artifact_digest,
+            envelope.assignment_behavior_digest,
+        )
+    assert "sha256:" not in str(caught.value)
+
+
+@pytest.mark.parametrize(
+    "changed",
+    ["midi_note", "velocity", "cents_offset", "onset_seconds", "release_seconds",
+     "ticks_per_quarter", "total_ticks", "total_seconds"],
+)
+def test_a_valid_digest_cannot_bind_different_music_to_the_revision(
+    application: MvpApplication, monkeypatch: pytest.MonkeyPatch, changed: str
+) -> None:
+    deliveries, choices, prepared = service_for(application)
+    envelope = receive(deliveries, load("local_midi_basic.json"))
+    choose_pins(choices, envelope)
+    real = prepared.application.run_assignment_json
+
+    def drift(payload: object) -> Any:
+        response = real(payload)
+        plan = response.playback_plan
+        if changed in {"ticks_per_quarter", "total_ticks"}:
+            timeline = replace(plan.timeline, **{changed: getattr(plan.timeline, changed) + 1})
+            plan = replace(plan, timeline=timeline)
+        elif changed == "total_seconds":
+            plan = replace(plan, total_seconds=plan.total_seconds + 1)
+        else:
+            event = plan.events[0]
+            value = getattr(event, changed)
+            offset = 0.01 if changed.endswith("seconds") else 1
+            if changed == "release_seconds":
+                offset = -0.01
+            event = replace(event, **{changed: (value or 0) + offset})
+            plan = replace(plan, events=(event, *plan.events[1:]))
+        plan = replace(plan, playback_digest=compute_playback_plan_digest(plan))
+        return replace(response, playback_plan=plan)
+
+    monkeypatch.setattr(prepared.application, "run_assignment_json", drift)
+    before = snapshot(deliveries, choices)
+    with pytest.raises(PreparationFailure, match="playback.*score"):
+        prepared.prepare(
+            envelope.delivery_id,
+            envelope.assignment_artifact_digest,
+            envelope.assignment_behavior_digest,
+        )
+    assert snapshot(deliveries, choices) == before
 
 
 def test_teacher_override_tempo_meter_and_simultaneous_notes_keep_their_shape(
@@ -281,6 +479,15 @@ def test_two_deliveries_of_one_assignment_stay_distinct(application: MvpApplicat
     assert left.delivery_id != right.delivery_id
     assert left.assignment_id == right.assignment_id
     assert left.assignment_artifact_digest == right.assignment_artifact_digest
+    left_document = preparation_to_dict(left)
+    right_document = preparation_to_dict(right)
+    left_revision = left_document["score"]["canonical_revision"]["revision_id"]
+    right_revision = right_document["score"]["canonical_revision"]["revision_id"]
+    assert left_document["playback"]["canonical_revision_id"] == left_revision
+    assert right_document["playback"]["canonical_revision_id"] == right_revision
+    assert left_document["playback"]["playback_digest"] == (
+        right_document["playback"]["playback_digest"]
+    )
 
 
 def test_repeating_preparation_writes_nothing(application: MvpApplication) -> None:
@@ -305,7 +512,9 @@ def test_repeating_preparation_writes_nothing(application: MvpApplication) -> No
     )
     assert snapshot(deliveries, choices) == before
     assert first["delivery_id"] == second["delivery_id"] == envelope.delivery_id
-    assert set(first) == set(second)
+    assert first == second
+    revision_id = first["score"]["canonical_revision"]["revision_id"]
+    assert first["playback"]["canonical_revision_id"] == revision_id
 
 
 def test_a_delivery_without_a_choice_is_not_prepared(application: MvpApplication) -> None:
