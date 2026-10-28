@@ -1339,8 +1339,8 @@ claim that a lesson is complete.
 | --- | --- |
 | Branch | `agent/mas-playback-provenance-001` |
 | Base | `67e909bd1d21fa9546641f13a807539273b1af11` |
-| Tested source | `76f033a2e7660fb187225136ee3a5d5b1a88c1c6` |
-| Tested tree | `f7e53f1e17911d9ef8c5894077fc64ad6d6c8cb0` |
+| Tested source | `ddb79a5047f4db7d63d01121b88cb9ee09ed5634` |
+| Tested tree | `6d53cc13c1c463edf4c107f2f0342d23b6026395` |
 | Predecessor | DO-016 Stage 9, PR #56, merged |
 
 This is a received-lesson successor. It is not a new DO-016 stage and it
@@ -1361,7 +1361,8 @@ null citation, and the fresh packet verifies.
 
 ### Verification
 
-Measured on Linux. Python 3.12.3, Node v22.23.4, Chrome 148.0.7778.96.
+Measured on Linux after review fixes. Python 3.11.17, Node v24.22.1,
+Chrome Headless Shell 156.0.8078.73.
 CI runs pytest on Python 3.11. The fresh packet is
 `docs/mvp2/do016_playback_provenance_artifacts/evidence.json`.
 
@@ -1369,11 +1370,11 @@ CI runs pytest on Python 3.11. The fresh packet is
 | --- | --- |
 | `ruff check src tests` and the verifier script | PASS |
 | `mypy` | PASS, 173 source files |
-| `pytest --cov --cov-report=term-missing` | 3554 passed, 3 skipped, 95.34% |
-| `npm test` in `web/mvp1` | 591 passed, 0 failed |
+| `pytest --cov --cov-report=term-missing` | 3563 passed, 3 skipped, 95.35% |
+| `npm test` in `web/mvp1` | 593 passed, 0 failed |
 | Stage 6 witness | PASS, 0 failures |
-| Stage 8 witness | PASS, 0 failures; begin 5, message 8, finish 3, cancel 2. Its 404 is simulated. |
-| Integration witness | PASS, 0 failures; epochs A/B/C pids 7018, 7373, 7403 |
+| Stage 8 witness | PASS, 0 failures; begin 6, message 8, finish 3, cancel 3. Its 404 and revision mutations are simulated. |
+| Integration witness | PASS, 0 failures; epochs A/B/C pids 9, 155, 199 |
 | Strict evidence verifier | PASS on the fresh packet |
 | Legacy evidence verifier | PASS on the Stage 9 packet; that packet fails strict mode |
 | DO-015 predecessor checks | PASS; smoke summary restored |
@@ -1382,6 +1383,15 @@ The bound T1 preparation cites `rev-cf73ae5afa337ebe334e924b` and digest
 `sha256:dbdb6d0d891bd71e56ce826794c21887cf66a279fbf78048c166337efc6427e5`.
 The Stage 9 recording of the same lesson cites null and digest
 `sha256:c0c0ddd11b2d2140462ddecc4e02e6ad33813b80759399fa6f780607d356e4c3`.
+
+Review also reproduced playback content drift despite a valid self-digest.
+Before attaching a citation, preparation now uses the existing playback
+builder to check the score's events/tick basis at the effective playback
+tempo against the plan's events, timeline, and duration. Eight mutations
+are rejected. The browser witnesses additionally show that mismatched
+preparation and Begin responses never mount a new runtime. Invalid
+reference preparation offers refresh/reopen recovery. Server revision
+conflicts log expected/actual IDs without exposing them in HTTP errors.
 
 Frozen `browser_smoke_summary.json` remains
 `11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.

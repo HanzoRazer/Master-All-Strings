@@ -1,135 +1,160 @@
 # MAS-PLAYBACK-PROVENANCE-001
 
-Received-lesson playback now cites the canonical score revision that the
-same preparation already carries. This is a software change on that path
-only. It does not repair legacy orchestration provenance, and it does not
-certify physical MIDI, speaker output, persistence, remote delivery, or
-lesson completion.
+Received-lesson playback cites the Core score revision in its preparation.
+Before binding, the producer also verifies that the playback content
+corresponds to that score's events at the plan's effective tempo. The browser
+requires matching citations before mounting reference practice or an attempt.
 
-## Before and after
+Software acceptance does not certify physical MIDI, speaker output,
+persistence, remote delivery, mastery, or lesson completion.
 
-A received preparation already contained a Core score revision, and TAB and
-notation cited it. The playback plan in that same response had
-`canonical_revision_id` null. The browser checked playback identity and
-events and did not require the revision to match.
+## Contract and compatibility
 
-The Stage 9 packet still records that older behavior. Its T1 preparation
-has playback citation `null` and digest
-`sha256:c0c0ddd11b2d2140462ddecc4e02e6ad33813b80759399fa6f780607d356e4c3`,
-while the score revision is `rev-cf73ae5afa337ebe334e924b`. Those bytes are
-unchanged. Legacy verification still accepts them. Strict verification
-rejects the null citation, which is the expected reading of that packet.
+The global playback schema is unchanged: `canonical_revision_id` remains
+optional for legacy standalone documents. A received preparation requires a
+nonblank string exactly equal to `score.canonical_revision.revision_id`.
+The expected revision comes from the server's captured preparation, never
+query parameters or local storage. No spelling/whitespace normalization occurs.
 
-After this order, preparation binds the typed plan before export:
+A fresh Begin may return a different, internally consistent revision for the
+same pinned lesson. This remains supported. A preparation whose playback
+and score cite different revisions is refused. There is no legacy exemption
+inside the received-preparation gate.
 
-- The original playback digest is verified first. A stale digest is refused
-  and is not replaced with a fresh one.
-- A null citation becomes the response's score revision, and
-  `playback_digest` is recomputed with `compute_playback_plan_digest`.
-- A citation that already matches is preserved.
-- A different non-null citation is `PreparationFailure`. HTTP returns
-  `{"error": "internal server error"}` and no preparation document. Begin
-  does not store an attempt.
+The historical Stage 9 packet at `docs/mvp2/do016_integration_artifacts/`
+is unchanged. It records the older null citation; legacy verification accepts
+it and strict verification rejects it. The current provenance packet under
+`do016_playback_provenance_artifacts/` is a fresh recording of the fixes.
 
-The fresh T1 preparation cites `rev-cf73ae5afa337ebe334e924b` on both the
-score and the playback plan. Its playback digest is
-`sha256:dbdb6d0d891bd71e56ce826794c21887cf66a279fbf78048c166337efc6427e5`.
-Begin's embedded preparation carries that same citation.
+## Production behavior and review findings
 
-## What changed
-
-```text
-branch         agent/mas-playback-provenance-001
-base           67e909bd1d21fa9546641f13a807539273b1af11
-tested source  76f033a2e7660fb187225136ee3a5d5b1a88c1c6
-tested tree    f7e53f1e17911d9ef8c5894077fc64ad6d6c8cb0
-```
-
-The tested tree was clean. `76f033a` contains the binding, the browser
-check, and strict evidence mode. The fresh packet, this report, the tranche
-note, and the assertion that reloads the packet come after that revision.
-
-Production edits are only:
+Only these production files change:
 
 - `src/master_all_strings/mvp/local_practice_preparation.py`
 - `web/mvp1/lesson_delivery_validation.js`
 
-`orchestrator.py`, playback models, serializers, schemas, and the legacy
-export path are unchanged. The global playback contract remains nullable.
-The received preparation imposes the equality.
+Preparation checks the original playback digest before binding. A stale digest
+fails; recomputation cannot repair it. A null citation is filled from the
+Core revision already in the response and the digest is recomputed. A
+matching citation is preserved. A conflicting citation is refused.
 
-## Environment and gates
+The review reproduced an additional defect on `67455a5`: changing pitch,
+velocity, cents offset, onset, release, ticks per quarter, total ticks, or total
+seconds and rehashing the plan still allowed it to acquire the score's citation.
+Eight regression cases now reject that drift.
 
-| Runtime | Version |
+The fix reuses the existing playback builder with the score's canonical events
+and tick basis plus the plan's effective tempo map. Events, timeline, and
+duration must match that authoritative derivation. Teacher tempo overrides
+remain playback instructions; the authored score tempo is not substituted
+for the effective map. No second timing algorithm is introduced.
+
+Internal failures remain sanitized HTTP 500 responses with no partial
+PREPARED document. Conflicting citations log expected/actual opaque revision
+IDs server-side using repr formatting. Public errors disclose neither ID.
+
+Browser validation already covered missing, null, blank, wrong-type, and
+different citations. Invalid reference preparation now also tells the person
+to refresh the lesson or reopen it from the inbox. New page integration tests
+prove an inconsistent preparation mounts no runtime, refresh recovers, and
+an inconsistent Begin is cancelled without MIDI capture or an attempt mount.
+Existing positive tests preserve coherent fresh Begin revisions.
+
+The expanded Stage 8 browser driver exercises the same reference and Begin
+rejections using explicitly labeled mutations of live responses. Stage 6 now
+reads the same browser/module environment settings as the other witnesses,
+retaining its original Linux defaults. These are test-harness changes beyond
+the original PR file list, authorized by the request for review fixes.
+
+`orchestrator.py`, schemas, legacy exports, dependencies, and musical,
+transport, and audio algorithms are unchanged.
+
+## Tested identities and environment
+
+| Item | Value |
 | --- | --- |
-| Python | 3.12.3 locally; CI uses 3.11 |
-| Node | v22.23.4 |
-| Chrome | 148.0.7778.96 |
-| OS | Linux |
-| Witness clock | 7:45:24 PM CDT on October 27, 2026 |
+| Branch | `agent/mas-playback-provenance-001` |
+| Base | `67e909bd1d21fa9546641f13a807539273b1af11` |
+| Reviewed head before fixes | `67455a5b3c755349cec2a0ddad5adf400994b9a5` |
+| Fresh integration tested source | `ddb79a5047f4db7d63d01121b88cb9ee09ed5634` |
+| Fresh integration tested tree | `6d53cc13c1c463edf4c107f2f0342d23b6026395` |
+| Python | 3.11.17 |
+| Node | v24.22.1 |
+| Browser | Chrome Headless Shell 156.0.8078.73 |
+| Platform | Linux |
+
+The integration ran from a clean tree. Later commits change only documentation,
+evidence, and the register. The original witness at `76f033a` is not cited
+as verification of these review fixes.
+
+Full Chrome could not create its process-singleton socket in this environment.
+Chrome Headless Shell launched with the checked-in arguments. No driver source
+was rewritten in scratch for these runs.
+
+## Verification
 
 | Gate | Result |
 | --- | --- |
-| `ruff check src tests` | PASS |
-| `ruff` on `scripts/verify_do016_integration_evidence.py` | PASS |
-| `mypy` | PASS, 173 source files |
-| `pytest --cov --cov-report=term-missing` | 3554 passed, 3 skipped, 95.34% in 87.42s on `76f033a` |
-| `npm test` in `web/mvp1` | 591 passed, 0 failed |
-| Stage 6 witness | PASS, 0 failures |
-| Stage 8 witness | PASS, 0 failures; begin 5, message 8, finish 3, cancel 2 |
-| Integration witness | PASS, 0 failures |
-| Strict verifier on the fresh packet | PASS |
-| Legacy verifier on the Stage 9 packet | PASS |
-| Strict verifier on the Stage 9 packet | FAIL, null playback citation |
-| `verify_do015_certification.py` | OK (9 of 9) |
-| `verify_do015_publication.py` | OK (8 of 8) |
-| `build_do015_certification_evidence.py --check` | OK |
-| `check_in_flight.py` | OK (1 row, 0 notes) |
-| DO-015 certification capture | exit 0, `CLOSED`, 3 attempts |
+| Ruff on src/tests and verifier | PASS |
+| mypy | PASS, 173 source files |
+| Python 3.11 pytest with coverage | 3563 passed, 3 skipped, 95.35% |
+| Frontend npm test | 593 passed, 0 failed |
+| Stage 6 browser witness | PASS, 0 failures |
+| Expanded Stage 8 browser witness | PASS, 0 failures |
+| Fresh integration witness | PASS, 0 failures |
+| Strict verifier, fresh packet | PASS |
+| Legacy verifier, historical Stage 9 packet | PASS |
+| DO-015 certification verifier | OK, 9 of 9 |
+| DO-015 publication verifier | OK, 8 of 8 |
+| DO-015 evidence generator --check | OK |
+| DO-015 certification capture | CLOSED, 3 attempts |
+| In-flight register | OK; remote PR reconciliation independently checked |
 
-The assertion that reloads the committed provenance packet passed after that
-suite. It does not change the drivers the witness executed.
+The register CLI noted `gh` was unavailable. GitHub plugin data independently
+returned only PR #57 on this branch; feeding that snapshot and the actual
+remote branches into its reconciliation function produced no failures/notes.
 
-Restart epochs on one origin: A pid 7018, B pid 7373, C pid 7403, each with
-`delivery_count_at_ready` 0. Stage 8's unknown-attempt finish remains
-simulated. The integration 404s come from the restarted process.
+Stage 8 records Begin 6, message 8, Finish 3, Cancel 3, guided 0,
+performance 0. Its revision mismatches and unknown-attempt 404 are simulated.
+For the mismatch cases, requests reach the live server and only the returned
+citation is mutated; an unusable Begin is cancelled against its stored attempt.
+They do not claim an actual server lesson changed.
 
-The DO-015 capture rewrote `docs/mvp2/do015_artifacts/browser_smoke_summary.json`
-and that file was restored. Its sha256 is
+The integration witness performs real restarts: epochs A/B/C have PIDs
+9, 155, and 199 on one localhost origin. Lost-Finish retry still returns the
+complete stored result without another Begin or append. The retained strict
+verifier checks citations/digests; producer consistency regressions check
+semantic correspondence before binding.
+
+The DO-015 capture rewrote its known generated smoke summary. Its original
+bytes were restored immediately afterward; frozen DO-015 and historical Stage 9
+evidence are unchanged. Frozen smoke-summary SHA-256 remains
 `11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
-The other frozen DO-015 files were unchanged:
 
-| File | sha256 |
-| --- | --- |
-| `certification_scenarios.json` | `e8543ac32ac131c98e02dac418bbaf818ccb82f80a3fc8f37d543937f0ec75c0` |
-| `certified_session.json` | `8dd997eb492a992347d627509b81b39793ca045a505b4b7494b4c8b0b95315fe` |
-| `ci_seal.json` | `355d1e3f38cf2f3b0babdab1a706a377758c78a14427d33390626685d7397d19` |
+## Reproduction
 
-## Commands
+Configure `DO016_CHROME_EXECUTABLE` and `DO016_PUPPETEER_MODULE` to an
+installed Chrome/Headless Shell executable and Puppeteer module respectively.
+Stage 6 reads these variables; the other drivers accept them or matching flags.
 
 ```bash
-python scripts/smoke_do016_integration.py /tmp/mas-playback-provenance-run \
-  --chrome-executable /usr/local/bin/google-chrome \
-  --puppeteer-module /tmp/inbox-smoke/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js
+python scripts/smoke_do016_received_practice.py /tmp/mas-playback-s06
+python scripts/smoke_do016_received_attempt.py /tmp/mas-playback-s08
+python scripts/smoke_do016_integration.py /tmp/mas-playback-provenance-run
 python scripts/verify_do016_integration_evidence.py \
   docs/mvp2/do016_playback_provenance_artifacts/evidence.json \
   --root . --require-bound-playback
 python scripts/verify_do016_integration_evidence.py \
   docs/mvp2/do016_integration_artifacts/evidence.json --root .
-python scripts/smoke_do016_received_practice.py /tmp/mas-playback-s06
-python scripts/smoke_do016_received_attempt.py /tmp/mas-playback-s08 \
-  --chrome-executable /usr/local/bin/google-chrome \
-  --puppeteer-module /tmp/inbox-smoke/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js
 ```
 
-## Limits that remain
+Exact integration paths and versions are in the retained packet. The Stage 8
+review summary is retained alongside it. Hosted CI status on the final head
+is recorded in the PR body after the push.
 
-- Legacy and demo playback plans can still omit `canonical_revision_id`.
-  This order does not change `orchestrator.py`.
-- An unconfirmed begin is still not repeated.
-- Deliveries, choices, and attempts still die with the process.
-- One evaluation is not mastery or lesson completion.
-- MIDI in the witness was injected. Physical input and speaker output stay
-  unverified.
-- Windows checkout line endings are a separate maintenance order. Nothing
-  here normalizes files or relaxes a gate.
+## Limits
+
+Legacy/demo playback remains nullable. Lost Begin remains unrecoverable.
+Deliveries, choices, and attempts die with the process. Injected MIDI and
+headless scheduling do not certify hardware. Windows line-ending policy is
+unchanged. One evaluated attempt does not establish mastery or completion.
