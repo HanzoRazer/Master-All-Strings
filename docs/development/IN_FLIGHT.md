@@ -12,7 +12,7 @@ pull request merges the next branch clears it.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| MAS-PLAYBACK-PROVENANCE-001 | agent/mas-playback-provenance-001 | Cursor | — | 67e909bd1d21fa9546641f13a807539273b1af11 | in flight | 2026-10-27 |
+| MAS-PLAYBACK-PROVENANCE-001 | agent/mas-playback-provenance-001 | Cursor | #57 | 67e909bd1d21fa9546641f13a807539273b1af11 | green | 2026-10-27 |
 
 An empty table means nothing is in flight.
 
