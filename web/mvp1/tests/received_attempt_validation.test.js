@@ -45,6 +45,18 @@ test("begin accepts the server snapshot, including a different revision", () => 
   assert.notEqual(begun.preparation.score.canonical_revision.revision_id, "rev-received");
 });
 
+test("begin rejects an unbound playback revision through preparation checks", () => {
+  const citations = [null, "", "   ", 7, "rev-other"];
+  for (const cited of citations) {
+    const body = beginDocument();
+    body.preparation.playback.canonical_revision_id = cited;
+    assert.equal(acceptBegin(body, preview, choice).ok, false, String(cited));
+  }
+  const missing = beginDocument();
+  delete missing.preparation.playback.canonical_revision_id;
+  assert.equal(acceptBegin(missing, preview, choice).ok, false);
+});
+
 test("begin rejects schema, version, status, shape, and policy changes", () => {
   const cases = [];
   const wrongSchema = beginDocument();

@@ -151,6 +151,41 @@ test("preparation rejects closed-document, pin, score, and timing faults", () =>
   }
 });
 
+test("a received preparation requires the playback revision to match the score", () => {
+  const preview = previewBody();
+  const choice = choiceBody();
+  assert.equal(preparationMatches(preparationBody(), preview, choice), true);
+  const mutations = [
+    (body) => {
+      delete body.playback.canonical_revision_id;
+    },
+    (body) => {
+      body.playback.canonical_revision_id = null;
+    },
+    (body) => {
+      body.playback.canonical_revision_id = "";
+    },
+    (body) => {
+      body.playback.canonical_revision_id = "   ";
+    },
+    (body) => {
+      body.playback.canonical_revision_id = 7;
+    },
+    (body) => {
+      body.playback.canonical_revision_id = "rev-other";
+    },
+  ];
+  for (const mutate of mutations) {
+    const body = preparationBody();
+    mutate(body);
+    assert.equal(preparationMatches(body, preview, choice), false);
+    assert.deepEqual(acceptPreparation(httpOk(body), preview, choice), {
+      ok: false,
+      invalid: true,
+    });
+  }
+});
+
 test("HTTP failures stay distinct from a malformed success", () => {
   const preview = previewBody();
   const choice = choiceBody();
