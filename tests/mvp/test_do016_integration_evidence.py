@@ -20,6 +20,14 @@ from typing import Any
 
 import pytest
 
+from master_all_strings.core.musical_events import MusicalEvent
+from master_all_strings.core.score.tempo import tempo_from_bpm
+from master_all_strings.mvp.playback.builder import build_lesson_playback_plan
+from master_all_strings.mvp.playback.serialization import (
+    compute_playback_plan_digest,
+    serialize_lesson_playback_plan,
+)
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER = REPO_ROOT / "scripts" / "verify_do016_integration_evidence.py"
 DRIVER = REPO_ROOT / "scripts" / "smoke_do016_integration.py"
@@ -622,6 +630,147 @@ def test_retained_packet_matches_its_bytes(verifier: ModuleType) -> None:
     path = REPO_ROOT / "docs/mvp2/do016_integration_artifacts/evidence.json"
     packet = json.loads(path.read_text(encoding="utf-8"))
     assert verifier.verify_evidence(packet, frozen_root=REPO_ROOT) == []
+
+
+def _playback_document(revision: str, midi_note: int = 64) -> dict[str, Any]:
+    plan = build_lesson_playback_plan(
+        assignment_id="assignment-stage9",
+        content_id="content-stage9",
+        events=(
+            MusicalEvent(
+                event_id="ev-1",
+                midi_note=midi_note,
+                start_tick=0,
+                duration_ticks=480,
+            ),
+        ),
+        ticks_per_quarter=480,
+        tempo_changes=(tempo_from_bpm(120),),
+        canonical_revision_id=revision,
+    )
+    document = json.loads(serialize_lesson_playback_plan(plan))
+    assert isinstance(document, dict)
+    return document
+
+
+def _response_of(exchange: dict[str, Any]) -> dict[str, Any]:
+    raw = base64.b64decode(exchange["response_base64"])
+    parsed = json.loads(raw)
+    assert isinstance(parsed, dict)
+    return parsed
+
+
+def _reseal(exchange: dict[str, Any], response: dict[str, Any]) -> None:
+    raw = json.dumps(response).encode()
+    exchange["response_base64"] = base64.b64encode(raw).decode()
+    exchange["response_sha256"] = hashlib.sha256(raw).hexdigest()
+
+
+def _with_bound_playback(packet: dict[str, Any], playback: dict[str, Any]) -> dict[str, Any]:
+    bound = copy.deepcopy(packet)
+    for exchange in bound["exchanges"]:
+        if exchange["operation"] == "prepare" and exchange["status"] == 200:
+            body = _response_of(exchange)
+            body["score"] = {"canonical_revision": {"revision_id": REVISION}}
+            body["playback"] = copy.deepcopy(playback)
+            _reseal(exchange, body)
+        if exchange["operation"] == "begin" and exchange["status"] == 201:
+            body = _response_of(exchange)
+            body["preparation"]["playback"] = copy.deepcopy(playback)
+            _reseal(exchange, body)
+    return bound
+
+
+def test_document_digest_matches_the_typed_playback_plan(verifier: ModuleType) -> None:
+    playback = _playback_document(REVISION)
+    plan = build_lesson_playback_plan(
+        assignment_id="assignment-stage9",
+        content_id="content-stage9",
+        events=(
+            MusicalEvent(event_id="ev-1", midi_note=64, start_tick=0, duration_ticks=480),
+        ),
+        ticks_per_quarter=480,
+        tempo_changes=(tempo_from_bpm(120),),
+        canonical_revision_id=REVISION,
+    )
+    assert verifier.document_playback_digest(playback) == compute_playback_plan_digest(plan)
+    assert verifier.document_playback_digest(playback) == plan.playback_digest
+
+
+def test_strict_mode_accepts_bound_playback(verifier: ModuleType, tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    packet = _with_bound_playback(
+        _packet(root / "docs" / "mvp2" / "do015_artifacts"),
+        _playback_document(REVISION),
+    )
+    assert verifier.verify_evidence(packet, frozen_root=root, require_bound_playback=True) == []
+
+
+def test_strict_mode_rejects_playback_mutations(verifier: ModuleType, tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    playback = _playback_document(REVISION)
+    base = _with_bound_playback(
+        _packet(root / "docs" / "mvp2" / "do015_artifacts"),
+        playback,
+    )
+
+    missing = copy.deepcopy(base)
+    prepare = next(item for item in missing["exchanges"] if item["operation"] == "prepare")
+    body = _response_of(prepare)
+    body["playback"]["canonical_revision_id"] = None
+    _reseal(prepare, body)
+    missing_problems = verifier.verify_evidence(
+        missing, frozen_root=root, require_bound_playback=True
+    )
+    assert any("playback revision is missing" in item for item in missing_problems)
+    assert all("sha256 does not match" not in item for item in missing_problems)
+    assert verifier.verify_evidence(missing, frozen_root=root) == []
+
+    stale = copy.deepcopy(base)
+    begun = next(
+        item for item in stale["exchanges"]
+        if item["scenario"] == "T1" and item["operation"] == "begin"
+    )
+    begun_body = _response_of(begun)
+    begun_body["preparation"]["playback"]["events"][0]["midi_note"] = 70
+    _reseal(begun, begun_body)
+    stale_problems = verifier.verify_evidence(
+        stale, frozen_root=root, require_bound_playback=True
+    )
+    assert any("playback digest does not match playback content" in item for item in stale_problems)
+    assert all("sha256 does not match" not in item for item in stale_problems)
+
+    moved = copy.deepcopy(base)
+    moved_begin = next(
+        item for item in moved["exchanges"]
+        if item["scenario"] == "T1" and item["operation"] == "begin"
+    )
+    moved_body = _response_of(moved_begin)
+    other = _playback_document("rev-other")
+    moved_body["preparation"]["playback"] = other
+    _reseal(moved_begin, moved_body)
+    moved_problems = verifier.verify_evidence(
+        moved, frozen_root=root, require_bound_playback=True
+    )
+    assert any(
+        "playback revision does not match the score revision" in item for item in moved_problems
+    )
+    assert all("playback digest does not match" not in item for item in moved_problems)
+    assert all("sha256 does not match" not in item for item in moved_problems)
+
+
+def test_historical_packet_fails_strict_provenance_and_passes_legacy(
+    verifier: ModuleType,
+) -> None:
+    path = REPO_ROOT / "docs/mvp2/do016_integration_artifacts/evidence.json"
+    packet = json.loads(path.read_text(encoding="utf-8"))
+    assert verifier.verify_evidence(packet, frozen_root=REPO_ROOT) == []
+    problems = verifier.verify_evidence(
+        packet, frozen_root=REPO_ROOT, require_bound_playback=True
+    )
+    assert problems
+    assert all("sha256 does not match" not in item for item in problems)
+    assert any("playback revision is missing" in item for item in problems)
 
 
 def test_child_server_restarts_on_the_same_port(driver: ModuleType, tmp_path: Path) -> None:
