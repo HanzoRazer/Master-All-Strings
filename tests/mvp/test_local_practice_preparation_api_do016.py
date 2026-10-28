@@ -216,6 +216,19 @@ def test_injected_playback_failures_stay_sanitized(
     assert set(response) == {"error"}
     assert "playback" not in response
 
+    def different_music(self: MvpApplication, payload: object) -> Any:
+        response = real(self, payload)
+        plan = response.playback_plan
+        event = replace(plan.events[0], midi_note=plan.events[0].midi_note + 1)
+        plan = replace(plan, events=(event, *plan.events[1:]))
+        plan = replace(plan, playback_digest=compute_playback_plan_digest(plan))
+        return replace(response, playback_plan=plan)
+
+    monkeypatch.setattr(MvpApplication, "run_assignment_json", different_music)
+    status, response = api.handle_http("POST", LESSON_PRACTICE_PREPARATION_PATH, body)
+    assert status == 500
+    assert response == {"error": "internal server error"}
+
 
 def test_direct_request_validation_rejects_the_body(
     api: LocalLessonDeliveryApi, assignment: LessonAssignmentV1

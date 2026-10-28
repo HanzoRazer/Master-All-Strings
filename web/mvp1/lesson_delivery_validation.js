@@ -54,7 +54,8 @@ const IDENTITY_FIELDS = [
   "assignment_behavior_digest",
 ];
 
-export const INVALID_RESPONSE = "The response is invalid. Playback stays off.";
+export const INVALID_RESPONSE =
+  "The response is invalid. Playback stays off. Refresh the lesson or reopen it from the inbox.";
 
 export const RECEIVED_SCORE_KEY = "received";
 

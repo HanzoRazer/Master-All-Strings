@@ -12,6 +12,7 @@ this module.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, replace
 from typing import Any
 
@@ -35,6 +36,7 @@ from master_all_strings.mvp.errors import (
     UnknownInstrumentError,
 )
 from master_all_strings.mvp.models import MvpProjectionResponseV1
+from master_all_strings.mvp.playback.builder import build_lesson_playback_plan
 from master_all_strings.mvp.playback.serialization import (
     compute_playback_plan_digest,
     verify_playback_plan_digest,
@@ -62,6 +64,7 @@ __all__ = [
 LOCAL_PRACTICE_PREPARATION_SCHEMA_ID = "master_all_strings.local_practice_preparation"
 LOCAL_PRACTICE_PREPARATION_SCHEMA_VERSION = "1.0.0"
 PREPARATION_STATUS_PREPARED = "PREPARED"
+_LOGGER = logging.getLogger(__name__)
 
 
 class UnsupportedInstrumentError(Exception):
@@ -305,8 +308,27 @@ def _bind_received_playback(response: MvpProjectionResponseV1) -> MvpProjectionR
         verify_playback_plan_digest(plan)
     except PlaybackPlanBuildError as exc:
         raise PreparationFailure("playback digest does not match playback content") from exc
+    # A valid self-digest is not proof that these are the revision's notes.
+    # Reuse the playback authority with the plan's effective tempo map: a
+    # teacher tempo override is not a change to the authored score revision.
+    expected = build_lesson_playback_plan(
+        assignment_id=plan.assignment_id,
+        content_id=plan.content_id,
+        events=bundle.revision.events,
+        ticks_per_quarter=bundle.revision.ticks_per_quarter,
+        tempo_changes=plan.timeline.tempo_changes,
+    )
+    if (
+        plan.events != expected.events
+        or plan.timeline != expected.timeline
+        or plan.total_seconds != expected.total_seconds
+    ):
+        raise PreparationFailure("playback content does not match the score revision")
     cited = plan.canonical_revision_id
     if cited is not None and cited != revision_id:
+        _LOGGER.warning(
+            "Received playback revision mismatch: expected=%r actual=%r", revision_id, cited
+        )
         raise PreparationFailure("playback cites a different canonical revision")
     if cited != revision_id:
         cited_plan = replace(plan, canonical_revision_id=revision_id)

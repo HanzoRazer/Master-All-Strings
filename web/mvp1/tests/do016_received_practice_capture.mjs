@@ -7,15 +7,20 @@
  */
 
 import { mkdirSync, writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 
-const puppeteer = await import("/tmp/inbox-smoke/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js");
+const puppeteerModule = process.env.DO016_PUPPETEER_MODULE
+  || "/tmp/inbox-smoke/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js";
+const imported = await import(pathToFileURL(puppeteerModule).href);
+const puppeteer = imported.default?.launch ? imported.default : imported;
+const chromeExecutable = process.env.DO016_CHROME_EXECUTABLE || "/usr/local/bin/google-chrome";
 
 const base = process.argv[2];
 const output = process.argv[3];
 mkdirSync(output, { recursive: true });
 
 const browser = await puppeteer.launch({
-  executablePath: "/usr/local/bin/google-chrome",
+  executablePath: chromeExecutable,
   headless: "new",
   args: ["--no-sandbox", "--disable-dev-shm-usage", "--autoplay-policy=no-user-gesture-required"],
 });

@@ -235,7 +235,7 @@ def test_an_existing_matching_citation_is_preserved(
 
 
 def test_a_conflicting_playback_citation_is_refused(
-    application: MvpApplication, monkeypatch: pytest.MonkeyPatch
+    application: MvpApplication, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     deliveries, choices, prepared = service_for(application)
     envelope = receive(deliveries, load("local_midi_basic.json"))
@@ -259,6 +259,8 @@ def test_a_conflicting_playback_citation_is_refused(
         )
     assert "rev-other" not in str(caught.value)
     assert captured["plan"].canonical_revision_id is None
+    assert "Received playback revision mismatch: expected=" in caplog.text
+    assert "actual='rev-other'" in caplog.text
 
 
 def test_a_response_without_a_score_is_not_bound(
@@ -303,6 +305,49 @@ def test_a_stale_playback_digest_is_refused_before_rebinding(
             envelope.assignment_behavior_digest,
         )
     assert "sha256:" not in str(caught.value)
+
+
+@pytest.mark.parametrize(
+    "changed",
+    ["midi_note", "velocity", "cents_offset", "onset_seconds", "release_seconds",
+     "ticks_per_quarter", "total_ticks", "total_seconds"],
+)
+def test_a_valid_digest_cannot_bind_different_music_to_the_revision(
+    application: MvpApplication, monkeypatch: pytest.MonkeyPatch, changed: str
+) -> None:
+    deliveries, choices, prepared = service_for(application)
+    envelope = receive(deliveries, load("local_midi_basic.json"))
+    choose_pins(choices, envelope)
+    real = prepared.application.run_assignment_json
+
+    def drift(payload: object) -> Any:
+        response = real(payload)
+        plan = response.playback_plan
+        if changed in {"ticks_per_quarter", "total_ticks"}:
+            timeline = replace(plan.timeline, **{changed: getattr(plan.timeline, changed) + 1})
+            plan = replace(plan, timeline=timeline)
+        elif changed == "total_seconds":
+            plan = replace(plan, total_seconds=plan.total_seconds + 1)
+        else:
+            event = plan.events[0]
+            value = getattr(event, changed)
+            offset = 0.01 if changed.endswith("seconds") else 1
+            if changed == "release_seconds":
+                offset = -0.01
+            event = replace(event, **{changed: (value or 0) + offset})
+            plan = replace(plan, events=(event, *plan.events[1:]))
+        plan = replace(plan, playback_digest=compute_playback_plan_digest(plan))
+        return replace(response, playback_plan=plan)
+
+    monkeypatch.setattr(prepared.application, "run_assignment_json", drift)
+    before = snapshot(deliveries, choices)
+    with pytest.raises(PreparationFailure, match="playback.*score"):
+        prepared.prepare(
+            envelope.delivery_id,
+            envelope.assignment_artifact_digest,
+            envelope.assignment_behavior_digest,
+        )
+    assert snapshot(deliveries, choices) == before
 
 
 def test_teacher_override_tempo_meter_and_simultaneous_notes_keep_their_shape(
