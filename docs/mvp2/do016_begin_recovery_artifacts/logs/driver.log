@@ -1,0 +1,6 @@
+PASS lost begin offers resolve
+PASS resolve interrupts the stored attempt - a35b1f7d-89e8-47c5-be9d-908888be6160
+PASS recovery before begin seals the key
+PASS blocked preparation does not publish started
+PASS repeated recovery stays interrupted
+PASS restart refuses the delayed begin
