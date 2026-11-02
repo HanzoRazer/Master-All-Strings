@@ -12,7 +12,7 @@ pull request merges the next branch clears it.
 
 | Order | Branch | Agent | PR | Base | State | Updated |
 | --- | --- | --- | --- | --- | --- | --- |
-| MAS-BEGIN-RECOVERY-001 | agent/mas-begin-recovery-001 | Cursor | — | 89626a4f040d1057fbb2b42e4465511977dfe15f | in flight | 2026-11-01 |
+| MAS-BEGIN-RECOVERY-001 | agent/mas-begin-recovery-001 | Cursor | #58 | 89626a4f040d1057fbb2b42e4465511977dfe15f | green | 2026-11-01 |
 
 An empty table means nothing is in flight.
 
