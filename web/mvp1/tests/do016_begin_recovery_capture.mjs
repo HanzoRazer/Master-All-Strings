@@ -1,8 +1,14 @@
 /**
  * Browser half of the keyed Begin recovery witness.
  * Restart and lost responses are real. The preparation barrier is the parent.
+ *
+ * Every exchange keeps the exact request and response bytes with their
+ * sha256, plus who put the request on the wire (the page or this harness)
+ * and what the page saw (the live response, a simulated network failure, or
+ * nothing because the harness sent it). Server responses are always live.
  */
 
+import { createHash } from "node:crypto";
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import net from "node:net";
 import { pathToFileURL } from "node:url";
@@ -19,6 +25,13 @@ const notes = [];
 let failures = 0;
 const exchanges = [];
 const scenarios = {};
+let seq = 0;
+let currentScenario = null;
+let currentEpoch = "A";
+// Live page records wait on this, so a harness exchange that happened first
+// on the server is also numbered first.
+let recordGate = Promise.resolve();
+const pendingRecords = [];
 
 function check(name, ok, detail = "") {
   notes.push(`${ok ? "PASS" : "FAIL"} ${name}${detail ? ` - ${detail}` : ""}`);
@@ -63,13 +76,57 @@ function connectControl(port) {
   });
 }
 
-function record(scenario, source, status, requestText, responseText) {
-  exchanges.push({
-    scenario,
-    source,
-    status,
-    request: JSON.parse(requestText || "{}"),
-    response: JSON.parse(responseText || "{}"),
+function sha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function exchange(fields, requestBytes, responseBytes) {
+  const request = Buffer.from(requestBytes);
+  const response = responseBytes == null ? null : Buffer.from(responseBytes);
+  return {
+    seq: fields.seq ?? ++seq,
+    scenario: fields.scenario,
+    source: fields.source,
+    route: fields.route,
+    sender: fields.sender,
+    page_outcome: fields.pageOutcome,
+    epoch: fields.epoch ?? currentEpoch,
+    status: fields.status ?? null,
+    request_base64: request.toString("base64"),
+    request_sha256: sha256(request),
+    response_base64: response === null ? null : response.toString("base64"),
+    response_sha256: response === null ? null : sha256(response),
+    request: JSON.parse(request.toString("utf8")),
+    response: response === null ? null : JSON.parse(response.toString("utf8")),
+  };
+}
+
+// The harness sent these bytes, or forwarded the page's bytes, to the live server.
+function recordHarness(scenario, source, route, pageOutcome, status, requestText, responseBytes) {
+  exchanges.push(exchange(
+    { scenario, source, route, sender: "harness", pageOutcome, status },
+    Buffer.from(requestText, "utf8"),
+    responseBytes,
+  ));
+}
+
+function routeOf(url) {
+  if (url.endsWith(BEGIN)) return "begin";
+  if (url.endsWith(RECOVERY)) return "recovery";
+  return null;
+}
+
+function decoded(base64) {
+  return Buffer.from(base64, "base64");
+}
+
+async function feedbackState(page) {
+  return page.evaluate(() => {
+    const panel = document.querySelector("#attempt-feedback");
+    return {
+      visible: Boolean(panel) && panel.hidden === false,
+      text: panel?.textContent || "",
+    };
   });
 }
 
@@ -81,8 +138,29 @@ try {
     headless: "new",
     args: ["--no-sandbox", "--disable-dev-shm-usage", "--autoplay-policy=no-user-gesture-required"],
   });
+  evidence.chrome = await browser.version();
+  evidence.epochs.push({ name: "A", pid: launch.pid });
   const control = await connectControl(launch.control_port);
   const page = await browser.newPage();
+  // Every begin or recovery the page itself received from the live server.
+  page.on("response", (response) => {
+    const route = routeOf(response.url());
+    if (!route || response.request().method() !== "POST") return;
+    const scenario = currentScenario;
+    const epoch = currentEpoch;
+    const gate = recordGate;
+    pendingRecords.push((async () => {
+      await gate;
+      const n = ++seq;
+      const body = await response.buffer();
+      exchanges.push(exchange(
+        { seq: n, scenario, source: "browser", route, sender: "browser",
+          pageOutcome: "response", epoch, status: response.status() },
+        Buffer.from(response.request().postData() || "", "utf8"),
+        body,
+      ));
+    })());
+  });
   await page.evaluateOnNewDocument(() => {
     const input = {
       id: "injected-begin-recovery",
@@ -111,6 +189,7 @@ try {
 
   // W1: the server stores Begin; the page only sees the failure, then resolves it.
   scenarios.W1 = {};
+  currentScenario = "W1";
   let lost = false;
   await page.setRequestInterception(true);
   page.on("request", async (request) => {
@@ -123,8 +202,8 @@ try {
           headers: { "content-type": "application/json" },
           body: posted,
         });
-        const text = await forwarded.text();
-        record("W1", "forwarded_server", forwarded.status, posted, text);
+        const bytes = Buffer.from(await forwarded.arrayBuffer());
+        recordHarness("W1", "forwarded_server", "begin", "network_failure", forwarded.status, posted, bytes);
         await request.abort("failed");
         return;
       }
@@ -144,9 +223,18 @@ try {
   scenarios.W1.interrupted = true;
   const storedAttempt = exchanges.find((item) => item.scenario === "W1")?.response?.attempt?.attempt_id;
   check("resolve interrupts the stored attempt", Boolean(storedAttempt), storedAttempt || "");
+  const w1Feedback = await feedbackState(page);
+  scenarios.W1.feedback_visible = w1Feedback.visible;
+  scenarios.W1.feedback_text = w1Feedback.text;
+  check(
+    "recovered interruption feedback stays visible",
+    w1Feedback.visible && Boolean(storedAttempt) && w1Feedback.text.includes(storedAttempt),
+    w1Feedback.text.slice(0, 120),
+  );
 
   // W2: recovery reaches the server before the delayed Begin is released.
   scenarios.W2 = {};
+  currentScenario = "W2";
   let delayed = false;
   await page.setRequestInterception(true);
   page.on("request", async (request) => {
@@ -154,8 +242,9 @@ try {
       if (!delayed && request.url().endsWith(BEGIN)) {
         delayed = true;
         const posted = request.postData() || "{}";
-        const recovered = await control.request("recover", { body: JSON.parse(posted) });
-        record("W2", "recovery_before_begin", recovered.status, posted, JSON.stringify(recovered.response));
+        const recovered = await control.request("recover", { raw: posted });
+        recordHarness("W2", "recovery_before_begin", "recovery", "not_sent_by_page",
+          recovered.status, posted, decoded(recovered.response_base64));
         await request.continue();
         return;
       }
@@ -178,6 +267,7 @@ try {
 
   // W3: recovery reaches the gateway while preparation is blocked.
   scenarios.W3 = {};
+  currentScenario = "W3";
   await control.request("arm");
   let blockedBegin = false;
   await page.setRequestInterception(true);
@@ -186,10 +276,18 @@ try {
       if (!blockedBegin && request.url().endsWith(BEGIN)) {
         blockedBegin = true;
         const posted = request.postData() || "{}";
-        const barrier = control.request("recover-while-blocked", { body: JSON.parse(posted) });
+        const barrier = control.request("recover-while-blocked", { raw: posted });
+        // The page's own Begin finishes only after this recovery released it.
+        let opened;
+        recordGate = new Promise((resolve) => { opened = resolve; });
         await request.continue();
-        const recovered = await barrier;
-        record("W3", "recovery_during_prepare", recovered.status, posted, JSON.stringify(recovered.response));
+        try {
+          const recovered = await barrier;
+          recordHarness("W3", "recovery_during_prepare", "recovery", "not_sent_by_page",
+            recovered.status, posted, decoded(recovered.response_base64));
+        } finally {
+          opened();
+        }
         return;
       }
       await request.continue();
@@ -206,9 +304,15 @@ try {
     "blocked preparation does not publish started",
     exchanges.some((item) => item.scenario === "W3" && item.response?.status === "PENDING"),
   );
+  const w3Feedback = await feedbackState(page);
+  scenarios.W3.feedback_visible = w3Feedback.visible;
+  scenarios.W3.feedback_text = w3Feedback.text;
+  check("interrupted begin feedback stays visible", w3Feedback.visible
+    && w3Feedback.text.includes("Attempt interrupted"), w3Feedback.text.slice(0, 120));
 
   // W4: hide one successful recovery, then repeat it.
   scenarios.W4 = {};
+  currentScenario = "W4";
   let hiddenRecovery = false;
   await page.setRequestInterception(true);
   page.on("request", async (request) => {
@@ -221,7 +325,8 @@ try {
           headers: { "content-type": "application/json" },
           body: posted,
         });
-        record("W4", "forwarded_begin", forwarded.status, posted, await forwarded.text());
+        recordHarness("W4", "forwarded_begin", "begin", "network_failure", forwarded.status, posted,
+          Buffer.from(await forwarded.arrayBuffer()));
         await request.abort("failed");
         return;
       }
@@ -232,9 +337,9 @@ try {
           headers: { "content-type": "application/json" },
           body: posted,
         });
-        const text = await forwarded.text();
-        record("W4", "forwarded_recovery", forwarded.status, posted, text);
-        scenarios.W4.first = JSON.parse(text);
+        const bytes = Buffer.from(await forwarded.arrayBuffer());
+        recordHarness("W4", "forwarded_recovery", "recovery", "network_failure", forwarded.status, posted, bytes);
+        scenarios.W4.first = JSON.parse(bytes.toString("utf8"));
         await request.abort("failed");
         return;
       }
@@ -253,15 +358,29 @@ try {
   await page.click("#btn-resolve-start");
   await page.waitForFunction(() => /interrupted/.test(document.querySelector("#attempt-status")?.textContent || ""));
   check("repeated recovery stays interrupted", scenarios.W4.first?.status === "INTERRUPTED");
+  const w4Feedback = await feedbackState(page);
+  scenarios.W4.feedback_visible = w4Feedback.visible;
+  scenarios.W4.feedback_text = w4Feedback.text;
+  const w4Attempt = scenarios.W4.first?.attempt?.attempt_id || "";
+  check("repeated recovery feedback stays visible", w4Feedback.visible && Boolean(w4Attempt)
+    && w4Feedback.text.includes(w4Attempt), w4Feedback.text.slice(0, 120));
 
   // W5: a restarted process tombs the key and refuses the delayed Begin.
   scenarios.W5 = {};
+  currentScenario = "W5";
   let restartBegin = "";
   await page.setRequestInterception(true);
   page.on("request", async (request) => {
     try {
       if (!restartBegin && request.url().endsWith(BEGIN)) {
         restartBegin = request.postData() || "{}";
+        // This Begin never reaches a server. Only its bytes are kept, for the replay.
+        exchanges.push(exchange(
+          { scenario: "W5", source: "aborted_begin", route: "begin", sender: "none",
+            pageOutcome: "network_failure" },
+          Buffer.from(restartBegin, "utf8"),
+          null,
+        ));
         await request.abort("failed");
         return;
       }
@@ -275,15 +394,25 @@ try {
   await page.waitForFunction(() => document.querySelector("#btn-resolve-start")?.hidden === false);
   page.removeAllListeners("request");
   await page.setRequestInterception(false);
+  await Promise.all(pendingRecords);
   const restarted = await control.request("restart");
-  evidence.epochs.push({ name: "B", pid: restarted.pid, previous_pid: restarted.previous_pid });
+  currentEpoch = "B";
+  evidence.epochs.push({
+    name: "B",
+    pid: restarted.pid,
+    previous_pid: restarted.previous_pid,
+    restart_seq: ++seq,
+  });
   await page.click("#btn-resolve-start");
   await page.waitForFunction(() => /No attempt is available/.test(
     document.querySelector("#attempt-status")?.textContent || ""
   ));
-  const replay = await control.request("replay-begin", { body: JSON.parse(restartBegin) });
-  record("W5", "replayed_begin", replay.status, restartBegin, JSON.stringify(replay.response));
-  check("restart refuses the delayed begin", replay.status === 409 && replay.response?.error === "begin_request_closed");
+  await Promise.all(pendingRecords);
+  const replay = await control.request("replay-begin", { raw: restartBegin });
+  recordHarness("W5", "replayed_begin", "begin", "not_sent_by_page", replay.status, restartBegin,
+    decoded(replay.response_base64));
+  const replayed = JSON.parse(decoded(replay.response_base64).toString("utf8"));
+  check("restart refuses the delayed begin", replay.status === 409 && replayed?.error === "begin_request_closed");
 
   evidence.complete = failures === 0;
 } catch (error) {
@@ -291,6 +420,13 @@ try {
   notes.push(`FAIL driver - ${error.stack || error.message}`);
   evidence.complete = false;
 } finally {
+  try {
+    await Promise.all(pendingRecords);
+  } catch (error) {
+    failures += 1;
+    notes.push(`FAIL record - ${error.message}`);
+  }
+  exchanges.sort((left, right) => left.seq - right.seq);
   if (browser) await browser.close();
   evidence.failures = failures;
   evidence.notes = notes;

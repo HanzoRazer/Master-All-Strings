@@ -7,19 +7,53 @@ of preparation inside this process, released by a message on stdin.
 from __future__ import annotations
 
 import argparse
+import base64
 import importlib.util
 import json
 import os
+import platform
 import signal
 import subprocess
 import sys
 import threading
+import urllib.error
+import urllib.request
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 CAPTURE = ROOT / "web" / "mvp1" / "tests" / "do016_begin_recovery_capture.mjs"
 VERIFIER = ROOT / "scripts" / "verify_do016_begin_recovery_evidence.py"
+BEGIN_REQUEST_PATH = "/api/education/lesson-practice-begin-requests"
+BEGIN_RECOVERY_PATH = "/api/education/lesson-practice-begin-recoveries"
+
+
+def post_raw(base: str, path: str, raw: str) -> tuple[int, str]:
+    """POST exactly these bytes and return the status and the response bytes."""
+
+    request = urllib.request.Request(
+        f"{base}{path}",
+        data=raw.encode("utf-8"),
+        method="POST",
+        headers={"content-type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
+            return int(response.status), base64.b64encode(response.read()).decode("ascii")
+    except urllib.error.HTTPError as error:
+        return int(error.code), base64.b64encode(error.read()).decode("ascii")
+
+
+def _git(*args: str) -> str:
+    return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
+
+
+def _node_version() -> str:
+    try:
+        return subprocess.check_output(["node", "--version"], text=True).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return ""
 
 
 def _integration() -> Any:
@@ -153,11 +187,15 @@ def _run(output: Path, chrome: Path, puppeteer: Path, integration: Any) -> int:
 
     threading.Thread(target=drain, daemon=True).start()
     code = 1
+    started_at = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    dirty = _git("status", "--porcelain")
     try:
         if child.poll() is not None or not ready_line:
             raise RuntimeError("child exited before listening")
         ready = json.loads(ready_line)
         base = str(ready["base"])
+        # The pid the server reports. On a Windows venv, Popen.pid is the launcher.
+        server_pid = {"value": int(ready["pid"])}
         if not integration.wait_for_http(f"{base}/lesson-inbox.html", 15):
             raise RuntimeError("child did not answer HTTP")
         assignment = integration.custom_assignment()
@@ -166,6 +204,7 @@ def _run(output: Path, chrome: Path, puppeteer: Path, integration: Any) -> int:
             raise RuntimeError(f"receive failed: {status}")
         launch = {
             "base": base,
+            "pid": int(ready["pid"]),
             "delivery_id": integration.DELIVERY_ID,
             "title": integration.TITLE,
             "chrome_executable": str(chrome),
@@ -191,7 +230,11 @@ def _run(output: Path, chrome: Path, puppeteer: Path, integration: Any) -> int:
             with connection:
                 pending = b""
                 while True:
-                    chunk = connection.recv(65536)
+                    try:
+                        chunk = connection.recv(65536)
+                    except OSError:
+                        # The browser driver exited; there is nothing left to answer.
+                        break
                     if not chunk:
                         break
                     pending += chunk
@@ -200,7 +243,15 @@ def _run(output: Path, chrome: Path, puppeteer: Path, integration: Any) -> int:
                         if not line.strip():
                             continue
                         reply = _control(
-                            json.loads(line), child, base, queue, lock, integration, port, output
+                            json.loads(line),
+                            child,
+                            base,
+                            queue,
+                            lock,
+                            integration,
+                            port,
+                            output,
+                            server_pid,
                         )
                         connection.sendall((json.dumps(reply) + "\n").encode())
 
@@ -217,19 +268,27 @@ def _run(output: Path, chrome: Path, puppeteer: Path, integration: Any) -> int:
         browser = json.loads((output / "browser_evidence.json").read_text(encoding="utf-8"))
         packet = {
             "schema": "master_all_strings.do016_begin_recovery_evidence",
-            "schema_version": "1",
+            "schema_version": "2",
             "complete": browser.get("complete") is True and code == 0,
             "failures": browser.get("failures"),
+            "started_at": started_at,
+            "tested_sha": _git("rev-parse", "HEAD"),
+            "tested_tree": _git("rev-parse", "HEAD^{tree}"),
+            "dirty": dirty,
+            "python": platform.python_version(),
+            "node": _node_version(),
+            "chrome": browser.get("chrome"),
+            "os": platform.platform(),
+            "puppeteer_module": str(puppeteer),
+            "transport": {
+                "server_responses": "live",
+                "network_failure": "simulated by aborting the page request",
+                "not_sent_by_page": "posted by the harness to the live server",
+            },
             "scenarios": browser.get("scenarios"),
             "exchanges": browser.get("exchanges"),
             "epochs": browser.get("epochs"),
             "notes": browser.get("notes"),
-            "tested_sha": subprocess.check_output(
-                ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
-            ).strip(),
-            "tested_tree": subprocess.check_output(
-                ["git", "rev-parse", "HEAD^{tree}"], cwd=ROOT, text=True
-            ).strip(),
         }
         (output / "evidence.json").write_text(json.dumps(packet, indent=2) + "\n", encoding="utf-8")
         verified = subprocess.run(
@@ -276,6 +335,7 @@ def _control(
     integration: Any,
     port: int,
     output: Path,
+    server_pid: dict[str, int],
 ) -> dict[str, Any]:
     operation = message.get("op")
     identifier = message.get("id")
@@ -284,37 +344,26 @@ def _control(
         child.stdin.write(json.dumps({"op": "arm"}) + "\n")
         child.stdin.flush()
         return {"id": identifier, "ok": True}
+    raw = message.get("raw")
+    if operation in {"recover-while-blocked", "recover", "replay-begin"} and not isinstance(
+        raw, str
+    ):
+        return {"id": identifier, "ok": False, "error": "request bytes are missing"}
     if operation == "recover-while-blocked":
-        body = message.get("body")
         if not _wait_for(queue, lock, "prepare-blocked", 20):
             return {"id": identifier, "ok": False, "error": "preparation did not block"}
-        status, response = integration._request(
-            base,
-            "POST",
-            "/api/education/lesson-practice-begin-recoveries",
-            body if isinstance(body, dict) else {},
-        )
+        status, response = post_raw(base, BEGIN_RECOVERY_PATH, str(raw))
         child.stdin.write(json.dumps({"op": "release"}) + "\n")
         child.stdin.flush()
-        return {"id": identifier, "ok": True, "status": status, "response": response}
+        return {"id": identifier, "ok": True, "status": status, "response_base64": response}
     if operation == "recover":
-        status, response = integration._request(
-            base,
-            "POST",
-            "/api/education/lesson-practice-begin-recoveries",
-            message.get("body") if isinstance(message.get("body"), dict) else {},
-        )
-        return {"id": identifier, "ok": True, "status": status, "response": response}
+        status, response = post_raw(base, BEGIN_RECOVERY_PATH, str(raw))
+        return {"id": identifier, "ok": True, "status": status, "response_base64": response}
     if operation == "replay-begin":
-        status, response = integration._request(
-            base,
-            "POST",
-            "/api/education/lesson-practice-begin-requests",
-            message.get("body") if isinstance(message.get("body"), dict) else {},
-        )
-        return {"id": identifier, "ok": True, "status": status, "response": response}
+        status, response = post_raw(base, BEGIN_REQUEST_PATH, str(raw))
+        return {"id": identifier, "ok": True, "status": status, "response_base64": response}
     if operation == "restart":
-        previous = child.pid
+        previous = server_pid["value"]
         child.stdin.write(json.dumps({"op": "stop"}) + "\n")
         child.stdin.flush()
         child.wait(timeout=5)
@@ -331,7 +380,7 @@ def _control(
         child.wait = replacement.wait  # type: ignore[method-assign]
         child.stdin = replacement.stdin
         child.kill = replacement.kill  # type: ignore[method-assign]
-        child._pid = replacement.pid  # noqa: SLF001
+        server_pid["value"] = int(ready["pid"])
         if not integration.wait_for_http(f"{ready['base']}/lesson-inbox.html", 15):
             return {"id": identifier, "ok": False, "error": "restart was not ready"}
         return {
