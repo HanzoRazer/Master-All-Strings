@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://master-all-strings.dev/schema/mvp2/received-lesson-begin-request-v1.schema.json",
+  "title": "ReceivedLessonBeginRequestV1",
+  "description": "One keyed Begin request in this server process. STARTED nests the capturing Begin document. INTERRUPTED nests the cancellation document. PENDING and NO_ATTEMPT carry no attempt.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "required": ["schema_id", "schema_version", "begin_request_id", "status", "attempt"],
+  "properties": {
+    "schema_id": {"const": "master_all_strings.received_lesson_begin_request"},
+    "schema_version": {"const": "1.0.0"},
+    "begin_request_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "status": {"enum": ["STARTED", "PENDING", "NO_ATTEMPT", "INTERRUPTED"]}
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "status": {"const": "STARTED"},
+        "attempt": {
+          "$ref": "https://master-all-strings.dev/schema/mvp2/received-lesson-attempt-v1.schema.json#/$defs/begin"
+        }
+      }
+    },
+    {
+      "properties": {
+        "status": {"const": "PENDING"},
+        "attempt": {"type": "null"}
+      }
+    },
+    {
+      "properties": {
+        "status": {"const": "NO_ATTEMPT"},
+        "attempt": {"type": "null"}
+      }
+    },
+    {
+      "properties": {
+        "status": {"const": "INTERRUPTED"},
+        "attempt": {
+          "$ref": "https://master-all-strings.dev/schema/mvp2/received-lesson-attempt-v1.schema.json#/$defs/interrupted"
+        }
+      }
+    }
+  ]
+}

@@ -89,6 +89,7 @@ export function mountLessonPractice(root, options = {}) {
   const finishAttempt = required(root, "#btn-finish-attempt");
   const cancelAttempt = required(root, "#btn-cancel-attempt");
   const retryFinish = required(root, "#btn-retry-finish");
+  const resolveStart = required(root, "#btn-resolve-start");
   const attemptStatus = required(root, "#attempt-status");
   const attemptCount = required(root, "#attempt-count");
   const attemptFeedback = required(root, "#attempt-feedback");
@@ -336,11 +337,14 @@ export function mountLessonPractice(root, options = {}) {
   function syncAttemptButtons() {
     const snap = controller.snapshot();
     const busy = BUSY.has(snap.state);
-    startAttempt.disabled = busy || !lesson || !snap.selectedId || snap.unconfirmedKind === "finish";
+    const beginUnresolved = snap.unconfirmedKind === "begin";
+    startAttempt.disabled = busy || !lesson || !snap.selectedId
+      || snap.unconfirmedKind === "finish" || beginUnresolved;
     finishAttempt.disabled = snap.state !== AttemptState.CAPTURING;
     cancelAttempt.hidden = snap.state !== AttemptState.CAPTURING;
     pauseButton.hidden = snap.state === AttemptState.CAPTURING;
     retryFinish.hidden = snap.unconfirmedKind !== "finish";
+    resolveStart.hidden = !beginUnresolved;
     enableMidi.disabled = busy;
   }
 
@@ -542,6 +546,9 @@ export function mountLessonPractice(root, options = {}) {
   });
   retryFinish.addEventListener("click", () => {
     track(controller.retryFinish());
+  });
+  resolveStart.addEventListener("click", () => {
+    track(controller.resolveBegin());
   });
 
   if (view && typeof view.addEventListener === "function") {

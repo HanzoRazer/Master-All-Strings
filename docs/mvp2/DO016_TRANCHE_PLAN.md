@@ -1396,3 +1396,63 @@ conflicts log expected/actual IDs without exposing them in HTTP errors.
 Frozen `browser_smoke_summary.json` remains
 `11af5e8656b87785d152735777702b9a025fd0d5f06c315a9b52b46cd38e42db`.
 
+## MAS-BEGIN-RECOVERY-001 — explicit recovery for a lost Begin
+
+| Field | Value |
+| --- | --- |
+| Branch | `agent/mas-begin-recovery-001` |
+| Base | `89626a4f040d1057fbb2b42e4465511977dfe15f` |
+| Tested source | `5381c4c8c56b31777d3f8f5932555b6230f63cd8` |
+| Tested tree | `640ecbdcf97a250b1c66e028ef3ccd6a01191930` |
+| Predecessor | MAS-PLAYBACK-PROVENANCE-001, PR #57, merged |
+
+This is not a DO-016 stage. The received-lesson page starts through a keyed
+gateway. The four Stage 7 routes and `ReceivedLessonAttemptV1` 1.0.0 stay
+in place for existing callers. One lowercase UUID v4 identifies one payload.
+A different payload is `409 begin_request_conflict`. Recovery seals the key.
+A matching later Begin is `409 begin_request_closed`. A pre-insert public
+failure returns that status and seals `NO_ATTEMPT`. An uncertain failure
+after insert stays unresolved.
+
+The page keeps the key after a lost Begin and offers Resolve start. Resolve
+does not send another Begin. Only `NO_ATTEMPT` or `INTERRUPTED` clears it.
+
+### Verification
+
+Python 3.12.3, Node v22.23.4, Chrome 148.0.7778.96. CI runs pytest on
+Python 3.11. The packet is `docs/mvp2/do016_begin_recovery_artifacts/evidence.json`.
+
+| Gate | Result |
+| --- | --- |
+| `ruff` | PASS, including the new scripts |
+| `mypy` | PASS, 175 source files |
+| `pytest --cov --cov-report=term-missing` | 3580 passed, 3 skipped, 95.11% |
+| `npm test` in `web/mvp1` | 596 passed, 0 failed |
+| Stage 6 witness | PASS, 0 failures |
+| Stage 8 witness | PASS, 0 failures; begin 6, message 8, finish 3, cancel 2 |
+| Integration witness | PASS, 0 failures |
+| Begin-recovery witness | PASS. W1 stored Begin then interrupted it. W2 sealed the key first. W3 returned PENDING while preparation was blocked. W5 refused the delayed Begin after restart. Superseded by the rerun below. |
+| Strict playback-provenance packet | PASS |
+| Legacy Stage 9 packet | PASS |
+| DO-015 predecessor checks | PASS; smoke summary restored |
+
+
+### Review fixes and rerun
+
+Review withdrew the late-Begin lockup. Tests through the real client and
+controller, and through the server's HTTP API, show a Begin delayed past a
+successful recovery is refused with `begin_request_closed` while a fresh
+key starts and evaluates. Two defects were fixed. The page cleared a
+recovered interruption's feedback as soon as it drew it. The Stage 9
+verifier accepted a nested attempt from any begin wrapper, without
+checking its status, version or key.
+
+The begin-recovery packet now keeps exact request and response bytes with
+their sha256, sender, page outcome, epoch and order. Its verifier checks
+the relationships between them. The rerun at
+`ef0ba1c3b56e4ac5cf3dee0ee3dc815bf9b0c917`, on Windows with Python 3.11.9,
+Node v24.11.0 and Chrome 156.0.8078.74, passed nine checks with no
+failures, including visible feedback after each recovered interruption.
+Every server response in it is live. Network failures seen by the page are
+simulated, and each exchange says which. See
+`MAS_BEGIN_RECOVERY_001_REPORT.md`.

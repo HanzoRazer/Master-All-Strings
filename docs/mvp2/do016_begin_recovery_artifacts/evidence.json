@@ -1,0 +1,2360 @@
+{
+  "schema": "master_all_strings.do016_begin_recovery_evidence",
+  "schema_version": "2",
+  "complete": true,
+  "failures": 0,
+  "started_at": "2026-11-02T01:35:24Z",
+  "tested_sha": "ef0ba1c3b56e4ac5cf3dee0ee3dc815bf9b0c917",
+  "tested_tree": "074b25d2d6ae5863f470c7359700dd9f2585c036",
+  "dirty": "",
+  "python": "3.11.9",
+  "node": "v24.11.0",
+  "chrome": "Chrome/156.0.8078.74",
+  "os": "Windows-10-10.0.26100-SP0",
+  "puppeteer_module": "C:\\tmp\\inbox-smoke\\node_modules\\puppeteer-core\\lib\\esm\\puppeteer\\puppeteer-core.js",
+  "transport": {
+    "server_responses": "live",
+    "network_failure": "simulated by aborting the page request",
+    "not_sent_by_page": "posted by the harness to the live server"
+  },
+  "scenarios": {
+    "W1": {
+      "interrupted": true,
+      "feedback_visible": true,
+      "feedback_text": "Attempt interruptedAttempt: 59844cc0-f644-489a-8519-72ddf0e7cc15No evaluation was produced.MIDI input: UNVERIFIED_PHYSICAL_MIDI_INPUTAudio output: UNVERIFIED_AUDIO_OUTPUT"
+    },
+    "W2": {},
+    "W3": {
+      "feedback_visible": true,
+      "feedback_text": "Attempt interruptedAttempt: 79c700df-b100-4710-9d4e-253aa255322fNo evaluation was produced.MIDI input: UNVERIFIED_PHYSICAL_MIDI_INPUTAudio output: UNVERIFIED_AUDIO_OUTPUT"
+    },
+    "W4": {
+      "first": {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": "6113112c-4c14-4413-ae60-0f6f7317c118",
+        "status": "INTERRUPTED",
+        "attempt": {
+          "schema_id": "master_all_strings.received_lesson_attempt",
+          "schema_version": "1.0.0",
+          "attempt_status": "INTERRUPTED",
+          "attempt_id": "05be68a1-e16d-4cb2-89b8-0d726da28278",
+          "capture_id": "91bd55cf-0539-462f-8cf2-c97f38b1b1d9",
+          "performance_session_id": "ccbb3fd4-9add-46c4-849d-8e58ee8c47f6",
+          "delivery_id": "delivery-stage9",
+          "assignment_id": "teacher_smith_student_42_2026_08_10",
+          "content_id": "blues_turnaround_01",
+          "assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "capture_clock": "browser_performance_time",
+          "raw_capture": {
+            "schema_version": "1.0.0",
+            "capture_id": "91bd55cf-0539-462f-8cf2-c97f38b1b1d9",
+            "session_id": "ccbb3fd4-9add-46c4-849d-8e58ee8c47f6",
+            "runtime_identity": {
+              "schema_version": "1.0.0",
+              "runtime_id": "web-midi",
+              "runtime_kind": "lightweight",
+              "reported_version": "1",
+              "version_policy": "web-midi-v1",
+              "version_supported": true
+            },
+            "source_identity": {
+              "schema_version": "1.0.0",
+              "source_id": "Injected Begin Recovery",
+              "port": "browser",
+              "device": "Injected Begin Recovery",
+              "supplies_string_identity": false
+            },
+            "started_at": "2026-11-02T01:35:33.256695Z",
+            "completion_state": "interrupted",
+            "tempo_context": 8,
+            "meter_context": {
+              "schema_version": "1.0.0",
+              "beats_per_bar": 4,
+              "beat_unit": 4
+            },
+            "events": [],
+            "ended_at": "2026-11-02T01:35:33.317733Z",
+            "warnings": [],
+            "faults": [],
+            "provenance": {
+              "clock_domain": "browser_performance_time"
+            }
+          },
+          "observed_events": [],
+          "unmatched_note_offs": [],
+          "hardware_status": {
+            "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+            "audio_output": "UNVERIFIED_AUDIO_OUTPUT"
+          }
+        }
+      },
+      "feedback_visible": true,
+      "feedback_text": "Attempt interruptedAttempt: 05be68a1-e16d-4cb2-89b8-0d726da28278No evaluation was produced.MIDI input: UNVERIFIED_PHYSICAL_MIDI_INPUTAudio output: UNVERIFIED_AUDIO_OUTPUT"
+    },
+    "W5": {}
+  },
+  "exchanges": [
+    {
+      "seq": 1,
+      "scenario": "W1",
+      "source": "forwarded_server",
+      "route": "begin",
+      "sender": "harness",
+      "page_outcome": "network_failure",
+      "epoch": "A",
+      "status": 201,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiMzJiZjA5OTctZGU1Ni00ZDVkLTkzNGUtM2YxOGEwMzliNmQ4IiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjozMzQ0MDAwMDB9fQ==",
+      "request_sha256": "005be07fa9e239ce7e217937aaef5ef785b7b71600eb42e2aa2dc93f1591bd49",
+      "response_base64": "eyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9iZWdpbl9yZXF1ZXN0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlZ2luX3JlcXVlc3RfaWQiOiAiMzJiZjA5OTctZGU1Ni00ZDVkLTkzNGUtM2YxOGEwMzliNmQ4IiwgInN0YXR1cyI6ICJTVEFSVEVEIiwgImF0dGVtcHQiOiB7InNjaGVtYV9pZCI6ICJtYXN0ZXJfYWxsX3N0cmluZ3MucmVjZWl2ZWRfbGVzc29uX2F0dGVtcHQiLCAic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiYXR0ZW1wdF9zdGF0dXMiOiAiQ0FQVFVSSU5HIiwgImF0dGVtcHRfaWQiOiAiNTk4NDRjYzAtZjY0NC00ODlhLTg1MTktNzJkZGYwZTdjYzE1IiwgImNhcHR1cmVfaWQiOiAiYzEzNzc4MDgtMmQwZi00ZjZjLTkyZjktMzVlNTI5OGZlYzg1IiwgInBlcmZvcm1hbmNlX3Nlc3Npb25faWQiOiAiZDA4MzU0NzktOWZkNS00NjM5LWFmNDAtNGQyYjdmYWJmYTFjIiwgImRlbGl2ZXJ5X2lkIjogImRlbGl2ZXJ5LXN0YWdlOSIsICJhc3NpZ25tZW50X2lkIjogInRlYWNoZXJfc21pdGhfc3R1ZGVudF80Ml8yMDI2XzA4XzEwIiwgImNvbnRlbnRfaWQiOiAiYmx1ZXNfdHVybmFyb3VuZF8wMSIsICJhc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6ICJzaGEyNTY6YmVkZWZlMzZjNWI0NmRkMzE0YWE5MWM5MjdkMTE1OTNlNjJhNDZlYTcxNmMzNTBkYWNjY2E5Njc2YWI4NDEyNSIsICJhc3NpZ25tZW50X2JlaGF2aW9yX2RpZ2VzdCI6ICJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsICJjYXB0dXJlX2Nsb2NrIjogImJyb3dzZXJfcGVyZm9ybWFuY2VfdGltZSIsICJwcmVwYXJhdGlvbiI6IHsic2NoZW1hX2lkIjogIm1hc3Rlcl9hbGxfc3RyaW5ncy5sb2NhbF9wcmFjdGljZV9wcmVwYXJhdGlvbiIsICJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJwcmVwYXJhdGlvbl9zdGF0dXMiOiAiUFJFUEFSRUQiLCAiZGVsaXZlcnlfaWQiOiAiZGVsaXZlcnktc3RhZ2U5IiwgImFzc2lnbm1lbnRfaWQiOiAidGVhY2hlcl9zbWl0aF9zdHVkZW50XzQyXzIwMjZfMDhfMTAiLCAiY29udGVudF9pZCI6ICJibHVlc190dXJuYXJvdW5kXzAxIiwgImFzc2lnbm1lbnRfYXJ0aWZhY3RfZGlnZXN0IjogInNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwgImFzc2lnbm1lbnRfYmVoYXZpb3JfZGlnZXN0IjogInNoYTI1NjpjNjk4NmZiZmNjNDljM2Q5MmZlNWNiMDAxMTA2NDc5N2FlZTVkMGQ1YWRmMGZmYWVmZDdhM2NjNmQwYTU1Y2M0IiwgInByb2plY3Rpb24iOiB7InN0YXR1cyI6ICJyZWFkeSIsICJkZW1vX2lkIjogbnVsbCwgInN1bW1hcnlfdGl0bGUiOiAiU3RhZ2UgOSBJbnRlZ3JhdGlvbiBFdHVkZSIsICJpbnN0cnVtZW50X2lkIjogImd1aXRhci1zdGFuZGFyZC02IiwgImJlaGF2aW9yX2RpZ2VzdCI6ICJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsICJ3YXJuaW5ncyI6IFtdLCAidW5zdXBwb3J0ZWRfZmVhdHVyZXMiOiBbXSwgInRlYWNoaW5nX2FpZHMiOiB7Im9uZV9zdHJpbmciOiBbeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAiLCAiaW5zdHJ1bWVudF9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy02IiwgImRpc3BsYXlfbGFiZWwiOiAiRTIiLCAiZXZlbnRzIjogW3siZXZlbnRfaWQiOiAiZXYtMSIsICJtaWRpX25vdGUiOiA2NCwgInN0YXR1cyI6ICJ1bnBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTYiLCAiZGlzcGxheV9vcmRlciI6IG51bGwsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IG51bGwsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IG51bGwsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogbnVsbCwgImlzX29wZW5fc3RyaW5nIjogbnVsbCwgInVucmVzb2x2ZWRfcmVhc29uIjogInVucGxheWFibGVfb25fcmVxdWVzdGVkX3N0cmluZyJ9LCB7ImV2ZW50X2lkIjogImV2LTIiLCAibWlkaV9ub3RlIjogNjcsICJzdGF0dXMiOiAidW5wbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy02IiwgImRpc3BsYXlfb3JkZXIiOiBudWxsLCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiBudWxsLCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiBudWxsLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IG51bGwsICJpc19vcGVuX3N0cmluZyI6IG51bGwsICJ1bnJlc29sdmVkX3JlYXNvbiI6ICJ1bnBsYXlhYmxlX29uX3JlcXVlc3RlZF9zdHJpbmcifSwgeyJldmVudF9pZCI6ICJldi0zIiwgIm1pZGlfbm90ZSI6IDY5LCAic3RhdHVzIjogInVucGxheWFibGUiLCAicmVxdWVzdGVkX3N0cmluZ19pZCI6ICJzdHJpbmctNiIsICJkaXNwbGF5X29yZGVyIjogbnVsbCwgInBoeXNpY2FsX2ZyZXRfbnVtYmVyIjogbnVsbCwgInJlbGF0aXZlX3NlbWl0b25lX3Bvc2l0aW9uIjogbnVsbCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiBudWxsLCAiaXNfb3Blbl9zdHJpbmciOiBudWxsLCAidW5yZXNvbHZlZF9yZWFzb24iOiAidW5wbGF5YWJsZV9vbl9yZXF1ZXN0ZWRfc3RyaW5nIn1dfSwgeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAiLCAiaW5zdHJ1bWVudF9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy01IiwgImRpc3BsYXlfbGFiZWwiOiAiQTIiLCAiZXZlbnRzIjogW3siZXZlbnRfaWQiOiAiZXYtMSIsICJtaWRpX25vdGUiOiA2NCwgInN0YXR1cyI6ICJwbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy01IiwgImRpc3BsYXlfb3JkZXIiOiAxLCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiAxOSwgInJlbGF0aXZlX3NlbWl0b25lX3Bvc2l0aW9uIjogMTkuMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjY2NjI5MDAzNjQ1NzQ5MTQsICJpc19vcGVuX3N0cmluZyI6IGZhbHNlLCAidW5yZXNvbHZlZF9yZWFzb24iOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0yIiwgIm1pZGlfbm90ZSI6IDY3LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTUiLCAiZGlzcGxheV9vcmRlciI6IDEsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDIyLCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiAyMi4wLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNzE5Mzg0NDg3OTIyNjU2NywgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTMiLCAibWlkaV9ub3RlIjogNjksICJzdGF0dXMiOiAidW5wbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy01IiwgImRpc3BsYXlfb3JkZXIiOiBudWxsLCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiBudWxsLCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiBudWxsLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IG51bGwsICJpc19vcGVuX3N0cmluZyI6IG51bGwsICJ1bnJlc29sdmVkX3JlYXNvbiI6ICJ1bnBsYXlhYmxlX29uX3JlcXVlc3RlZF9zdHJpbmcifV19LCB7InNjaGVtYV92ZXJzaW9uIjogIjEuMCIsICJpbnN0cnVtZW50X2lkIjogImd1aXRhci1zdGFuZGFyZC02IiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTQiLCAiZGlzcGxheV9sYWJlbCI6ICJEMyIsICJldmVudHMiOiBbeyJldmVudF9pZCI6ICJldi0xIiwgIm1pZGlfbm90ZSI6IDY0LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTQiLCAiZGlzcGxheV9vcmRlciI6IDIsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDE0LCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiAxNC4wLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNTU0NTUwNjQwOTI5ODMwNCwgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTIiLCAibWlkaV9ub3RlIjogNjcsICJzdGF0dXMiOiAicGxheWFibGUiLCAicmVxdWVzdGVkX3N0cmluZ19pZCI6ICJzdHJpbmctNCIsICJkaXNwbGF5X29yZGVyIjogMiwgInBoeXNpY2FsX2ZyZXRfbnVtYmVyIjogMTcsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDE3LjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC42MjU0MjMyMzA3ODA4Mjk2LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH0sIHsiZXZlbnRfaWQiOiAiZXYtMyIsICJtaWRpX25vdGUiOiA2OSwgInN0YXR1cyI6ICJwbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy00IiwgImRpc3BsYXlfb3JkZXIiOiAyLCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiAxOSwgInJlbGF0aXZlX3NlbWl0b25lX3Bvc2l0aW9uIjogMTkuMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjY2NjI5MDAzNjQ1NzQ5MTQsICJpc19vcGVuX3N0cmluZyI6IGZhbHNlLCAidW5yZXNvbHZlZF9yZWFzb24iOiBudWxsfV19LCB7InNjaGVtYV92ZXJzaW9uIjogIjEuMCIsICJpbnN0cnVtZW50X2lkIjogImd1aXRhci1zdGFuZGFyZC02IiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTMiLCAiZGlzcGxheV9sYWJlbCI6ICJHMyIsICJldmVudHMiOiBbeyJldmVudF9pZCI6ICJldi0xIiwgIm1pZGlfbm90ZSI6IDY0LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTMiLCAiZGlzcGxheV9vcmRlciI6IDMsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDksICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDkuMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjQwNTM5NjQ0MjQ5ODYzOTUsICJpc19vcGVuX3N0cmluZyI6IGZhbHNlLCAidW5yZXNvbHZlZF9yZWFzb24iOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0yIiwgIm1pZGlfbm90ZSI6IDY3LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTMiLCAiZGlzcGxheV9vcmRlciI6IDMsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDEyLCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiAxMi4wLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNSwgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTMiLCAibWlkaV9ub3RlIjogNjksICJzdGF0dXMiOiAicGxheWFibGUiLCAicmVxdWVzdGVkX3N0cmluZ19pZCI6ICJzdHJpbmctMyIsICJkaXNwbGF5X29yZGVyIjogMywgInBoeXNpY2FsX2ZyZXRfbnVtYmVyIjogMTQsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDE0LjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC41NTQ1NTA2NDA5Mjk4MzA0LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH1dfSwgeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAiLCAiaW5zdHJ1bWVudF9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy0yIiwgImRpc3BsYXlfbGFiZWwiOiAiQjMiLCAiZXZlbnRzIjogW3siZXZlbnRfaWQiOiAiZXYtMSIsICJtaWRpX25vdGUiOiA2NCwgInN0YXR1cyI6ICJwbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy0yIiwgImRpc3BsYXlfb3JkZXIiOiA0LCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiA1LCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiA1LjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC4yNTA4NDY0NjE1NjE2NTkyNCwgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTIiLCAibWlkaV9ub3RlIjogNjcsICJzdGF0dXMiOiAicGxheWFibGUiLCAicmVxdWVzdGVkX3N0cmluZ19pZCI6ICJzdHJpbmctMiIsICJkaXNwbGF5X29yZGVyIjogNCwgInBoeXNpY2FsX2ZyZXRfbnVtYmVyIjogOCwgInJlbGF0aXZlX3NlbWl0b25lX3Bvc2l0aW9uIjogOC4wLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuMzcwMDM5NDc1MDUyNTYzNCwgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTMiLCAibWlkaV9ub3RlIjogNjksICJzdGF0dXMiOiAicGxheWFibGUiLCAicmVxdWVzdGVkX3N0cmluZ19pZCI6ICJzdHJpbmctMiIsICJkaXNwbGF5X29yZGVyIjogNCwgInBoeXNpY2FsX2ZyZXRfbnVtYmVyIjogMTAsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDEwLjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC40Mzg3Njg5NzU4NDUzMTM1LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH1dfSwgeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAiLCAiaW5zdHJ1bWVudF9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy0xIiwgImRpc3BsYXlfbGFiZWwiOiAiRTQiLCAiZXZlbnRzIjogW3siZXZlbnRfaWQiOiAiZXYtMSIsICJtaWRpX25vdGUiOiA2NCwgInN0YXR1cyI6ICJwbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy0xIiwgImRpc3BsYXlfb3JkZXIiOiA1LCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiAwLCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiAwLjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC4wLCAiaXNfb3Blbl9zdHJpbmciOiB0cnVlLCAidW5yZXNvbHZlZF9yZWFzb24iOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0yIiwgIm1pZGlfbm90ZSI6IDY3LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTEiLCAiZGlzcGxheV9vcmRlciI6IDUsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDMsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDMuMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjE1OTEwMzU4NDc0NjI4NTUsICJpc19vcGVuX3N0cmluZyI6IGZhbHNlLCAidW5yZXNvbHZlZF9yZWFzb24iOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0zIiwgIm1pZGlfbm90ZSI6IDY5LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTEiLCAiZGlzcGxheV9vcmRlciI6IDUsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDUsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDUuMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjI1MDg0NjQ2MTU2MTY1OTI0LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH1dfV19LCAicHJvamVjdGlvbiI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicHJvamVjdGlvbl90eXBlIjogImZyZXRib2FyZF9zY3JvbGwiLCAicHJvamVjdGlvbl92ZXJzaW9uIjogIjEuMC4wIiwgImZpZGVsaXR5IjogInNlbGVjdGVkX3NwYXRpYWxfdjEiLCAicHJvamVjdGlvbl9kaWdlc3QiOiAic2hhMjU2OmQxODE4ZDZkZGMwOGUxODRkZDRhYzY4ZWJkNTViZjQ3NjQ0NDAwZDNmZWI2YTRjZDBlZmE4NjRiNmVlNjE0MTIiLCAiYXNzaWdubWVudF9pZCI6ICJ0ZWFjaGVyX3NtaXRoX3N0dWRlbnRfNDJfMjAyNl8wOF8xMCIsICJjb250ZW50X2lkIjogImJsdWVzX3R1cm5hcm91bmRfMDEiLCAidGl0bGUiOiAiU3RhZ2UgOSBJbnRlZ3JhdGlvbiBFdHVkZSIsICJ0aW1lbGluZSI6IHsidGlja3NfcGVyX3F1YXJ0ZXIiOiA0ODAsICJ0b3RhbF90aWNrcyI6IDE0NDAsICJ0b3RhbF9zZWNvbmRzIjogMjIuNSwgInNlY29uZHNfcGVyX3NjcmVlbiI6IDQuMCwgInBsYXlfbGluZV9mcmFjdGlvbiI6IDAuMjJ9LCAidGVtcG9fY2hhbmdlcyI6IFt7InRpY2siOiAwLCAidGVtcG9fYnBtIjogOC4wLCAibWljcm9zZWNvbmRzX3Blcl9xdWFydGVyIjogNzUwMDAwMH1dLCAiaW5zdHJ1bWVudCI6IHsiaW5zdHJ1bWVudF9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJkaXNwbGF5X25hbWUiOiAiU3RhbmRhcmQgR3VpdGFyICg2LXN0cmluZykiLCAiZmluZ2VyYm9hcmRfbW9kZSI6ICJmcmV0dGVkIiwgInNjYWxlX2xlbmd0aF9tbSI6IDY0OC4wLCAibGFuZXMiOiBbeyJzdHJpbmdfaWQiOiAic3RyaW5nLTYiLCAiZGlzcGxheV9sYWJlbCI6ICJFMiIsICJkaXNwbGF5X29yZGVyIjogMCwgIm9wZW5fbWlkaV9ub3RlIjogNDAsICJvcGVuX3BpdGNoX2xhYmVsIjogIkUyIn0sIHsic3RyaW5nX2lkIjogInN0cmluZy01IiwgImRpc3BsYXlfbGFiZWwiOiAiQTIiLCAiZGlzcGxheV9vcmRlciI6IDEsICJvcGVuX21pZGlfbm90ZSI6IDQ1LCAib3Blbl9waXRjaF9sYWJlbCI6ICJBMiJ9LCB7InN0cmluZ19pZCI6ICJzdHJpbmctNCIsICJkaXNwbGF5X2xhYmVsIjogIkQzIiwgImRpc3BsYXlfb3JkZXIiOiAyLCAib3Blbl9taWRpX25vdGUiOiA1MCwgIm9wZW5fcGl0Y2hfbGFiZWwiOiAiRDMifSwgeyJzdHJpbmdfaWQiOiAic3RyaW5nLTMiLCAiZGlzcGxheV9sYWJlbCI6ICJHMyIsICJkaXNwbGF5X29yZGVyIjogMywgIm9wZW5fbWlkaV9ub3RlIjogNTUsICJvcGVuX3BpdGNoX2xhYmVsIjogIkczIn0sIHsic3RyaW5nX2lkIjogInN0cmluZy0yIiwgImRpc3BsYXlfbGFiZWwiOiAiQjMiLCAiZGlzcGxheV9vcmRlciI6IDQsICJvcGVuX21pZGlfbm90ZSI6IDU5LCAib3Blbl9waXRjaF9sYWJlbCI6ICJCMyJ9LCB7InN0cmluZ19pZCI6ICJzdHJpbmctMSIsICJkaXNwbGF5X2xhYmVsIjogIkU0IiwgImRpc3BsYXlfb3JkZXIiOiA1LCAib3Blbl9taWRpX25vdGUiOiA2NCwgIm9wZW5fcGl0Y2hfbGFiZWwiOiAiRTQifV0sICJmcmV0cyI6IFt7ImZyZXRfbnVtYmVyIjogMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjAsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDEsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC4wNTYxMjU2ODczMTgzMDY0NywgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMiwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjEwOTEwMTI4MTg1OTY2MDczLCAibWFya2VyX2xhYmVsIjogbnVsbH0sIHsiZnJldF9udW1iZXIiOiAzLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuMTU5MTAzNTg0NzQ2Mjg1NSwgIm1hcmtlcl9sYWJlbCI6ICIzcmQgZnJldCJ9LCB7ImZyZXRfbnVtYmVyIjogNCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjIwNjI5OTQ3NDAxNTkwMDIsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDUsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC4yNTA4NDY0NjE1NjE2NTkyNCwgIm1hcmtlcl9sYWJlbCI6ICI1dGggZnJldCJ9LCB7ImZyZXRfbnVtYmVyIjogNiwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjI5Mjg5MzIxODgxMzQ1MjQsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDcsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC4zMzI1ODAwNzI5MTQ5ODI4LCAibWFya2VyX2xhYmVsIjogIjd0aCBmcmV0In0sIHsiZnJldF9udW1iZXIiOiA4LCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuMzcwMDM5NDc1MDUyNTYzNCwgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogOSwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjQwNTM5NjQ0MjQ5ODYzOTUsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDEwLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNDM4NzY4OTc1ODQ1MzEzNSwgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMTEsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC40NzAyNjg0NTI4MjAzNTIzNSwgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMTIsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC41LCAibWFya2VyX2xhYmVsIjogIjEydGggZnJldCJ9LCB7ImZyZXRfbnVtYmVyIjogMTMsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC41MjgwNjI4NDM2NTkxNTMyLCAibWFya2VyX2xhYmVsIjogbnVsbH0sIHsiZnJldF9udW1iZXIiOiAxNCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjU1NDU1MDY0MDkyOTgzMDQsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDE1LCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNTc5NTUxNzkyMzczMTQyOCwgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMTYsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC42MDMxNDk3MzcwMDc5NTAyLCAibWFya2VyX2xhYmVsIjogbnVsbH0sIHsiZnJldF9udW1iZXIiOiAxNywgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjYyNTQyMzIzMDc4MDgyOTYsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDE4LCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNjQ2NDQ2NjA5NDA2NzI2MywgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMTksICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC42NjYyOTAwMzY0NTc0OTE0LCAibWFya2VyX2xhYmVsIjogbnVsbH0sIHsiZnJldF9udW1iZXIiOiAyMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjY4NTAxOTczNzUyNjI4MTYsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDIxLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNzAyNjk4MjIxMjQ5MzE5OCwgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMjIsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC43MTkzODQ0ODc5MjI2NTY3LCAibWFya2VyX2xhYmVsIjogbnVsbH1dfSwgInNlbGVjdGlvbl9wb2xpY3kiOiAiZW51bWVyYXRpb25fdjEiLCAibm90ZXMiOiBbeyJldmVudF9pZCI6ICJldi0xIiwgInN0YXR1cyI6ICJzZWxlY3RlZCIsICJtaWRpX25vdGUiOiA2NCwgInBpdGNoX2xhYmVsIjogIkU0IiwgIm9uc2V0X3RpY2siOiAwLCAiZHVyYXRpb25fdGlja3MiOiA0ODAsICJvbnNldF9zZWNvbmRzIjogMC4wLCAicmVsZWFzZV9zZWNvbmRzIjogNy41LCAibGFuZV9kaXNwbGF5X29yZGVyIjogMSwgInN0cmluZ19pZCI6ICJzdHJpbmctNSIsICJmcmV0X251bWJlciI6IDE5LCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiAxOS4wLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNjY2MjkwMDM2NDU3NDkxNCwgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJzZWxlY3Rpb25fb3JpZ2luIjogImF1dG9tYXRpYyIsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTIiLCAic3RhdHVzIjogInNlbGVjdGVkIiwgIm1pZGlfbm90ZSI6IDY3LCAicGl0Y2hfbGFiZWwiOiAiRzQiLCAib25zZXRfdGljayI6IDQ4MCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAib25zZXRfc2Vjb25kcyI6IDcuNSwgInJlbGVhc2Vfc2Vjb25kcyI6IDE1LjAsICJsYW5lX2Rpc3BsYXlfb3JkZXIiOiAxLCAic3RyaW5nX2lkIjogInN0cmluZy01IiwgImZyZXRfbnVtYmVyIjogMjIsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDIyLjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC43MTkzODQ0ODc5MjI2NTY3LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInNlbGVjdGlvbl9vcmlnaW4iOiAiYXV0b21hdGljIiwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH0sIHsiZXZlbnRfaWQiOiAiZXYtMyIsICJzdGF0dXMiOiAic2VsZWN0ZWQiLCAibWlkaV9ub3RlIjogNjksICJwaXRjaF9sYWJlbCI6ICJBNCIsICJvbnNldF90aWNrIjogOTYwLCAiZHVyYXRpb25fdGlja3MiOiA0ODAsICJvbnNldF9zZWNvbmRzIjogMTUuMCwgInJlbGVhc2Vfc2Vjb25kcyI6IDIyLjUsICJsYW5lX2Rpc3BsYXlfb3JkZXIiOiAyLCAic3RyaW5nX2lkIjogInN0cmluZy00IiwgImZyZXRfbnVtYmVyIjogMTksICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDE5LjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC42NjYyOTAwMzY0NTc0OTE0LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInNlbGVjdGlvbl9vcmlnaW4iOiAiYXV0b21hdGljIiwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH1dLCAid2FybmluZ3MiOiBbXSwgInVuc3VwcG9ydGVkX2ZlYXR1cmVzIjogW10sICJkZXNjcmlwdGlvbiI6IG51bGwsICJvYmplY3RpdmUiOiAiU2hvdyBvbmUgcmVjZWl2ZWQgbGVzc29uIGZyb20gaW5ib3ggdGhyb3VnaCBmZWVkYmFjay4iLCAidGVhY2hlcl9ub3RlIjogIkludGVncmF0aW9uIHdpdG5lc3MgYXNzaWdubWVudC4gTm90IGEgYnVuZGxlZCBkZW1vLiJ9LCAidGltZWxpbmVfYW5jaG9yc19zY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJ0aW1lbGluZV9hbmNob3JzIjogW3sidGljayI6IDAsICJzZWNvbmRzIjogMC4wfSwgeyJ0aWNrIjogMTQ0MCwgInNlY29uZHMiOiAyMi41fV19LCAicGxheWJhY2siOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImFzc2lnbm1lbnRfaWQiOiAidGVhY2hlcl9zbWl0aF9zdHVkZW50XzQyXzIwMjZfMDhfMTAiLCAiY29udGVudF9pZCI6ICJibHVlc190dXJuYXJvdW5kXzAxIiwgInRpbWVsaW5lIjogeyJ0aWNrc19wZXJfcXVhcnRlciI6IDQ4MCwgInRvdGFsX3RpY2tzIjogMTQ0MCwgInRlbXBvX2NoYW5nZXMiOiBbeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJ0aWNrIjogMCwgIm1pY3Jvc2Vjb25kc19wZXJfcXVhcnRlciI6IDc1MDAwMDB9XX0sICJldmVudHMiOiBbeyJldmVudF9pZCI6ICJldi0xIiwgIm1pZGlfbm90ZSI6IDY0LCAidmVsb2NpdHkiOiA4MCwgIm9uc2V0X3NlY29uZHMiOiAwLjAsICJyZWxlYXNlX3NlY29uZHMiOiA3LjUsICJjZW50c19vZmZzZXQiOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0yIiwgIm1pZGlfbm90ZSI6IDY3LCAidmVsb2NpdHkiOiA4MCwgIm9uc2V0X3NlY29uZHMiOiA3LjUsICJyZWxlYXNlX3NlY29uZHMiOiAxNS4wLCAiY2VudHNfb2Zmc2V0IjogbnVsbH0sIHsiZXZlbnRfaWQiOiAiZXYtMyIsICJtaWRpX25vdGUiOiA2OSwgInZlbG9jaXR5IjogODAsICJvbnNldF9zZWNvbmRzIjogMTUuMCwgInJlbGVhc2Vfc2Vjb25kcyI6IDIyLjUsICJjZW50c19vZmZzZXQiOiBudWxsfV0sICJ0b3RhbF9zZWNvbmRzIjogMjIuNSwgIndhcm5pbmdzIjogW10sICJ1bnN1cHBvcnRlZF9mZWF0dXJlcyI6IFtdLCAicGxheWJhY2tfZGlnZXN0IjogInNoYTI1NjpkYmRiNmQwZDg5MWJkNzFlNTZjZTgyNjc5NGMyMTg4N2NmNjZhMjc5ZmJmNzgwNDhjMTY2MzM3ZWZjNjQyN2U1IiwgImNhbm9uaWNhbF9yZXZpc2lvbl9pZCI6ICJyZXYtY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiIn0sICJwcmFjdGljZSI6IHsicG9saWN5IjogeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJhc3NpZ25tZW50X2lkIjogInRlYWNoZXJfc21pdGhfc3R1ZGVudF80Ml8yMDI2XzA4XzEwIiwgImNvbnRlbnRfaWQiOiAiYmx1ZXNfdHVybmFyb3VuZF8wMSIsICJsZXNzb25fZW5kX3RpY2siOiAxNDQwLCAibG9vcCI6IHsiZW5hYmxlZCI6IGZhbHNlLCAic3RhcnRfdGljayI6IDAsICJlbmRfdGljayI6IDE0NDAsICJ0YXJnZXRfcmVwZXRpdGlvbnMiOiBudWxsfSwgImNvdW50X2luX2JhcnMiOiAwfSwgInJ1bnRpbWUiOiB7Imxvb3Bfc3RhcnRfc2Vjb25kcyI6IDAuMCwgImxvb3BfZW5kX3NlY29uZHMiOiAyMi41fX0sICJzY29yZSI6IHsiY2Fub25pY2FsX3JldmlzaW9uIjogeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJyZXZpc2lvbl9pZCI6ICJyZXYtY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiIiwgImRvY3VtZW50X2lkIjogInNjb3JlLWJsdWVzX3R1cm5hcm91bmRfMDEiLCAicmV2aXNpb25fbnVtYmVyIjogMSwgInBhcmVudF9yZXZpc2lvbl9pZCI6IG51bGwsICJjcmVhdGVkX2F0IjogIjIwMjYtMDgtMTBUMTI6MDA6MDBaIiwgInRpY2tzX3Blcl9xdWFydGVyIjogNDgwLCAiY29udGVudF9kaWdlc3QiOiAiY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiMDFhYTY1ZDQwMzE2MWVjY2ZhMWU5YmNhMGRiN2ZlNDk0ZjQ5ZTZhZCIsICJwcm92ZW5hbmNlIjogeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJzb3VyY2Vfa2luZCI6ICJtYW51YWxfY29uc3RydWN0aW9uIiwgInBvbGljeV92ZXJzaW9uIjogIkFVVEhPUkVEX0xFU1NPTl9SRVZJU0lPTl9WMSIsICJzb3VyY2VfcmVmZXJlbmNlIjogImJsdWVzX3R1cm5hcm91bmRfMDEiLCAiZXZlbnRfcHJvdmVuYW5jZSI6IFtdLCAibm90ZXMiOiBbXX0sICJldmVudHMiOiBbeyJldmVudF9pZCI6ICJldi0xIiwgIm1pZGlfbm90ZSI6IDY0LCAic3RhcnRfdGljayI6IDAsICJkdXJhdGlvbl90aWNrcyI6IDQ4MCwgInZlbG9jaXR5IjogODAsICJjZW50c19vZmZzZXQiOiAwLjAsICJ2b2ljZV9pZCI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTIiLCAibWlkaV9ub3RlIjogNjcsICJzdGFydF90aWNrIjogNDgwLCAiZHVyYXRpb25fdGlja3MiOiA0ODAsICJ2ZWxvY2l0eSI6IDgwLCAiY2VudHNfb2Zmc2V0IjogMC4wLCAidm9pY2VfaWQiOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0zIiwgIm1pZGlfbm90ZSI6IDY5LCAic3RhcnRfdGljayI6IDk2MCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAidmVsb2NpdHkiOiA4MCwgImNlbnRzX29mZnNldCI6IDAuMCwgInZvaWNlX2lkIjogbnVsbH1dLCAidGVtcG9fY2hhbmdlcyI6IFt7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgInRpY2siOiAwLCAibWljcm9zZWNvbmRzX3Blcl9xdWFydGVyIjogNzUwMDAwMH1dLCAibWV0ZXJfY2hhbmdlcyI6IFt7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgInRpY2siOiAwLCAibnVtZXJhdG9yIjogNCwgImRlbm9taW5hdG9yIjogNH1dfSwgInRhYiI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicHJvamVjdGlvbl9pZCI6ICJ0YWI6cmV2LWNmNzNhZTVhZmEzMzdlYmUzMzRlOTI0YiIsICJjYW5vbmljYWxfcmV2aXNpb25faWQiOiAicmV2LWNmNzNhZTVhZmEzMzdlYmUzMzRlOTI0YiIsICJwcm9qZWN0aW9uX2tpbmQiOiAidGFiIiwgInBheWxvYWQiOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImNhbm9uaWNhbF9yZXZpc2lvbl9pZCI6ICJyZXYtY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiIiwgImluc3RydW1lbnRfcHJvZmlsZV9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJldmVudHMiOiBbeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJjYW5vbmljYWxfZXZlbnRfaWQiOiAiZXYtMSIsICJzdGFydF90aWNrIjogMCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAibWlkaV9ub3RlIjogNjQsICJzdGF0dXMiOiAicGxheWFibGUiLCAic3RyaW5nX2lkIjogInN0cmluZy01IiwgImZyZXQiOiAxOSwgImNlbnRzX29mZnNldCI6IDAuMH0sIHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiY2Fub25pY2FsX2V2ZW50X2lkIjogImV2LTIiLCAic3RhcnRfdGljayI6IDQ4MCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAibWlkaV9ub3RlIjogNjcsICJzdGF0dXMiOiAicGxheWFibGUiLCAic3RyaW5nX2lkIjogInN0cmluZy01IiwgImZyZXQiOiAyMiwgImNlbnRzX29mZnNldCI6IDAuMH0sIHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiY2Fub25pY2FsX2V2ZW50X2lkIjogImV2LTMiLCAic3RhcnRfdGljayI6IDk2MCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAibWlkaV9ub3RlIjogNjksICJzdGF0dXMiOiAicGxheWFibGUiLCAic3RyaW5nX2lkIjogInN0cmluZy00IiwgImZyZXQiOiAxOSwgImNlbnRzX29mZnNldCI6IDAuMH1dLCAidW5zdXBwb3J0ZWRfZmVhdHVyZXMiOiBbXX0sICJkaWdlc3QiOiAic2hhMjU2OmMxZWMzMWQwNTU0Yzk5ODg0OTcwMzRiMzFiMGYzNTIyMWNjMzg4NTQ1MDJkZDYxYjE4YWE0NTA0ZGEwODQ5MGQiLCAidW5zdXBwb3J0ZWRfZmVhdHVyZXMiOiBbXX0sICJub3RhdGlvbiI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicHJvamVjdGlvbl9pZCI6ICJub3RhdGlvbjpyZXYtY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiIiwgImNhbm9uaWNhbF9yZXZpc2lvbl9pZCI6ICJyZXYtY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiIiwgInByb2plY3Rpb25fa2luZCI6ICJub3RhdGlvbiIsICJwYXlsb2FkIjogeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJjYW5vbmljYWxfcmV2aXNpb25faWQiOiAicmV2LWNmNzNhZTVhZmEzMzdlYmUzMzRlOTI0YiIsICJ0aWNrc19wZXJfcXVhcnRlciI6IDQ4MCwgImRpc3BsYXlfcG9saWN5IjogInNoYXJwX3ByZWZlcnJlZF92MSIsICJtZWFzdXJlcyI6IFt7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgIm1lYXN1cmVfaW5kZXgiOiAwLCAic3RhcnRfdGljayI6IDAsICJlbmRfdGljayI6IDE5MjAsICJtZXRlciI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAidGljayI6IDAsICJudW1lcmF0b3IiOiA0LCAiZGVub21pbmF0b3IiOiA0fSwgImV2ZW50cyI6IFt7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImV2ZW50X2tpbmQiOiAibm90ZSIsICJzdGFydF90aWNrIjogMCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAiY2Fub25pY2FsX2V2ZW50X2lkIjogImV2LTEiLCAibWlkaV9ub3RlIjogNjQsICJkaXNwbGF5X3BpdGNoIjogIkU0IiwgImRpc3BsYXlfZHVyYXRpb24iOiAicXVhcnRlciIsICJkZXJpdmF0aW9uIjogbnVsbH0sIHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiZXZlbnRfa2luZCI6ICJub3RlIiwgInN0YXJ0X3RpY2siOiA0ODAsICJkdXJhdGlvbl90aWNrcyI6IDQ4MCwgImNhbm9uaWNhbF9ldmVudF9pZCI6ICJldi0yIiwgIm1pZGlfbm90ZSI6IDY3LCAiZGlzcGxheV9waXRjaCI6ICJHNCIsICJkaXNwbGF5X2R1cmF0aW9uIjogInF1YXJ0ZXIiLCAiZGVyaXZhdGlvbiI6IG51bGx9LCB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImV2ZW50X2tpbmQiOiAibm90ZSIsICJzdGFydF90aWNrIjogOTYwLCAiZHVyYXRpb25fdGlja3MiOiA0ODAsICJjYW5vbmljYWxfZXZlbnRfaWQiOiAiZXYtMyIsICJtaWRpX25vdGUiOiA2OSwgImRpc3BsYXlfcGl0Y2giOiAiQTQiLCAiZGlzcGxheV9kdXJhdGlvbiI6ICJxdWFydGVyIiwgImRlcml2YXRpb24iOiBudWxsfV19XSwgInVuc3VwcG9ydGVkX2ZlYXR1cmVzIjogW119LCAiZGlnZXN0IjogInNoYTI1Njo1OTFiMDU3NWY3OTBjMWM1NTJlNDVlMTJkZjYyN2IzNWE4OWZlN2Y3MWYxNzcwMDA2YTNjNDNiOGRjMzllNTM2IiwgInVuc3VwcG9ydGVkX2ZlYXR1cmVzIjogW119fX0sICJhdHRlbXB0X3BvbGljeSI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicGFzc19jb3VudCI6IDEsICJwbGF5YmFja19yYXRlIjogMSwgImxvb3BpbmdfYWxsb3dlZCI6IGZhbHNlLCAic2Vla2luZ19hbGxvd2VkIjogZmFsc2UsICJsZXNzb25fc3dpdGNoaW5nX2FsbG93ZWQiOiBmYWxzZSwgInJlZmVyZW5jZV9zb3VuZCI6ICJpbmRlcGVuZGVudF9vZl9jYXB0dXJlIn19fQ==",
+      "response_sha256": "e6d68267b3c3542a4b1308336721fa0bce4d9515e5b1ca7a72858705733628da",
+      "request": {
+        "begin_request_id": "32bf0997-de56-4d5d-934e-3f18a039b6d8",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 334400000
+        }
+      },
+      "response": {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": "32bf0997-de56-4d5d-934e-3f18a039b6d8",
+        "status": "STARTED",
+        "attempt": {
+          "schema_id": "master_all_strings.received_lesson_attempt",
+          "schema_version": "1.0.0",
+          "attempt_status": "CAPTURING",
+          "attempt_id": "59844cc0-f644-489a-8519-72ddf0e7cc15",
+          "capture_id": "c1377808-2d0f-4f6c-92f9-35e5298fec85",
+          "performance_session_id": "d0835479-9fd5-4639-af40-4d2b7fabfa1c",
+          "delivery_id": "delivery-stage9",
+          "assignment_id": "teacher_smith_student_42_2026_08_10",
+          "content_id": "blues_turnaround_01",
+          "assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "capture_clock": "browser_performance_time",
+          "preparation": {
+            "schema_id": "master_all_strings.local_practice_preparation",
+            "schema_version": "1.0.0",
+            "preparation_status": "PREPARED",
+            "delivery_id": "delivery-stage9",
+            "assignment_id": "teacher_smith_student_42_2026_08_10",
+            "content_id": "blues_turnaround_01",
+            "assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+            "assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+            "projection": {
+              "status": "ready",
+              "demo_id": null,
+              "summary_title": "Stage 9 Integration Etude",
+              "instrument_id": "guitar-standard-6",
+              "behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+              "warnings": [],
+              "unsupported_features": [],
+              "teaching_aids": {
+                "one_string": [
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-6",
+                    "display_label": "E2",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "unplayable",
+                        "requested_string_id": "string-6",
+                        "display_order": null,
+                        "physical_fret_number": null,
+                        "relative_semitone_position": null,
+                        "normalized_position": null,
+                        "is_open_string": null,
+                        "unresolved_reason": "unplayable_on_requested_string"
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "unplayable",
+                        "requested_string_id": "string-6",
+                        "display_order": null,
+                        "physical_fret_number": null,
+                        "relative_semitone_position": null,
+                        "normalized_position": null,
+                        "is_open_string": null,
+                        "unresolved_reason": "unplayable_on_requested_string"
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "unplayable",
+                        "requested_string_id": "string-6",
+                        "display_order": null,
+                        "physical_fret_number": null,
+                        "relative_semitone_position": null,
+                        "normalized_position": null,
+                        "is_open_string": null,
+                        "unresolved_reason": "unplayable_on_requested_string"
+                      }
+                    ]
+                  },
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-5",
+                    "display_label": "A2",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "playable",
+                        "requested_string_id": "string-5",
+                        "display_order": 1,
+                        "physical_fret_number": 19,
+                        "relative_semitone_position": 19,
+                        "normalized_position": 0.6662900364574914,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "playable",
+                        "requested_string_id": "string-5",
+                        "display_order": 1,
+                        "physical_fret_number": 22,
+                        "relative_semitone_position": 22,
+                        "normalized_position": 0.7193844879226567,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "unplayable",
+                        "requested_string_id": "string-5",
+                        "display_order": null,
+                        "physical_fret_number": null,
+                        "relative_semitone_position": null,
+                        "normalized_position": null,
+                        "is_open_string": null,
+                        "unresolved_reason": "unplayable_on_requested_string"
+                      }
+                    ]
+                  },
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-4",
+                    "display_label": "D3",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "playable",
+                        "requested_string_id": "string-4",
+                        "display_order": 2,
+                        "physical_fret_number": 14,
+                        "relative_semitone_position": 14,
+                        "normalized_position": 0.5545506409298304,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "playable",
+                        "requested_string_id": "string-4",
+                        "display_order": 2,
+                        "physical_fret_number": 17,
+                        "relative_semitone_position": 17,
+                        "normalized_position": 0.6254232307808296,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "playable",
+                        "requested_string_id": "string-4",
+                        "display_order": 2,
+                        "physical_fret_number": 19,
+                        "relative_semitone_position": 19,
+                        "normalized_position": 0.6662900364574914,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      }
+                    ]
+                  },
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-3",
+                    "display_label": "G3",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "playable",
+                        "requested_string_id": "string-3",
+                        "display_order": 3,
+                        "physical_fret_number": 9,
+                        "relative_semitone_position": 9,
+                        "normalized_position": 0.4053964424986395,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "playable",
+                        "requested_string_id": "string-3",
+                        "display_order": 3,
+                        "physical_fret_number": 12,
+                        "relative_semitone_position": 12,
+                        "normalized_position": 0.5,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "playable",
+                        "requested_string_id": "string-3",
+                        "display_order": 3,
+                        "physical_fret_number": 14,
+                        "relative_semitone_position": 14,
+                        "normalized_position": 0.5545506409298304,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      }
+                    ]
+                  },
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-2",
+                    "display_label": "B3",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "playable",
+                        "requested_string_id": "string-2",
+                        "display_order": 4,
+                        "physical_fret_number": 5,
+                        "relative_semitone_position": 5,
+                        "normalized_position": 0.25084646156165924,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "playable",
+                        "requested_string_id": "string-2",
+                        "display_order": 4,
+                        "physical_fret_number": 8,
+                        "relative_semitone_position": 8,
+                        "normalized_position": 0.3700394750525634,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "playable",
+                        "requested_string_id": "string-2",
+                        "display_order": 4,
+                        "physical_fret_number": 10,
+                        "relative_semitone_position": 10,
+                        "normalized_position": 0.4387689758453135,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      }
+                    ]
+                  },
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-1",
+                    "display_label": "E4",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "playable",
+                        "requested_string_id": "string-1",
+                        "display_order": 5,
+                        "physical_fret_number": 0,
+                        "relative_semitone_position": 0,
+                        "normalized_position": 0,
+                        "is_open_string": true,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "playable",
+                        "requested_string_id": "string-1",
+                        "display_order": 5,
+                        "physical_fret_number": 3,
+                        "relative_semitone_position": 3,
+                        "normalized_position": 0.1591035847462855,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "playable",
+                        "requested_string_id": "string-1",
+                        "display_order": 5,
+                        "physical_fret_number": 5,
+                        "relative_semitone_position": 5,
+                        "normalized_position": 0.25084646156165924,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      }
+                    ]
+                  }
+                ]
+              },
+              "projection": {
+                "schema_version": "1.0.0",
+                "projection_type": "fretboard_scroll",
+                "projection_version": "1.0.0",
+                "fidelity": "selected_spatial_v1",
+                "projection_digest": "sha256:d1818d6ddc08e184dd4ac68ebd55bf47644400d3feb6a4cd0efa864b6ee61412",
+                "assignment_id": "teacher_smith_student_42_2026_08_10",
+                "content_id": "blues_turnaround_01",
+                "title": "Stage 9 Integration Etude",
+                "timeline": {
+                  "ticks_per_quarter": 480,
+                  "total_ticks": 1440,
+                  "total_seconds": 22.5,
+                  "seconds_per_screen": 4,
+                  "play_line_fraction": 0.22
+                },
+                "tempo_changes": [
+                  {
+                    "tick": 0,
+                    "tempo_bpm": 8,
+                    "microseconds_per_quarter": 7500000
+                  }
+                ],
+                "instrument": {
+                  "instrument_id": "guitar-standard-6",
+                  "display_name": "Standard Guitar (6-string)",
+                  "fingerboard_mode": "fretted",
+                  "scale_length_mm": 648,
+                  "lanes": [
+                    {
+                      "string_id": "string-6",
+                      "display_label": "E2",
+                      "display_order": 0,
+                      "open_midi_note": 40,
+                      "open_pitch_label": "E2"
+                    },
+                    {
+                      "string_id": "string-5",
+                      "display_label": "A2",
+                      "display_order": 1,
+                      "open_midi_note": 45,
+                      "open_pitch_label": "A2"
+                    },
+                    {
+                      "string_id": "string-4",
+                      "display_label": "D3",
+                      "display_order": 2,
+                      "open_midi_note": 50,
+                      "open_pitch_label": "D3"
+                    },
+                    {
+                      "string_id": "string-3",
+                      "display_label": "G3",
+                      "display_order": 3,
+                      "open_midi_note": 55,
+                      "open_pitch_label": "G3"
+                    },
+                    {
+                      "string_id": "string-2",
+                      "display_label": "B3",
+                      "display_order": 4,
+                      "open_midi_note": 59,
+                      "open_pitch_label": "B3"
+                    },
+                    {
+                      "string_id": "string-1",
+                      "display_label": "E4",
+                      "display_order": 5,
+                      "open_midi_note": 64,
+                      "open_pitch_label": "E4"
+                    }
+                  ],
+                  "frets": [
+                    {
+                      "fret_number": 0,
+                      "normalized_position": 0,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 1,
+                      "normalized_position": 0.05612568731830647,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 2,
+                      "normalized_position": 0.10910128185966073,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 3,
+                      "normalized_position": 0.1591035847462855,
+                      "marker_label": "3rd fret"
+                    },
+                    {
+                      "fret_number": 4,
+                      "normalized_position": 0.2062994740159002,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 5,
+                      "normalized_position": 0.25084646156165924,
+                      "marker_label": "5th fret"
+                    },
+                    {
+                      "fret_number": 6,
+                      "normalized_position": 0.2928932188134524,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 7,
+                      "normalized_position": 0.3325800729149828,
+                      "marker_label": "7th fret"
+                    },
+                    {
+                      "fret_number": 8,
+                      "normalized_position": 0.3700394750525634,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 9,
+                      "normalized_position": 0.4053964424986395,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 10,
+                      "normalized_position": 0.4387689758453135,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 11,
+                      "normalized_position": 0.47026845282035235,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 12,
+                      "normalized_position": 0.5,
+                      "marker_label": "12th fret"
+                    },
+                    {
+                      "fret_number": 13,
+                      "normalized_position": 0.5280628436591532,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 14,
+                      "normalized_position": 0.5545506409298304,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 15,
+                      "normalized_position": 0.5795517923731428,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 16,
+                      "normalized_position": 0.6031497370079502,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 17,
+                      "normalized_position": 0.6254232307808296,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 18,
+                      "normalized_position": 0.6464466094067263,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 19,
+                      "normalized_position": 0.6662900364574914,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 20,
+                      "normalized_position": 0.6850197375262816,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 21,
+                      "normalized_position": 0.7026982212493198,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 22,
+                      "normalized_position": 0.7193844879226567,
+                      "marker_label": null
+                    }
+                  ]
+                },
+                "selection_policy": "enumeration_v1",
+                "notes": [
+                  {
+                    "event_id": "ev-1",
+                    "status": "selected",
+                    "midi_note": 64,
+                    "pitch_label": "E4",
+                    "onset_tick": 0,
+                    "duration_ticks": 480,
+                    "onset_seconds": 0,
+                    "release_seconds": 7.5,
+                    "lane_display_order": 1,
+                    "string_id": "string-5",
+                    "fret_number": 19,
+                    "relative_semitone_position": 19,
+                    "normalized_position": 0.6662900364574914,
+                    "is_open_string": false,
+                    "selection_origin": "automatic",
+                    "unresolved_reason": null
+                  },
+                  {
+                    "event_id": "ev-2",
+                    "status": "selected",
+                    "midi_note": 67,
+                    "pitch_label": "G4",
+                    "onset_tick": 480,
+                    "duration_ticks": 480,
+                    "onset_seconds": 7.5,
+                    "release_seconds": 15,
+                    "lane_display_order": 1,
+                    "string_id": "string-5",
+                    "fret_number": 22,
+                    "relative_semitone_position": 22,
+                    "normalized_position": 0.7193844879226567,
+                    "is_open_string": false,
+                    "selection_origin": "automatic",
+                    "unresolved_reason": null
+                  },
+                  {
+                    "event_id": "ev-3",
+                    "status": "selected",
+                    "midi_note": 69,
+                    "pitch_label": "A4",
+                    "onset_tick": 960,
+                    "duration_ticks": 480,
+                    "onset_seconds": 15,
+                    "release_seconds": 22.5,
+                    "lane_display_order": 2,
+                    "string_id": "string-4",
+                    "fret_number": 19,
+                    "relative_semitone_position": 19,
+                    "normalized_position": 0.6662900364574914,
+                    "is_open_string": false,
+                    "selection_origin": "automatic",
+                    "unresolved_reason": null
+                  }
+                ],
+                "warnings": [],
+                "unsupported_features": [],
+                "description": null,
+                "objective": "Show one received lesson from inbox through feedback.",
+                "teacher_note": "Integration witness assignment. Not a bundled demo."
+              },
+              "timeline_anchors_schema_version": "1.0.0",
+              "timeline_anchors": [
+                {
+                  "tick": 0,
+                  "seconds": 0
+                },
+                {
+                  "tick": 1440,
+                  "seconds": 22.5
+                }
+              ]
+            },
+            "playback": {
+              "schema_version": "1.0.0",
+              "assignment_id": "teacher_smith_student_42_2026_08_10",
+              "content_id": "blues_turnaround_01",
+              "timeline": {
+                "ticks_per_quarter": 480,
+                "total_ticks": 1440,
+                "tempo_changes": [
+                  {
+                    "schema_version": "1.0.0",
+                    "tick": 0,
+                    "microseconds_per_quarter": 7500000
+                  }
+                ]
+              },
+              "events": [
+                {
+                  "event_id": "ev-1",
+                  "midi_note": 64,
+                  "velocity": 80,
+                  "onset_seconds": 0,
+                  "release_seconds": 7.5,
+                  "cents_offset": null
+                },
+                {
+                  "event_id": "ev-2",
+                  "midi_note": 67,
+                  "velocity": 80,
+                  "onset_seconds": 7.5,
+                  "release_seconds": 15,
+                  "cents_offset": null
+                },
+                {
+                  "event_id": "ev-3",
+                  "midi_note": 69,
+                  "velocity": 80,
+                  "onset_seconds": 15,
+                  "release_seconds": 22.5,
+                  "cents_offset": null
+                }
+              ],
+              "total_seconds": 22.5,
+              "warnings": [],
+              "unsupported_features": [],
+              "playback_digest": "sha256:dbdb6d0d891bd71e56ce826794c21887cf66a279fbf78048c166337efc6427e5",
+              "canonical_revision_id": "rev-cf73ae5afa337ebe334e924b"
+            },
+            "practice": {
+              "policy": {
+                "schema_version": "1.0.0",
+                "assignment_id": "teacher_smith_student_42_2026_08_10",
+                "content_id": "blues_turnaround_01",
+                "lesson_end_tick": 1440,
+                "loop": {
+                  "enabled": false,
+                  "start_tick": 0,
+                  "end_tick": 1440,
+                  "target_repetitions": null
+                },
+                "count_in_bars": 0
+              },
+              "runtime": {
+                "loop_start_seconds": 0,
+                "loop_end_seconds": 22.5
+              }
+            },
+            "score": {
+              "canonical_revision": {
+                "schema_version": "1.0.0",
+                "revision_id": "rev-cf73ae5afa337ebe334e924b",
+                "document_id": "score-blues_turnaround_01",
+                "revision_number": 1,
+                "parent_revision_id": null,
+                "created_at": "2026-08-10T12:00:00Z",
+                "ticks_per_quarter": 480,
+                "content_digest": "cf73ae5afa337ebe334e924b01aa65d403161eccfa1e9bca0db7fe494f49e6ad",
+                "provenance": {
+                  "schema_version": "1.0.0",
+                  "source_kind": "manual_construction",
+                  "policy_version": "AUTHORED_LESSON_REVISION_V1",
+                  "source_reference": "blues_turnaround_01",
+                  "event_provenance": [],
+                  "notes": []
+                },
+                "events": [
+                  {
+                    "event_id": "ev-1",
+                    "midi_note": 64,
+                    "start_tick": 0,
+                    "duration_ticks": 480,
+                    "velocity": 80,
+                    "cents_offset": 0,
+                    "voice_id": null
+                  },
+                  {
+                    "event_id": "ev-2",
+                    "midi_note": 67,
+                    "start_tick": 480,
+                    "duration_ticks": 480,
+                    "velocity": 80,
+                    "cents_offset": 0,
+                    "voice_id": null
+                  },
+                  {
+                    "event_id": "ev-3",
+                    "midi_note": 69,
+                    "start_tick": 960,
+                    "duration_ticks": 480,
+                    "velocity": 80,
+                    "cents_offset": 0,
+                    "voice_id": null
+                  }
+                ],
+                "tempo_changes": [
+                  {
+                    "schema_version": "1.0.0",
+                    "tick": 0,
+                    "microseconds_per_quarter": 7500000
+                  }
+                ],
+                "meter_changes": [
+                  {
+                    "schema_version": "1.0.0",
+                    "tick": 0,
+                    "numerator": 4,
+                    "denominator": 4
+                  }
+                ]
+              },
+              "tab": {
+                "schema_version": "1.0.0",
+                "projection_id": "tab:rev-cf73ae5afa337ebe334e924b",
+                "canonical_revision_id": "rev-cf73ae5afa337ebe334e924b",
+                "projection_kind": "tab",
+                "payload": {
+                  "schema_version": "1.0.0",
+                  "canonical_revision_id": "rev-cf73ae5afa337ebe334e924b",
+                  "instrument_profile_id": "guitar-standard-6",
+                  "events": [
+                    {
+                      "schema_version": "1.0.0",
+                      "canonical_event_id": "ev-1",
+                      "start_tick": 0,
+                      "duration_ticks": 480,
+                      "midi_note": 64,
+                      "status": "playable",
+                      "string_id": "string-5",
+                      "fret": 19,
+                      "cents_offset": 0
+                    },
+                    {
+                      "schema_version": "1.0.0",
+                      "canonical_event_id": "ev-2",
+                      "start_tick": 480,
+                      "duration_ticks": 480,
+                      "midi_note": 67,
+                      "status": "playable",
+                      "string_id": "string-5",
+                      "fret": 22,
+                      "cents_offset": 0
+                    },
+                    {
+                      "schema_version": "1.0.0",
+                      "canonical_event_id": "ev-3",
+                      "start_tick": 960,
+                      "duration_ticks": 480,
+                      "midi_note": 69,
+                      "status": "playable",
+                      "string_id": "string-4",
+                      "fret": 19,
+                      "cents_offset": 0
+                    }
+                  ],
+                  "unsupported_features": []
+                },
+                "digest": "sha256:c1ec31d0554c9988497034b31b0f35221cc38854502dd61b18aa4504da08490d",
+                "unsupported_features": []
+              },
+              "notation": {
+                "schema_version": "1.0.0",
+                "projection_id": "notation:rev-cf73ae5afa337ebe334e924b",
+                "canonical_revision_id": "rev-cf73ae5afa337ebe334e924b",
+                "projection_kind": "notation",
+                "payload": {
+                  "schema_version": "1.0.0",
+                  "canonical_revision_id": "rev-cf73ae5afa337ebe334e924b",
+                  "ticks_per_quarter": 480,
+                  "display_policy": "sharp_preferred_v1",
+                  "measures": [
+                    {
+                      "schema_version": "1.0.0",
+                      "measure_index": 0,
+                      "start_tick": 0,
+                      "end_tick": 1920,
+                      "meter": {
+                        "schema_version": "1.0.0",
+                        "tick": 0,
+                        "numerator": 4,
+                        "denominator": 4
+                      },
+                      "events": [
+                        {
+                          "schema_version": "1.0.0",
+                          "event_kind": "note",
+                          "start_tick": 0,
+                          "duration_ticks": 480,
+                          "canonical_event_id": "ev-1",
+                          "midi_note": 64,
+                          "display_pitch": "E4",
+                          "display_duration": "quarter",
+                          "derivation": null
+                        },
+                        {
+                          "schema_version": "1.0.0",
+                          "event_kind": "note",
+                          "start_tick": 480,
+                          "duration_ticks": 480,
+                          "canonical_event_id": "ev-2",
+                          "midi_note": 67,
+                          "display_pitch": "G4",
+                          "display_duration": "quarter",
+                          "derivation": null
+                        },
+                        {
+                          "schema_version": "1.0.0",
+                          "event_kind": "note",
+                          "start_tick": 960,
+                          "duration_ticks": 480,
+                          "canonical_event_id": "ev-3",
+                          "midi_note": 69,
+                          "display_pitch": "A4",
+                          "display_duration": "quarter",
+                          "derivation": null
+                        }
+                      ]
+                    }
+                  ],
+                  "unsupported_features": []
+                },
+                "digest": "sha256:591b0575f790c1c552e45e12df627b35a89fe7f71f1770006a3c43b8dc39e536",
+                "unsupported_features": []
+              }
+            }
+          },
+          "attempt_policy": {
+            "schema_version": "1.0.0",
+            "pass_count": 1,
+            "playback_rate": 1,
+            "looping_allowed": false,
+            "seeking_allowed": false,
+            "lesson_switching_allowed": false,
+            "reference_sound": "independent_of_capture"
+          }
+        }
+      }
+    },
+    {
+      "seq": 2,
+      "scenario": "W1",
+      "source": "browser",
+      "route": "recovery",
+      "sender": "browser",
+      "page_outcome": "response",
+      "epoch": "A",
+      "status": 200,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiMzJiZjA5OTctZGU1Ni00ZDVkLTkzNGUtM2YxOGEwMzliNmQ4IiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjozMzQ0MDAwMDB9fQ==",
+      "request_sha256": "005be07fa9e239ce7e217937aaef5ef785b7b71600eb42e2aa2dc93f1591bd49",
+      "response_base64": "eyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9iZWdpbl9yZXF1ZXN0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlZ2luX3JlcXVlc3RfaWQiOiAiMzJiZjA5OTctZGU1Ni00ZDVkLTkzNGUtM2YxOGEwMzliNmQ4IiwgInN0YXR1cyI6ICJJTlRFUlJVUFRFRCIsICJhdHRlbXB0IjogeyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9hdHRlbXB0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImF0dGVtcHRfc3RhdHVzIjogIklOVEVSUlVQVEVEIiwgImF0dGVtcHRfaWQiOiAiNTk4NDRjYzAtZjY0NC00ODlhLTg1MTktNzJkZGYwZTdjYzE1IiwgImNhcHR1cmVfaWQiOiAiYzEzNzc4MDgtMmQwZi00ZjZjLTkyZjktMzVlNTI5OGZlYzg1IiwgInBlcmZvcm1hbmNlX3Nlc3Npb25faWQiOiAiZDA4MzU0NzktOWZkNS00NjM5LWFmNDAtNGQyYjdmYWJmYTFjIiwgImRlbGl2ZXJ5X2lkIjogImRlbGl2ZXJ5LXN0YWdlOSIsICJhc3NpZ25tZW50X2lkIjogInRlYWNoZXJfc21pdGhfc3R1ZGVudF80Ml8yMDI2XzA4XzEwIiwgImNvbnRlbnRfaWQiOiAiYmx1ZXNfdHVybmFyb3VuZF8wMSIsICJhc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6ICJzaGEyNTY6YmVkZWZlMzZjNWI0NmRkMzE0YWE5MWM5MjdkMTE1OTNlNjJhNDZlYTcxNmMzNTBkYWNjY2E5Njc2YWI4NDEyNSIsICJhc3NpZ25tZW50X2JlaGF2aW9yX2RpZ2VzdCI6ICJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsICJjYXB0dXJlX2Nsb2NrIjogImJyb3dzZXJfcGVyZm9ybWFuY2VfdGltZSIsICJyYXdfY2FwdHVyZSI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiY2FwdHVyZV9pZCI6ICJjMTM3NzgwOC0yZDBmLTRmNmMtOTJmOS0zNWU1Mjk4ZmVjODUiLCAic2Vzc2lvbl9pZCI6ICJkMDgzNTQ3OS05ZmQ1LTQ2MzktYWY0MC00ZDJiN2ZhYmZhMWMiLCAicnVudGltZV9pZGVudGl0eSI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicnVudGltZV9pZCI6ICJ3ZWItbWlkaSIsICJydW50aW1lX2tpbmQiOiAibGlnaHR3ZWlnaHQiLCAicmVwb3J0ZWRfdmVyc2lvbiI6ICIxIiwgInZlcnNpb25fcG9saWN5IjogIndlYi1taWRpLXYxIiwgInZlcnNpb25fc3VwcG9ydGVkIjogdHJ1ZX0sICJzb3VyY2VfaWRlbnRpdHkiOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgInNvdXJjZV9pZCI6ICJJbmplY3RlZCBCZWdpbiBSZWNvdmVyeSIsICJwb3J0IjogImJyb3dzZXIiLCAiZGV2aWNlIjogIkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwgInN1cHBsaWVzX3N0cmluZ19pZGVudGl0eSI6IGZhbHNlfSwgInN0YXJ0ZWRfYXQiOiAiMjAyNi0xMS0wMlQwMTozNTozMi44Mjg5MDdaIiwgImNvbXBsZXRpb25fc3RhdGUiOiAiaW50ZXJydXB0ZWQiLCAidGVtcG9fY29udGV4dCI6IDguMCwgIm1ldGVyX2NvbnRleHQiOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlYXRzX3Blcl9iYXIiOiA0LCAiYmVhdF91bml0IjogNH0sICJldmVudHMiOiBbXSwgImVuZGVkX2F0IjogIjIwMjYtMTEtMDJUMDE6MzU6MzIuOTg3NTc3WiIsICJ3YXJuaW5ncyI6IFtdLCAiZmF1bHRzIjogW10sICJwcm92ZW5hbmNlIjogeyJjbG9ja19kb21haW4iOiAiYnJvd3Nlcl9wZXJmb3JtYW5jZV90aW1lIn19LCAib2JzZXJ2ZWRfZXZlbnRzIjogW10sICJ1bm1hdGNoZWRfbm90ZV9vZmZzIjogW10sICJoYXJkd2FyZV9zdGF0dXMiOiB7Im1pZGlfaW5wdXQiOiAiVU5WRVJJRklFRF9QSFlTSUNBTF9NSURJX0lOUFVUIiwgImF1ZGlvX291dHB1dCI6ICJVTlZFUklGSUVEX0FVRElPX09VVFBVVCJ9fX0=",
+      "response_sha256": "3c46379d289fca727700abd7b44d39044768c91b624ef9ff9477bc76f7fe454a",
+      "request": {
+        "begin_request_id": "32bf0997-de56-4d5d-934e-3f18a039b6d8",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 334400000
+        }
+      },
+      "response": {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": "32bf0997-de56-4d5d-934e-3f18a039b6d8",
+        "status": "INTERRUPTED",
+        "attempt": {
+          "schema_id": "master_all_strings.received_lesson_attempt",
+          "schema_version": "1.0.0",
+          "attempt_status": "INTERRUPTED",
+          "attempt_id": "59844cc0-f644-489a-8519-72ddf0e7cc15",
+          "capture_id": "c1377808-2d0f-4f6c-92f9-35e5298fec85",
+          "performance_session_id": "d0835479-9fd5-4639-af40-4d2b7fabfa1c",
+          "delivery_id": "delivery-stage9",
+          "assignment_id": "teacher_smith_student_42_2026_08_10",
+          "content_id": "blues_turnaround_01",
+          "assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "capture_clock": "browser_performance_time",
+          "raw_capture": {
+            "schema_version": "1.0.0",
+            "capture_id": "c1377808-2d0f-4f6c-92f9-35e5298fec85",
+            "session_id": "d0835479-9fd5-4639-af40-4d2b7fabfa1c",
+            "runtime_identity": {
+              "schema_version": "1.0.0",
+              "runtime_id": "web-midi",
+              "runtime_kind": "lightweight",
+              "reported_version": "1",
+              "version_policy": "web-midi-v1",
+              "version_supported": true
+            },
+            "source_identity": {
+              "schema_version": "1.0.0",
+              "source_id": "Injected Begin Recovery",
+              "port": "browser",
+              "device": "Injected Begin Recovery",
+              "supplies_string_identity": false
+            },
+            "started_at": "2026-11-02T01:35:32.828907Z",
+            "completion_state": "interrupted",
+            "tempo_context": 8,
+            "meter_context": {
+              "schema_version": "1.0.0",
+              "beats_per_bar": 4,
+              "beat_unit": 4
+            },
+            "events": [],
+            "ended_at": "2026-11-02T01:35:32.987577Z",
+            "warnings": [],
+            "faults": [],
+            "provenance": {
+              "clock_domain": "browser_performance_time"
+            }
+          },
+          "observed_events": [],
+          "unmatched_note_offs": [],
+          "hardware_status": {
+            "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+            "audio_output": "UNVERIFIED_AUDIO_OUTPUT"
+          }
+        }
+      }
+    },
+    {
+      "seq": 3,
+      "scenario": "W2",
+      "source": "recovery_before_begin",
+      "route": "recovery",
+      "sender": "harness",
+      "page_outcome": "not_sent_by_page",
+      "epoch": "A",
+      "status": 200,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiNzljNzZkNTgtZTNjYy00ODUyLTlkMDMtNWI0MWZiODA3YjIxIiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjo1ODQ1MDAwMDB9fQ==",
+      "request_sha256": "db99b3ab172c6c01b3f7506d7a2a5cddc5840635c65e96b43b0e2e55a55c214b",
+      "response_base64": "eyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9iZWdpbl9yZXF1ZXN0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlZ2luX3JlcXVlc3RfaWQiOiAiNzljNzZkNTgtZTNjYy00ODUyLTlkMDMtNWI0MWZiODA3YjIxIiwgInN0YXR1cyI6ICJOT19BVFRFTVBUIiwgImF0dGVtcHQiOiBudWxsfQ==",
+      "response_sha256": "522fce495cb9ac7c2f2f40bb0ef22a5e58b5d41d37ac78e6c87623c7011911ae",
+      "request": {
+        "begin_request_id": "79c76d58-e3cc-4852-9d03-5b41fb807b21",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 584500000
+        }
+      },
+      "response": {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": "79c76d58-e3cc-4852-9d03-5b41fb807b21",
+        "status": "NO_ATTEMPT",
+        "attempt": null
+      }
+    },
+    {
+      "seq": 4,
+      "scenario": "W2",
+      "source": "browser",
+      "route": "begin",
+      "sender": "browser",
+      "page_outcome": "response",
+      "epoch": "A",
+      "status": 409,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiNzljNzZkNTgtZTNjYy00ODUyLTlkMDMtNWI0MWZiODA3YjIxIiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjo1ODQ1MDAwMDB9fQ==",
+      "request_sha256": "db99b3ab172c6c01b3f7506d7a2a5cddc5840635c65e96b43b0e2e55a55c214b",
+      "response_base64": "eyJlcnJvciI6ICJiZWdpbl9yZXF1ZXN0X2Nsb3NlZCJ9",
+      "response_sha256": "723766a86207f64cd31d6de4cda83b08033b87110dc6ef4f1d585644697b2957",
+      "request": {
+        "begin_request_id": "79c76d58-e3cc-4852-9d03-5b41fb807b21",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 584500000
+        }
+      },
+      "response": {
+        "error": "begin_request_closed"
+      }
+    },
+    {
+      "seq": 5,
+      "scenario": "W2",
+      "source": "browser",
+      "route": "recovery",
+      "sender": "browser",
+      "page_outcome": "response",
+      "epoch": "A",
+      "status": 200,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiNzljNzZkNTgtZTNjYy00ODUyLTlkMDMtNWI0MWZiODA3YjIxIiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjo1ODQ1MDAwMDB9fQ==",
+      "request_sha256": "db99b3ab172c6c01b3f7506d7a2a5cddc5840635c65e96b43b0e2e55a55c214b",
+      "response_base64": "eyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9iZWdpbl9yZXF1ZXN0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlZ2luX3JlcXVlc3RfaWQiOiAiNzljNzZkNTgtZTNjYy00ODUyLTlkMDMtNWI0MWZiODA3YjIxIiwgInN0YXR1cyI6ICJOT19BVFRFTVBUIiwgImF0dGVtcHQiOiBudWxsfQ==",
+      "response_sha256": "522fce495cb9ac7c2f2f40bb0ef22a5e58b5d41d37ac78e6c87623c7011911ae",
+      "request": {
+        "begin_request_id": "79c76d58-e3cc-4852-9d03-5b41fb807b21",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 584500000
+        }
+      },
+      "response": {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": "79c76d58-e3cc-4852-9d03-5b41fb807b21",
+        "status": "NO_ATTEMPT",
+        "attempt": null
+      }
+    },
+    {
+      "seq": 6,
+      "scenario": "W3",
+      "source": "recovery_during_prepare",
+      "route": "recovery",
+      "sender": "harness",
+      "page_outcome": "not_sent_by_page",
+      "epoch": "A",
+      "status": 202,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiMjIyZmNiMzYtNmI1Zi00MjA5LTliNzgtMTVhODNjYmNmNTE2IiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjo2ODQxMDAwMDB9fQ==",
+      "request_sha256": "40fd446cf036b725257a3a6ef5586f370da424afb1e13a7442d68d9c0ffa9aef",
+      "response_base64": "eyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9iZWdpbl9yZXF1ZXN0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlZ2luX3JlcXVlc3RfaWQiOiAiMjIyZmNiMzYtNmI1Zi00MjA5LTliNzgtMTVhODNjYmNmNTE2IiwgInN0YXR1cyI6ICJQRU5ESU5HIiwgImF0dGVtcHQiOiBudWxsfQ==",
+      "response_sha256": "78da36083d9185ed8ac878ed7f0878f5387082f001d8cde5a6a47daf7c3b702e",
+      "request": {
+        "begin_request_id": "222fcb36-6b5f-4209-9b78-15a83cbcf516",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 684100000
+        }
+      },
+      "response": {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": "222fcb36-6b5f-4209-9b78-15a83cbcf516",
+        "status": "PENDING",
+        "attempt": null
+      }
+    },
+    {
+      "seq": 7,
+      "scenario": "W3",
+      "source": "browser",
+      "route": "begin",
+      "sender": "browser",
+      "page_outcome": "response",
+      "epoch": "A",
+      "status": 200,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiMjIyZmNiMzYtNmI1Zi00MjA5LTliNzgtMTVhODNjYmNmNTE2IiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjo2ODQxMDAwMDB9fQ==",
+      "request_sha256": "40fd446cf036b725257a3a6ef5586f370da424afb1e13a7442d68d9c0ffa9aef",
+      "response_base64": "eyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9iZWdpbl9yZXF1ZXN0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlZ2luX3JlcXVlc3RfaWQiOiAiMjIyZmNiMzYtNmI1Zi00MjA5LTliNzgtMTVhODNjYmNmNTE2IiwgInN0YXR1cyI6ICJJTlRFUlJVUFRFRCIsICJhdHRlbXB0IjogeyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9hdHRlbXB0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImF0dGVtcHRfc3RhdHVzIjogIklOVEVSUlVQVEVEIiwgImF0dGVtcHRfaWQiOiAiNzljNzAwZGYtYjEwMC00NzEwLTlkNGUtMjUzYWEyNTUzMjJmIiwgImNhcHR1cmVfaWQiOiAiNTJmNTYwYTUtYTBhYS00ZTA1LWFhYjAtODA5MDZhZjdiYjEwIiwgInBlcmZvcm1hbmNlX3Nlc3Npb25faWQiOiAiZGM5OTY5NmEtNzg4OC00NmQ3LTkyYTAtY2EzZmQwMjQ4MjQ3IiwgImRlbGl2ZXJ5X2lkIjogImRlbGl2ZXJ5LXN0YWdlOSIsICJhc3NpZ25tZW50X2lkIjogInRlYWNoZXJfc21pdGhfc3R1ZGVudF80Ml8yMDI2XzA4XzEwIiwgImNvbnRlbnRfaWQiOiAiYmx1ZXNfdHVybmFyb3VuZF8wMSIsICJhc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6ICJzaGEyNTY6YmVkZWZlMzZjNWI0NmRkMzE0YWE5MWM5MjdkMTE1OTNlNjJhNDZlYTcxNmMzNTBkYWNjY2E5Njc2YWI4NDEyNSIsICJhc3NpZ25tZW50X2JlaGF2aW9yX2RpZ2VzdCI6ICJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsICJjYXB0dXJlX2Nsb2NrIjogImJyb3dzZXJfcGVyZm9ybWFuY2VfdGltZSIsICJyYXdfY2FwdHVyZSI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiY2FwdHVyZV9pZCI6ICI1MmY1NjBhNS1hMGFhLTRlMDUtYWFiMC04MDkwNmFmN2JiMTAiLCAic2Vzc2lvbl9pZCI6ICJkYzk5Njk2YS03ODg4LTQ2ZDctOTJhMC1jYTNmZDAyNDgyNDciLCAicnVudGltZV9pZGVudGl0eSI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicnVudGltZV9pZCI6ICJ3ZWItbWlkaSIsICJydW50aW1lX2tpbmQiOiAibGlnaHR3ZWlnaHQiLCAicmVwb3J0ZWRfdmVyc2lvbiI6ICIxIiwgInZlcnNpb25fcG9saWN5IjogIndlYi1taWRpLXYxIiwgInZlcnNpb25fc3VwcG9ydGVkIjogdHJ1ZX0sICJzb3VyY2VfaWRlbnRpdHkiOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgInNvdXJjZV9pZCI6ICJJbmplY3RlZCBCZWdpbiBSZWNvdmVyeSIsICJwb3J0IjogImJyb3dzZXIiLCAiZGV2aWNlIjogIkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwgInN1cHBsaWVzX3N0cmluZ19pZGVudGl0eSI6IGZhbHNlfSwgInN0YXJ0ZWRfYXQiOiAiMjAyNi0xMS0wMlQwMTozNTozMy4xOTc3OTNaIiwgImNvbXBsZXRpb25fc3RhdGUiOiAiaW50ZXJydXB0ZWQiLCAidGVtcG9fY29udGV4dCI6IDguMCwgIm1ldGVyX2NvbnRleHQiOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlYXRzX3Blcl9iYXIiOiA0LCAiYmVhdF91bml0IjogNH0sICJldmVudHMiOiBbXSwgImVuZGVkX2F0IjogIjIwMjYtMTEtMDJUMDE6MzU6MzMuMTk3NzkzWiIsICJ3YXJuaW5ncyI6IFtdLCAiZmF1bHRzIjogW10sICJwcm92ZW5hbmNlIjogeyJjbG9ja19kb21haW4iOiAiYnJvd3Nlcl9wZXJmb3JtYW5jZV90aW1lIn19LCAib2JzZXJ2ZWRfZXZlbnRzIjogW10sICJ1bm1hdGNoZWRfbm90ZV9vZmZzIjogW10sICJoYXJkd2FyZV9zdGF0dXMiOiB7Im1pZGlfaW5wdXQiOiAiVU5WRVJJRklFRF9QSFlTSUNBTF9NSURJX0lOUFVUIiwgImF1ZGlvX291dHB1dCI6ICJVTlZFUklGSUVEX0FVRElPX09VVFBVVCJ9fX0=",
+      "response_sha256": "35acc12ab7bdcd4e5a727efe5d0718e48d44d898b65b5a4afe2808dc12335f07",
+      "request": {
+        "begin_request_id": "222fcb36-6b5f-4209-9b78-15a83cbcf516",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 684100000
+        }
+      },
+      "response": {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": "222fcb36-6b5f-4209-9b78-15a83cbcf516",
+        "status": "INTERRUPTED",
+        "attempt": {
+          "schema_id": "master_all_strings.received_lesson_attempt",
+          "schema_version": "1.0.0",
+          "attempt_status": "INTERRUPTED",
+          "attempt_id": "79c700df-b100-4710-9d4e-253aa255322f",
+          "capture_id": "52f560a5-a0aa-4e05-aab0-80906af7bb10",
+          "performance_session_id": "dc99696a-7888-46d7-92a0-ca3fd0248247",
+          "delivery_id": "delivery-stage9",
+          "assignment_id": "teacher_smith_student_42_2026_08_10",
+          "content_id": "blues_turnaround_01",
+          "assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "capture_clock": "browser_performance_time",
+          "raw_capture": {
+            "schema_version": "1.0.0",
+            "capture_id": "52f560a5-a0aa-4e05-aab0-80906af7bb10",
+            "session_id": "dc99696a-7888-46d7-92a0-ca3fd0248247",
+            "runtime_identity": {
+              "schema_version": "1.0.0",
+              "runtime_id": "web-midi",
+              "runtime_kind": "lightweight",
+              "reported_version": "1",
+              "version_policy": "web-midi-v1",
+              "version_supported": true
+            },
+            "source_identity": {
+              "schema_version": "1.0.0",
+              "source_id": "Injected Begin Recovery",
+              "port": "browser",
+              "device": "Injected Begin Recovery",
+              "supplies_string_identity": false
+            },
+            "started_at": "2026-11-02T01:35:33.197793Z",
+            "completion_state": "interrupted",
+            "tempo_context": 8,
+            "meter_context": {
+              "schema_version": "1.0.0",
+              "beats_per_bar": 4,
+              "beat_unit": 4
+            },
+            "events": [],
+            "ended_at": "2026-11-02T01:35:33.197793Z",
+            "warnings": [],
+            "faults": [],
+            "provenance": {
+              "clock_domain": "browser_performance_time"
+            }
+          },
+          "observed_events": [],
+          "unmatched_note_offs": [],
+          "hardware_status": {
+            "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+            "audio_output": "UNVERIFIED_AUDIO_OUTPUT"
+          }
+        }
+      }
+    },
+    {
+      "seq": 8,
+      "scenario": "W4",
+      "source": "forwarded_begin",
+      "route": "begin",
+      "sender": "harness",
+      "page_outcome": "network_failure",
+      "epoch": "A",
+      "status": 201,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiNjExMzExMmMtNGMxNC00NDEzLWFlNjAtMGY2ZjczMTdjMTE4IiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjo3ODYxMDAwMDB9fQ==",
+      "request_sha256": "0d028ceb7fb3d5e708ed9f78fd924be1d71344ae018efabef9c8ca1d8291e8d8",
+      "response_base64": "eyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9iZWdpbl9yZXF1ZXN0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlZ2luX3JlcXVlc3RfaWQiOiAiNjExMzExMmMtNGMxNC00NDEzLWFlNjAtMGY2ZjczMTdjMTE4IiwgInN0YXR1cyI6ICJTVEFSVEVEIiwgImF0dGVtcHQiOiB7InNjaGVtYV9pZCI6ICJtYXN0ZXJfYWxsX3N0cmluZ3MucmVjZWl2ZWRfbGVzc29uX2F0dGVtcHQiLCAic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiYXR0ZW1wdF9zdGF0dXMiOiAiQ0FQVFVSSU5HIiwgImF0dGVtcHRfaWQiOiAiMDViZTY4YTEtZTE2ZC00Y2IyLTg5YjgtMGQ3MjZkYTI4Mjc4IiwgImNhcHR1cmVfaWQiOiAiOTFiZDU1Y2YtMDUzOS00NjJmLThjZjItYzk3ZjM4YjFiMWQ5IiwgInBlcmZvcm1hbmNlX3Nlc3Npb25faWQiOiAiY2NiYjNmZDQtOWFkZC00NmM0LTg0OWQtOGU1OGVlOGM0N2Y2IiwgImRlbGl2ZXJ5X2lkIjogImRlbGl2ZXJ5LXN0YWdlOSIsICJhc3NpZ25tZW50X2lkIjogInRlYWNoZXJfc21pdGhfc3R1ZGVudF80Ml8yMDI2XzA4XzEwIiwgImNvbnRlbnRfaWQiOiAiYmx1ZXNfdHVybmFyb3VuZF8wMSIsICJhc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6ICJzaGEyNTY6YmVkZWZlMzZjNWI0NmRkMzE0YWE5MWM5MjdkMTE1OTNlNjJhNDZlYTcxNmMzNTBkYWNjY2E5Njc2YWI4NDEyNSIsICJhc3NpZ25tZW50X2JlaGF2aW9yX2RpZ2VzdCI6ICJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsICJjYXB0dXJlX2Nsb2NrIjogImJyb3dzZXJfcGVyZm9ybWFuY2VfdGltZSIsICJwcmVwYXJhdGlvbiI6IHsic2NoZW1hX2lkIjogIm1hc3Rlcl9hbGxfc3RyaW5ncy5sb2NhbF9wcmFjdGljZV9wcmVwYXJhdGlvbiIsICJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJwcmVwYXJhdGlvbl9zdGF0dXMiOiAiUFJFUEFSRUQiLCAiZGVsaXZlcnlfaWQiOiAiZGVsaXZlcnktc3RhZ2U5IiwgImFzc2lnbm1lbnRfaWQiOiAidGVhY2hlcl9zbWl0aF9zdHVkZW50XzQyXzIwMjZfMDhfMTAiLCAiY29udGVudF9pZCI6ICJibHVlc190dXJuYXJvdW5kXzAxIiwgImFzc2lnbm1lbnRfYXJ0aWZhY3RfZGlnZXN0IjogInNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwgImFzc2lnbm1lbnRfYmVoYXZpb3JfZGlnZXN0IjogInNoYTI1NjpjNjk4NmZiZmNjNDljM2Q5MmZlNWNiMDAxMTA2NDc5N2FlZTVkMGQ1YWRmMGZmYWVmZDdhM2NjNmQwYTU1Y2M0IiwgInByb2plY3Rpb24iOiB7InN0YXR1cyI6ICJyZWFkeSIsICJkZW1vX2lkIjogbnVsbCwgInN1bW1hcnlfdGl0bGUiOiAiU3RhZ2UgOSBJbnRlZ3JhdGlvbiBFdHVkZSIsICJpbnN0cnVtZW50X2lkIjogImd1aXRhci1zdGFuZGFyZC02IiwgImJlaGF2aW9yX2RpZ2VzdCI6ICJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsICJ3YXJuaW5ncyI6IFtdLCAidW5zdXBwb3J0ZWRfZmVhdHVyZXMiOiBbXSwgInRlYWNoaW5nX2FpZHMiOiB7Im9uZV9zdHJpbmciOiBbeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAiLCAiaW5zdHJ1bWVudF9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy02IiwgImRpc3BsYXlfbGFiZWwiOiAiRTIiLCAiZXZlbnRzIjogW3siZXZlbnRfaWQiOiAiZXYtMSIsICJtaWRpX25vdGUiOiA2NCwgInN0YXR1cyI6ICJ1bnBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTYiLCAiZGlzcGxheV9vcmRlciI6IG51bGwsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IG51bGwsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IG51bGwsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogbnVsbCwgImlzX29wZW5fc3RyaW5nIjogbnVsbCwgInVucmVzb2x2ZWRfcmVhc29uIjogInVucGxheWFibGVfb25fcmVxdWVzdGVkX3N0cmluZyJ9LCB7ImV2ZW50X2lkIjogImV2LTIiLCAibWlkaV9ub3RlIjogNjcsICJzdGF0dXMiOiAidW5wbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy02IiwgImRpc3BsYXlfb3JkZXIiOiBudWxsLCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiBudWxsLCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiBudWxsLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IG51bGwsICJpc19vcGVuX3N0cmluZyI6IG51bGwsICJ1bnJlc29sdmVkX3JlYXNvbiI6ICJ1bnBsYXlhYmxlX29uX3JlcXVlc3RlZF9zdHJpbmcifSwgeyJldmVudF9pZCI6ICJldi0zIiwgIm1pZGlfbm90ZSI6IDY5LCAic3RhdHVzIjogInVucGxheWFibGUiLCAicmVxdWVzdGVkX3N0cmluZ19pZCI6ICJzdHJpbmctNiIsICJkaXNwbGF5X29yZGVyIjogbnVsbCwgInBoeXNpY2FsX2ZyZXRfbnVtYmVyIjogbnVsbCwgInJlbGF0aXZlX3NlbWl0b25lX3Bvc2l0aW9uIjogbnVsbCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiBudWxsLCAiaXNfb3Blbl9zdHJpbmciOiBudWxsLCAidW5yZXNvbHZlZF9yZWFzb24iOiAidW5wbGF5YWJsZV9vbl9yZXF1ZXN0ZWRfc3RyaW5nIn1dfSwgeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAiLCAiaW5zdHJ1bWVudF9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy01IiwgImRpc3BsYXlfbGFiZWwiOiAiQTIiLCAiZXZlbnRzIjogW3siZXZlbnRfaWQiOiAiZXYtMSIsICJtaWRpX25vdGUiOiA2NCwgInN0YXR1cyI6ICJwbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy01IiwgImRpc3BsYXlfb3JkZXIiOiAxLCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiAxOSwgInJlbGF0aXZlX3NlbWl0b25lX3Bvc2l0aW9uIjogMTkuMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjY2NjI5MDAzNjQ1NzQ5MTQsICJpc19vcGVuX3N0cmluZyI6IGZhbHNlLCAidW5yZXNvbHZlZF9yZWFzb24iOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0yIiwgIm1pZGlfbm90ZSI6IDY3LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTUiLCAiZGlzcGxheV9vcmRlciI6IDEsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDIyLCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiAyMi4wLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNzE5Mzg0NDg3OTIyNjU2NywgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTMiLCAibWlkaV9ub3RlIjogNjksICJzdGF0dXMiOiAidW5wbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy01IiwgImRpc3BsYXlfb3JkZXIiOiBudWxsLCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiBudWxsLCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiBudWxsLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IG51bGwsICJpc19vcGVuX3N0cmluZyI6IG51bGwsICJ1bnJlc29sdmVkX3JlYXNvbiI6ICJ1bnBsYXlhYmxlX29uX3JlcXVlc3RlZF9zdHJpbmcifV19LCB7InNjaGVtYV92ZXJzaW9uIjogIjEuMCIsICJpbnN0cnVtZW50X2lkIjogImd1aXRhci1zdGFuZGFyZC02IiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTQiLCAiZGlzcGxheV9sYWJlbCI6ICJEMyIsICJldmVudHMiOiBbeyJldmVudF9pZCI6ICJldi0xIiwgIm1pZGlfbm90ZSI6IDY0LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTQiLCAiZGlzcGxheV9vcmRlciI6IDIsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDE0LCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiAxNC4wLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNTU0NTUwNjQwOTI5ODMwNCwgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTIiLCAibWlkaV9ub3RlIjogNjcsICJzdGF0dXMiOiAicGxheWFibGUiLCAicmVxdWVzdGVkX3N0cmluZ19pZCI6ICJzdHJpbmctNCIsICJkaXNwbGF5X29yZGVyIjogMiwgInBoeXNpY2FsX2ZyZXRfbnVtYmVyIjogMTcsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDE3LjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC42MjU0MjMyMzA3ODA4Mjk2LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH0sIHsiZXZlbnRfaWQiOiAiZXYtMyIsICJtaWRpX25vdGUiOiA2OSwgInN0YXR1cyI6ICJwbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy00IiwgImRpc3BsYXlfb3JkZXIiOiAyLCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiAxOSwgInJlbGF0aXZlX3NlbWl0b25lX3Bvc2l0aW9uIjogMTkuMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjY2NjI5MDAzNjQ1NzQ5MTQsICJpc19vcGVuX3N0cmluZyI6IGZhbHNlLCAidW5yZXNvbHZlZF9yZWFzb24iOiBudWxsfV19LCB7InNjaGVtYV92ZXJzaW9uIjogIjEuMCIsICJpbnN0cnVtZW50X2lkIjogImd1aXRhci1zdGFuZGFyZC02IiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTMiLCAiZGlzcGxheV9sYWJlbCI6ICJHMyIsICJldmVudHMiOiBbeyJldmVudF9pZCI6ICJldi0xIiwgIm1pZGlfbm90ZSI6IDY0LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTMiLCAiZGlzcGxheV9vcmRlciI6IDMsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDksICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDkuMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjQwNTM5NjQ0MjQ5ODYzOTUsICJpc19vcGVuX3N0cmluZyI6IGZhbHNlLCAidW5yZXNvbHZlZF9yZWFzb24iOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0yIiwgIm1pZGlfbm90ZSI6IDY3LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTMiLCAiZGlzcGxheV9vcmRlciI6IDMsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDEyLCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiAxMi4wLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNSwgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTMiLCAibWlkaV9ub3RlIjogNjksICJzdGF0dXMiOiAicGxheWFibGUiLCAicmVxdWVzdGVkX3N0cmluZ19pZCI6ICJzdHJpbmctMyIsICJkaXNwbGF5X29yZGVyIjogMywgInBoeXNpY2FsX2ZyZXRfbnVtYmVyIjogMTQsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDE0LjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC41NTQ1NTA2NDA5Mjk4MzA0LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH1dfSwgeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAiLCAiaW5zdHJ1bWVudF9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy0yIiwgImRpc3BsYXlfbGFiZWwiOiAiQjMiLCAiZXZlbnRzIjogW3siZXZlbnRfaWQiOiAiZXYtMSIsICJtaWRpX25vdGUiOiA2NCwgInN0YXR1cyI6ICJwbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy0yIiwgImRpc3BsYXlfb3JkZXIiOiA0LCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiA1LCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiA1LjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC4yNTA4NDY0NjE1NjE2NTkyNCwgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTIiLCAibWlkaV9ub3RlIjogNjcsICJzdGF0dXMiOiAicGxheWFibGUiLCAicmVxdWVzdGVkX3N0cmluZ19pZCI6ICJzdHJpbmctMiIsICJkaXNwbGF5X29yZGVyIjogNCwgInBoeXNpY2FsX2ZyZXRfbnVtYmVyIjogOCwgInJlbGF0aXZlX3NlbWl0b25lX3Bvc2l0aW9uIjogOC4wLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuMzcwMDM5NDc1MDUyNTYzNCwgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTMiLCAibWlkaV9ub3RlIjogNjksICJzdGF0dXMiOiAicGxheWFibGUiLCAicmVxdWVzdGVkX3N0cmluZ19pZCI6ICJzdHJpbmctMiIsICJkaXNwbGF5X29yZGVyIjogNCwgInBoeXNpY2FsX2ZyZXRfbnVtYmVyIjogMTAsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDEwLjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC40Mzg3Njg5NzU4NDUzMTM1LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH1dfSwgeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAiLCAiaW5zdHJ1bWVudF9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy0xIiwgImRpc3BsYXlfbGFiZWwiOiAiRTQiLCAiZXZlbnRzIjogW3siZXZlbnRfaWQiOiAiZXYtMSIsICJtaWRpX25vdGUiOiA2NCwgInN0YXR1cyI6ICJwbGF5YWJsZSIsICJyZXF1ZXN0ZWRfc3RyaW5nX2lkIjogInN0cmluZy0xIiwgImRpc3BsYXlfb3JkZXIiOiA1LCAicGh5c2ljYWxfZnJldF9udW1iZXIiOiAwLCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiAwLjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC4wLCAiaXNfb3Blbl9zdHJpbmciOiB0cnVlLCAidW5yZXNvbHZlZF9yZWFzb24iOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0yIiwgIm1pZGlfbm90ZSI6IDY3LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTEiLCAiZGlzcGxheV9vcmRlciI6IDUsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDMsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDMuMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjE1OTEwMzU4NDc0NjI4NTUsICJpc19vcGVuX3N0cmluZyI6IGZhbHNlLCAidW5yZXNvbHZlZF9yZWFzb24iOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0zIiwgIm1pZGlfbm90ZSI6IDY5LCAic3RhdHVzIjogInBsYXlhYmxlIiwgInJlcXVlc3RlZF9zdHJpbmdfaWQiOiAic3RyaW5nLTEiLCAiZGlzcGxheV9vcmRlciI6IDUsICJwaHlzaWNhbF9mcmV0X251bWJlciI6IDUsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDUuMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjI1MDg0NjQ2MTU2MTY1OTI0LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH1dfV19LCAicHJvamVjdGlvbiI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicHJvamVjdGlvbl90eXBlIjogImZyZXRib2FyZF9zY3JvbGwiLCAicHJvamVjdGlvbl92ZXJzaW9uIjogIjEuMC4wIiwgImZpZGVsaXR5IjogInNlbGVjdGVkX3NwYXRpYWxfdjEiLCAicHJvamVjdGlvbl9kaWdlc3QiOiAic2hhMjU2OmQxODE4ZDZkZGMwOGUxODRkZDRhYzY4ZWJkNTViZjQ3NjQ0NDAwZDNmZWI2YTRjZDBlZmE4NjRiNmVlNjE0MTIiLCAiYXNzaWdubWVudF9pZCI6ICJ0ZWFjaGVyX3NtaXRoX3N0dWRlbnRfNDJfMjAyNl8wOF8xMCIsICJjb250ZW50X2lkIjogImJsdWVzX3R1cm5hcm91bmRfMDEiLCAidGl0bGUiOiAiU3RhZ2UgOSBJbnRlZ3JhdGlvbiBFdHVkZSIsICJ0aW1lbGluZSI6IHsidGlja3NfcGVyX3F1YXJ0ZXIiOiA0ODAsICJ0b3RhbF90aWNrcyI6IDE0NDAsICJ0b3RhbF9zZWNvbmRzIjogMjIuNSwgInNlY29uZHNfcGVyX3NjcmVlbiI6IDQuMCwgInBsYXlfbGluZV9mcmFjdGlvbiI6IDAuMjJ9LCAidGVtcG9fY2hhbmdlcyI6IFt7InRpY2siOiAwLCAidGVtcG9fYnBtIjogOC4wLCAibWljcm9zZWNvbmRzX3Blcl9xdWFydGVyIjogNzUwMDAwMH1dLCAiaW5zdHJ1bWVudCI6IHsiaW5zdHJ1bWVudF9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJkaXNwbGF5X25hbWUiOiAiU3RhbmRhcmQgR3VpdGFyICg2LXN0cmluZykiLCAiZmluZ2VyYm9hcmRfbW9kZSI6ICJmcmV0dGVkIiwgInNjYWxlX2xlbmd0aF9tbSI6IDY0OC4wLCAibGFuZXMiOiBbeyJzdHJpbmdfaWQiOiAic3RyaW5nLTYiLCAiZGlzcGxheV9sYWJlbCI6ICJFMiIsICJkaXNwbGF5X29yZGVyIjogMCwgIm9wZW5fbWlkaV9ub3RlIjogNDAsICJvcGVuX3BpdGNoX2xhYmVsIjogIkUyIn0sIHsic3RyaW5nX2lkIjogInN0cmluZy01IiwgImRpc3BsYXlfbGFiZWwiOiAiQTIiLCAiZGlzcGxheV9vcmRlciI6IDEsICJvcGVuX21pZGlfbm90ZSI6IDQ1LCAib3Blbl9waXRjaF9sYWJlbCI6ICJBMiJ9LCB7InN0cmluZ19pZCI6ICJzdHJpbmctNCIsICJkaXNwbGF5X2xhYmVsIjogIkQzIiwgImRpc3BsYXlfb3JkZXIiOiAyLCAib3Blbl9taWRpX25vdGUiOiA1MCwgIm9wZW5fcGl0Y2hfbGFiZWwiOiAiRDMifSwgeyJzdHJpbmdfaWQiOiAic3RyaW5nLTMiLCAiZGlzcGxheV9sYWJlbCI6ICJHMyIsICJkaXNwbGF5X29yZGVyIjogMywgIm9wZW5fbWlkaV9ub3RlIjogNTUsICJvcGVuX3BpdGNoX2xhYmVsIjogIkczIn0sIHsic3RyaW5nX2lkIjogInN0cmluZy0yIiwgImRpc3BsYXlfbGFiZWwiOiAiQjMiLCAiZGlzcGxheV9vcmRlciI6IDQsICJvcGVuX21pZGlfbm90ZSI6IDU5LCAib3Blbl9waXRjaF9sYWJlbCI6ICJCMyJ9LCB7InN0cmluZ19pZCI6ICJzdHJpbmctMSIsICJkaXNwbGF5X2xhYmVsIjogIkU0IiwgImRpc3BsYXlfb3JkZXIiOiA1LCAib3Blbl9taWRpX25vdGUiOiA2NCwgIm9wZW5fcGl0Y2hfbGFiZWwiOiAiRTQifV0sICJmcmV0cyI6IFt7ImZyZXRfbnVtYmVyIjogMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjAsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDEsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC4wNTYxMjU2ODczMTgzMDY0NywgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMiwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjEwOTEwMTI4MTg1OTY2MDczLCAibWFya2VyX2xhYmVsIjogbnVsbH0sIHsiZnJldF9udW1iZXIiOiAzLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuMTU5MTAzNTg0NzQ2Mjg1NSwgIm1hcmtlcl9sYWJlbCI6ICIzcmQgZnJldCJ9LCB7ImZyZXRfbnVtYmVyIjogNCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjIwNjI5OTQ3NDAxNTkwMDIsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDUsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC4yNTA4NDY0NjE1NjE2NTkyNCwgIm1hcmtlcl9sYWJlbCI6ICI1dGggZnJldCJ9LCB7ImZyZXRfbnVtYmVyIjogNiwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjI5Mjg5MzIxODgxMzQ1MjQsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDcsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC4zMzI1ODAwNzI5MTQ5ODI4LCAibWFya2VyX2xhYmVsIjogIjd0aCBmcmV0In0sIHsiZnJldF9udW1iZXIiOiA4LCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuMzcwMDM5NDc1MDUyNTYzNCwgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogOSwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjQwNTM5NjQ0MjQ5ODYzOTUsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDEwLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNDM4NzY4OTc1ODQ1MzEzNSwgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMTEsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC40NzAyNjg0NTI4MjAzNTIzNSwgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMTIsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC41LCAibWFya2VyX2xhYmVsIjogIjEydGggZnJldCJ9LCB7ImZyZXRfbnVtYmVyIjogMTMsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC41MjgwNjI4NDM2NTkxNTMyLCAibWFya2VyX2xhYmVsIjogbnVsbH0sIHsiZnJldF9udW1iZXIiOiAxNCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjU1NDU1MDY0MDkyOTgzMDQsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDE1LCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNTc5NTUxNzkyMzczMTQyOCwgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMTYsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC42MDMxNDk3MzcwMDc5NTAyLCAibWFya2VyX2xhYmVsIjogbnVsbH0sIHsiZnJldF9udW1iZXIiOiAxNywgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjYyNTQyMzIzMDc4MDgyOTYsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDE4LCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNjQ2NDQ2NjA5NDA2NzI2MywgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMTksICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC42NjYyOTAwMzY0NTc0OTE0LCAibWFya2VyX2xhYmVsIjogbnVsbH0sIHsiZnJldF9udW1iZXIiOiAyMCwgIm5vcm1hbGl6ZWRfcG9zaXRpb24iOiAwLjY4NTAxOTczNzUyNjI4MTYsICJtYXJrZXJfbGFiZWwiOiBudWxsfSwgeyJmcmV0X251bWJlciI6IDIxLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNzAyNjk4MjIxMjQ5MzE5OCwgIm1hcmtlcl9sYWJlbCI6IG51bGx9LCB7ImZyZXRfbnVtYmVyIjogMjIsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC43MTkzODQ0ODc5MjI2NTY3LCAibWFya2VyX2xhYmVsIjogbnVsbH1dfSwgInNlbGVjdGlvbl9wb2xpY3kiOiAiZW51bWVyYXRpb25fdjEiLCAibm90ZXMiOiBbeyJldmVudF9pZCI6ICJldi0xIiwgInN0YXR1cyI6ICJzZWxlY3RlZCIsICJtaWRpX25vdGUiOiA2NCwgInBpdGNoX2xhYmVsIjogIkU0IiwgIm9uc2V0X3RpY2siOiAwLCAiZHVyYXRpb25fdGlja3MiOiA0ODAsICJvbnNldF9zZWNvbmRzIjogMC4wLCAicmVsZWFzZV9zZWNvbmRzIjogNy41LCAibGFuZV9kaXNwbGF5X29yZGVyIjogMSwgInN0cmluZ19pZCI6ICJzdHJpbmctNSIsICJmcmV0X251bWJlciI6IDE5LCAicmVsYXRpdmVfc2VtaXRvbmVfcG9zaXRpb24iOiAxOS4wLCAibm9ybWFsaXplZF9wb3NpdGlvbiI6IDAuNjY2MjkwMDM2NDU3NDkxNCwgImlzX29wZW5fc3RyaW5nIjogZmFsc2UsICJzZWxlY3Rpb25fb3JpZ2luIjogImF1dG9tYXRpYyIsICJ1bnJlc29sdmVkX3JlYXNvbiI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTIiLCAic3RhdHVzIjogInNlbGVjdGVkIiwgIm1pZGlfbm90ZSI6IDY3LCAicGl0Y2hfbGFiZWwiOiAiRzQiLCAib25zZXRfdGljayI6IDQ4MCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAib25zZXRfc2Vjb25kcyI6IDcuNSwgInJlbGVhc2Vfc2Vjb25kcyI6IDE1LjAsICJsYW5lX2Rpc3BsYXlfb3JkZXIiOiAxLCAic3RyaW5nX2lkIjogInN0cmluZy01IiwgImZyZXRfbnVtYmVyIjogMjIsICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDIyLjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC43MTkzODQ0ODc5MjI2NTY3LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInNlbGVjdGlvbl9vcmlnaW4iOiAiYXV0b21hdGljIiwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH0sIHsiZXZlbnRfaWQiOiAiZXYtMyIsICJzdGF0dXMiOiAic2VsZWN0ZWQiLCAibWlkaV9ub3RlIjogNjksICJwaXRjaF9sYWJlbCI6ICJBNCIsICJvbnNldF90aWNrIjogOTYwLCAiZHVyYXRpb25fdGlja3MiOiA0ODAsICJvbnNldF9zZWNvbmRzIjogMTUuMCwgInJlbGVhc2Vfc2Vjb25kcyI6IDIyLjUsICJsYW5lX2Rpc3BsYXlfb3JkZXIiOiAyLCAic3RyaW5nX2lkIjogInN0cmluZy00IiwgImZyZXRfbnVtYmVyIjogMTksICJyZWxhdGl2ZV9zZW1pdG9uZV9wb3NpdGlvbiI6IDE5LjAsICJub3JtYWxpemVkX3Bvc2l0aW9uIjogMC42NjYyOTAwMzY0NTc0OTE0LCAiaXNfb3Blbl9zdHJpbmciOiBmYWxzZSwgInNlbGVjdGlvbl9vcmlnaW4iOiAiYXV0b21hdGljIiwgInVucmVzb2x2ZWRfcmVhc29uIjogbnVsbH1dLCAid2FybmluZ3MiOiBbXSwgInVuc3VwcG9ydGVkX2ZlYXR1cmVzIjogW10sICJkZXNjcmlwdGlvbiI6IG51bGwsICJvYmplY3RpdmUiOiAiU2hvdyBvbmUgcmVjZWl2ZWQgbGVzc29uIGZyb20gaW5ib3ggdGhyb3VnaCBmZWVkYmFjay4iLCAidGVhY2hlcl9ub3RlIjogIkludGVncmF0aW9uIHdpdG5lc3MgYXNzaWdubWVudC4gTm90IGEgYnVuZGxlZCBkZW1vLiJ9LCAidGltZWxpbmVfYW5jaG9yc19zY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJ0aW1lbGluZV9hbmNob3JzIjogW3sidGljayI6IDAsICJzZWNvbmRzIjogMC4wfSwgeyJ0aWNrIjogMTQ0MCwgInNlY29uZHMiOiAyMi41fV19LCAicGxheWJhY2siOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImFzc2lnbm1lbnRfaWQiOiAidGVhY2hlcl9zbWl0aF9zdHVkZW50XzQyXzIwMjZfMDhfMTAiLCAiY29udGVudF9pZCI6ICJibHVlc190dXJuYXJvdW5kXzAxIiwgInRpbWVsaW5lIjogeyJ0aWNrc19wZXJfcXVhcnRlciI6IDQ4MCwgInRvdGFsX3RpY2tzIjogMTQ0MCwgInRlbXBvX2NoYW5nZXMiOiBbeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJ0aWNrIjogMCwgIm1pY3Jvc2Vjb25kc19wZXJfcXVhcnRlciI6IDc1MDAwMDB9XX0sICJldmVudHMiOiBbeyJldmVudF9pZCI6ICJldi0xIiwgIm1pZGlfbm90ZSI6IDY0LCAidmVsb2NpdHkiOiA4MCwgIm9uc2V0X3NlY29uZHMiOiAwLjAsICJyZWxlYXNlX3NlY29uZHMiOiA3LjUsICJjZW50c19vZmZzZXQiOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0yIiwgIm1pZGlfbm90ZSI6IDY3LCAidmVsb2NpdHkiOiA4MCwgIm9uc2V0X3NlY29uZHMiOiA3LjUsICJyZWxlYXNlX3NlY29uZHMiOiAxNS4wLCAiY2VudHNfb2Zmc2V0IjogbnVsbH0sIHsiZXZlbnRfaWQiOiAiZXYtMyIsICJtaWRpX25vdGUiOiA2OSwgInZlbG9jaXR5IjogODAsICJvbnNldF9zZWNvbmRzIjogMTUuMCwgInJlbGVhc2Vfc2Vjb25kcyI6IDIyLjUsICJjZW50c19vZmZzZXQiOiBudWxsfV0sICJ0b3RhbF9zZWNvbmRzIjogMjIuNSwgIndhcm5pbmdzIjogW10sICJ1bnN1cHBvcnRlZF9mZWF0dXJlcyI6IFtdLCAicGxheWJhY2tfZGlnZXN0IjogInNoYTI1NjpkYmRiNmQwZDg5MWJkNzFlNTZjZTgyNjc5NGMyMTg4N2NmNjZhMjc5ZmJmNzgwNDhjMTY2MzM3ZWZjNjQyN2U1IiwgImNhbm9uaWNhbF9yZXZpc2lvbl9pZCI6ICJyZXYtY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiIn0sICJwcmFjdGljZSI6IHsicG9saWN5IjogeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJhc3NpZ25tZW50X2lkIjogInRlYWNoZXJfc21pdGhfc3R1ZGVudF80Ml8yMDI2XzA4XzEwIiwgImNvbnRlbnRfaWQiOiAiYmx1ZXNfdHVybmFyb3VuZF8wMSIsICJsZXNzb25fZW5kX3RpY2siOiAxNDQwLCAibG9vcCI6IHsiZW5hYmxlZCI6IGZhbHNlLCAic3RhcnRfdGljayI6IDAsICJlbmRfdGljayI6IDE0NDAsICJ0YXJnZXRfcmVwZXRpdGlvbnMiOiBudWxsfSwgImNvdW50X2luX2JhcnMiOiAwfSwgInJ1bnRpbWUiOiB7Imxvb3Bfc3RhcnRfc2Vjb25kcyI6IDAuMCwgImxvb3BfZW5kX3NlY29uZHMiOiAyMi41fX0sICJzY29yZSI6IHsiY2Fub25pY2FsX3JldmlzaW9uIjogeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJyZXZpc2lvbl9pZCI6ICJyZXYtY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiIiwgImRvY3VtZW50X2lkIjogInNjb3JlLWJsdWVzX3R1cm5hcm91bmRfMDEiLCAicmV2aXNpb25fbnVtYmVyIjogMSwgInBhcmVudF9yZXZpc2lvbl9pZCI6IG51bGwsICJjcmVhdGVkX2F0IjogIjIwMjYtMDgtMTBUMTI6MDA6MDBaIiwgInRpY2tzX3Blcl9xdWFydGVyIjogNDgwLCAiY29udGVudF9kaWdlc3QiOiAiY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiMDFhYTY1ZDQwMzE2MWVjY2ZhMWU5YmNhMGRiN2ZlNDk0ZjQ5ZTZhZCIsICJwcm92ZW5hbmNlIjogeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJzb3VyY2Vfa2luZCI6ICJtYW51YWxfY29uc3RydWN0aW9uIiwgInBvbGljeV92ZXJzaW9uIjogIkFVVEhPUkVEX0xFU1NPTl9SRVZJU0lPTl9WMSIsICJzb3VyY2VfcmVmZXJlbmNlIjogImJsdWVzX3R1cm5hcm91bmRfMDEiLCAiZXZlbnRfcHJvdmVuYW5jZSI6IFtdLCAibm90ZXMiOiBbXX0sICJldmVudHMiOiBbeyJldmVudF9pZCI6ICJldi0xIiwgIm1pZGlfbm90ZSI6IDY0LCAic3RhcnRfdGljayI6IDAsICJkdXJhdGlvbl90aWNrcyI6IDQ4MCwgInZlbG9jaXR5IjogODAsICJjZW50c19vZmZzZXQiOiAwLjAsICJ2b2ljZV9pZCI6IG51bGx9LCB7ImV2ZW50X2lkIjogImV2LTIiLCAibWlkaV9ub3RlIjogNjcsICJzdGFydF90aWNrIjogNDgwLCAiZHVyYXRpb25fdGlja3MiOiA0ODAsICJ2ZWxvY2l0eSI6IDgwLCAiY2VudHNfb2Zmc2V0IjogMC4wLCAidm9pY2VfaWQiOiBudWxsfSwgeyJldmVudF9pZCI6ICJldi0zIiwgIm1pZGlfbm90ZSI6IDY5LCAic3RhcnRfdGljayI6IDk2MCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAidmVsb2NpdHkiOiA4MCwgImNlbnRzX29mZnNldCI6IDAuMCwgInZvaWNlX2lkIjogbnVsbH1dLCAidGVtcG9fY2hhbmdlcyI6IFt7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgInRpY2siOiAwLCAibWljcm9zZWNvbmRzX3Blcl9xdWFydGVyIjogNzUwMDAwMH1dLCAibWV0ZXJfY2hhbmdlcyI6IFt7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgInRpY2siOiAwLCAibnVtZXJhdG9yIjogNCwgImRlbm9taW5hdG9yIjogNH1dfSwgInRhYiI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicHJvamVjdGlvbl9pZCI6ICJ0YWI6cmV2LWNmNzNhZTVhZmEzMzdlYmUzMzRlOTI0YiIsICJjYW5vbmljYWxfcmV2aXNpb25faWQiOiAicmV2LWNmNzNhZTVhZmEzMzdlYmUzMzRlOTI0YiIsICJwcm9qZWN0aW9uX2tpbmQiOiAidGFiIiwgInBheWxvYWQiOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImNhbm9uaWNhbF9yZXZpc2lvbl9pZCI6ICJyZXYtY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiIiwgImluc3RydW1lbnRfcHJvZmlsZV9pZCI6ICJndWl0YXItc3RhbmRhcmQtNiIsICJldmVudHMiOiBbeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJjYW5vbmljYWxfZXZlbnRfaWQiOiAiZXYtMSIsICJzdGFydF90aWNrIjogMCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAibWlkaV9ub3RlIjogNjQsICJzdGF0dXMiOiAicGxheWFibGUiLCAic3RyaW5nX2lkIjogInN0cmluZy01IiwgImZyZXQiOiAxOSwgImNlbnRzX29mZnNldCI6IDAuMH0sIHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiY2Fub25pY2FsX2V2ZW50X2lkIjogImV2LTIiLCAic3RhcnRfdGljayI6IDQ4MCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAibWlkaV9ub3RlIjogNjcsICJzdGF0dXMiOiAicGxheWFibGUiLCAic3RyaW5nX2lkIjogInN0cmluZy01IiwgImZyZXQiOiAyMiwgImNlbnRzX29mZnNldCI6IDAuMH0sIHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiY2Fub25pY2FsX2V2ZW50X2lkIjogImV2LTMiLCAic3RhcnRfdGljayI6IDk2MCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAibWlkaV9ub3RlIjogNjksICJzdGF0dXMiOiAicGxheWFibGUiLCAic3RyaW5nX2lkIjogInN0cmluZy00IiwgImZyZXQiOiAxOSwgImNlbnRzX29mZnNldCI6IDAuMH1dLCAidW5zdXBwb3J0ZWRfZmVhdHVyZXMiOiBbXX0sICJkaWdlc3QiOiAic2hhMjU2OmMxZWMzMWQwNTU0Yzk5ODg0OTcwMzRiMzFiMGYzNTIyMWNjMzg4NTQ1MDJkZDYxYjE4YWE0NTA0ZGEwODQ5MGQiLCAidW5zdXBwb3J0ZWRfZmVhdHVyZXMiOiBbXX0sICJub3RhdGlvbiI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicHJvamVjdGlvbl9pZCI6ICJub3RhdGlvbjpyZXYtY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiIiwgImNhbm9uaWNhbF9yZXZpc2lvbl9pZCI6ICJyZXYtY2Y3M2FlNWFmYTMzN2ViZTMzNGU5MjRiIiwgInByb2plY3Rpb25fa2luZCI6ICJub3RhdGlvbiIsICJwYXlsb2FkIjogeyJzY2hlbWFfdmVyc2lvbiI6ICIxLjAuMCIsICJjYW5vbmljYWxfcmV2aXNpb25faWQiOiAicmV2LWNmNzNhZTVhZmEzMzdlYmUzMzRlOTI0YiIsICJ0aWNrc19wZXJfcXVhcnRlciI6IDQ4MCwgImRpc3BsYXlfcG9saWN5IjogInNoYXJwX3ByZWZlcnJlZF92MSIsICJtZWFzdXJlcyI6IFt7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgIm1lYXN1cmVfaW5kZXgiOiAwLCAic3RhcnRfdGljayI6IDAsICJlbmRfdGljayI6IDE5MjAsICJtZXRlciI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAidGljayI6IDAsICJudW1lcmF0b3IiOiA0LCAiZGVub21pbmF0b3IiOiA0fSwgImV2ZW50cyI6IFt7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImV2ZW50X2tpbmQiOiAibm90ZSIsICJzdGFydF90aWNrIjogMCwgImR1cmF0aW9uX3RpY2tzIjogNDgwLCAiY2Fub25pY2FsX2V2ZW50X2lkIjogImV2LTEiLCAibWlkaV9ub3RlIjogNjQsICJkaXNwbGF5X3BpdGNoIjogIkU0IiwgImRpc3BsYXlfZHVyYXRpb24iOiAicXVhcnRlciIsICJkZXJpdmF0aW9uIjogbnVsbH0sIHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiZXZlbnRfa2luZCI6ICJub3RlIiwgInN0YXJ0X3RpY2siOiA0ODAsICJkdXJhdGlvbl90aWNrcyI6IDQ4MCwgImNhbm9uaWNhbF9ldmVudF9pZCI6ICJldi0yIiwgIm1pZGlfbm90ZSI6IDY3LCAiZGlzcGxheV9waXRjaCI6ICJHNCIsICJkaXNwbGF5X2R1cmF0aW9uIjogInF1YXJ0ZXIiLCAiZGVyaXZhdGlvbiI6IG51bGx9LCB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImV2ZW50X2tpbmQiOiAibm90ZSIsICJzdGFydF90aWNrIjogOTYwLCAiZHVyYXRpb25fdGlja3MiOiA0ODAsICJjYW5vbmljYWxfZXZlbnRfaWQiOiAiZXYtMyIsICJtaWRpX25vdGUiOiA2OSwgImRpc3BsYXlfcGl0Y2giOiAiQTQiLCAiZGlzcGxheV9kdXJhdGlvbiI6ICJxdWFydGVyIiwgImRlcml2YXRpb24iOiBudWxsfV19XSwgInVuc3VwcG9ydGVkX2ZlYXR1cmVzIjogW119LCAiZGlnZXN0IjogInNoYTI1Njo1OTFiMDU3NWY3OTBjMWM1NTJlNDVlMTJkZjYyN2IzNWE4OWZlN2Y3MWYxNzcwMDA2YTNjNDNiOGRjMzllNTM2IiwgInVuc3VwcG9ydGVkX2ZlYXR1cmVzIjogW119fX0sICJhdHRlbXB0X3BvbGljeSI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicGFzc19jb3VudCI6IDEsICJwbGF5YmFja19yYXRlIjogMSwgImxvb3BpbmdfYWxsb3dlZCI6IGZhbHNlLCAic2Vla2luZ19hbGxvd2VkIjogZmFsc2UsICJsZXNzb25fc3dpdGNoaW5nX2FsbG93ZWQiOiBmYWxzZSwgInJlZmVyZW5jZV9zb3VuZCI6ICJpbmRlcGVuZGVudF9vZl9jYXB0dXJlIn19fQ==",
+      "response_sha256": "4b1b25cff83e02c6ca55b722767aaf1bbde6d9129361797718d79eeaeecce3b8",
+      "request": {
+        "begin_request_id": "6113112c-4c14-4413-ae60-0f6f7317c118",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 786100000
+        }
+      },
+      "response": {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": "6113112c-4c14-4413-ae60-0f6f7317c118",
+        "status": "STARTED",
+        "attempt": {
+          "schema_id": "master_all_strings.received_lesson_attempt",
+          "schema_version": "1.0.0",
+          "attempt_status": "CAPTURING",
+          "attempt_id": "05be68a1-e16d-4cb2-89b8-0d726da28278",
+          "capture_id": "91bd55cf-0539-462f-8cf2-c97f38b1b1d9",
+          "performance_session_id": "ccbb3fd4-9add-46c4-849d-8e58ee8c47f6",
+          "delivery_id": "delivery-stage9",
+          "assignment_id": "teacher_smith_student_42_2026_08_10",
+          "content_id": "blues_turnaround_01",
+          "assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "capture_clock": "browser_performance_time",
+          "preparation": {
+            "schema_id": "master_all_strings.local_practice_preparation",
+            "schema_version": "1.0.0",
+            "preparation_status": "PREPARED",
+            "delivery_id": "delivery-stage9",
+            "assignment_id": "teacher_smith_student_42_2026_08_10",
+            "content_id": "blues_turnaround_01",
+            "assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+            "assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+            "projection": {
+              "status": "ready",
+              "demo_id": null,
+              "summary_title": "Stage 9 Integration Etude",
+              "instrument_id": "guitar-standard-6",
+              "behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+              "warnings": [],
+              "unsupported_features": [],
+              "teaching_aids": {
+                "one_string": [
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-6",
+                    "display_label": "E2",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "unplayable",
+                        "requested_string_id": "string-6",
+                        "display_order": null,
+                        "physical_fret_number": null,
+                        "relative_semitone_position": null,
+                        "normalized_position": null,
+                        "is_open_string": null,
+                        "unresolved_reason": "unplayable_on_requested_string"
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "unplayable",
+                        "requested_string_id": "string-6",
+                        "display_order": null,
+                        "physical_fret_number": null,
+                        "relative_semitone_position": null,
+                        "normalized_position": null,
+                        "is_open_string": null,
+                        "unresolved_reason": "unplayable_on_requested_string"
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "unplayable",
+                        "requested_string_id": "string-6",
+                        "display_order": null,
+                        "physical_fret_number": null,
+                        "relative_semitone_position": null,
+                        "normalized_position": null,
+                        "is_open_string": null,
+                        "unresolved_reason": "unplayable_on_requested_string"
+                      }
+                    ]
+                  },
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-5",
+                    "display_label": "A2",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "playable",
+                        "requested_string_id": "string-5",
+                        "display_order": 1,
+                        "physical_fret_number": 19,
+                        "relative_semitone_position": 19,
+                        "normalized_position": 0.6662900364574914,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "playable",
+                        "requested_string_id": "string-5",
+                        "display_order": 1,
+                        "physical_fret_number": 22,
+                        "relative_semitone_position": 22,
+                        "normalized_position": 0.7193844879226567,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "unplayable",
+                        "requested_string_id": "string-5",
+                        "display_order": null,
+                        "physical_fret_number": null,
+                        "relative_semitone_position": null,
+                        "normalized_position": null,
+                        "is_open_string": null,
+                        "unresolved_reason": "unplayable_on_requested_string"
+                      }
+                    ]
+                  },
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-4",
+                    "display_label": "D3",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "playable",
+                        "requested_string_id": "string-4",
+                        "display_order": 2,
+                        "physical_fret_number": 14,
+                        "relative_semitone_position": 14,
+                        "normalized_position": 0.5545506409298304,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "playable",
+                        "requested_string_id": "string-4",
+                        "display_order": 2,
+                        "physical_fret_number": 17,
+                        "relative_semitone_position": 17,
+                        "normalized_position": 0.6254232307808296,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "playable",
+                        "requested_string_id": "string-4",
+                        "display_order": 2,
+                        "physical_fret_number": 19,
+                        "relative_semitone_position": 19,
+                        "normalized_position": 0.6662900364574914,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      }
+                    ]
+                  },
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-3",
+                    "display_label": "G3",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "playable",
+                        "requested_string_id": "string-3",
+                        "display_order": 3,
+                        "physical_fret_number": 9,
+                        "relative_semitone_position": 9,
+                        "normalized_position": 0.4053964424986395,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "playable",
+                        "requested_string_id": "string-3",
+                        "display_order": 3,
+                        "physical_fret_number": 12,
+                        "relative_semitone_position": 12,
+                        "normalized_position": 0.5,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "playable",
+                        "requested_string_id": "string-3",
+                        "display_order": 3,
+                        "physical_fret_number": 14,
+                        "relative_semitone_position": 14,
+                        "normalized_position": 0.5545506409298304,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      }
+                    ]
+                  },
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-2",
+                    "display_label": "B3",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "playable",
+                        "requested_string_id": "string-2",
+                        "display_order": 4,
+                        "physical_fret_number": 5,
+                        "relative_semitone_position": 5,
+                        "normalized_position": 0.25084646156165924,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "playable",
+                        "requested_string_id": "string-2",
+                        "display_order": 4,
+                        "physical_fret_number": 8,
+                        "relative_semitone_position": 8,
+                        "normalized_position": 0.3700394750525634,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "playable",
+                        "requested_string_id": "string-2",
+                        "display_order": 4,
+                        "physical_fret_number": 10,
+                        "relative_semitone_position": 10,
+                        "normalized_position": 0.4387689758453135,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      }
+                    ]
+                  },
+                  {
+                    "schema_version": "1.0",
+                    "instrument_id": "guitar-standard-6",
+                    "requested_string_id": "string-1",
+                    "display_label": "E4",
+                    "events": [
+                      {
+                        "event_id": "ev-1",
+                        "midi_note": 64,
+                        "status": "playable",
+                        "requested_string_id": "string-1",
+                        "display_order": 5,
+                        "physical_fret_number": 0,
+                        "relative_semitone_position": 0,
+                        "normalized_position": 0,
+                        "is_open_string": true,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-2",
+                        "midi_note": 67,
+                        "status": "playable",
+                        "requested_string_id": "string-1",
+                        "display_order": 5,
+                        "physical_fret_number": 3,
+                        "relative_semitone_position": 3,
+                        "normalized_position": 0.1591035847462855,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      },
+                      {
+                        "event_id": "ev-3",
+                        "midi_note": 69,
+                        "status": "playable",
+                        "requested_string_id": "string-1",
+                        "display_order": 5,
+                        "physical_fret_number": 5,
+                        "relative_semitone_position": 5,
+                        "normalized_position": 0.25084646156165924,
+                        "is_open_string": false,
+                        "unresolved_reason": null
+                      }
+                    ]
+                  }
+                ]
+              },
+              "projection": {
+                "schema_version": "1.0.0",
+                "projection_type": "fretboard_scroll",
+                "projection_version": "1.0.0",
+                "fidelity": "selected_spatial_v1",
+                "projection_digest": "sha256:d1818d6ddc08e184dd4ac68ebd55bf47644400d3feb6a4cd0efa864b6ee61412",
+                "assignment_id": "teacher_smith_student_42_2026_08_10",
+                "content_id": "blues_turnaround_01",
+                "title": "Stage 9 Integration Etude",
+                "timeline": {
+                  "ticks_per_quarter": 480,
+                  "total_ticks": 1440,
+                  "total_seconds": 22.5,
+                  "seconds_per_screen": 4,
+                  "play_line_fraction": 0.22
+                },
+                "tempo_changes": [
+                  {
+                    "tick": 0,
+                    "tempo_bpm": 8,
+                    "microseconds_per_quarter": 7500000
+                  }
+                ],
+                "instrument": {
+                  "instrument_id": "guitar-standard-6",
+                  "display_name": "Standard Guitar (6-string)",
+                  "fingerboard_mode": "fretted",
+                  "scale_length_mm": 648,
+                  "lanes": [
+                    {
+                      "string_id": "string-6",
+                      "display_label": "E2",
+                      "display_order": 0,
+                      "open_midi_note": 40,
+                      "open_pitch_label": "E2"
+                    },
+                    {
+                      "string_id": "string-5",
+                      "display_label": "A2",
+                      "display_order": 1,
+                      "open_midi_note": 45,
+                      "open_pitch_label": "A2"
+                    },
+                    {
+                      "string_id": "string-4",
+                      "display_label": "D3",
+                      "display_order": 2,
+                      "open_midi_note": 50,
+                      "open_pitch_label": "D3"
+                    },
+                    {
+                      "string_id": "string-3",
+                      "display_label": "G3",
+                      "display_order": 3,
+                      "open_midi_note": 55,
+                      "open_pitch_label": "G3"
+                    },
+                    {
+                      "string_id": "string-2",
+                      "display_label": "B3",
+                      "display_order": 4,
+                      "open_midi_note": 59,
+                      "open_pitch_label": "B3"
+                    },
+                    {
+                      "string_id": "string-1",
+                      "display_label": "E4",
+                      "display_order": 5,
+                      "open_midi_note": 64,
+                      "open_pitch_label": "E4"
+                    }
+                  ],
+                  "frets": [
+                    {
+                      "fret_number": 0,
+                      "normalized_position": 0,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 1,
+                      "normalized_position": 0.05612568731830647,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 2,
+                      "normalized_position": 0.10910128185966073,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 3,
+                      "normalized_position": 0.1591035847462855,
+                      "marker_label": "3rd fret"
+                    },
+                    {
+                      "fret_number": 4,
+                      "normalized_position": 0.2062994740159002,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 5,
+                      "normalized_position": 0.25084646156165924,
+                      "marker_label": "5th fret"
+                    },
+                    {
+                      "fret_number": 6,
+                      "normalized_position": 0.2928932188134524,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 7,
+                      "normalized_position": 0.3325800729149828,
+                      "marker_label": "7th fret"
+                    },
+                    {
+                      "fret_number": 8,
+                      "normalized_position": 0.3700394750525634,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 9,
+                      "normalized_position": 0.4053964424986395,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 10,
+                      "normalized_position": 0.4387689758453135,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 11,
+                      "normalized_position": 0.47026845282035235,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 12,
+                      "normalized_position": 0.5,
+                      "marker_label": "12th fret"
+                    },
+                    {
+                      "fret_number": 13,
+                      "normalized_position": 0.5280628436591532,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 14,
+                      "normalized_position": 0.5545506409298304,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 15,
+                      "normalized_position": 0.5795517923731428,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 16,
+                      "normalized_position": 0.6031497370079502,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 17,
+                      "normalized_position": 0.6254232307808296,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 18,
+                      "normalized_position": 0.6464466094067263,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 19,
+                      "normalized_position": 0.6662900364574914,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 20,
+                      "normalized_position": 0.6850197375262816,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 21,
+                      "normalized_position": 0.7026982212493198,
+                      "marker_label": null
+                    },
+                    {
+                      "fret_number": 22,
+                      "normalized_position": 0.7193844879226567,
+                      "marker_label": null
+                    }
+                  ]
+                },
+                "selection_policy": "enumeration_v1",
+                "notes": [
+                  {
+                    "event_id": "ev-1",
+                    "status": "selected",
+                    "midi_note": 64,
+                    "pitch_label": "E4",
+                    "onset_tick": 0,
+                    "duration_ticks": 480,
+                    "onset_seconds": 0,
+                    "release_seconds": 7.5,
+                    "lane_display_order": 1,
+                    "string_id": "string-5",
+                    "fret_number": 19,
+                    "relative_semitone_position": 19,
+                    "normalized_position": 0.6662900364574914,
+                    "is_open_string": false,
+                    "selection_origin": "automatic",
+                    "unresolved_reason": null
+                  },
+                  {
+                    "event_id": "ev-2",
+                    "status": "selected",
+                    "midi_note": 67,
+                    "pitch_label": "G4",
+                    "onset_tick": 480,
+                    "duration_ticks": 480,
+                    "onset_seconds": 7.5,
+                    "release_seconds": 15,
+                    "lane_display_order": 1,
+                    "string_id": "string-5",
+                    "fret_number": 22,
+                    "relative_semitone_position": 22,
+                    "normalized_position": 0.7193844879226567,
+                    "is_open_string": false,
+                    "selection_origin": "automatic",
+                    "unresolved_reason": null
+                  },
+                  {
+                    "event_id": "ev-3",
+                    "status": "selected",
+                    "midi_note": 69,
+                    "pitch_label": "A4",
+                    "onset_tick": 960,
+                    "duration_ticks": 480,
+                    "onset_seconds": 15,
+                    "release_seconds": 22.5,
+                    "lane_display_order": 2,
+                    "string_id": "string-4",
+                    "fret_number": 19,
+                    "relative_semitone_position": 19,
+                    "normalized_position": 0.6662900364574914,
+                    "is_open_string": false,
+                    "selection_origin": "automatic",
+                    "unresolved_reason": null
+                  }
+                ],
+                "warnings": [],
+                "unsupported_features": [],
+                "description": null,
+                "objective": "Show one received lesson from inbox through feedback.",
+                "teacher_note": "Integration witness assignment. Not a bundled demo."
+              },
+              "timeline_anchors_schema_version": "1.0.0",
+              "timeline_anchors": [
+                {
+                  "tick": 0,
+                  "seconds": 0
+                },
+                {
+                  "tick": 1440,
+                  "seconds": 22.5
+                }
+              ]
+            },
+            "playback": {
+              "schema_version": "1.0.0",
+              "assignment_id": "teacher_smith_student_42_2026_08_10",
+              "content_id": "blues_turnaround_01",
+              "timeline": {
+                "ticks_per_quarter": 480,
+                "total_ticks": 1440,
+                "tempo_changes": [
+                  {
+                    "schema_version": "1.0.0",
+                    "tick": 0,
+                    "microseconds_per_quarter": 7500000
+                  }
+                ]
+              },
+              "events": [
+                {
+                  "event_id": "ev-1",
+                  "midi_note": 64,
+                  "velocity": 80,
+                  "onset_seconds": 0,
+                  "release_seconds": 7.5,
+                  "cents_offset": null
+                },
+                {
+                  "event_id": "ev-2",
+                  "midi_note": 67,
+                  "velocity": 80,
+                  "onset_seconds": 7.5,
+                  "release_seconds": 15,
+                  "cents_offset": null
+                },
+                {
+                  "event_id": "ev-3",
+                  "midi_note": 69,
+                  "velocity": 80,
+                  "onset_seconds": 15,
+                  "release_seconds": 22.5,
+                  "cents_offset": null
+                }
+              ],
+              "total_seconds": 22.5,
+              "warnings": [],
+              "unsupported_features": [],
+              "playback_digest": "sha256:dbdb6d0d891bd71e56ce826794c21887cf66a279fbf78048c166337efc6427e5",
+              "canonical_revision_id": "rev-cf73ae5afa337ebe334e924b"
+            },
+            "practice": {
+              "policy": {
+                "schema_version": "1.0.0",
+                "assignment_id": "teacher_smith_student_42_2026_08_10",
+                "content_id": "blues_turnaround_01",
+                "lesson_end_tick": 1440,
+                "loop": {
+                  "enabled": false,
+                  "start_tick": 0,
+                  "end_tick": 1440,
+                  "target_repetitions": null
+                },
+                "count_in_bars": 0
+              },
+              "runtime": {
+                "loop_start_seconds": 0,
+                "loop_end_seconds": 22.5
+              }
+            },
+            "score": {
+              "canonical_revision": {
+                "schema_version": "1.0.0",
+                "revision_id": "rev-cf73ae5afa337ebe334e924b",
+                "document_id": "score-blues_turnaround_01",
+                "revision_number": 1,
+                "parent_revision_id": null,
+                "created_at": "2026-08-10T12:00:00Z",
+                "ticks_per_quarter": 480,
+                "content_digest": "cf73ae5afa337ebe334e924b01aa65d403161eccfa1e9bca0db7fe494f49e6ad",
+                "provenance": {
+                  "schema_version": "1.0.0",
+                  "source_kind": "manual_construction",
+                  "policy_version": "AUTHORED_LESSON_REVISION_V1",
+                  "source_reference": "blues_turnaround_01",
+                  "event_provenance": [],
+                  "notes": []
+                },
+                "events": [
+                  {
+                    "event_id": "ev-1",
+                    "midi_note": 64,
+                    "start_tick": 0,
+                    "duration_ticks": 480,
+                    "velocity": 80,
+                    "cents_offset": 0,
+                    "voice_id": null
+                  },
+                  {
+                    "event_id": "ev-2",
+                    "midi_note": 67,
+                    "start_tick": 480,
+                    "duration_ticks": 480,
+                    "velocity": 80,
+                    "cents_offset": 0,
+                    "voice_id": null
+                  },
+                  {
+                    "event_id": "ev-3",
+                    "midi_note": 69,
+                    "start_tick": 960,
+                    "duration_ticks": 480,
+                    "velocity": 80,
+                    "cents_offset": 0,
+                    "voice_id": null
+                  }
+                ],
+                "tempo_changes": [
+                  {
+                    "schema_version": "1.0.0",
+                    "tick": 0,
+                    "microseconds_per_quarter": 7500000
+                  }
+                ],
+                "meter_changes": [
+                  {
+                    "schema_version": "1.0.0",
+                    "tick": 0,
+                    "numerator": 4,
+                    "denominator": 4
+                  }
+                ]
+              },
+              "tab": {
+                "schema_version": "1.0.0",
+                "projection_id": "tab:rev-cf73ae5afa337ebe334e924b",
+                "canonical_revision_id": "rev-cf73ae5afa337ebe334e924b",
+                "projection_kind": "tab",
+                "payload": {
+                  "schema_version": "1.0.0",
+                  "canonical_revision_id": "rev-cf73ae5afa337ebe334e924b",
+                  "instrument_profile_id": "guitar-standard-6",
+                  "events": [
+                    {
+                      "schema_version": "1.0.0",
+                      "canonical_event_id": "ev-1",
+                      "start_tick": 0,
+                      "duration_ticks": 480,
+                      "midi_note": 64,
+                      "status": "playable",
+                      "string_id": "string-5",
+                      "fret": 19,
+                      "cents_offset": 0
+                    },
+                    {
+                      "schema_version": "1.0.0",
+                      "canonical_event_id": "ev-2",
+                      "start_tick": 480,
+                      "duration_ticks": 480,
+                      "midi_note": 67,
+                      "status": "playable",
+                      "string_id": "string-5",
+                      "fret": 22,
+                      "cents_offset": 0
+                    },
+                    {
+                      "schema_version": "1.0.0",
+                      "canonical_event_id": "ev-3",
+                      "start_tick": 960,
+                      "duration_ticks": 480,
+                      "midi_note": 69,
+                      "status": "playable",
+                      "string_id": "string-4",
+                      "fret": 19,
+                      "cents_offset": 0
+                    }
+                  ],
+                  "unsupported_features": []
+                },
+                "digest": "sha256:c1ec31d0554c9988497034b31b0f35221cc38854502dd61b18aa4504da08490d",
+                "unsupported_features": []
+              },
+              "notation": {
+                "schema_version": "1.0.0",
+                "projection_id": "notation:rev-cf73ae5afa337ebe334e924b",
+                "canonical_revision_id": "rev-cf73ae5afa337ebe334e924b",
+                "projection_kind": "notation",
+                "payload": {
+                  "schema_version": "1.0.0",
+                  "canonical_revision_id": "rev-cf73ae5afa337ebe334e924b",
+                  "ticks_per_quarter": 480,
+                  "display_policy": "sharp_preferred_v1",
+                  "measures": [
+                    {
+                      "schema_version": "1.0.0",
+                      "measure_index": 0,
+                      "start_tick": 0,
+                      "end_tick": 1920,
+                      "meter": {
+                        "schema_version": "1.0.0",
+                        "tick": 0,
+                        "numerator": 4,
+                        "denominator": 4
+                      },
+                      "events": [
+                        {
+                          "schema_version": "1.0.0",
+                          "event_kind": "note",
+                          "start_tick": 0,
+                          "duration_ticks": 480,
+                          "canonical_event_id": "ev-1",
+                          "midi_note": 64,
+                          "display_pitch": "E4",
+                          "display_duration": "quarter",
+                          "derivation": null
+                        },
+                        {
+                          "schema_version": "1.0.0",
+                          "event_kind": "note",
+                          "start_tick": 480,
+                          "duration_ticks": 480,
+                          "canonical_event_id": "ev-2",
+                          "midi_note": 67,
+                          "display_pitch": "G4",
+                          "display_duration": "quarter",
+                          "derivation": null
+                        },
+                        {
+                          "schema_version": "1.0.0",
+                          "event_kind": "note",
+                          "start_tick": 960,
+                          "duration_ticks": 480,
+                          "canonical_event_id": "ev-3",
+                          "midi_note": 69,
+                          "display_pitch": "A4",
+                          "display_duration": "quarter",
+                          "derivation": null
+                        }
+                      ]
+                    }
+                  ],
+                  "unsupported_features": []
+                },
+                "digest": "sha256:591b0575f790c1c552e45e12df627b35a89fe7f71f1770006a3c43b8dc39e536",
+                "unsupported_features": []
+              }
+            }
+          },
+          "attempt_policy": {
+            "schema_version": "1.0.0",
+            "pass_count": 1,
+            "playback_rate": 1,
+            "looping_allowed": false,
+            "seeking_allowed": false,
+            "lesson_switching_allowed": false,
+            "reference_sound": "independent_of_capture"
+          }
+        }
+      }
+    },
+    {
+      "seq": 9,
+      "scenario": "W4",
+      "source": "forwarded_recovery",
+      "route": "recovery",
+      "sender": "harness",
+      "page_outcome": "network_failure",
+      "epoch": "A",
+      "status": 200,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiNjExMzExMmMtNGMxNC00NDEzLWFlNjAtMGY2ZjczMTdjMTE4IiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjo3ODYxMDAwMDB9fQ==",
+      "request_sha256": "0d028ceb7fb3d5e708ed9f78fd924be1d71344ae018efabef9c8ca1d8291e8d8",
+      "response_base64": "eyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9iZWdpbl9yZXF1ZXN0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlZ2luX3JlcXVlc3RfaWQiOiAiNjExMzExMmMtNGMxNC00NDEzLWFlNjAtMGY2ZjczMTdjMTE4IiwgInN0YXR1cyI6ICJJTlRFUlJVUFRFRCIsICJhdHRlbXB0IjogeyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9hdHRlbXB0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImF0dGVtcHRfc3RhdHVzIjogIklOVEVSUlVQVEVEIiwgImF0dGVtcHRfaWQiOiAiMDViZTY4YTEtZTE2ZC00Y2IyLTg5YjgtMGQ3MjZkYTI4Mjc4IiwgImNhcHR1cmVfaWQiOiAiOTFiZDU1Y2YtMDUzOS00NjJmLThjZjItYzk3ZjM4YjFiMWQ5IiwgInBlcmZvcm1hbmNlX3Nlc3Npb25faWQiOiAiY2NiYjNmZDQtOWFkZC00NmM0LTg0OWQtOGU1OGVlOGM0N2Y2IiwgImRlbGl2ZXJ5X2lkIjogImRlbGl2ZXJ5LXN0YWdlOSIsICJhc3NpZ25tZW50X2lkIjogInRlYWNoZXJfc21pdGhfc3R1ZGVudF80Ml8yMDI2XzA4XzEwIiwgImNvbnRlbnRfaWQiOiAiYmx1ZXNfdHVybmFyb3VuZF8wMSIsICJhc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6ICJzaGEyNTY6YmVkZWZlMzZjNWI0NmRkMzE0YWE5MWM5MjdkMTE1OTNlNjJhNDZlYTcxNmMzNTBkYWNjY2E5Njc2YWI4NDEyNSIsICJhc3NpZ25tZW50X2JlaGF2aW9yX2RpZ2VzdCI6ICJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsICJjYXB0dXJlX2Nsb2NrIjogImJyb3dzZXJfcGVyZm9ybWFuY2VfdGltZSIsICJyYXdfY2FwdHVyZSI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiY2FwdHVyZV9pZCI6ICI5MWJkNTVjZi0wNTM5LTQ2MmYtOGNmMi1jOTdmMzhiMWIxZDkiLCAic2Vzc2lvbl9pZCI6ICJjY2JiM2ZkNC05YWRkLTQ2YzQtODQ5ZC04ZTU4ZWU4YzQ3ZjYiLCAicnVudGltZV9pZGVudGl0eSI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicnVudGltZV9pZCI6ICJ3ZWItbWlkaSIsICJydW50aW1lX2tpbmQiOiAibGlnaHR3ZWlnaHQiLCAicmVwb3J0ZWRfdmVyc2lvbiI6ICIxIiwgInZlcnNpb25fcG9saWN5IjogIndlYi1taWRpLXYxIiwgInZlcnNpb25fc3VwcG9ydGVkIjogdHJ1ZX0sICJzb3VyY2VfaWRlbnRpdHkiOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgInNvdXJjZV9pZCI6ICJJbmplY3RlZCBCZWdpbiBSZWNvdmVyeSIsICJwb3J0IjogImJyb3dzZXIiLCAiZGV2aWNlIjogIkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwgInN1cHBsaWVzX3N0cmluZ19pZGVudGl0eSI6IGZhbHNlfSwgInN0YXJ0ZWRfYXQiOiAiMjAyNi0xMS0wMlQwMTozNTozMy4yNTY2OTVaIiwgImNvbXBsZXRpb25fc3RhdGUiOiAiaW50ZXJydXB0ZWQiLCAidGVtcG9fY29udGV4dCI6IDguMCwgIm1ldGVyX2NvbnRleHQiOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlYXRzX3Blcl9iYXIiOiA0LCAiYmVhdF91bml0IjogNH0sICJldmVudHMiOiBbXSwgImVuZGVkX2F0IjogIjIwMjYtMTEtMDJUMDE6MzU6MzMuMzE3NzMzWiIsICJ3YXJuaW5ncyI6IFtdLCAiZmF1bHRzIjogW10sICJwcm92ZW5hbmNlIjogeyJjbG9ja19kb21haW4iOiAiYnJvd3Nlcl9wZXJmb3JtYW5jZV90aW1lIn19LCAib2JzZXJ2ZWRfZXZlbnRzIjogW10sICJ1bm1hdGNoZWRfbm90ZV9vZmZzIjogW10sICJoYXJkd2FyZV9zdGF0dXMiOiB7Im1pZGlfaW5wdXQiOiAiVU5WRVJJRklFRF9QSFlTSUNBTF9NSURJX0lOUFVUIiwgImF1ZGlvX291dHB1dCI6ICJVTlZFUklGSUVEX0FVRElPX09VVFBVVCJ9fX0=",
+      "response_sha256": "040a39c6aa2c0bfcf837dd2e14342bb224395da87c8939024a2847c9e429e583",
+      "request": {
+        "begin_request_id": "6113112c-4c14-4413-ae60-0f6f7317c118",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 786100000
+        }
+      },
+      "response": {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": "6113112c-4c14-4413-ae60-0f6f7317c118",
+        "status": "INTERRUPTED",
+        "attempt": {
+          "schema_id": "master_all_strings.received_lesson_attempt",
+          "schema_version": "1.0.0",
+          "attempt_status": "INTERRUPTED",
+          "attempt_id": "05be68a1-e16d-4cb2-89b8-0d726da28278",
+          "capture_id": "91bd55cf-0539-462f-8cf2-c97f38b1b1d9",
+          "performance_session_id": "ccbb3fd4-9add-46c4-849d-8e58ee8c47f6",
+          "delivery_id": "delivery-stage9",
+          "assignment_id": "teacher_smith_student_42_2026_08_10",
+          "content_id": "blues_turnaround_01",
+          "assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "capture_clock": "browser_performance_time",
+          "raw_capture": {
+            "schema_version": "1.0.0",
+            "capture_id": "91bd55cf-0539-462f-8cf2-c97f38b1b1d9",
+            "session_id": "ccbb3fd4-9add-46c4-849d-8e58ee8c47f6",
+            "runtime_identity": {
+              "schema_version": "1.0.0",
+              "runtime_id": "web-midi",
+              "runtime_kind": "lightweight",
+              "reported_version": "1",
+              "version_policy": "web-midi-v1",
+              "version_supported": true
+            },
+            "source_identity": {
+              "schema_version": "1.0.0",
+              "source_id": "Injected Begin Recovery",
+              "port": "browser",
+              "device": "Injected Begin Recovery",
+              "supplies_string_identity": false
+            },
+            "started_at": "2026-11-02T01:35:33.256695Z",
+            "completion_state": "interrupted",
+            "tempo_context": 8,
+            "meter_context": {
+              "schema_version": "1.0.0",
+              "beats_per_bar": 4,
+              "beat_unit": 4
+            },
+            "events": [],
+            "ended_at": "2026-11-02T01:35:33.317733Z",
+            "warnings": [],
+            "faults": [],
+            "provenance": {
+              "clock_domain": "browser_performance_time"
+            }
+          },
+          "observed_events": [],
+          "unmatched_note_offs": [],
+          "hardware_status": {
+            "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+            "audio_output": "UNVERIFIED_AUDIO_OUTPUT"
+          }
+        }
+      }
+    },
+    {
+      "seq": 10,
+      "scenario": "W4",
+      "source": "browser",
+      "route": "recovery",
+      "sender": "browser",
+      "page_outcome": "response",
+      "epoch": "A",
+      "status": 200,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiNjExMzExMmMtNGMxNC00NDEzLWFlNjAtMGY2ZjczMTdjMTE4IiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjo3ODYxMDAwMDB9fQ==",
+      "request_sha256": "0d028ceb7fb3d5e708ed9f78fd924be1d71344ae018efabef9c8ca1d8291e8d8",
+      "response_base64": "eyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9iZWdpbl9yZXF1ZXN0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlZ2luX3JlcXVlc3RfaWQiOiAiNjExMzExMmMtNGMxNC00NDEzLWFlNjAtMGY2ZjczMTdjMTE4IiwgInN0YXR1cyI6ICJJTlRFUlJVUFRFRCIsICJhdHRlbXB0IjogeyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9hdHRlbXB0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImF0dGVtcHRfc3RhdHVzIjogIklOVEVSUlVQVEVEIiwgImF0dGVtcHRfaWQiOiAiMDViZTY4YTEtZTE2ZC00Y2IyLTg5YjgtMGQ3MjZkYTI4Mjc4IiwgImNhcHR1cmVfaWQiOiAiOTFiZDU1Y2YtMDUzOS00NjJmLThjZjItYzk3ZjM4YjFiMWQ5IiwgInBlcmZvcm1hbmNlX3Nlc3Npb25faWQiOiAiY2NiYjNmZDQtOWFkZC00NmM0LTg0OWQtOGU1OGVlOGM0N2Y2IiwgImRlbGl2ZXJ5X2lkIjogImRlbGl2ZXJ5LXN0YWdlOSIsICJhc3NpZ25tZW50X2lkIjogInRlYWNoZXJfc21pdGhfc3R1ZGVudF80Ml8yMDI2XzA4XzEwIiwgImNvbnRlbnRfaWQiOiAiYmx1ZXNfdHVybmFyb3VuZF8wMSIsICJhc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6ICJzaGEyNTY6YmVkZWZlMzZjNWI0NmRkMzE0YWE5MWM5MjdkMTE1OTNlNjJhNDZlYTcxNmMzNTBkYWNjY2E5Njc2YWI4NDEyNSIsICJhc3NpZ25tZW50X2JlaGF2aW9yX2RpZ2VzdCI6ICJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsICJjYXB0dXJlX2Nsb2NrIjogImJyb3dzZXJfcGVyZm9ybWFuY2VfdGltZSIsICJyYXdfY2FwdHVyZSI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAiY2FwdHVyZV9pZCI6ICI5MWJkNTVjZi0wNTM5LTQ2MmYtOGNmMi1jOTdmMzhiMWIxZDkiLCAic2Vzc2lvbl9pZCI6ICJjY2JiM2ZkNC05YWRkLTQ2YzQtODQ5ZC04ZTU4ZWU4YzQ3ZjYiLCAicnVudGltZV9pZGVudGl0eSI6IHsic2NoZW1hX3ZlcnNpb24iOiAiMS4wLjAiLCAicnVudGltZV9pZCI6ICJ3ZWItbWlkaSIsICJydW50aW1lX2tpbmQiOiAibGlnaHR3ZWlnaHQiLCAicmVwb3J0ZWRfdmVyc2lvbiI6ICIxIiwgInZlcnNpb25fcG9saWN5IjogIndlYi1taWRpLXYxIiwgInZlcnNpb25fc3VwcG9ydGVkIjogdHJ1ZX0sICJzb3VyY2VfaWRlbnRpdHkiOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgInNvdXJjZV9pZCI6ICJJbmplY3RlZCBCZWdpbiBSZWNvdmVyeSIsICJwb3J0IjogImJyb3dzZXIiLCAiZGV2aWNlIjogIkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwgInN1cHBsaWVzX3N0cmluZ19pZGVudGl0eSI6IGZhbHNlfSwgInN0YXJ0ZWRfYXQiOiAiMjAyNi0xMS0wMlQwMTozNTozMy4yNTY2OTVaIiwgImNvbXBsZXRpb25fc3RhdGUiOiAiaW50ZXJydXB0ZWQiLCAidGVtcG9fY29udGV4dCI6IDguMCwgIm1ldGVyX2NvbnRleHQiOiB7InNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlYXRzX3Blcl9iYXIiOiA0LCAiYmVhdF91bml0IjogNH0sICJldmVudHMiOiBbXSwgImVuZGVkX2F0IjogIjIwMjYtMTEtMDJUMDE6MzU6MzMuMzE3NzMzWiIsICJ3YXJuaW5ncyI6IFtdLCAiZmF1bHRzIjogW10sICJwcm92ZW5hbmNlIjogeyJjbG9ja19kb21haW4iOiAiYnJvd3Nlcl9wZXJmb3JtYW5jZV90aW1lIn19LCAib2JzZXJ2ZWRfZXZlbnRzIjogW10sICJ1bm1hdGNoZWRfbm90ZV9vZmZzIjogW10sICJoYXJkd2FyZV9zdGF0dXMiOiB7Im1pZGlfaW5wdXQiOiAiVU5WRVJJRklFRF9QSFlTSUNBTF9NSURJX0lOUFVUIiwgImF1ZGlvX291dHB1dCI6ICJVTlZFUklGSUVEX0FVRElPX09VVFBVVCJ9fX0=",
+      "response_sha256": "040a39c6aa2c0bfcf837dd2e14342bb224395da87c8939024a2847c9e429e583",
+      "request": {
+        "begin_request_id": "6113112c-4c14-4413-ae60-0f6f7317c118",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 786100000
+        }
+      },
+      "response": {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": "6113112c-4c14-4413-ae60-0f6f7317c118",
+        "status": "INTERRUPTED",
+        "attempt": {
+          "schema_id": "master_all_strings.received_lesson_attempt",
+          "schema_version": "1.0.0",
+          "attempt_status": "INTERRUPTED",
+          "attempt_id": "05be68a1-e16d-4cb2-89b8-0d726da28278",
+          "capture_id": "91bd55cf-0539-462f-8cf2-c97f38b1b1d9",
+          "performance_session_id": "ccbb3fd4-9add-46c4-849d-8e58ee8c47f6",
+          "delivery_id": "delivery-stage9",
+          "assignment_id": "teacher_smith_student_42_2026_08_10",
+          "content_id": "blues_turnaround_01",
+          "assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "capture_clock": "browser_performance_time",
+          "raw_capture": {
+            "schema_version": "1.0.0",
+            "capture_id": "91bd55cf-0539-462f-8cf2-c97f38b1b1d9",
+            "session_id": "ccbb3fd4-9add-46c4-849d-8e58ee8c47f6",
+            "runtime_identity": {
+              "schema_version": "1.0.0",
+              "runtime_id": "web-midi",
+              "runtime_kind": "lightweight",
+              "reported_version": "1",
+              "version_policy": "web-midi-v1",
+              "version_supported": true
+            },
+            "source_identity": {
+              "schema_version": "1.0.0",
+              "source_id": "Injected Begin Recovery",
+              "port": "browser",
+              "device": "Injected Begin Recovery",
+              "supplies_string_identity": false
+            },
+            "started_at": "2026-11-02T01:35:33.256695Z",
+            "completion_state": "interrupted",
+            "tempo_context": 8,
+            "meter_context": {
+              "schema_version": "1.0.0",
+              "beats_per_bar": 4,
+              "beat_unit": 4
+            },
+            "events": [],
+            "ended_at": "2026-11-02T01:35:33.317733Z",
+            "warnings": [],
+            "faults": [],
+            "provenance": {
+              "clock_domain": "browser_performance_time"
+            }
+          },
+          "observed_events": [],
+          "unmatched_note_offs": [],
+          "hardware_status": {
+            "midi_input": "UNVERIFIED_PHYSICAL_MIDI_INPUT",
+            "audio_output": "UNVERIFIED_AUDIO_OUTPUT"
+          }
+        }
+      }
+    },
+    {
+      "seq": 11,
+      "scenario": "W5",
+      "source": "aborted_begin",
+      "route": "begin",
+      "sender": "none",
+      "page_outcome": "network_failure",
+      "epoch": "A",
+      "status": null,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiMjRmNDc1YjUtMDMyZS00NTQyLWI3MWUtNzZmOGMwOGJmODlhIiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjo5ODUyMDAwMDB9fQ==",
+      "request_sha256": "688f07a9e1b4b6cb0a7a77d8d0683e8d74c0dfdcce2b49a8dcc8fff6504641f6",
+      "response_base64": null,
+      "response_sha256": null,
+      "request": {
+        "begin_request_id": "24f475b5-032e-4542-b71e-76f8c08bf89a",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 985200000
+        }
+      },
+      "response": null
+    },
+    {
+      "seq": 13,
+      "scenario": "W5",
+      "source": "browser",
+      "route": "recovery",
+      "sender": "browser",
+      "page_outcome": "response",
+      "epoch": "B",
+      "status": 200,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiMjRmNDc1YjUtMDMyZS00NTQyLWI3MWUtNzZmOGMwOGJmODlhIiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjo5ODUyMDAwMDB9fQ==",
+      "request_sha256": "688f07a9e1b4b6cb0a7a77d8d0683e8d74c0dfdcce2b49a8dcc8fff6504641f6",
+      "response_base64": "eyJzY2hlbWFfaWQiOiAibWFzdGVyX2FsbF9zdHJpbmdzLnJlY2VpdmVkX2xlc3Nvbl9iZWdpbl9yZXF1ZXN0IiwgInNjaGVtYV92ZXJzaW9uIjogIjEuMC4wIiwgImJlZ2luX3JlcXVlc3RfaWQiOiAiMjRmNDc1YjUtMDMyZS00NTQyLWI3MWUtNzZmOGMwOGJmODlhIiwgInN0YXR1cyI6ICJOT19BVFRFTVBUIiwgImF0dGVtcHQiOiBudWxsfQ==",
+      "response_sha256": "c0dfd8ab85451b4d0b0f6932fbe4b367b1c47a8c990f76e86891fc3277ab8daf",
+      "request": {
+        "begin_request_id": "24f475b5-032e-4542-b71e-76f8c08bf89a",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 985200000
+        }
+      },
+      "response": {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": "24f475b5-032e-4542-b71e-76f8c08bf89a",
+        "status": "NO_ATTEMPT",
+        "attempt": null
+      }
+    },
+    {
+      "seq": 14,
+      "scenario": "W5",
+      "source": "replayed_begin",
+      "route": "begin",
+      "sender": "harness",
+      "page_outcome": "not_sent_by_page",
+      "epoch": "B",
+      "status": 409,
+      "request_base64": "eyJiZWdpbl9yZXF1ZXN0X2lkIjoiMjRmNDc1YjUtMDMyZS00NTQyLWI3MWUtNzZmOGMwOGJmODlhIiwiYmVnaW4iOnsiZGVsaXZlcnlfaWQiOiJkZWxpdmVyeS1zdGFnZTkiLCJleHBlY3RlZF9hc3NpZ25tZW50X2FydGlmYWN0X2RpZ2VzdCI6InNoYTI1NjpiZWRlZmUzNmM1YjQ2ZGQzMTRhYTkxYzkyN2QxMTU5M2U2MmE0NmVhNzE2YzM1MGRhY2NjYTk2NzZhYjg0MTI1IiwiZXhwZWN0ZWRfYXNzaWdubWVudF9iZWhhdmlvcl9kaWdlc3QiOiJzaGEyNTY6YzY5ODZmYmZjYzQ5YzNkOTJmZTVjYjAwMTEwNjQ3OTdhZWU1ZDBkNWFkZjBmZmFlZmQ3YTNjYzZkMGE1NWNjNCIsImRldmljZV9pZCI6IkluamVjdGVkIEJlZ2luIFJlY292ZXJ5IiwiY2FwdHVyZV90aW1lX25zIjo5ODUyMDAwMDB9fQ==",
+      "request_sha256": "688f07a9e1b4b6cb0a7a77d8d0683e8d74c0dfdcce2b49a8dcc8fff6504641f6",
+      "response_base64": "eyJlcnJvciI6ICJiZWdpbl9yZXF1ZXN0X2Nsb3NlZCJ9",
+      "response_sha256": "723766a86207f64cd31d6de4cda83b08033b87110dc6ef4f1d585644697b2957",
+      "request": {
+        "begin_request_id": "24f475b5-032e-4542-b71e-76f8c08bf89a",
+        "begin": {
+          "delivery_id": "delivery-stage9",
+          "expected_assignment_artifact_digest": "sha256:bedefe36c5b46dd314aa91c927d11593e62a46ea716c350daccca9676ab84125",
+          "expected_assignment_behavior_digest": "sha256:c6986fbfcc49c3d92fe5cb0011064797aee5d0d5adf0ffaefd7a3cc6d0a55cc4",
+          "device_id": "Injected Begin Recovery",
+          "capture_time_ns": 985200000
+        }
+      },
+      "response": {
+        "error": "begin_request_closed"
+      }
+    }
+  ],
+  "epochs": [
+    {
+      "name": "A",
+      "pid": 36672
+    },
+    {
+      "name": "B",
+      "pid": 14000,
+      "previous_pid": 36672,
+      "restart_seq": 12
+    }
+  ],
+  "notes": [
+    "PASS lost begin offers resolve",
+    "PASS resolve interrupts the stored attempt - 59844cc0-f644-489a-8519-72ddf0e7cc15",
+    "PASS recovered interruption feedback stays visible - Attempt interruptedAttempt: 59844cc0-f644-489a-8519-72ddf0e7cc15No evaluation was produced.MIDI input: UNVERIFIED_PHYSIC",
+    "PASS recovery before begin seals the key",
+    "PASS blocked preparation does not publish started",
+    "PASS interrupted begin feedback stays visible - Attempt interruptedAttempt: 79c700df-b100-4710-9d4e-253aa255322fNo evaluation was produced.MIDI input: UNVERIFIED_PHYSIC",
+    "PASS repeated recovery stays interrupted",
+    "PASS repeated recovery feedback stays visible - Attempt interruptedAttempt: 05be68a1-e16d-4cb2-89b8-0d726da28278No evaluation was produced.MIDI input: UNVERIFIED_PHYSIC",
+    "PASS restart refuses the delayed begin"
+  ]
+}

@@ -133,6 +133,7 @@ function buildRoot() {
   }
   add("button", "btn-cancel-attempt").hidden = true;
   add("button", "btn-retry-finish").hidden = true;
+  add("button", "btn-resolve-start").hidden = true;
   add("a", "back-inbox").setAttribute("href", "lesson-inbox.html");
   for (const id of ["btn-play", "btn-pause", "btn-restart"]) {
     const button = add("button", id);
@@ -274,6 +275,43 @@ function attemptCalls() {
     async begin(body) {
       calls.push({ op: "begin", body });
       return this.next.begin(body);
+    },
+    async beginRequest(request) {
+      calls.push({ op: "begin", body: request.begin, key: request.beginRequestId });
+      const response = await this.next.begin(request.begin);
+      if (response?.status === 201 && response.body && !response.body.begin_request_id) {
+        return {
+          ...response,
+          body: {
+            schema_id: "master_all_strings.received_lesson_begin_request",
+            schema_version: "1.0.0",
+            begin_request_id: request.beginRequestId,
+            status: "STARTED",
+            attempt: response.body,
+          },
+        };
+      }
+      return response;
+    },
+    async resolveBegin(request) {
+      calls.push({
+        op: "resolve",
+        key: request.beginRequestId,
+        keepalive: request.keepalive === true,
+      });
+      if (this.next.resolveBegin) return this.next.resolveBegin(request);
+      return {
+        ok: true,
+        status: 200,
+        error: null,
+        body: {
+          schema_id: "master_all_strings.received_lesson_begin_request",
+          schema_version: "1.0.0",
+          begin_request_id: request.beginRequestId,
+          status: "NO_ATTEMPT",
+          attempt: null,
+        },
+      };
     },
     async append(body) {
       calls.push({ op: "append", body });
@@ -460,15 +498,15 @@ test("an inconsistent Begin revision is cancelled before an attempt runtime moun
   await page.ui.idle();
   page.q("btn-start-attempt").click();
   await page.ui.idle();
-  assert.deepEqual(transport.calls.map((call) => call.op), ["begin", "cancel"]);
-  assert.equal(transport.calls[1].body.attemptId, attempt.attempt_id);
+  assert.deepEqual(transport.calls.map((call) => call.op), ["begin"]);
   assert.equal(page.record.runtimes.length, 1);
   assert.equal(reference.played, undefined);
   assert.equal(midi.connected, null);
   assert.equal(page.q("btn-play").disabled, false);
-  assert.equal(page.q("btn-start-attempt").disabled, false);
+  assert.equal(page.q("btn-start-attempt").disabled, true);
+  assert.equal(page.q("btn-resolve-start").hidden, false);
   assert.equal(page.q("attempt-feedback").textContent, "");
-  assert.match(page.q("attempt-status").textContent, /begin response could not be used/);
+  assert.match(page.q("attempt-status").textContent, /did not finish/);
 });
 
 test("server text is rendered as text and a score view can fail alone", async () => {
@@ -742,8 +780,8 @@ test("leaving the page abandons an attempt and restoration does not resume captu
   view.dispatch("pagehide", {});
   releaseBegin(ok(attempt, 201));
   await page.ui.idle();
-  assert.equal(transport.calls.some((call) => call.op === "cancel"), true);
-  assert.equal(transport.cancelBody.keepalive, true);
+  assert.equal(transport.calls.some((call) => call.op === "resolve" && call.keepalive), true);
+  assert.equal(transport.calls.some((call) => call.op === "cancel"), false);
   assert.equal(page.record.runtimes.some((runtime) => runtime.played && runtime.spec.bundle.score.canonical_revision.revision_id === "rev-attempt"), false);
   view.dispatch("pageshow", { persisted: true });
   await page.ui.idle();

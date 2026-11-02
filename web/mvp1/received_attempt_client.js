@@ -9,6 +9,8 @@ export const LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH = "/api/education/lesson-pract
 export const LESSON_PRACTICE_ATTEMPT_FINISH_PATH = "/api/education/lesson-practice-attempt-finishes";
 export const LESSON_PRACTICE_ATTEMPT_CANCELLATION_PATH =
   "/api/education/lesson-practice-attempt-cancellations";
+export const LESSON_PRACTICE_BEGIN_REQUEST_PATH = "/api/education/lesson-practice-begin-requests";
+export const LESSON_PRACTICE_BEGIN_RECOVERY_PATH = "/api/education/lesson-practice-begin-recoveries";
 
 export class ReceivedAttemptClient {
   /**
@@ -30,13 +32,35 @@ export class ReceivedAttemptClient {
    * @param {number} request.captureTimeNs
    */
   begin(request) {
-    return this._send(LESSON_PRACTICE_ATTEMPT_PATH, {
-      delivery_id: request.deliveryId,
-      expected_assignment_artifact_digest: request.artifactDigest,
-      expected_assignment_behavior_digest: request.behaviorDigest,
-      device_id: request.deviceId,
-      capture_time_ns: request.captureTimeNs,
-    });
+    return this._send(LESSON_PRACTICE_ATTEMPT_PATH, beginFields(request));
+  }
+
+  /**
+   * @param {object} request
+   * @param {string} request.beginRequestId
+   * @param {object} request.begin
+   * @param {boolean} [request.keepalive]
+   */
+  beginRequest(request) {
+    return this._send(
+      LESSON_PRACTICE_BEGIN_REQUEST_PATH,
+      gatewayBody(request),
+      { keepalive: Boolean(request.keepalive) },
+    );
+  }
+
+  /**
+   * @param {object} request
+   * @param {string} request.beginRequestId
+   * @param {object} request.begin
+   * @param {boolean} [request.keepalive]
+   */
+  resolveBegin(request) {
+    return this._send(
+      LESSON_PRACTICE_BEGIN_RECOVERY_PATH,
+      gatewayBody(request),
+      { keepalive: Boolean(request.keepalive) },
+    );
   }
 
   /**
@@ -110,6 +134,23 @@ export class ReceivedAttemptClient {
     if (!response.ok || error !== null) return { ok: false, status, error, body: null };
     return { ok: true, status, error: null, body: payload };
   }
+}
+
+function beginFields(request) {
+  return {
+    delivery_id: request.deliveryId,
+    expected_assignment_artifact_digest: request.artifactDigest,
+    expected_assignment_behavior_digest: request.behaviorDigest,
+    device_id: request.deviceId,
+    capture_time_ns: request.captureTimeNs,
+  };
+}
+
+function gatewayBody(request) {
+  return {
+    begin_request_id: request.beginRequestId,
+    begin: beginFields(request.begin),
+  };
 }
 
 /**

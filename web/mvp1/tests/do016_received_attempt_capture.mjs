@@ -41,7 +41,8 @@ function check(name, ok, detail = "") {
 function tally(url) {
   if (url.includes("/api/education/guided-sessions")) counts.guided += 1;
   if (url.includes("/api/performance/")) counts.performance += 1;
-  if (url.endsWith("/api/education/lesson-practice-attempts")) counts.begin += 1;
+  if (url.endsWith("/api/education/lesson-practice-attempts")
+    || url.endsWith("/api/education/lesson-practice-begin-requests")) counts.begin += 1;
   if (url.endsWith("/api/education/lesson-practice-attempt-messages")) counts.message += 1;
   if (url.endsWith("/api/education/lesson-practice-attempt-finishes")) counts.finish += 1;
   if (url.endsWith("/api/education/lesson-practice-attempt-cancellations")) counts.cancel += 1;
@@ -87,10 +88,15 @@ function watch(page, label, tallyRequests = true) {
     });
   }
   page.on("response", async (response) => {
-    if (!response.url().endsWith("/api/education/lesson-practice-attempts")) return;
+    const beginPath = response.url().endsWith("/api/education/lesson-practice-attempts")
+      || response.url().endsWith("/api/education/lesson-practice-begin-requests");
+    if (!beginPath) return;
     if (response.status() !== 201) return;
     try {
-      const body = await response.json();
+      const payload = await response.json();
+      const body = payload.schema_id === "master_all_strings.received_lesson_begin_request"
+        ? payload.attempt
+        : payload;
       attempts.push({
         label,
         attempt_id: body.attempt_id,
@@ -345,7 +351,8 @@ try {
   pageE.on("request", async (request) => {
     tally(request.url());
     const prepare = request.url().endsWith("/api/education/lesson-practice-preparations");
-    const begin = request.url().endsWith("/api/education/lesson-practice-attempts");
+    const begin = request.url().endsWith("/api/education/lesson-practice-attempts")
+      || request.url().endsWith("/api/education/lesson-practice-begin-requests");
     if ((prepare && !changedPreparation) || (begin && !changedBegin)) {
       if (prepare) changedPreparation = true;
       if (begin) changedBegin = true;
@@ -356,7 +363,7 @@ try {
           body: request.postData(),
         });
         const body = await response.json();
-        const preparation = begin ? body.preparation : body;
+        const preparation = begin ? (body.attempt?.preparation ?? body.preparation) : body;
         preparation.playback.canonical_revision_id = "rev-simulated-stale-playback";
         await request.respond({
           status: response.status,
@@ -387,16 +394,26 @@ try {
   await pageE.waitForFunction(() => /ready/.test(document.querySelector("#midi-status")?.textContent || ""));
   const beforeBadBegin = { ...counts };
   await pageE.click("#btn-start-attempt");
-  await pageE.waitForFunction(() => /begin response could not be used/.test(document.querySelector("#attempt-status")?.textContent || ""));
-  check("revision mismatch cancels the unusable Begin without capture", changedBegin
-    && counts.cancel === beforeBadBegin.cancel + 1
+  await pageE.waitForFunction(() => document.querySelector("#btn-resolve-start")?.hidden === false);
+  check("revision mismatch leaves the start unresolved", changedBegin
     && counts.message === beforeBadBegin.message
-    && counts.finish === beforeBadBegin.finish);
+    && counts.finish === beforeBadBegin.finish
+    && counts.cancel === beforeBadBegin.cancel);
+  await pageE.click("#btn-resolve-start");
+  await pageE.waitForFunction(() => /interrupted/.test(document.querySelector("#attempt-status")?.textContent || ""));
+  check("resolve closes the unusable begin", (await text(pageE, "#attempt-status")).includes("interrupted"));
   check("rejected Begin restores ordinary practice", await pageE.evaluate(() => (
     !document.querySelector("#btn-play").disabled
     && !document.querySelector("#btn-start-attempt").disabled
-    && document.querySelector("#attempt-feedback").textContent === ""
   )));
+  // The closed attempt stays on screen as an interruption, never as an evaluation.
+  const closedFeedback = await pageE.evaluate(() => {
+    const panel = document.querySelector("#attempt-feedback");
+    return { visible: panel.hidden === false, text: panel.textContent || "" };
+  });
+  check("resolved Begin shows its interruption", closedFeedback.visible
+    && closedFeedback.text.includes("No evaluation was produced.")
+    && !closedFeedback.text.includes("Matched:"), closedFeedback.text.slice(0, 120));
   notes.push("NOTE revision mismatches are simulated response mutations, not a changed server lesson.");
   await contextE.close();
 } catch (error) {

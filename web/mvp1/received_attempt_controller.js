@@ -5,6 +5,11 @@ comparison does not.
 */
 
 import {
+  acceptBeginGateway,
+  definitiveBeginRefusal,
+  isBeginRequestId,
+} from "./received_begin_validation.js";
+import {
   acceptAcknowledgement,
   acceptBegin,
   acceptEvaluated,
@@ -50,6 +55,8 @@ export function createReceivedAttemptController(deps) {
   let lastCaptureNs = 0;
   let terminal = null;
   let unconfirmedKind = null;
+  let pendingBegin = null;
+  let resolving = false;
   let midiState = "permission_required";
   let drain = Promise.resolve();
 
@@ -61,6 +68,7 @@ export function createReceivedAttemptController(deps) {
       selectedId,
       midiState,
       unconfirmedKind,
+      pendingBegin: pendingBegin !== null,
       devices: typeof deps.midi.devices === "function" ? deps.midi.devices() : [],
     };
   }
@@ -123,7 +131,7 @@ export function createReceivedAttemptController(deps) {
 
   async function start() {
     if (ACTIVE.has(state) || state === AttemptState.FINISHING) return snapshot();
-    if (unconfirmedKind === "finish") return snapshot();
+    if (unconfirmedKind === "finish" || unconfirmedKind === "begin" || pendingBegin) return snapshot();
     const lesson = deps.getLesson();
     const device = (deps.midi.devices() || []).find((item) => item.id === selectedId);
     if (!lesson?.preview || !lesson.choice || !device) {
@@ -144,77 +152,109 @@ export function createReceivedAttemptController(deps) {
     setState(AttemptState.STARTING);
     const captureTimeNs = deps.nowNs();
     lastCaptureNs = captureTimeNs;
-    const response = await deps.client.begin({
+    const key = mintKey();
+    if (!key) {
+      return settle(
+        AttemptState.IDLE,
+        "This browser could not create a start key. Refresh the page and try again.",
+      );
+    }
+    const begin = {
       deliveryId: lesson.preview.delivery_id,
       artifactDigest: lesson.preview.assignment_artifact_digest,
       behaviorDigest: lesson.preview.assignment_behavior_digest,
       deviceId: deviceLabel(device),
       captureTimeNs,
-    });
+    };
+    pendingBegin = { key, begin };
+    const response = await deps.client.beginRequest({ beginRequestId: key, begin });
     if (!alive(token)) {
-      const lateId = response?.body?.attempt_id;
-      if (typeof lateId === "string" && lateId.trim()) {
-        void deps.client.cancel({
-          attemptId: lateId,
-          captureTimeNs: deps.nowNs(),
-          keepalive: true,
-        });
-      }
+      keepaliveResolve();
       return snapshot();
     }
-    if (!response.ok || response.status !== 201) {
+    return applyBeginResponse(token, response, lesson);
+  }
+
+  function mintKey() {
+    let key = "";
+    try {
+      const generate = deps.newBeginRequestId || (() => crypto.randomUUID());
+      key = generate();
+    } catch {
+      key = "";
+    }
+    return isBeginRequestId(key) ? key : null;
+  }
+
+  function keepaliveResolve() {
+    if (!pendingBegin) return;
+    const request = pendingBegin;
+    pendingBegin = null;
+    void deps.client.resolveBegin({
+      beginRequestId: request.key,
+      begin: request.begin,
+      keepalive: true,
+    });
+  }
+
+  async function applyBeginResponse(token, response, lesson) {
+    if (!response.ok || (response.status !== 201 && response.status !== 200)) {
       deps.lockInteractions(false);
-      if (response.status === 0) {
-        unconfirmedKind = "begin";
-        setState(AttemptState.UNCONFIRMED, "The start request did not finish.");
-        return snapshot();
+      if (definitiveBeginRefusal(response)) {
+        pendingBegin = null;
+        return settle(AttemptState.IDLE, publicAttemptFailure(response));
       }
-      setState(AttemptState.IDLE, publicAttemptFailure(response));
+      return settle(AttemptState.UNCONFIRMED, beginUnconfirmedNotice(response), "begin");
+    }
+    const accepted = acceptBeginGateway(
+      response.body,
+      pendingBegin?.key,
+      lesson.preview,
+      lesson.choice,
+    );
+    if (!alive(token)) {
+      keepaliveResolve();
       return snapshot();
     }
-    const accepted = acceptBegin(response.body, lesson.preview, lesson.choice);
-    if (!accepted.ok) {
-      const attemptId = typeof response.body?.attempt_id === "string" ? response.body.attempt_id : "";
-      if (attemptId.trim()) {
-        const cancelled = await deps.client.cancel({
-          attemptId,
-          captureTimeNs: deps.nowNs(),
-          keepalive: true,
-        });
-        if (!alive(token)) return snapshot();
-        if (cancelled.status === 0) {
-          beginDoc = { attempt_id: attemptId };
-          unconfirmedKind = "cancel";
-          deps.lockInteractions(false);
-          setState(
-            AttemptState.UNCONFIRMED,
-            "The begin response could not be used, and cancellation was not confirmed.",
-          );
-          return snapshot();
-        }
-      }
-      if (!alive(token)) return snapshot();
-      deps.lockInteractions(false);
-      setState(AttemptState.IDLE, "The begin response could not be used.");
+    if (!accepted.ok || accepted.status === "PENDING") {
+      return settle(AttemptState.UNCONFIRMED, "The start request did not finish.", "begin");
+    }
+    if (accepted.status === "NO_ATTEMPT") {
+      pendingBegin = null;
+      return settle(
+        AttemptState.IDLE,
+        "No attempt is available in this server process.",
+      );
+    }
+    if (accepted.status === "INTERRUPTED") {
+      pendingBegin = null;
+      // settle() clears feedback, so the interrupted document is shown after it.
+      settle(AttemptState.INTERRUPTED, "The unconfirmed attempt was interrupted.");
+      deps.showInterrupted?.(accepted.attempt);
       return snapshot();
     }
+    const begun = acceptBegin(accepted.attempt, lesson.preview, lesson.choice);
+    if (!begun.ok) {
+      return settle(AttemptState.UNCONFIRMED, "The start request did not finish.", "begin");
+    }
+    pendingBegin = null;
     let runtime = null;
     try {
-      runtime = await deps.replaceRuntime(accepted.body.preparation);
+      runtime = await deps.replaceRuntime(begun.body.preparation);
     } catch {
       runtime = null;
     }
     if (!alive(token)) {
       runtime?.dispose?.();
       void deps.client.cancel({
-        attemptId: accepted.body.attempt_id,
+        attemptId: begun.body.attempt_id,
         captureTimeNs: deps.nowNs(),
         keepalive: true,
       });
       return snapshot();
     }
     if (!runtime) {
-      beginDoc = accepted.body;
+      beginDoc = begun.body;
       await performCancel(token, "The lesson snapshot could not be mounted.");
       return snapshot();
     }
@@ -223,8 +263,7 @@ export function createReceivedAttemptController(deps) {
     runtime.setLoopEnabled?.(false);
     runtime.restart?.();
     runtime.setInteractionLock?.(true);
-    beginDoc = accepted.body;
-    lastCaptureNs = captureTimeNs;
+    beginDoc = begun.body;
     setState(AttemptState.CAPTURING);
     attachIntake(token);
     if (state !== AttemptState.CAPTURING) return snapshot();
@@ -415,13 +454,61 @@ export function createReceivedAttemptController(deps) {
     return snapshot();
   }
 
+  async function resolveBegin() {
+    if (!pendingBegin || resolving || unconfirmedKind !== "begin") return snapshot();
+    resolving = true;
+    const token = generation;
+    const request = pendingBegin;
+    const response = await deps.client.resolveBegin({
+      beginRequestId: request.key,
+      begin: request.begin,
+    });
+    resolving = false;
+    if (!alive(token) || pendingBegin !== request) return snapshot();
+    if (!response.ok || response.status === 202) {
+      return settle(AttemptState.UNCONFIRMED, beginUnconfirmedNotice(response), "begin");
+    }
+    const lesson = deps.getLesson();
+    const accepted = acceptBeginGateway(
+      response.body,
+      request.key,
+      lesson?.preview,
+      lesson?.choice,
+    );
+    if (!accepted.ok || accepted.status === "PENDING" || accepted.status === "STARTED") {
+      return settle(AttemptState.UNCONFIRMED, "The start request did not finish.", "begin");
+    }
+    pendingBegin = null;
+    if (accepted.status === "NO_ATTEMPT") {
+      return settle(AttemptState.IDLE, "No attempt is available in this server process.");
+    }
+    settle(AttemptState.INTERRUPTED, "The unconfirmed attempt was interrupted.");
+    deps.showInterrupted?.(accepted.attempt);
+    return snapshot();
+  }
+
+  function beginUnconfirmedNotice(response) {
+    if (response?.status === 0) return "The start request did not finish.";
+    if (response?.status === 202) return "The start is still unresolved. Resolve start again.";
+    if (response?.status >= 500) return "The start failed on the server. Resolve start to check it.";
+    return "The start request did not finish.";
+  }
+
   function abandon() {
     const attemptId = beginDoc?.attempt_id;
     const open = ACTIVE.has(state) || state === AttemptState.CAPTURING;
+    const pending = pendingBegin;
     generation += 1;
     stopIntake();
     queue = [];
-    if (attemptId && open) {
+    if (pending && !beginDoc) {
+      pendingBegin = null;
+      void deps.client.resolveBegin({
+        beginRequestId: pending.key,
+        begin: pending.begin,
+        keepalive: true,
+      });
+    } else if (attemptId && open) {
       void deps.client.cancel({
         attemptId,
         captureTimeNs: terminalNs(),
@@ -443,6 +530,7 @@ export function createReceivedAttemptController(deps) {
     enableMidi,
     selectInput,
     start,
+    resolveBegin,
     finish,
     retryFinish,
     cancel,

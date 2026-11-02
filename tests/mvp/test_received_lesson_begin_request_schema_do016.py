@@ -1,0 +1,64 @@
+"""The keyed Begin wrapper cites the existing attempt shapes and adds none."""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+from pathlib import Path
+from typing import Any
+
+from jsonschema import Draft202012Validator
+from referencing import Registry, Resource
+
+_BEHAVIOR = Path(__file__).resolve().parent / "test_received_lesson_begin_request_do016.py"
+_spec = importlib.util.spec_from_file_location("begin_request_behavior", _BEHAVIOR)
+assert _spec is not None and _spec.loader is not None
+_behavior = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_behavior)
+KEY = _behavior.KEY
+_gateway = _behavior._gateway
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SCHEMA = (
+    REPO_ROOT / "resources" / "mvp2" / "schema" / "received_lesson_begin_request_v1.schema.json"
+)
+ATTEMPT = (
+    REPO_ROOT / "resources" / "mvp2" / "schema" / "received_lesson_attempt_v1.schema.json"
+)
+
+
+def _validator() -> Draft202012Validator:
+    registry = Registry()
+    for path in (ATTEMPT, SCHEMA):
+        schema = json.loads(path.read_text(encoding="utf-8"))
+        registry = registry.with_resource(schema["$id"], Resource.from_contents(schema))
+    nested_path = Path(__file__).resolve().parent / "test_received_lesson_attempt_schema_do016.py"
+    nested_spec = importlib.util.spec_from_file_location("attempt_schema", nested_path)
+    assert nested_spec is not None and nested_spec.loader is not None
+    nested = importlib.util.module_from_spec(nested_spec)
+    nested_spec.loader.exec_module(nested)
+    for path in nested.NESTED:
+        schema = nested._load(path)
+        registry = registry.with_resource(schema["$id"], Resource.from_contents(schema))
+    return Draft202012Validator(json.loads(SCHEMA.read_text(encoding="utf-8")), registry=registry)
+
+
+def test_started_and_interrupted_wrappers_match_the_schema() -> None:
+    gateway, payload = _gateway()
+    _status, started = gateway.begin(KEY, payload)
+    validator = _validator()
+    validator.validate(started)
+    _code, interrupted = gateway.recover(KEY, payload)
+    validator.validate(interrupted)
+    pending: dict[str, Any] = {
+        "schema_id": "master_all_strings.received_lesson_begin_request",
+        "schema_version": "1.0.0",
+        "begin_request_id": KEY,
+        "status": "PENDING",
+        "attempt": None,
+    }
+    validator.validate(pending)
+    extra = dict(started)
+    extra["evaluation"] = {}
+    errors = list(validator.iter_errors(extra))
+    assert errors

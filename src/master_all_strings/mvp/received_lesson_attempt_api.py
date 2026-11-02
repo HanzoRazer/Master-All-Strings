@@ -9,6 +9,7 @@ education facade.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 from urllib.parse import urlparse
 
@@ -44,12 +45,16 @@ from master_all_strings.mvp.received_lesson_attempt import (
     SequenceConflictError,
     UnknownAttemptError,
 )
+from master_all_strings.mvp.received_lesson_begin_request import ReceivedLessonBeginGateway
+from master_all_strings.mvp.received_lesson_begin_request_repository import BeginPayload
 
 __all__ = [
     "LESSON_PRACTICE_ATTEMPT_CANCELLATION_PATH",
     "LESSON_PRACTICE_ATTEMPT_FINISH_PATH",
     "LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH",
     "LESSON_PRACTICE_ATTEMPT_PATH",
+    "LESSON_PRACTICE_BEGIN_RECOVERY_PATH",
+    "LESSON_PRACTICE_BEGIN_REQUEST_PATH",
     "LocalReceivedLessonAttemptApi",
 ]
 
@@ -57,6 +62,8 @@ LESSON_PRACTICE_ATTEMPT_PATH = "/api/education/lesson-practice-attempts"
 LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH = "/api/education/lesson-practice-attempt-messages"
 LESSON_PRACTICE_ATTEMPT_FINISH_PATH = "/api/education/lesson-practice-attempt-finishes"
 LESSON_PRACTICE_ATTEMPT_CANCELLATION_PATH = "/api/education/lesson-practice-attempt-cancellations"
+LESSON_PRACTICE_BEGIN_REQUEST_PATH = "/api/education/lesson-practice-begin-requests"
+LESSON_PRACTICE_BEGIN_RECOVERY_PATH = "/api/education/lesson-practice-begin-recoveries"
 
 ATTEMPT_PATHS = frozenset(
     {
@@ -64,7 +71,13 @@ ATTEMPT_PATHS = frozenset(
         LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH,
         LESSON_PRACTICE_ATTEMPT_FINISH_PATH,
         LESSON_PRACTICE_ATTEMPT_CANCELLATION_PATH,
+        LESSON_PRACTICE_BEGIN_REQUEST_PATH,
+        LESSON_PRACTICE_BEGIN_RECOVERY_PATH,
     }
+)
+
+_UUID_V4 = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
 )
 
 _BEGIN_FIELDS = (
@@ -95,6 +108,7 @@ class LocalReceivedLessonAttemptApi:
         service: ReceivedLessonAttemptService | None = None,
     ) -> None:
         self.service = service or ReceivedLessonAttemptService(deliveries, choices)
+        self.gateway = ReceivedLessonBeginGateway(self.service)
 
     def handle_http(
         self, method: str, path: str, payload: dict[str, Any]
@@ -109,6 +123,12 @@ class LocalReceivedLessonAttemptApi:
         try:
             if parsed.path == LESSON_PRACTICE_ATTEMPT_PATH:
                 return 201, self.service.begin(*_begin_body(payload))
+            if parsed.path == LESSON_PRACTICE_BEGIN_REQUEST_PATH:
+                key, begin_payload = _gateway_body(payload)
+                return self.gateway.begin(key, begin_payload)
+            if parsed.path == LESSON_PRACTICE_BEGIN_RECOVERY_PATH:
+                key, begin_payload = _gateway_body(payload)
+                return self.gateway.recover(key, begin_payload)
             if parsed.path == LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH:
                 return 200, self.service.append_message(*_message_body(payload))
             if parsed.path == LESSON_PRACTICE_ATTEMPT_FINISH_PATH:
@@ -161,6 +181,18 @@ def _digest(value: object, name: str) -> str:
     except EducationContractError as exc:
         raise AttemptRequestError(str(exc)) from exc
     return value
+
+
+def _gateway_body(payload: dict[str, Any]) -> tuple[str, BeginPayload]:
+    body = _closed(payload, ("begin_request_id", "begin"), "begin request")
+    key = body["begin_request_id"]
+    if not isinstance(key, str) or _UUID_V4.fullmatch(key) is None:
+        raise AttemptRequestError("begin_request_id must be a lowercase uuid v4")
+    nested = body["begin"]
+    if not isinstance(nested, dict):
+        raise AttemptRequestError("begin must be an object")
+    delivery_id, artifact, behavior, device_id, capture_time_ns = _begin_body(nested)
+    return key, BeginPayload(delivery_id, artifact, behavior, device_id, capture_time_ns)
 
 
 def _begin_body(payload: dict[str, Any]) -> tuple[str, str, str, str, int]:
