@@ -405,6 +405,26 @@ class ReceivedLessonAttemptService:
     ) -> dict[str, Any]:
         """Prepare a fresh snapshot and open a capture. Do not start playback."""
 
+        attempt, document = self.assemble_begin(
+            delivery_id,
+            artifact_digest,
+            behavior_digest,
+            device_id,
+            capture_time_ns,
+        )
+        self.commit_begin(attempt)
+        return document
+
+    def assemble_begin(
+        self,
+        delivery_id: str,
+        artifact_digest: str,
+        behavior_digest: str,
+        device_id: str,
+        capture_time_ns: int,
+    ) -> tuple[StoredAttempt, dict[str, Any]]:
+        """Build one attempt and its Begin document. Do not store it yet."""
+
         delivery_id = _nonblank(delivery_id, "delivery_id")
         device_id = _nonblank(device_id, "device_id")
         capture_time_ns = _nonnegative_int(capture_time_ns, "capture_time_ns")
@@ -443,14 +463,18 @@ class ReceivedLessonAttemptService:
             ),
             history=history,
         )
+        body = _identity(attempt, ATTEMPT_STATUS_CAPTURING)
+        body["preparation"] = deepcopy(attempt.preparation)
+        body["attempt_policy"] = deepcopy(attempt.policy)
+        return attempt, body
+
+    def commit_begin(self, attempt: StoredAttempt) -> None:
+        """Store an assembled attempt. The Begin document already exists."""
+
         try:
             self.repository.insert(attempt)
         except AttemptCollisionError as exc:
             raise AttemptSnapshotError("attempt id collided") from exc
-        body = _identity(attempt, ATTEMPT_STATUS_CAPTURING)
-        body["preparation"] = deepcopy(attempt.preparation)
-        body["attempt_policy"] = deepcopy(attempt.policy)
-        return body
 
     def _open_capture(
         self,
