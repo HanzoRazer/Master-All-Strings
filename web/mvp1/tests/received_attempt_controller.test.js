@@ -90,6 +90,41 @@ function harness(options = {}) {
       if (options.beginResult) return options.beginResult(body);
       return ok(begin, 201);
     },
+    async beginRequest(request) {
+      calls.push({ op: "begin", body: request.begin, key: request.beginRequestId });
+      const response = options.beginResult
+        ? await options.beginResult(request.begin)
+        : ok(begin, 201);
+      if (response?.status === 201 && response.body && !response.body.begin_request_id) {
+        return {
+          ...response,
+          body: {
+            schema_id: "master_all_strings.received_lesson_begin_request",
+            schema_version: "1.0.0",
+            begin_request_id: request.beginRequestId,
+            status: "STARTED",
+            attempt: response.body,
+          },
+        };
+      }
+      return response;
+    },
+    async resolveBegin(request) {
+      calls.push({ op: "resolve", body: request.begin, key: request.beginRequestId, keepalive: request.keepalive === true });
+      if (options.resolveResult) return options.resolveResult(request);
+      return {
+        ok: true,
+        status: 200,
+        error: null,
+        body: {
+          schema_id: "master_all_strings.received_lesson_begin_request",
+          schema_version: "1.0.0",
+          begin_request_id: request.beginRequestId,
+          status: "NO_ATTEMPT",
+          attempt: null,
+        },
+      };
+    },
     async append(body) {
       calls.push({ op: "append", body });
       if (options.appendResult) return options.appendResult(body, calls);
@@ -342,8 +377,9 @@ test("a late begin cannot start a replaced page", async () => {
   await pending;
   assert.equal(env.controller.snapshot().state, "IDLE");
   assert.equal(ops(env.calls, "midi-connect").length, 0);
-  assert.equal(ops(env.calls, "cancel").length, 1);
-  assert.equal(ops(env.calls, "cancel")[0].body.keepalive, true);
+  assert.equal(ops(env.calls, "resolve").length, 1);
+  assert.equal(ops(env.calls, "resolve")[0].keepalive, true);
+  assert.equal(ops(env.calls, "cancel").length, 0);
   assert.equal(env.runtime.calls.includes("play"), false);
   assert.equal(env.shown.some((item) => item.kind === "evaluated"), false);
 });
@@ -357,14 +393,15 @@ test("a lost begin is not repeated and an invalid begin is cancelled", async () 
   assert.equal(lost.controller.snapshot().unconfirmedKind, "begin");
   assert.equal(ops(lost.calls, "begin").length, 1);
   await lost.controller.start();
-  assert.equal(ops(lost.calls, "begin").length, 2);
+  assert.equal(ops(lost.calls, "begin").length, 1);
 
   const invalid = harness({
     beginResult: () => ok({ ...beginDocument(), extra: true, attempt_id: "attempt-bad" }, 201),
   });
   await capture(invalid);
-  assert.equal(ops(invalid.calls, "cancel")[0].body.attemptId, "attempt-bad");
-  assert.equal(invalid.controller.snapshot().state, "IDLE");
+  assert.equal(ops(invalid.calls, "cancel").length, 0);
+  assert.equal(invalid.controller.snapshot().state, "UNCONFIRMED");
+  assert.equal(invalid.controller.snapshot().unconfirmedKind, "begin");
   assert.equal(invalid.shown.some((item) => item.kind === "interrupted"), false);
 
   const unconfirmedCancel = harness({
@@ -373,7 +410,8 @@ test("a lost begin is not repeated and an invalid begin is cancelled", async () 
   });
   await capture(unconfirmedCancel);
   assert.equal(unconfirmedCancel.controller.snapshot().state, "UNCONFIRMED");
-  assert.equal(unconfirmedCancel.controller.snapshot().unconfirmedKind, "cancel");
+  assert.equal(unconfirmedCancel.controller.snapshot().unconfirmedKind, "begin");
+  assert.equal(ops(unconfirmedCancel.calls, "cancel").length, 0);
 });
 
 test("retry finish keeps the attempt and sends no new MIDI", async () => {

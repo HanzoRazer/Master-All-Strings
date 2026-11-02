@@ -6,6 +6,8 @@ import {
   LESSON_PRACTICE_ATTEMPT_FINISH_PATH,
   LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH,
   LESSON_PRACTICE_ATTEMPT_PATH,
+  LESSON_PRACTICE_BEGIN_RECOVERY_PATH,
+  LESSON_PRACTICE_BEGIN_REQUEST_PATH,
   ReceivedAttemptClient,
 } from "../received_attempt_client.js";
 
@@ -147,4 +149,28 @@ test("transport failures and unusable bodies stay closed", async () => {
   const blank = await empty.client.cancel({ attemptId: "a", captureTimeNs: 4 });
   assert.equal(blank.ok, false);
   assert.equal(blank.status, 200);
+});
+
+test("keyed begin and recovery post the same nested request", async () => {
+  const { client, calls } = install(() => response(201, { status: "STARTED" }));
+  const begin = {
+    deliveryId: "delivery-001",
+    artifactDigest: "sha256:aa",
+    behaviorDigest: "sha256:bb",
+    deviceId: "Keyboard",
+    captureTimeNs: 50,
+  };
+  await client.beginRequest({ beginRequestId: "abcdefab-abcd-4abc-8abc-abcdefabcdef", begin });
+  await client.resolveBegin({
+    beginRequestId: "abcdefab-abcd-4abc-8abc-abcdefabcdef",
+    begin,
+    keepalive: true,
+  });
+  assert.equal(calls[0].url, `http://127.0.0.1:9${LESSON_PRACTICE_BEGIN_REQUEST_PATH}`);
+  assert.equal(calls[1].url, `http://127.0.0.1:9${LESSON_PRACTICE_BEGIN_RECOVERY_PATH}`);
+  assert.equal(calls[0].init.body, calls[1].init.body);
+  assert.equal(calls[1].init.keepalive, true);
+  const posted = JSON.parse(calls[0].init.body);
+  assert.equal(posted.begin.capture_time_ns, 50);
+  assert.equal(posted.begin.device_id, "Keyboard");
 });
