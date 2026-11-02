@@ -32,11 +32,13 @@ def _validator() -> Draft202012Validator:
     for path in (ATTEMPT, SCHEMA):
         schema = json.loads(path.read_text(encoding="utf-8"))
         registry = registry.with_resource(schema["$id"], Resource.from_contents(schema))
-    # Nested attempt documents cite the same schemas the attempt contract does.
-    from tests.mvp.test_received_lesson_attempt_schema_do016 import NESTED, _load
-
-    for path in NESTED:
-        schema = _load(path)
+    nested_path = Path(__file__).resolve().parent / "test_received_lesson_attempt_schema_do016.py"
+    nested_spec = importlib.util.spec_from_file_location("attempt_schema", nested_path)
+    assert nested_spec is not None and nested_spec.loader is not None
+    nested = importlib.util.module_from_spec(nested_spec)
+    nested_spec.loader.exec_module(nested)
+    for path in nested.NESTED:
+        schema = nested._load(path)
         registry = registry.with_resource(schema["$id"], Resource.from_contents(schema))
     return Draft202012Validator(json.loads(SCHEMA.read_text(encoding="utf-8")), registry=registry)
 
