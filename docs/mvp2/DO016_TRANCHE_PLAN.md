@@ -1431,8 +1431,28 @@ Python 3.11. The packet is `docs/mvp2/do016_begin_recovery_artifacts/evidence.js
 | Stage 6 witness | PASS, 0 failures |
 | Stage 8 witness | PASS, 0 failures; begin 6, message 8, finish 3, cancel 2 |
 | Integration witness | PASS, 0 failures |
-| Begin-recovery witness | PASS. W1 stored Begin then interrupted it. W2 sealed the key first. W3 returned PENDING while preparation was blocked. W5 refused the delayed Begin after restart. |
+| Begin-recovery witness | PASS. W1 stored Begin then interrupted it. W2 sealed the key first. W3 returned PENDING while preparation was blocked. W5 refused the delayed Begin after restart. Superseded by the rerun below. |
 | Strict playback-provenance packet | PASS |
 | Legacy Stage 9 packet | PASS |
 | DO-015 predecessor checks | PASS; smoke summary restored |
 
+
+### Review fixes and rerun
+
+Review withdrew the late-Begin lockup. Tests through the real client and
+controller, and through the server's HTTP API, show a Begin delayed past a
+successful recovery is refused with `begin_request_closed` while a fresh
+key starts and evaluates. Two defects were fixed. The page cleared a
+recovered interruption's feedback as soon as it drew it. The Stage 9
+verifier accepted a nested attempt from any begin wrapper, without
+checking its status, version or key.
+
+The begin-recovery packet now keeps exact request and response bytes with
+their sha256, sender, page outcome, epoch and order. Its verifier checks
+the relationships between them. The rerun at
+`ef0ba1c3b56e4ac5cf3dee0ee3dc815bf9b0c917`, on Windows with Python 3.11.9,
+Node v24.11.0 and Chrome 156.0.8078.74, passed nine checks with no
+failures, including visible feedback after each recovered interruption.
+Every server response in it is live. Network failures seen by the page are
+simulated, and each exchange says which. See
+`MAS_BEGIN_RECOVERY_001_REPORT.md`.

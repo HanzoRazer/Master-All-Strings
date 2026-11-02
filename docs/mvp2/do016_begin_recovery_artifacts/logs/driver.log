@@ -1,6 +1,9 @@
 PASS lost begin offers resolve
-PASS resolve interrupts the stored attempt - a35b1f7d-89e8-47c5-be9d-908888be6160
+PASS resolve interrupts the stored attempt - 59844cc0-f644-489a-8519-72ddf0e7cc15
+PASS recovered interruption feedback stays visible - Attempt interruptedAttempt: 59844cc0-f644-489a-8519-72ddf0e7cc15No evaluation was produced.MIDI input: UNVERIFIED_PHYSIC
 PASS recovery before begin seals the key
 PASS blocked preparation does not publish started
+PASS interrupted begin feedback stays visible - Attempt interruptedAttempt: 79c700df-b100-4710-9d4e-253aa255322fNo evaluation was produced.MIDI input: UNVERIFIED_PHYSIC
 PASS repeated recovery stays interrupted
+PASS repeated recovery feedback stays visible - Attempt interruptedAttempt: 05be68a1-e16d-4cb2-89b8-0d726da28278No evaluation was produced.MIDI input: UNVERIFIED_PHYSIC
 PASS restart refuses the delayed begin
