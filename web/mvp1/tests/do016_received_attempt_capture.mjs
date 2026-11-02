@@ -405,8 +405,15 @@ try {
   check("rejected Begin restores ordinary practice", await pageE.evaluate(() => (
     !document.querySelector("#btn-play").disabled
     && !document.querySelector("#btn-start-attempt").disabled
-    && document.querySelector("#attempt-feedback").textContent === ""
   )));
+  // The closed attempt stays on screen as an interruption, never as an evaluation.
+  const closedFeedback = await pageE.evaluate(() => {
+    const panel = document.querySelector("#attempt-feedback");
+    return { visible: panel.hidden === false, text: panel.textContent || "" };
+  });
+  check("resolved Begin shows its interruption", closedFeedback.visible
+    && closedFeedback.text.includes("No evaluation was produced.")
+    && !closedFeedback.text.includes("Matched:"), closedFeedback.text.slice(0, 120));
   notes.push("NOTE revision mismatches are simulated response mutations, not a changed server lesson.");
   await contextE.close();
 } catch (error) {
