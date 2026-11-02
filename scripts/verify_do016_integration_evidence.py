@@ -85,6 +85,15 @@ def document_playback_digest(playback: dict[str, Any]) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
+def _begin_attempt(response: dict[str, Any]) -> dict[str, Any]:
+    """Historical packets store the attempt document. New ones wrap it."""
+
+    if response.get("schema_id") == "master_all_strings.received_lesson_begin_request":
+        attempt = response.get("attempt")
+        return attempt if isinstance(attempt, dict) else {}
+    return response
+
+
 def verify_evidence(
     packet: dict[str, Any],
     *,
@@ -218,7 +227,7 @@ def _successful_preparation(item: dict[str, Any]) -> dict[str, Any] | None:
         response = item.get("response")
         if not isinstance(response, dict):
             return {}
-        preparation = response.get("preparation")
+        preparation = _begin_attempt(response).get("preparation")
         return preparation if isinstance(preparation, dict) else {}
     return None
 
@@ -353,13 +362,14 @@ def _verify_evaluated_chain(
         problems.append(f"{scenario_id}: appends are not strictly between begin and finish")
     begin_item = items[begin]
     finish_item = items[finish]
-    if begin_item["status"] != 201 or begin_item["response"].get("attempt_status") != "CAPTURING":
+    begin_body = _begin_attempt(begin_item["response"])
+    if begin_item["status"] != 201 or begin_body.get("attempt_status") != "CAPTURING":
         problems.append(f"{scenario_id}: begin was not accepted")
     if finish_item["status"] != 200 or finish_item["response"].get("attempt_status") != "EVALUATED":
         problems.append(f"{scenario_id}: finish was not evaluated")
     if begin_item["fabricated"] is not False or finish_item["source"] != "browser":
         problems.append(f"{scenario_id}: begin or finish was not a live browser response")
-    pins = _pins(begin_item["response"], finish_item["response"])
+    pins = _pins(begin_body, finish_item["response"])
     if pins is None:
         problems.append(f"{scenario_id}: identity pins are incomplete or disagree")
         return None
@@ -486,7 +496,7 @@ def _verify_t3(
     if not messages:
         problems.append("T3: cancel has no acknowledged message")
     begin_item = items[begin]
-    attempt_id = begin_item["response"].get("attempt_id")
+    attempt_id = _begin_attempt(begin_item["response"]).get("attempt_id")
     if not isinstance(attempt_id, str) or not attempt_id.strip():
         problems.append("T3: begin has no attempt id")
         attempt_id = ""
@@ -535,7 +545,7 @@ def _verify_restart_terminal(
         problems.append(f"{scenario_id}: no message was acknowledged before restart")
     if items[begin]["status"] != 201:
         problems.append(f"{scenario_id}: begin was not accepted")
-    attempt_id = items[begin]["response"].get("attempt_id")
+    attempt_id = _begin_attempt(items[begin]["response"]).get("attempt_id")
     if not isinstance(attempt_id, str):
         problems.append(f"{scenario_id}: begin has no attempt id")
         attempt_id = ""
@@ -628,7 +638,7 @@ def _verify_t7(problems: list[str], scenario: Any, items: list[dict[str, Any]]) 
         problems.append("T7: the stored finish was not evaluated")
     if retry["response"].get("attempt_status") != "EVALUATED":
         problems.append("T7: the retry was not evaluated")
-    attempt_id = begins[0]["response"].get("attempt_id")
+    attempt_id = _begin_attempt(begins[0]["response"]).get("attempt_id")
     if scenario.get("attempt_id") != attempt_id:
         problems.append("T7: recorded attempt id disagrees with begin")
     for item in (forwarded, retry):

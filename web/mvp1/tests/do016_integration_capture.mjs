@@ -58,6 +58,7 @@ function operationOf(url) {
   if (path === "/api/education/lesson-practice-choices") return "choice";
   if (path === "/api/education/lesson-practice-preparations") return "prepare";
   if (path === "/api/education/lesson-practice-attempts") return "begin";
+  if (path === "/api/education/lesson-practice-begin-requests") return "begin";
   if (path === "/api/education/lesson-practice-attempt-messages") return "message";
   if (path === "/api/education/lesson-practice-attempt-finishes") return "finish";
   if (path === "/api/education/lesson-practice-attempt-cancellations") return "cancel";
@@ -75,7 +76,15 @@ function countsOf(items) {
   };
 }
 
+function attemptDocument(body) {
+  if (body && body.schema_id === "master_all_strings.received_lesson_begin_request") {
+    return body.attempt || {};
+  }
+  return body;
+}
+
 function pinsOf(begin, finish) {
+  begin = attemptDocument(begin);
   return {
     delivery_id: begin.delivery_id,
     assignment_id: begin.assignment_id,
@@ -434,7 +443,7 @@ try {
   await settle();
   const interrupted = await practiceState(page);
   scenarios.T3.feedback_text = interrupted.feedback;
-  const t3Begin = scenarioItems("T3").find((item) => item.operation === "begin").parsedResponse;
+  const t3Begin = attemptDocument(scenarioItems("T3").find((item) => item.operation === "begin").parsedResponse);
   scenarios.T3.attempt_id = t3Begin.attempt_id;
   check("cancel shows interruption without counts", interrupted.feedback.includes("No evaluation was produced.")
     && !interrupted.feedback.includes("Matched:"), interrupted.feedback.slice(0, 180));
@@ -454,7 +463,7 @@ try {
   ).includes("no longer has this attempt"));
   await settle();
   const lostFinish = await practiceState(page);
-  const t4Begin = scenarioItems("T4").find((item) => item.operation === "begin").parsedResponse;
+  const t4Begin = attemptDocument(scenarioItems("T4").find((item) => item.operation === "begin").parsedResponse);
   scenarios.T4.attempt_id = t4Begin.attempt_id;
   scenarios.T4.epoch_before = restartFinish.epoch_before;
   scenarios.T4.epoch_after = restartFinish.epoch_after;
@@ -492,7 +501,7 @@ try {
   ).includes("no longer has this attempt"));
   await settle();
   const lostCancel = await practiceState(page);
-  const t5Begin = scenarioItems("T5").find((item) => item.operation === "begin").parsedResponse;
+  const t5Begin = attemptDocument(scenarioItems("T5").find((item) => item.operation === "begin").parsedResponse);
   scenarios.T5.attempt_id = t5Begin.attempt_id;
   scenarios.T5.epoch_before = restartCancel.epoch_before;
   scenarios.T5.epoch_after = restartCancel.epoch_after;
@@ -603,7 +612,9 @@ try {
   const messageCountAfter = t7Items.filter((item) => item.operation === "message").length;
   const beginCountBefore = beforeRetry.filter((item) => item.operation === "begin").length;
   const messageCountBefore = beforeRetry.filter((item) => item.operation === "message").length;
-  scenarios.T7.attempt_id = t7Items.find((item) => item.operation === "begin").parsedResponse.attempt_id;
+  scenarios.T7.attempt_id = attemptDocument(
+    t7Items.find((item) => item.operation === "begin").parsedResponse,
+  ).attempt_id;
   scenarios.T7.begin_during_retry = beginCountAfter - beginCountBefore;
   scenarios.T7.appends_during_retry = messageCountAfter - messageCountBefore;
   scenarios.T7.feedback_text = retried.feedback;

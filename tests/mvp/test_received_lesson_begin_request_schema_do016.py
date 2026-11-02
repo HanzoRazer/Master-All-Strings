@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 from typing import Any
 
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
-from tests.mvp.test_received_lesson_begin_request_do016 import KEY, _gateway
+
+_BEHAVIOR = Path(__file__).resolve().parent / "test_received_lesson_begin_request_do016.py"
+_spec = importlib.util.spec_from_file_location("begin_request_behavior", _BEHAVIOR)
+assert _spec is not None and _spec.loader is not None
+_behavior = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_behavior)
+KEY = _behavior.KEY
+_gateway = _behavior._gateway
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHEMA = (
