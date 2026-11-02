@@ -228,11 +228,10 @@ export function createReceivedAttemptController(deps) {
     }
     if (accepted.status === "INTERRUPTED") {
       pendingBegin = null;
+      // settle() clears feedback, so the interrupted document is shown after it.
+      settle(AttemptState.INTERRUPTED, "The unconfirmed attempt was interrupted.");
       deps.showInterrupted?.(accepted.attempt);
-      return settle(
-        AttemptState.INTERRUPTED,
-        "The unconfirmed attempt was interrupted.",
-      );
+      return snapshot();
     }
     const begun = acceptBegin(accepted.attempt, lesson.preview, lesson.choice);
     if (!begun.ok) {
@@ -483,8 +482,9 @@ export function createReceivedAttemptController(deps) {
     if (accepted.status === "NO_ATTEMPT") {
       return settle(AttemptState.IDLE, "No attempt is available in this server process.");
     }
+    settle(AttemptState.INTERRUPTED, "The unconfirmed attempt was interrupted.");
     deps.showInterrupted?.(accepted.attempt);
-    return settle(AttemptState.INTERRUPTED, "The unconfirmed attempt was interrupted.");
+    return snapshot();
   }
 
   function beginUnconfirmedNotice(response) {

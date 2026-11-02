@@ -10,6 +10,8 @@ import threading
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from master_all_strings.education.assignment_delivery_preview import LessonDeliveryPreviewService
 from master_all_strings.education.assignment_delivery_serialization import envelope_for
 from master_all_strings.education.assignment_delivery_service import LessonDeliveryService
@@ -21,6 +23,8 @@ from master_all_strings.lesson.serialization import deserialize_lesson_assignmen
 from master_all_strings.mvp.local_practice_preparation import LocalPracticePreparationService
 from master_all_strings.mvp.received_lesson_attempt import ReceivedLessonAttemptService
 from master_all_strings.mvp.received_lesson_attempt_api import (
+    LESSON_PRACTICE_ATTEMPT_FINISH_PATH,
+    LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH,
     LESSON_PRACTICE_ATTEMPT_PATH,
     LESSON_PRACTICE_BEGIN_RECOVERY_PATH,
     LESSON_PRACTICE_BEGIN_REQUEST_PATH,
@@ -427,3 +431,71 @@ def test_restart_forgets_the_key_and_refuses_the_delayed_begin() -> None:
     refused = restarted.begin(KEY, payload)
     assert refused == (409, {"error": "begin_request_closed"})
     assert restarted.service.repository._attempts == {}  # noqa: SLF001
+
+
+def _http_begin(key: str, payload: BeginPayload) -> dict[str, Any]:
+    return {
+        "begin_request_id": key,
+        "begin": {
+            "delivery_id": payload.delivery_id,
+            "expected_assignment_artifact_digest": payload.artifact_digest,
+            "expected_assignment_behavior_digest": payload.behavior_digest,
+            "device_id": payload.device_id,
+            "capture_time_ns": payload.capture_time_ns,
+        },
+    }
+
+
+@pytest.mark.parametrize("original_was_stored", [False, True])
+def test_a_begin_delayed_past_recovery_cannot_disturb_the_next_attempt(
+    original_was_stored: bool,
+) -> None:
+    """The server half of the browser race test in received_attempt_controller.test.js.
+
+    The original Begin either never reached the server before recovery, or was
+    stored and only its response was lost. Either way the browser recovers, a
+    fresh key starts and evaluates, and the original request arriving late is
+    refused without creating or touching an attempt.
+    """
+
+    service, payload, _envelope = _open()
+    api = LocalReceivedLessonAttemptApi(service._deliveries, service._choices, service=service)  # noqa: SLF001
+    original = _http_begin(KEY, payload)
+    if original_was_stored:
+        assert api.handle_http("POST", LESSON_PRACTICE_BEGIN_REQUEST_PATH, original)[0] == 201
+    status, recovered = api.handle_http("POST", LESSON_PRACTICE_BEGIN_RECOVERY_PATH, original)
+    assert status == 200
+    assert recovered["status"] == ("INTERRUPTED" if original_was_stored else "NO_ATTEMPT")
+
+    status, fresh = api.handle_http(
+        "POST", LESSON_PRACTICE_BEGIN_REQUEST_PATH, _http_begin(OTHER, payload)
+    )
+    assert status == 201
+    assert fresh["status"] == "STARTED"
+    attempt_id = fresh["attempt"]["attempt_id"]
+    before = dict(service.repository._attempts)  # noqa: SLF001
+
+    late = api.handle_http("POST", LESSON_PRACTICE_BEGIN_REQUEST_PATH, original)
+    assert late == (409, {"error": "begin_request_closed"})
+    assert service.repository._attempts == before  # noqa: SLF001
+
+    status, ack = api.handle_http(
+        "POST",
+        LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH,
+        {
+            "attempt_id": attempt_id,
+            "sequence_number": 0,
+            "capture_time_ns": 2_000,
+            "practice_position_seconds": 0.0,
+            "raw_payload": [144, 60, 80],
+        },
+    )
+    assert status == 200
+    assert ack["accepted_event_count"] == 1
+    status, done = api.handle_http(
+        "POST",
+        LESSON_PRACTICE_ATTEMPT_FINISH_PATH,
+        {"attempt_id": attempt_id, "capture_time_ns": 3_000},
+    )
+    assert status == 200
+    assert done["attempt_status"] == "EVALUATED"

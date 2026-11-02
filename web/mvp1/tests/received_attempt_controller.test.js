@@ -2,6 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createReceivedAttemptController } from "../received_attempt_controller.js";
+import {
+  LESSON_PRACTICE_ATTEMPT_FINISH_PATH,
+  LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH,
+  LESSON_PRACTICE_BEGIN_RECOVERY_PATH,
+  LESSON_PRACTICE_BEGIN_REQUEST_PATH,
+  ReceivedAttemptClient,
+} from "../received_attempt_client.js";
 import { choiceBody, previewBody } from "./lesson_practice_fixture.js";
 import {
   acknowledgementDocument,
@@ -702,4 +709,168 @@ test("a rejected attempt recovers into another attempt", async () => {
   assert.equal(done.state, "EVALUATED");
   assert.equal(env.shown.at(-1).kind, "evaluated");
   assert.equal(env.shown.at(-1).body.attempt_id, second.attempt_id);
+});
+
+// A server that keeps the keyed Begin contract the Python gateway enforces:
+// a recovery seals a key that never began, and a sealed or interrupted key
+// refuses a later Begin.
+function keyedServer() {
+  const keys = new Map();
+  const attempts = [];
+  const wrapper = (key, status, attempt) => ({
+    schema_id: "master_all_strings.received_lesson_begin_request",
+    schema_version: "1.0.0",
+    begin_request_id: key,
+    status,
+    attempt,
+  });
+  function handle(path, body) {
+    if (path === LESSON_PRACTICE_BEGIN_REQUEST_PATH) {
+      const key = body.begin_request_id;
+      const record = keys.get(key);
+      if (record?.kind === "started") return [200, wrapper(key, "STARTED", record.attempt)];
+      if (record) return [409, { error: "begin_request_closed" }];
+      const index = attempts.length + 1;
+      const attempt = beginDocument({
+        attemptId: `attempt-${index}`,
+        captureId: `capture-${index}`,
+        sessionId: `session-${index}`,
+      });
+      attempts.push(attempt);
+      keys.set(key, { kind: "started", attempt });
+      return [201, wrapper(key, "STARTED", attempt)];
+    }
+    if (path === LESSON_PRACTICE_BEGIN_RECOVERY_PATH) {
+      const key = body.begin_request_id;
+      const record = keys.get(key);
+      if (!record || record.kind === "no_attempt") {
+        keys.set(key, { kind: "no_attempt" });
+        return [200, wrapper(key, "NO_ATTEMPT", null)];
+      }
+      // Recovery only cancels a Begin that captured nothing.
+      const interrupted = interruptedDocument(record.attempt);
+      interrupted.observed_events = [];
+      interrupted.unmatched_note_offs = [];
+      interrupted.raw_capture.events = [];
+      keys.set(key, { kind: "interrupted", attempt: record.attempt });
+      return [200, wrapper(key, "INTERRUPTED", interrupted)];
+    }
+    const attempt = attempts.find((item) => item.attempt_id === body.attempt_id);
+    if (!attempt) return [404, { error: "unknown_attempt" }];
+    if (path === LESSON_PRACTICE_ATTEMPT_MESSAGE_PATH) {
+      return [200, acknowledgementDocument(attempt, body.sequence_number + 1)];
+    }
+    if (path === LESSON_PRACTICE_ATTEMPT_FINISH_PATH) return [200, evaluatedDocument(attempt)];
+    return [404, { error: "not_found" }];
+  }
+  return { handle, attempts, keys };
+}
+
+// The real client and controller over a network that can hold one Begin in
+// flight (the browser sees a failure, the server has not seen it yet) or
+// lose one Begin's response after the server stored it.
+function keyedNetwork(server) {
+  const network = { mode: null, held: null };
+  network.fetchImpl = async (url, init) => {
+    const path = new URL(url).pathname;
+    const body = JSON.parse(init.body);
+    if (path === LESSON_PRACTICE_BEGIN_REQUEST_PATH && network.mode) {
+      const mode = network.mode;
+      network.mode = null;
+      network.held = { path, body };
+      if (mode === "lose-response") server.handle(path, body);
+      throw new TypeError("network connection lost");
+    }
+    const [status, document] = server.handle(path, body);
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      async text() { return JSON.stringify(document); },
+    };
+  };
+  network.deliverHeld = () => server.handle(network.held.path, network.held.body);
+  return network;
+}
+
+function realClientController(network) {
+  let listener = null;
+  let keyIndex = 0;
+  const shown = [];
+  const midi = {
+    async requestPermission() { return "ready"; },
+    devices() { return [{ id: "key-1", name: "Keyboard" }]; },
+    connect(_id, onEvent) { listener = onEvent; return true; },
+    disconnect() { listener = null; },
+  };
+  const controller = createReceivedAttemptController({
+    client: new ReceivedAttemptClient({ base: "http://127.0.0.1:9", fetchImpl: network.fetchImpl }),
+    midi,
+    newBeginRequestId: () => `0000000${++keyIndex}-0000-4000-8000-00000000abcd`,
+    nowNs: () => 2_000_000,
+    isCurrent: () => true,
+    getLesson: () => ({ preview: previewBody(), choice: choiceBody() }),
+    positionSeconds: () => 0,
+    lockInteractions() {},
+    stopPlayback() {},
+    pausePlayback() {},
+    replaceRuntime: async () => ({ play() {}, restart() {}, setRate() {}, setLoopEnabled() {},
+      setInteractionLock() {}, dispose() {} }),
+    clearFeedback() { shown.push({ kind: "clear" }); },
+    showEvaluated(body) { shown.push({ kind: "evaluated", body }); },
+    showInterrupted(body) { shown.push({ kind: "interrupted", body }); },
+  });
+  const emit = (payload) => listener?.({
+    device_id: "key-1", raw_payload: payload, capture_time_ns: 2_500_000,
+  });
+  return { controller, emit, shown };
+}
+
+async function evaluateFreshAttempt(page, server, network, expectedAttempt) {
+  const started = await page.controller.start();
+  assert.equal(started.state, "CAPTURING");
+  assert.equal(started.attemptId, expectedAttempt);
+  // The original Begin reaches the server only now, after recovery sealed it.
+  const [lateStatus, lateBody] = network.deliverHeld();
+  assert.equal(lateStatus, 409);
+  assert.deepEqual(lateBody, { error: "begin_request_closed" });
+  assert.equal(page.controller.snapshot().state, "CAPTURING");
+  assert.equal(page.controller.snapshot().attemptId, expectedAttempt);
+  page.emit([0x90, 64, 80]);
+  const done = await page.controller.finish();
+  assert.equal(done.state, "EVALUATED");
+  assert.equal(page.shown.at(-1).body.attempt_id, expectedAttempt);
+  assert.equal(server.attempts.length, Number(expectedAttempt.split("-")[1]));
+}
+
+test("a Begin delayed past a successful recovery cannot block the next attempt", async () => {
+  const server = keyedServer();
+  const network = keyedNetwork(server);
+  const page = realClientController(network);
+  await page.controller.enableMidi();
+  network.mode = "hold";
+  const lost = await page.controller.start();
+  assert.equal(lost.state, "UNCONFIRMED");
+  assert.equal(lost.unconfirmedKind, "begin");
+  const resolved = await page.controller.resolveBegin();
+  assert.equal(resolved.state, "IDLE");
+  assert.equal(resolved.unconfirmedKind, null);
+  assert.equal(resolved.pendingBegin, false);
+  assert.equal(server.keys.get(network.held.body.begin_request_id).kind, "no_attempt");
+  await evaluateFreshAttempt(page, server, network, "attempt-1");
+});
+
+test("a stored Begin whose response was lost is interrupted, and a replay cannot block the next attempt", async () => {
+  const server = keyedServer();
+  const network = keyedNetwork(server);
+  const page = realClientController(network);
+  await page.controller.enableMidi();
+  network.mode = "lose-response";
+  const lost = await page.controller.start();
+  assert.equal(lost.state, "UNCONFIRMED");
+  const resolved = await page.controller.resolveBegin();
+  assert.equal(resolved.state, "INTERRUPTED");
+  assert.equal(resolved.pendingBegin, false);
+  assert.equal(page.shown.at(-1).kind, "interrupted");
+  assert.equal(page.shown.at(-1).body.attempt_id, "attempt-1");
+  await evaluateFreshAttempt(page, server, network, "attempt-2");
 });
