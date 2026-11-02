@@ -567,6 +567,111 @@ def test_non_object_evaluation_is_reported_not_raised(
         for problem in problems)
 
 
+def _key(index: int) -> str:
+    return f"{index:08x}-0000-4000-8000-00000000abcd"
+
+
+def _rewrite_request(exchange: dict[str, Any], body: dict[str, Any]) -> None:
+    raw = json.dumps(body).encode()
+    exchange["request_base64"] = base64.b64encode(raw).decode()
+    exchange["request_sha256"] = hashlib.sha256(raw).hexdigest()
+
+
+def _request(exchange: dict[str, Any]) -> dict[str, Any]:
+    body = json.loads(base64.b64decode(exchange["request_base64"]))
+    assert isinstance(body, dict)
+    return body
+
+
+def _keyed_packet(frozen_dir: Path) -> dict[str, Any]:
+    """The same packet, recorded through the keyed Begin route."""
+
+    packet = _packet(frozen_dir)
+    begins = [item for item in packet["exchanges"] if item["operation"] == "begin"]
+    for index, exchange in enumerate(begins):
+        key = _key(index)
+        _rewrite_request(exchange, {"begin_request_id": key, "begin": _request(exchange)})
+        _rewrite_response(
+            exchange,
+            {
+                "schema_id": "master_all_strings.received_lesson_begin_request",
+                "schema_version": "1.0.0",
+                "begin_request_id": key,
+                "status": "STARTED",
+                "attempt": _response(exchange),
+            },
+        )
+    return packet
+
+
+def test_keyed_begin_packet_passes(verifier: ModuleType, tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    packet = _keyed_packet(root / "docs" / "mvp2" / "do015_artifacts")
+    assert _problems(verifier, packet, root) == []
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "diagnostic"),
+    [
+        ("status", "PENDING", "status is not STARTED"),
+        ("status", "INTERRUPTED", "status is not STARTED"),
+        ("schema_version", "2.0.0", "schema version is not 1.0.0"),
+        ("begin_request_id", _key(99), "not the recorded request's key"),
+        ("begin_request_id", _key(0).upper(), "not a lowercase uuid v4"),
+        ("attempt", None, "carries no attempt"),
+    ],
+)
+def test_begin_wrapper_must_vouch_for_its_attempt(
+    verifier: ModuleType, tmp_path: Path, field: str, value: Any, diagnostic: str
+) -> None:
+    root = tmp_path / "repo"
+    packet = _keyed_packet(root / "docs" / "mvp2" / "do015_artifacts")
+    begin = _find(packet, "T1", "begin")[0]
+    wrapper = _response(begin)
+    wrapper[field] = value
+    _rewrite_response(begin, wrapper)
+    problems = _problems(verifier, packet, root)
+    assert any(problem.startswith("T1: ") and diagnostic in problem for problem in problems)
+    # The nested attempt is not accepted, so the chain cannot pin to it.
+    assert any("T1: identity pins are incomplete" in problem for problem in problems)
+
+
+def test_begin_request_key_must_match_its_wrapper(verifier: ModuleType, tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    packet = _keyed_packet(root / "docs" / "mvp2" / "do015_artifacts")
+    begin = _find(packet, "T4", "begin")[0]
+    request = _request(begin)
+    request["begin_request_id"] = _key(98)
+    _rewrite_request(begin, request)
+    problems = _problems(verifier, packet, root)
+    assert any("T4" in problem and "not the recorded request's key" in problem
+        for problem in problems)
+    assert any("T4: begin has no attempt id" in problem for problem in problems)
+
+
+def test_keyed_request_with_a_bare_attempt_fails(verifier: ModuleType, tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    packet = _keyed_packet(root / "docs" / "mvp2" / "do015_artifacts")
+    begin = _find(packet, "T7", "begin")[0]
+    _rewrite_response(begin, _response(begin)["attempt"])
+    problems = _problems(verifier, packet, root)
+    assert any("T7" in problem and "not a begin request wrapper" in problem
+        for problem in problems)
+
+
+def test_keyed_attempt_pins_hold_across_the_scenario(
+    verifier: ModuleType, tmp_path: Path
+) -> None:
+    root = tmp_path / "repo"
+    packet = _keyed_packet(root / "docs" / "mvp2" / "do015_artifacts")
+    cancel = _find(packet, "T3", "cancel")[0]
+    body = _response(cancel)
+    body["capture_id"] = "capture-other"
+    _rewrite_response(cancel, body)
+    problems = _problems(verifier, packet, root)
+    assert any("T3" in problem and "capture_id pin" in problem for problem in problems)
+
+
 def test_missing_scenario_and_frozen_drift_fail(verifier: ModuleType, tmp_path: Path) -> None:
     root = tmp_path / "repo"
     packet = _packet(root / "docs" / "mvp2" / "do015_artifacts")

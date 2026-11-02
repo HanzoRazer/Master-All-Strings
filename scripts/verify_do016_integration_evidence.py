@@ -34,6 +34,11 @@ PIN_FIELDS = (
     "performance_session_id",
     "evaluation_digest",
 )
+BEGIN_REQUEST_SCHEMA_ID = "master_all_strings.received_lesson_begin_request"
+BEGIN_REQUEST_SCHEMA_VERSION = "1.0.0"
+BEGIN_REQUEST_ID = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+)
 DELIVERY_PINS = PIN_FIELDS[:6]
 ATTEMPT_PINS = ("attempt_id", "capture_id", "performance_session_id")
 # Every key, at any depth of a recorded request or response body, that names
@@ -85,13 +90,52 @@ def document_playback_digest(playback: dict[str, Any]) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
-def _begin_attempt(response: dict[str, Any]) -> dict[str, Any]:
-    """Historical packets store the attempt document. New ones wrap it."""
+def _begin_attempt(item: dict[str, Any]) -> dict[str, Any]:
+    """Return the attempt document a Begin exchange vouches for.
 
-    if response.get("schema_id") == "master_all_strings.received_lesson_begin_request":
-        attempt = response.get("attempt")
-        return attempt if isinstance(attempt, dict) else {}
-    return response
+    Historical packets store the attempt document itself. Keyed packets wrap
+    it, and the nested attempt counts only when the wrapper is a STARTED
+    wrapper for the key the recorded request sent. Anything else yields an
+    empty document, so every check that reads the attempt fails too.
+    """
+
+    response = item["response"]
+    if response.get("schema_id") != BEGIN_REQUEST_SCHEMA_ID:
+        return {} if "begin_request_id" in item["request"] else response
+    if _begin_wrapper_problem(item) is not None:
+        return {}
+    attempt: dict[str, Any] = response["attempt"]
+    return attempt
+
+
+def _begin_wrapper_problem(item: dict[str, Any]) -> str | None:
+    response = item["response"]
+    request = item["request"]
+    if response.get("schema_id") != BEGIN_REQUEST_SCHEMA_ID:
+        if "begin_request_id" in request:
+            return "keyed begin response is not a begin request wrapper"
+        return None
+    if response.get("schema_version") != BEGIN_REQUEST_SCHEMA_VERSION:
+        return "begin wrapper schema version is not 1.0.0"
+    if response.get("status") != "STARTED":
+        return "begin wrapper status is not STARTED"
+    key = response.get("begin_request_id")
+    if not isinstance(key, str) or BEGIN_REQUEST_ID.fullmatch(key) is None:
+        return "begin wrapper key is not a lowercase uuid v4"
+    if request.get("begin_request_id") != key:
+        return "begin wrapper key is not the recorded request's key"
+    if not isinstance(response.get("attempt"), dict):
+        return "begin wrapper carries no attempt"
+    return None
+
+
+def _verify_begin_wrappers(problems: list[str], decoded: list[dict[str, Any]]) -> None:
+    for item in decoded:
+        if item["operation"] != "begin" or item["status"] not in (200, 201):
+            continue
+        problem = _begin_wrapper_problem(item)
+        if problem is not None:
+            problems.append(f"{item['scenario']}: {item['id']} {problem}")
 
 
 def verify_evidence(
@@ -153,6 +197,7 @@ def verify_evidence(
         problems.extend(item_problems)
         if item is not None:
             decoded.append(item)
+    _verify_begin_wrappers(problems, decoded)
 
     by_scenario: dict[str, list[dict[str, Any]]] = {
         scenario_id: [] for scenario_id in REQUIRED_SCENARIOS
@@ -224,10 +269,9 @@ def _successful_preparation(item: dict[str, Any]) -> dict[str, Any] | None:
         response = item.get("response")
         return response if isinstance(response, dict) else {}
     if item.get("operation") == "begin" and item.get("status") == 201:
-        response = item.get("response")
-        if not isinstance(response, dict):
+        if not isinstance(item.get("response"), dict):
             return {}
-        preparation = _begin_attempt(response).get("preparation")
+        preparation = _begin_attempt(item).get("preparation")
         return preparation if isinstance(preparation, dict) else {}
     return None
 
@@ -362,7 +406,7 @@ def _verify_evaluated_chain(
         problems.append(f"{scenario_id}: appends are not strictly between begin and finish")
     begin_item = items[begin]
     finish_item = items[finish]
-    begin_body = _begin_attempt(begin_item["response"])
+    begin_body = _begin_attempt(begin_item)
     if begin_item["status"] != 201 or begin_body.get("attempt_status") != "CAPTURING":
         problems.append(f"{scenario_id}: begin was not accepted")
     if finish_item["status"] != 200 or finish_item["response"].get("attempt_status") != "EVALUATED":
@@ -496,7 +540,7 @@ def _verify_t3(
     if not messages:
         problems.append("T3: cancel has no acknowledged message")
     begin_item = items[begin]
-    attempt_id = _begin_attempt(begin_item["response"]).get("attempt_id")
+    attempt_id = _begin_attempt(begin_item).get("attempt_id")
     if not isinstance(attempt_id, str) or not attempt_id.strip():
         problems.append("T3: begin has no attempt id")
         attempt_id = ""
@@ -545,7 +589,7 @@ def _verify_restart_terminal(
         problems.append(f"{scenario_id}: no message was acknowledged before restart")
     if items[begin]["status"] != 201:
         problems.append(f"{scenario_id}: begin was not accepted")
-    attempt_id = _begin_attempt(items[begin]["response"]).get("attempt_id")
+    attempt_id = _begin_attempt(items[begin]).get("attempt_id")
     if not isinstance(attempt_id, str):
         problems.append(f"{scenario_id}: begin has no attempt id")
         attempt_id = ""
@@ -638,7 +682,7 @@ def _verify_t7(problems: list[str], scenario: Any, items: list[dict[str, Any]]) 
         problems.append("T7: the stored finish was not evaluated")
     if retry["response"].get("attempt_status") != "EVALUATED":
         problems.append("T7: the retry was not evaluated")
-    attempt_id = _begin_attempt(begins[0]["response"]).get("attempt_id")
+    attempt_id = _begin_attempt(begins[0]).get("attempt_id")
     if scenario.get("attempt_id") != attempt_id:
         problems.append("T7: recorded attempt id disagrees with begin")
     for item in (forwarded, retry):
@@ -720,7 +764,7 @@ def _verify_continuity(
             )
             if begin is not None:
                 for field in ATTEMPT_PINS:
-                    value = begin["response"].get(field)
+                    value = _begin_attempt(begin).get(field)
                     if isinstance(value, str):
                         expected[field] = value
         reported: set[tuple[str, str]] = set()
